@@ -163,8 +163,15 @@
         }
 
         /* --- Landscape mobile (low-height viewport) --- */
-        @media (orientation: landscape) and (max-height: 500px) {
+        @media (orientation: landscape) and (max-height: 560px) {
+            html {
+                height: 100%;
+                overflow: hidden;
+            }
             body {
+                height: 100vh;
+                height: 100dvh;
+                overflow: hidden;
                 display: grid;
                 grid-template-areas:
                     "title  title"
