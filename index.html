@@ -14,14 +14,18 @@
             background-color: #2c1e16;
             color: #f4e8d2;
             margin: 0;
-            padding: 20px;
+            padding: 0;
+            height: 100vh;
+            height: 100dvh;
+            overflow: hidden;
+        }
+        #game-wrapper {
             display: flex;
             flex-direction: column;
             align-items: center;
-            overflow: hidden;
+            padding: 20px;
             box-sizing: border-box;
-            height: 100vh;
-            height: 100dvh;
+            width: 100%;
         }
         h1 { margin-top: 0; color: #e6b800; text-shadow: 2px 2px #000; letter-spacing: 1px;}
         
@@ -121,7 +125,7 @@
         .btn:disabled { background-color: #777; cursor: not-allowed; transform: none; }
         
         .hand {
-            display: flex; gap: 15px; flex: 1; min-height: 120px;
+            display: flex; gap: 15px; height: 250px;
             width: 95%; max-width: 1000px; justify-content: center;
             overflow-x: auto; box-sizing: border-box;
         }
@@ -170,8 +174,9 @@
 
         /* --- Landscape mobile (low-height viewport) --- */
         @media (orientation: landscape) and (max-height: 560px) {
-            body {
+            #game-wrapper {
                 display: grid;
+                height: 100dvh;
                 grid-template-areas:
                     "title  title"
                     "battle hand"
@@ -254,6 +259,7 @@
 </head>
 <body>
 
+    <div id="game-wrapper">
     <h1>Usiec Cepra (ang. Slay the Ceper)</h1>
 
     <div class="battlefield">
@@ -323,6 +329,7 @@
         <div>Talia: <span id="draw-pile-count">0</span></div>
         <div>Odrzucone: <span id="discard-pile-count">0</span></div>
     </div>
+    </div><!-- #game-wrapper -->
 
     <script>
         const cardLibrary = {
@@ -509,6 +516,15 @@
         }
 
         initGame();
+
+        function scaleGame() {
+            const wrapper = document.getElementById('game-wrapper');
+            wrapper.style.zoom = '';
+            const scale = Math.min(1, window.innerHeight / wrapper.offsetHeight);
+            if (scale < 1) wrapper.style.zoom = scale;
+        }
+        scaleGame();
+        window.addEventListener('resize', scaleGame);
     </script>
 </body>
 </html>
