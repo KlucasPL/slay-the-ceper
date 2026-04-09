@@ -9,6 +9,7 @@ on:
 jobs:
   lighthouse:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -27,3 +28,11 @@ jobs:
 
       - name: Run Lighthouse CI
         run: npm run lhci
+
+      - name: Upload Lighthouse artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouseci-report
+          path: .lighthouseci/
+          if-no-files-found: ignore

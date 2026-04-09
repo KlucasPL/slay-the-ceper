@@ -11,6 +11,9 @@ dist-ssr/
 # Vitest coverage
 coverage/
 
+# Lighthouse CI artifacts
+.lighthouseci/
+
 # OS
 .DS_Store
 

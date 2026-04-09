@@ -19,8 +19,30 @@ You are an Expert Frontend Engineer and Lead Game Developer for **Usiec Cepra** 
 1. **Separation of Concerns:** Never mix game logic with DOM manipulation.
 2. **`src/state/GameState.js`** — All numbers, math, turn logic, deck arrays. Must be 100% browser-environment-agnostic: no `document`, `window`, or `console.log` in production code.
 3. **`src/ui/UIManager.js`** — Listens to state changes, updates the DOM. All `document.querySelector`, element creation, and CSS class toggling live here only.
-4. **`src/data/`** — Cards, Characters, and Enemies are pure data objects (no logic, no side effects). One file per category.
-5. **`src/styles/`** — CSS is modular. Animations are in a separate file from layout styles.
+4. **`src/data/characters.js` and `src/data/enemies.js`** — pure data objects only.
+5. **`src/data/cards.js`** — declarative card metadata plus `effect(state)` callbacks. Card effects can only mutate `GameState`, never DOM.
+6. **`src/styles/`** — CSS is modular. Animations are in a separate file from layout styles.
+
+## Combat & Reward Rules
+
+- Track statuses on both combatants: `strength`, `weak`, `fragile`, `next_double`, `energy_next_turn`.
+- Apply damage modifiers in `GameState` only:
+  - `strength` adds flat damage,
+  - `weak` applies -25% outgoing damage (floor),
+  - `next_double` affects only the next attack and then resets.
+- On victory, use reward overlay (never `alert`) with 3 random non-basic cards.
+- Base cards are excluded from rewards: `ciupaga`, `gasior`.
+- On reward pick: add card to deck and call `resetBattle()`.
+- `resetBattle()` must handle: Ceper scaling, player heal, status/block cleanup, full deck rebuild (hand/discard/exhaust), shuffle, and fresh turn start.
+
+## Quality Gates
+
+- Before finalizing changes, keep these checks green:
+  - `npm run lint`
+  - `npm run format:check`
+  - `npm test`
+  - `npm run build`
+- Respect CI workflows in `.github/workflows/` including Lighthouse mobile checks.
 
 ## Game Lore & Terminology
 

@@ -36,8 +36,39 @@ tests/            # Vitest unit tests — logic only, never DOM
 
 1. `src/state/GameState.js` must never reference `document`, `window`, or call `console.log` in production code.
 2. `src/ui/UIManager.js` must never contain game logic, calculations, or modify game state directly.
-3. All card/enemy/relic definitions are pure data objects in `src/data/` — no methods, no side effects.
-4. CSS animations live in `src/styles/animations.css` — never inline in JS.
+3. Characters and enemies stay as pure data objects in `src/data/`.
+4. Cards live in `src/data/cards.js` as declarative definitions with metadata plus `effect(state)` callbacks. Card effects must never access the DOM directly.
+5. CSS animations live in `src/styles/animations.css` — never inline in JS.
+
+## Core Combat Mechanics
+
+- Status model on both Góral and Ceper: `strength`, `weak`, `fragile`, `next_double`, `energy_next_turn`.
+- Damage rules:
+  - `strength` adds flat damage.
+  - `weak` reduces outgoing damage by 25% (floor).
+  - `next_double` doubles only the next attack, then resets.
+- End-of-turn / start-of-turn status ticking must stay inside `GameState`.
+- Combat reset after victory must stay in `GameState.resetBattle()`:
+  - scale Ceper (`maxHp +10`, base attack `+2`),
+  - heal Góral by 15 (capped by max Krzepa),
+  - clear blocks and statuses,
+  - rebuild deck from hand/discard/exhaust and shuffle,
+  - start a fresh turn.
+
+## Victory & Rewards
+
+- Win flow must use the overlay reward screen (not `alert`) when Ceper falls.
+- Reward choice: show 3 random cards, excluding base cards (`ciupaga`, `gasior`).
+- On reward click: add chosen card to deck and call `resetBattle()`.
+
+## CI / Quality Gates
+
+- Keep quality checks green for every change:
+  - `npm run lint`
+  - `npm run format:check`
+  - `npm test`
+  - `npm run build`
+- Lighthouse CI tracks mobile performance and accessibility on pushes.
 
 ## Game Terminology
 
