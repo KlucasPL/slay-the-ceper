@@ -43,16 +43,16 @@ tests/            # Vitest unit tests — logic only, never DOM
 
 Always use these terms in code identifiers, comments, and UI strings:
 
-| Term | Meaning |
-|------|---------|
-| Góral | Player character (Highlander) |
-| Jędrek | Tanky Góral |
-| Baciar | Rogue-like Góral |
+| Term          | Meaning                              |
+| ------------- | ------------------------------------ |
+| Góral         | Player character (Highlander)        |
+| Jędrek        | Tanky Góral                          |
+| Baciar        | Rogue-like Góral                     |
 | Ceper / Cepry | Enemy / Enemies (clueless tourist/s) |
-| Oscypki | Energy (to play cards) |
-| Krzepa | Health Points |
-| Garda | Block / Defense |
-| Dutki | Currency (shop) |
+| Oscypki       | Energy (to play cards)               |
+| Krzepa        | Health Points                        |
+| Garda         | Block / Defense                      |
+| Dutki         | Currency (shop)                      |
 
 ## Development Workflow
 

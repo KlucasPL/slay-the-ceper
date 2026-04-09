@@ -7,30 +7,54 @@
 /** @type {Record<string, CardDef>} */
 export const cardLibrary = {
   ciupaga: {
-    id: 'ciupaga', name: 'Cios Ciupagą', cost: 1, emoji: '🪓', desc: 'Zadaje 6 obrażeń.',
+    id: 'ciupaga',
+    name: 'Cios Ciupagą',
+    cost: 1,
+    emoji: '🪓',
+    desc: 'Zadaje 6 obrażeń.',
     effect(state) {
       const dmg = state._calcAttackDamage(state.player, 6);
       const damage = state._applyDamageToEnemy(dmg);
-      return { playerAnim: 'anim-attack-p', enemyAnim: damage.dealt > 0 ? 'anim-damage' : 'anim-block', damage };
+      return {
+        playerAnim: 'anim-attack-p',
+        enemyAnim: damage.dealt > 0 ? 'anim-damage' : 'anim-block',
+        damage,
+      };
     },
   },
   gasior: {
-    id: 'gasior', name: 'Łyk z Gąsiora', cost: 1, emoji: '🏺', desc: 'Zyskujesz 5 Gardy.',
+    id: 'gasior',
+    name: 'Łyk z Gąsiora',
+    cost: 1,
+    emoji: '🏺',
+    desc: 'Zyskujesz 5 Gardy.',
     effect(state) {
       state.player.block += 5;
       return { playerAnim: 'anim-block' };
     },
   },
   kierpce: {
-    id: 'kierpce', name: 'Rzut Kierpcem', cost: 2, emoji: '👞', desc: 'Zadaje 12 obrażeń. Śmierdzi.',
+    id: 'kierpce',
+    name: 'Rzut Kierpcem',
+    cost: 2,
+    emoji: '👞',
+    desc: 'Zadaje 12 obrażeń. Śmierdzi.',
     effect(state) {
       const dmg = state._calcAttackDamage(state.player, 12);
       const damage = state._applyDamageToEnemy(dmg);
-      return { playerAnim: 'anim-attack-p', enemyAnim: damage.dealt > 0 ? 'anim-damage' : 'anim-block', damage };
+      return {
+        playerAnim: 'anim-attack-p',
+        enemyAnim: damage.dealt > 0 ? 'anim-damage' : 'anim-block',
+        damage,
+      };
     },
   },
   hej: {
-    id: 'hej', name: 'Góralskie Hej!', cost: 0, emoji: '🗣️', desc: 'Dobierz 2 karty. Hej!',
+    id: 'hej',
+    name: 'Góralskie Hej!',
+    cost: 0,
+    emoji: '🗣️',
+    desc: 'Dobierz 2 karty. Hej!',
     effect(state) {
       state._drawCards(2);
       return { playerAnim: 'anim-block' };
@@ -40,7 +64,10 @@ export const cardLibrary = {
   // --- New cards ---
 
   sernik: {
-    id: 'sernik', name: 'Sernik', cost: 0, emoji: '🍰',
+    id: 'sernik',
+    name: 'Sernik',
+    cost: 0,
+    emoji: '🍰',
     desc: 'Zyskujesz 1 Oscypek. Exhaust.',
     exhaust: true,
     effect(state) {
@@ -49,7 +76,10 @@ export const cardLibrary = {
     },
   },
   redyk: {
-    id: 'redyk', name: 'Redyk', cost: 1, emoji: '🐑',
+    id: 'redyk',
+    name: 'Redyk',
+    cost: 1,
+    emoji: '🐑',
     desc: 'Atakuje 4 razy po 2 obrażenia (+Siła).',
     effect(state) {
       let totalDealt = 0;
@@ -69,7 +99,10 @@ export const cardLibrary = {
     },
   },
   halny: {
-    id: 'halny', name: 'Halny', cost: 2, emoji: '🌬️',
+    id: 'halny',
+    name: 'Halny',
+    cost: 2,
+    emoji: '🌬️',
     desc: 'Odrzuć rękę, dobierz 3 karty.',
     effect(state) {
       state.discard.push(...state.hand);
@@ -79,7 +112,10 @@ export const cardLibrary = {
     },
   },
   parzenica: {
-    id: 'parzenica', name: 'Parzenica', cost: 1, emoji: '🧶',
+    id: 'parzenica',
+    name: 'Parzenica',
+    cost: 1,
+    emoji: '🧶',
     desc: 'Zyskujesz 7 Gardy. Na początku kolejnej tury +1 Oscypek.',
     effect(state) {
       state.player.block += 7;
@@ -88,17 +124,27 @@ export const cardLibrary = {
     },
   },
   zadyma: {
-    id: 'zadyma', name: 'Zadyma', cost: 1, emoji: '💥',
+    id: 'zadyma',
+    name: 'Zadyma',
+    cost: 1,
+    emoji: '💥',
     desc: 'Zadaje 8 obrażeń. Jeśli wróg ma Gardę: 12 obrażeń.',
     effect(state) {
       const base = state.enemy.block > 0 ? 12 : 8;
       const dmg = state._calcAttackDamage(state.player, base);
       const damage = state._applyDamageToEnemy(dmg);
-      return { playerAnim: 'anim-attack-p', enemyAnim: damage.dealt > 0 ? 'anim-damage' : 'anim-block', damage };
+      return {
+        playerAnim: 'anim-attack-p',
+        enemyAnim: damage.dealt > 0 ? 'anim-damage' : 'anim-block',
+        damage,
+      };
     },
   },
   zyntyca: {
-    id: 'zyntyca', name: 'Żyntyca', cost: 1, emoji: '🥛',
+    id: 'zyntyca',
+    name: 'Żyntyca',
+    cost: 1,
+    emoji: '🥛',
     desc: 'Leczysz 4 Krzepa.',
     effect(state) {
       state.player.hp = Math.min(state.player.hp + 4, state.player.maxHp);
@@ -106,17 +152,27 @@ export const cardLibrary = {
     },
   },
   janosik: {
-    id: 'janosik', name: 'Janosik', cost: 1, emoji: '🗡️',
+    id: 'janosik',
+    name: 'Janosik',
+    cost: 1,
+    emoji: '🗡️',
     desc: 'Zadaje 7 obrażeń. Jeśli Cepr pada: +20 Dutki.',
     effect(state) {
       const dmg = state._calcAttackDamage(state.player, 7);
       const damage = state._applyDamageToEnemy(dmg);
       if (state.enemy.hp <= 0) state.gold += 20;
-      return { playerAnim: 'anim-attack-p', enemyAnim: damage.dealt > 0 ? 'anim-damage' : 'anim-block', damage };
+      return {
+        playerAnim: 'anim-attack-p',
+        enemyAnim: damage.dealt > 0 ? 'anim-damage' : 'anim-block',
+        damage,
+      };
     },
   },
   echo: {
-    id: 'echo', name: 'Echo', cost: 2, emoji: '🔊',
+    id: 'echo',
+    name: 'Echo',
+    cost: 2,
+    emoji: '🔊',
     desc: 'Twój następny atak zadaje podwójne obrażenia.',
     effect(state) {
       state.player.status.next_double = true;
@@ -124,29 +180,50 @@ export const cardLibrary = {
     },
   },
   sandaly: {
-    id: 'sandaly', name: 'Sandały', cost: 1, emoji: '👡',
+    id: 'sandaly',
+    name: 'Sandały',
+    cost: 1,
+    emoji: '👡',
     desc: 'Zadaje 5 obrażeń. Nakłada Słabość 2 na wroga.',
     effect(state) {
       const dmg = state._calcAttackDamage(state.player, 5);
       const damage = state._applyDamageToEnemy(dmg);
       state.enemy.status.weak += 2;
-      return { playerAnim: 'anim-attack-p', enemyAnim: damage.dealt > 0 ? 'anim-damage' : 'anim-block', damage };
+      return {
+        playerAnim: 'anim-attack-p',
+        enemyAnim: damage.dealt > 0 ? 'anim-damage' : 'anim-block',
+        damage,
+      };
     },
   },
   giewont: {
-    id: 'giewont', name: 'Giewont', cost: 3, emoji: '⛰️',
+    id: 'giewont',
+    name: 'Giewont',
+    cost: 3,
+    emoji: '⛰️',
     desc: 'Zadaje 25 obrażeń.',
     effect(state) {
       const dmg = state._calcAttackDamage(state.player, 25);
       const damage = state._applyDamageToEnemy(dmg);
-      return { playerAnim: 'anim-attack-p', enemyAnim: damage.dealt > 0 ? 'anim-damage' : 'anim-block', damage };
+      return {
+        playerAnim: 'anim-attack-p',
+        enemyAnim: damage.dealt > 0 ? 'anim-damage' : 'anim-block',
+        damage,
+      };
     },
   },
 };
 
 /** @type {string[]} */
 export const startingDeck = [
-  'ciupaga', 'ciupaga', 'ciupaga', 'ciupaga',
-  'gasior',  'gasior',  'gasior',  'gasior',
-  'kierpce', 'hej',
+  'ciupaga',
+  'ciupaga',
+  'ciupaga',
+  'ciupaga',
+  'gasior',
+  'gasior',
+  'gasior',
+  'gasior',
+  'kierpce',
+  'hej',
 ];

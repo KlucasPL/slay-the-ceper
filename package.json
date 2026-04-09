@@ -6,10 +6,20 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
+    "lhci": "lhci autorun",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier . --write",
+    "format:check": "prettier . --check",
     "test": "vitest run",
     "test:watch": "vitest"
   },
   "devDependencies": {
+    "@lhci/cli": "^0.15.0",
+    "@eslint/js": "^9.22.0",
+    "eslint": "^9.22.0",
+    "globals": "^15.15.0",
+    "prettier": "^3.5.3",
     "vite": "^6.0.0",
     "vitest": "^3.0.0"
   }

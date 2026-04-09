@@ -25,13 +25,13 @@ export class UIManager {
    */
   updateUI() {
     const { player, enemy, deck, discard } = this.state;
-    document.getElementById('p-hp').textContent      = player.hp;
-    document.getElementById('p-block').textContent   = player.block;
-    document.getElementById('e-hp').textContent      = enemy.hp;
-    document.getElementById('e-block').textContent   = enemy.block;
-    document.getElementById('energy').textContent    = player.energy;
-    document.getElementById('e-intent').textContent  = `Zamiar: Atak (⚔️ ${enemy.nextAttack})`;
-    document.getElementById('draw-pile-count').textContent    = deck.length;
+    document.getElementById('p-hp').textContent = player.hp;
+    document.getElementById('p-block').textContent = player.block;
+    document.getElementById('e-hp').textContent = enemy.hp;
+    document.getElementById('e-block').textContent = enemy.block;
+    document.getElementById('energy').textContent = player.energy;
+    document.getElementById('e-intent').textContent = `Zamiar: Atak (⚔️ ${enemy.nextAttack})`;
+    document.getElementById('draw-pile-count').textContent = deck.length;
     document.getElementById('discard-pile-count').textContent = discard.length;
     this._renderStatuses('p-statuses', player.status);
     this._renderStatuses('e-statuses', enemy.status);
@@ -54,10 +54,10 @@ export class UIManager {
       span.textContent = `${icon} ${label}`;
       el.appendChild(span);
     };
-    if (status.strength > 0)     tag('💪', status.strength);
-    if (status.weak > 0)         tag('😵', status.weak);
-    if (status.fragile > 0)      tag('🫧', status.fragile);
-    if (status.next_double)      tag('✨', '2×');
+    if (status.strength > 0) tag('💪', status.strength);
+    if (status.weak > 0) tag('😵', status.weak);
+    if (status.fragile > 0) tag('🫧', status.fragile);
+    if (status.next_double) tag('✨', '2×');
     if (status.energy_next_turn > 0) tag('⚡', `+${status.energy_next_turn}`);
   }
 
@@ -82,10 +82,18 @@ export class UIManager {
         });
       }
 
-      const costEl   = document.createElement('div'); costEl.className   = 'card-cost';  costEl.textContent  = card.cost;
-      const titleEl  = document.createElement('div'); titleEl.className  = 'card-title'; titleEl.textContent = card.name;
-      const imgEl    = document.createElement('div'); imgEl.className    = 'card-img';   imgEl.textContent   = card.emoji;
-      const descEl   = document.createElement('div'); descEl.className   = 'card-desc';  descEl.textContent  = card.desc;
+      const costEl = document.createElement('div');
+      costEl.className = 'card-cost';
+      costEl.textContent = card.cost;
+      const titleEl = document.createElement('div');
+      titleEl.className = 'card-title';
+      titleEl.textContent = card.name;
+      const imgEl = document.createElement('div');
+      imgEl.className = 'card-img';
+      imgEl.textContent = card.emoji;
+      const descEl = document.createElement('div');
+      descEl.className = 'card-desc';
+      descEl.textContent = card.desc;
 
       cardEl.append(costEl, titleEl, imgEl, descEl);
       handDiv.appendChild(cardEl);
@@ -117,7 +125,6 @@ export class UIManager {
           if (win) this._showEndGame(win);
         }, 400);
       }, 150);
-
     } else {
       // Skill / utility card: instant feedback on player
       if (effect.playerAnim) this._triggerAnim('sprite-player', effect.playerAnim);

@@ -2,8 +2,16 @@ import { describe, it, expect } from 'vitest';
 import { GameState } from '../src/state/GameState.js';
 import { startingDeck } from '../src/data/cards.js';
 
-const mockPlayer = { name: 'Jędrek', emoji: '🧔‍♂️', hp: 50, maxHp: 50, block: 0, energy: 3, maxEnergy: 3 };
-const mockEnemy  = { name: 'Cepr',   emoji: '🧦',     hp: 40, maxHp: 40, block: 0, nextAttack: 8 };
+const mockPlayer = {
+  name: 'Jędrek',
+  emoji: '🧔‍♂️',
+  hp: 50,
+  maxHp: 50,
+  block: 0,
+  energy: 3,
+  maxEnergy: 3,
+};
+const mockEnemy = { name: 'Cepr', emoji: '🧦', hp: 40, maxHp: 40, block: 0, nextAttack: 8 };
 
 /** @returns {GameState} */
 function makeState() {
@@ -78,14 +86,16 @@ describe('GameState', () => {
     it('deals 6 damage to Ceper', () => {
       const s = freshState();
       s.hand = ['ciupaga'];
-      s.enemy.hp = 40; s.enemy.block = 0;
+      s.enemy.hp = 40;
+      s.enemy.block = 0;
       s.playCard(0);
       expect(s.enemy.hp).toBe(34);
     });
     it('damage is reduced by Ceper Garda', () => {
       const s = freshState();
       s.hand = ['ciupaga'];
-      s.enemy.block = 4; s.enemy.hp = 40;
+      s.enemy.block = 4;
+      s.enemy.hp = 40;
       s.playCard(0);
       expect(s.enemy.block).toBe(0);
       expect(s.enemy.hp).toBe(38);
@@ -93,7 +103,8 @@ describe('GameState', () => {
     it('fully absorbed when Ceper Garda >= damage', () => {
       const s = freshState();
       s.hand = ['ciupaga'];
-      s.enemy.block = 10; s.enemy.hp = 40;
+      s.enemy.block = 10;
+      s.enemy.hp = 40;
       s.playCard(0);
       expect(s.enemy.block).toBe(4);
       expect(s.enemy.hp).toBe(40);
@@ -104,7 +115,8 @@ describe('GameState', () => {
     it('deals 12 damage', () => {
       const s = freshState(3);
       s.hand = ['kierpce'];
-      s.enemy.hp = 40; s.enemy.block = 0;
+      s.enemy.hp = 40;
+      s.enemy.block = 0;
       s.playCard(0);
       expect(s.enemy.hp).toBe(28);
     });
@@ -144,7 +156,8 @@ describe('GameState', () => {
     it('adds to attack damage', () => {
       const s = freshState();
       s.hand = ['ciupaga'];
-      s.enemy.hp = 40; s.enemy.block = 0;
+      s.enemy.hp = 40;
+      s.enemy.block = 0;
       s.player.status.strength = 3;
       s.playCard(0);
       expect(s.enemy.hp).toBe(31); // 6 + 3 = 9 damage
@@ -152,7 +165,8 @@ describe('GameState', () => {
     it('applies to every hit of redyk', () => {
       const s = freshState(3);
       s.hand = ['redyk'];
-      s.enemy.hp = 40; s.enemy.block = 0;
+      s.enemy.hp = 40;
+      s.enemy.block = 0;
       s.player.status.strength = 1;
       s.playCard(0);
       expect(s.enemy.hp).toBe(28); // 4 × (2+1) = 12 damage
@@ -163,7 +177,8 @@ describe('GameState', () => {
     it('reduces player attack damage by 25%', () => {
       const s = freshState();
       s.hand = ['ciupaga'];
-      s.enemy.hp = 40; s.enemy.block = 0;
+      s.enemy.hp = 40;
+      s.enemy.block = 0;
       s.player.status.weak = 1;
       s.playCard(0);
       expect(s.enemy.hp).toBe(36); // floor(6 × 0.75) = 4 damage
@@ -177,7 +192,8 @@ describe('GameState', () => {
     });
     it('reduces enemy attack when enemy has weak', () => {
       const s = freshState();
-      s.player.hp = 50; s.player.block = 0;
+      s.player.hp = 50;
+      s.player.block = 0;
       s.enemy.nextAttack = 8;
       s.enemy.status.weak = 1;
       s.endTurn();
@@ -191,7 +207,8 @@ describe('GameState', () => {
     });
     it('ticks player weak down at startTurn', () => {
       const s = freshState();
-      s.hand = []; s.deck = [];
+      s.hand = [];
+      s.deck = [];
       s.player.status.weak = 2;
       s.startTurn();
       expect(s.player.status.weak).toBe(1);
@@ -203,7 +220,8 @@ describe('GameState', () => {
       const s = freshState(3);
       s.player.status.next_double = true;
       s.hand = ['ciupaga'];
-      s.enemy.hp = 40; s.enemy.block = 0;
+      s.enemy.hp = 40;
+      s.enemy.block = 0;
       s.playCard(0);
       expect(s.enemy.hp).toBe(28); // 6 × 2 = 12 damage
       expect(s.player.status.next_double).toBe(false);
@@ -212,7 +230,8 @@ describe('GameState', () => {
       const s = freshState(3);
       s.player.status.next_double = true;
       s.hand = ['redyk'];
-      s.enemy.hp = 40; s.enemy.block = 0;
+      s.enemy.hp = 40;
+      s.enemy.block = 0;
       s.playCard(0);
       // Hit 1: 2×2=4; Hits 2-4: 2 each → total 4+2+2+2=10
       expect(s.enemy.hp).toBe(30);
@@ -236,14 +255,16 @@ describe('GameState', () => {
     it('deals 4×2 = 8 damage with no status', () => {
       const s = freshState(3);
       s.hand = ['redyk'];
-      s.enemy.hp = 40; s.enemy.block = 0;
+      s.enemy.hp = 40;
+      s.enemy.block = 0;
       s.playCard(0);
       expect(s.enemy.hp).toBe(32);
     });
     it('stops early if enemy hp reaches 0', () => {
       const s = freshState(3);
       s.hand = ['redyk'];
-      s.enemy.hp = 3; s.enemy.block = 0;
+      s.enemy.hp = 3;
+      s.enemy.block = 0;
       s.playCard(0);
       expect(s.enemy.hp).toBeLessThanOrEqual(0);
     });
@@ -279,7 +300,8 @@ describe('GameState', () => {
     });
     it('energy_next_turn bonus is consumed on startTurn', () => {
       const s = freshState(3);
-      s.hand = []; s.deck = [];
+      s.hand = [];
+      s.deck = [];
       s.player.status.energy_next_turn = 1;
       s.startTurn();
       expect(s.player.energy).toBe(4); // 3 + 1
@@ -291,14 +313,16 @@ describe('GameState', () => {
     it('deals 8 damage when enemy has no Garda', () => {
       const s = freshState();
       s.hand = ['zadyma'];
-      s.enemy.hp = 40; s.enemy.block = 0;
+      s.enemy.hp = 40;
+      s.enemy.block = 0;
       s.playCard(0);
       expect(s.enemy.hp).toBe(32);
     });
     it('deals 12 damage when enemy has Garda', () => {
       const s = freshState();
       s.hand = ['zadyma'];
-      s.enemy.hp = 40; s.enemy.block = 5;
+      s.enemy.hp = 40;
+      s.enemy.block = 5;
       s.playCard(0);
       // 12 - 5 blocked = 7 dealt
       expect(s.enemy.hp).toBe(33);
@@ -327,14 +351,16 @@ describe('GameState', () => {
     it('deals 7 damage', () => {
       const s = freshState();
       s.hand = ['janosik'];
-      s.enemy.hp = 40; s.enemy.block = 0;
+      s.enemy.hp = 40;
+      s.enemy.block = 0;
       s.playCard(0);
       expect(s.enemy.hp).toBe(33);
     });
     it('grants +20 Dutki if enemy dies', () => {
       const s = freshState();
       s.hand = ['janosik'];
-      s.enemy.hp = 5; s.enemy.block = 0;
+      s.enemy.hp = 5;
+      s.enemy.block = 0;
       s.gold = 0;
       s.playCard(0);
       expect(s.gold).toBe(20);
@@ -342,7 +368,8 @@ describe('GameState', () => {
     it('does not grant Dutki if enemy survives', () => {
       const s = freshState();
       s.hand = ['janosik'];
-      s.enemy.hp = 40; s.enemy.block = 0;
+      s.enemy.hp = 40;
+      s.enemy.block = 0;
       s.gold = 0;
       s.playCard(0);
       expect(s.gold).toBe(0);
@@ -362,7 +389,8 @@ describe('GameState', () => {
     it('deals 5 damage', () => {
       const s = freshState();
       s.hand = ['sandaly'];
-      s.enemy.hp = 40; s.enemy.block = 0;
+      s.enemy.hp = 40;
+      s.enemy.block = 0;
       s.playCard(0);
       expect(s.enemy.hp).toBe(35);
     });
@@ -379,7 +407,8 @@ describe('GameState', () => {
     it('deals 25 damage', () => {
       const s = freshState(3);
       s.hand = ['giewont'];
-      s.enemy.hp = 40; s.enemy.block = 0;
+      s.enemy.hp = 40;
+      s.enemy.block = 0;
       s.playCard(0);
       expect(s.enemy.hp).toBe(15);
     });
@@ -397,14 +426,16 @@ describe('GameState', () => {
     });
     it('enemy attack deals damage to Góral', () => {
       const s = freshState();
-      s.player.hp = 50; s.player.block = 0;
+      s.player.hp = 50;
+      s.player.block = 0;
       s.enemy.nextAttack = 8;
       s.endTurn();
       expect(s.player.hp).toBe(42);
     });
     it('enemy attack is reduced by Góral Garda', () => {
       const s = freshState();
-      s.player.hp = 50; s.player.block = 5;
+      s.player.hp = 50;
+      s.player.block = 5;
       s.enemy.nextAttack = 8;
       s.endTurn();
       expect(s.player.block).toBe(0);
@@ -412,7 +443,8 @@ describe('GameState', () => {
     });
     it('enemy attack is fully blocked', () => {
       const s = freshState();
-      s.player.hp = 50; s.player.block = 10;
+      s.player.hp = 50;
+      s.player.block = 10;
       s.enemy.nextAttack = 8;
       s.endTurn();
       expect(s.player.block).toBe(2);
@@ -420,7 +452,8 @@ describe('GameState', () => {
     });
     it('returns correct damage breakdown', () => {
       const s = freshState();
-      s.player.block = 3; s.enemy.nextAttack = 8;
+      s.player.block = 3;
+      s.enemy.nextAttack = 8;
       const result = s.endTurn();
       expect(result.enemyAttack.raw).toBe(8);
       expect(result.enemyAttack.blocked).toBe(3);
@@ -444,13 +477,15 @@ describe('GameState', () => {
   describe('startTurn', () => {
     it('restores Oscypki to maxEnergy', () => {
       const s = freshState(0);
-      s.hand = []; s.deck = [];
+      s.hand = [];
+      s.deck = [];
       s.startTurn();
       expect(s.player.energy).toBe(s.player.maxEnergy);
     });
     it('resets Góral Garda to 0', () => {
       const s = freshState();
-      s.hand = []; s.deck = [];
+      s.hand = [];
+      s.deck = [];
       s.player.block = 7;
       s.startTurn();
       expect(s.player.block).toBe(0);
@@ -519,15 +554,33 @@ describe('GameState', () => {
       const s = freshState();
       s.player.block = 9;
       s.enemy.block = 6;
-      s.player.status = { strength: 2, weak: 3, fragile: 1, next_double: true, energy_next_turn: 1 };
+      s.player.status = {
+        strength: 2,
+        weak: 3,
+        fragile: 1,
+        next_double: true,
+        energy_next_turn: 1,
+      };
       s.enemy.status = { strength: 4, weak: 2, fragile: 2, next_double: true, energy_next_turn: 0 };
 
       s.resetBattle();
 
       expect(s.player.block).toBe(0);
       expect(s.enemy.block).toBe(0);
-      expect(s.player.status).toEqual({ strength: 0, weak: 0, fragile: 0, next_double: false, energy_next_turn: 0 });
-      expect(s.enemy.status).toEqual({ strength: 0, weak: 0, fragile: 0, next_double: false, energy_next_turn: 0 });
+      expect(s.player.status).toEqual({
+        strength: 0,
+        weak: 0,
+        fragile: 0,
+        next_double: false,
+        energy_next_turn: 0,
+      });
+      expect(s.enemy.status).toEqual({
+        strength: 0,
+        weak: 0,
+        fragile: 0,
+        next_double: false,
+        energy_next_turn: 0,
+      });
     });
 
     it('moves hand/discard/exhaust back to deck and starts next turn', () => {

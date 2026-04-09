@@ -1,93 +1,153 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Usiec Cepra (ang. Slay the Ceper)</title>
     <script type="module" src="/src/main.js"></script>
-</head>
-<body>
-
+  </head>
+  <body>
     <div id="game-wrapper">
-    <h1>Usiec Cepra (ang. Slay the Ceper)</h1>
+      <h1>Usiec Cepra (ang. Slay the Ceper)</h1>
 
-    <div class="battlefield">
+      <div class="battlefield">
         <div class="entity" id="player">
-            <h2>Jędrek 🧔‍♂️</h2>
-            <div class="sprite" id="sprite-player">
-                <svg viewBox="0 0 100 100" width="120" height="120">
-                    <line x1="50" y1="65" x2="30" y2="75" stroke="#ffccaa" stroke-width="6" stroke-linecap="round"/>
-                    <line x1="45" y1="85" x2="40" y2="100" stroke="white" stroke-width="8"/>
-                    <line x1="55" y1="85" x2="60" y2="100" stroke="white" stroke-width="8"/>
-                    <ellipse cx="38" cy="100" rx="8" ry="4" fill="#8b5a2b"/>
-                    <ellipse cx="62" cy="100" rx="8" ry="4" fill="#8b5a2b"/>
-                    <rect x="35" y="50" width="30" height="35" rx="5" fill="white" stroke="#222" stroke-width="3"/>
-                    <path d="M 35,50 L 50,70 L 65,50" fill="none" stroke="#c00" stroke-width="3"/> <circle cx="50" cy="35" r="15" fill="#ffccaa"/>
-                    <circle cx="45" cy="32" r="2" fill="black"/>
-                    <circle cx="55" cy="32" r="2" fill="black"/>
-                    <path d="M 40,40 Q 50,45 60,40" fill="none" stroke="#553311" stroke-width="3"/> <path d="M 20,25 Q 50,15 80,25" fill="none" stroke="#111" stroke-width="6"/>
-                    <path d="M 35,25 C 35,5 65,5 65,25 Z" fill="#111"/>
-                    <path d="M 60,15 Q 75,-5 85,10" fill="none" stroke="#d00" stroke-width="4"/> <line x1="50" y1="65" x2="70" y2="55" stroke="#ffccaa" stroke-width="6" stroke-linecap="round"/>
-                    <line x1="65" y1="85" x2="85" y2="25" stroke="#654321" stroke-width="4"/> <polygon points="80,25 95,20 90,35" fill="#aaa" stroke="#333" stroke-width="2"/> </svg>
-            </div>
-            <div class="stats">❤️ Krzepa: <span id="p-hp">50</span>/50</div>
-            <div class="stats" style="color: #4da6ff;">🛡️ Garda: <span id="p-block">0</span></div>
-            <div id="p-statuses" class="statuses"></div>
+          <h2>Jędrek 🧔‍♂️</h2>
+          <div class="sprite" id="sprite-player">
+            <svg viewBox="0 0 100 100" width="120" height="120">
+              <line
+                x1="50"
+                y1="65"
+                x2="30"
+                y2="75"
+                stroke="#ffccaa"
+                stroke-width="6"
+                stroke-linecap="round"
+              />
+              <line x1="45" y1="85" x2="40" y2="100" stroke="white" stroke-width="8" />
+              <line x1="55" y1="85" x2="60" y2="100" stroke="white" stroke-width="8" />
+              <ellipse cx="38" cy="100" rx="8" ry="4" fill="#8b5a2b" />
+              <ellipse cx="62" cy="100" rx="8" ry="4" fill="#8b5a2b" />
+              <rect
+                x="35"
+                y="50"
+                width="30"
+                height="35"
+                rx="5"
+                fill="white"
+                stroke="#222"
+                stroke-width="3"
+              />
+              <path d="M 35,50 L 50,70 L 65,50" fill="none" stroke="#c00" stroke-width="3" />
+              <circle cx="50" cy="35" r="15" fill="#ffccaa" />
+              <circle cx="45" cy="32" r="2" fill="black" />
+              <circle cx="55" cy="32" r="2" fill="black" />
+              <path d="M 40,40 Q 50,45 60,40" fill="none" stroke="#553311" stroke-width="3" />
+              <path d="M 20,25 Q 50,15 80,25" fill="none" stroke="#111" stroke-width="6" />
+              <path d="M 35,25 C 35,5 65,5 65,25 Z" fill="#111" />
+              <path d="M 60,15 Q 75,-5 85,10" fill="none" stroke="#d00" stroke-width="4" />
+              <line
+                x1="50"
+                y1="65"
+                x2="70"
+                y2="55"
+                stroke="#ffccaa"
+                stroke-width="6"
+                stroke-linecap="round"
+              />
+              <line x1="65" y1="85" x2="85" y2="25" stroke="#654321" stroke-width="4" />
+              <polygon points="80,25 95,20 90,35" fill="#aaa" stroke="#333" stroke-width="2" />
+            </svg>
+          </div>
+          <div class="stats">❤️ Krzepa: <span id="p-hp">50</span>/50</div>
+          <div class="stats" style="color: #4da6ff">🛡️ Garda: <span id="p-block">0</span></div>
+          <div id="p-statuses" class="statuses"></div>
         </div>
         <div class="entity" id="enemy">
-            <h2>Cepr 🧦</h2>
-            <div class="intent" id="e-intent">Robi zdjęcie (⚔️ 8)</div>
-            <div class="sprite" id="sprite-enemy">
-                <svg viewBox="0 0 100 100" width="120" height="120">
-                    <line x1="50" y1="65" x2="35" y2="75" stroke="#ffccaa" stroke-width="6" stroke-linecap="round"/>
-                    <line x1="45" y1="80" x2="40" y2="95" stroke="#ffccaa" stroke-width="6"/>
-                    <line x1="55" y1="80" x2="60" y2="95" stroke="#ffccaa" stroke-width="6"/>
-                    <rect x="36" y="90" width="8" height="5" fill="white"/>
-                    <rect x="56" y="90" width="8" height="5" fill="white"/>
-                    <line x1="34" y1="95" x2="44" y2="95" stroke="#444" stroke-width="3"/>
-                    <line x1="54" y1="95" x2="64" y2="95" stroke="#444" stroke-width="3"/>
-                    <rect x="38" y="70" width="24" height="15" fill="#0066cc"/>
-                    <rect x="38" y="45" width="24" height="25" rx="4" fill="#ff66b2"/>
-                    <circle cx="50" cy="32" r="14" fill="#ffccaa"/>
-                    <rect x="40" y="28" width="8" height="6" fill="#111" rx="2"/>
-                    <rect x="52" y="28" width="8" height="6" fill="#111" rx="2"/>
-                    <line x1="48" y1="31" x2="52" y2="31" stroke="#111" stroke-width="2"/>
-                    <path d="M 45,40 Q 50,43 55,40" fill="none" stroke="#222" stroke-width="2"/> <polygon points="35,25 42,15 58,15 65,25" fill="#dddd88"/>
-                    <line x1="50" y1="65" x2="65" y2="60" stroke="#ffccaa" stroke-width="6" stroke-linecap="round"/>
-                    <rect x="58" y="54" width="16" height="12" fill="#333" rx="2"/>
-                    <circle cx="66" cy="60" r="4" fill="#888"/> <path d="M 45,35 Q 50,60 60,54" fill="none" stroke="#222" stroke-width="1.5"/> </svg>
-            </div>
-            <div class="stats">❤️ Krzepa: <span id="e-hp">40</span>/40</div>
-            <div class="stats" style="color: #4da6ff;">🛡️ Garda: <span id="e-block">0</span></div>
-            <div id="e-statuses" class="statuses"></div>
-        </div>
-    </div>
-
-    <div class="ui-bar">
-        <div class="energy">
-            <svg class="icon-oscypek" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                <polygon points="50,5 90,50 50,95 10,50" fill="#fbb03b" stroke="#a67c00" stroke-width="6" stroke-linejoin="round" />
-                <path d="M 25,35 Q 50,50 75,35 M 15,50 Q 50,65 85,50 M 25,65 Q 50,80 75,65" fill="none" stroke="#a67c00" stroke-width="6" stroke-linecap="round"/>
+          <h2>Cepr 🧦</h2>
+          <div class="intent" id="e-intent">Robi zdjęcie (⚔️ 8)</div>
+          <div class="sprite" id="sprite-enemy">
+            <svg viewBox="0 0 100 100" width="120" height="120">
+              <line
+                x1="50"
+                y1="65"
+                x2="35"
+                y2="75"
+                stroke="#ffccaa"
+                stroke-width="6"
+                stroke-linecap="round"
+              />
+              <line x1="45" y1="80" x2="40" y2="95" stroke="#ffccaa" stroke-width="6" />
+              <line x1="55" y1="80" x2="60" y2="95" stroke="#ffccaa" stroke-width="6" />
+              <rect x="36" y="90" width="8" height="5" fill="white" />
+              <rect x="56" y="90" width="8" height="5" fill="white" />
+              <line x1="34" y1="95" x2="44" y2="95" stroke="#444" stroke-width="3" />
+              <line x1="54" y1="95" x2="64" y2="95" stroke="#444" stroke-width="3" />
+              <rect x="38" y="70" width="24" height="15" fill="#0066cc" />
+              <rect x="38" y="45" width="24" height="25" rx="4" fill="#ff66b2" />
+              <circle cx="50" cy="32" r="14" fill="#ffccaa" />
+              <rect x="40" y="28" width="8" height="6" fill="#111" rx="2" />
+              <rect x="52" y="28" width="8" height="6" fill="#111" rx="2" />
+              <line x1="48" y1="31" x2="52" y2="31" stroke="#111" stroke-width="2" />
+              <path d="M 45,40 Q 50,43 55,40" fill="none" stroke="#222" stroke-width="2" />
+              <polygon points="35,25 42,15 58,15 65,25" fill="#dddd88" />
+              <line
+                x1="50"
+                y1="65"
+                x2="65"
+                y2="60"
+                stroke="#ffccaa"
+                stroke-width="6"
+                stroke-linecap="round"
+              />
+              <rect x="58" y="54" width="16" height="12" fill="#333" rx="2" />
+              <circle cx="66" cy="60" r="4" fill="#888" />
+              <path d="M 45,35 Q 50,60 60,54" fill="none" stroke="#222" stroke-width="1.5" />
             </svg>
-            Oscypki: <span id="energy">3</span>/3
+          </div>
+          <div class="stats">❤️ Krzepa: <span id="e-hp">40</span>/40</div>
+          <div class="stats" style="color: #4da6ff">🛡️ Garda: <span id="e-block">0</span></div>
+          <div id="e-statuses" class="statuses"></div>
+        </div>
+      </div>
+
+      <div class="ui-bar">
+        <div class="energy">
+          <svg class="icon-oscypek" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <polygon
+              points="50,5 90,50 50,95 10,50"
+              fill="#fbb03b"
+              stroke="#a67c00"
+              stroke-width="6"
+              stroke-linejoin="round"
+            />
+            <path
+              d="M 25,35 Q 50,50 75,35 M 15,50 Q 50,65 85,50 M 25,65 Q 50,80 75,65"
+              fill="none"
+              stroke="#a67c00"
+              stroke-width="6"
+              stroke-linecap="round"
+            />
+          </svg>
+          Oscypki: <span id="energy">3</span>/3
         </div>
         <button class="btn" id="end-turn-btn">Koniec Tury</button>
-    </div>
+      </div>
 
-    <div class="hand" id="hand"></div>
-    
-    <div class="piles">
+      <div class="hand" id="hand"></div>
+
+      <div class="piles">
         <div>Talia: <span id="draw-pile-count">0</span></div>
         <div>Odrzucone: <span id="discard-pile-count">0</span></div>
+      </div>
     </div>
-    </div><!-- #game-wrapper -->
+    <!-- #game-wrapper -->
 
     <div id="victory-overlay" class="victory-overlay hidden" aria-hidden="true">
-        <div class="victory-panel">
-            <h2 class="victory-title">Cepr usieczony! Wybierz łup:</h2>
-            <div id="reward-cards" class="reward-cards"></div>
-        </div>
+      <div class="victory-panel">
+        <h2 class="victory-title">Cepr usieczony! Wybierz łup:</h2>
+        <div id="reward-cards" class="reward-cards"></div>
+      </div>
     </div>
-
-</body>
+  </body>
 </html>
