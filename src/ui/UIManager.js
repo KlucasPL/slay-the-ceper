@@ -21,7 +21,7 @@ export class UIManager {
   }
 
   /**
-   * Re-renders all stat displays and the card hand.
+   * Re-renders all stat displays, statuses, and the card hand.
    */
   updateUI() {
     const { player, enemy, deck, discard } = this.state;
@@ -33,7 +33,32 @@ export class UIManager {
     document.getElementById('e-intent').textContent  = `Zamiar: Atak (⚔️ ${enemy.nextAttack})`;
     document.getElementById('draw-pile-count').textContent    = deck.length;
     document.getElementById('discard-pile-count').textContent = discard.length;
+    this._renderStatuses('p-statuses', player.status);
+    this._renderStatuses('e-statuses', enemy.status);
     this._renderHand();
+  }
+
+  /**
+   * Renders active status icons into a container element.
+   * @param {string} containerId
+   * @param {import('../data/cards.js').StatusDef} status
+   */
+  _renderStatuses(containerId, status) {
+    const el = document.getElementById(containerId);
+    if (!el) return;
+    el.innerHTML = '';
+    /** @param {string} icon @param {string} label */
+    const tag = (icon, label) => {
+      const span = document.createElement('span');
+      span.className = 'status-tag';
+      span.textContent = `${icon} ${label}`;
+      el.appendChild(span);
+    };
+    if (status.strength > 0)     tag('💪', status.strength);
+    if (status.weak > 0)         tag('😵', status.weak);
+    if (status.fragile > 0)      tag('🫧', status.fragile);
+    if (status.next_double)      tag('✨', '2×');
+    if (status.energy_next_turn > 0) tag('⚡', `+${status.energy_next_turn}`);
   }
 
   /**
@@ -76,14 +101,14 @@ export class UIManager {
 
     const { effect } = result;
 
-    if (effect.type === 'attack') {
+    if (effect.enemyAnim) {
+      // Attack card: player lunges, then enemy reacts
       this.isAnimating = true;
-      this._triggerAnim('sprite-player', 'anim-attack-p', 300);
+      if (effect.playerAnim) this._triggerAnim('sprite-player', effect.playerAnim, 300);
       this.updateUI();
 
       setTimeout(() => {
-        const anim = effect.damage.dealt > 0 ? 'anim-damage' : 'anim-block';
-        this._triggerAnim('sprite-enemy', anim);
+        this._triggerAnim('sprite-enemy', effect.enemyAnim);
         this.updateUI();
 
         setTimeout(() => {
@@ -94,11 +119,11 @@ export class UIManager {
       }, 150);
 
     } else {
-      this._triggerAnim('sprite-player', 'anim-block');
+      // Skill / utility card: instant feedback on player
+      if (effect.playerAnim) this._triggerAnim('sprite-player', effect.playerAnim);
       this.updateUI();
     }
   }
-
   /**
    * Handles the end-of-turn sequence: discard, enemy attack animation, then start next turn.
    */

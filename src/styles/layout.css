@@ -153,6 +153,25 @@ h1 { margin-top: 0; color: #e6b800; text-shadow: 2px 2px #000; letter-spacing: 1
 .card-img   { flex-grow: 1; display: flex; justify-content: center; align-items: center; font-size: 3.5em; }
 .card-desc  { font-size: 0.9em; text-align: center; background: rgba(0,0,0,0.1); padding: 5px; border-radius: 5px; }
 
+.statuses {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    justify-content: center;
+    min-height: 22px;
+    margin-top: 4px;
+}
+
+.status-tag {
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
+    padding: 1px 7px;
+    font-size: 0.78em;
+    font-weight: bold;
+    white-space: nowrap;
+}
+
 .piles {
     display: flex;
     justify-content: space-between;

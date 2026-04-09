@@ -1,15 +1,17 @@
 import { cardLibrary } from '../data/cards.js';
 
 /**
- * @typedef {{ name: string, hp: number, maxHp: number, block: number, energy: number, maxEnergy: number }} PlayerState
- * @typedef {{ name: string, hp: number, maxHp: number, block: number, nextAttack: number }} EnemyState
- *
- * @typedef {{ type: 'attack', cardId: string, damage: { raw: number, blocked: number, dealt: number } }
- *          | { type: 'skill',  cardId: string, blockGained?: number, cardsDrawn?: number }} CardEffect
- *
- * @typedef {{ success: false } | { success: true, effect: CardEffect }} PlayCardResult
+ * @typedef {import('../data/cards.js').StatusDef} StatusDef
+ * @typedef {{ name: string, hp: number, maxHp: number, block: number, energy: number, maxEnergy: number, status: StatusDef }} PlayerState
+ * @typedef {{ name: string, hp: number, maxHp: number, block: number, nextAttack: number, status: StatusDef }} EnemyState
+ * @typedef {{ success: false } | { success: true, effect: import('../data/cards.js').CardEffectResult }} PlayCardResult
  * @typedef {{ enemyAttack: { raw: number, blocked: number, dealt: number } }} EndTurnResult
  */
+
+/** @returns {StatusDef} */
+function defaultStatus() {
+  return { strength: 0, weak: 0, fragile: 0, next_double: false, energy_next_turn: 0 };
+}
 
 export class GameState {
   /**
@@ -18,15 +20,19 @@ export class GameState {
    */
   constructor(character, enemy) {
     /** @type {PlayerState} */
-    this.player = { ...character };
+    this.player = { ...character, status: defaultStatus() };
     /** @type {EnemyState} */
-    this.enemy = { ...enemy };
+    this.enemy = { ...enemy, status: defaultStatus() };
+    /** @type {number} Dutki (gold) */
+    this.gold = 0;
     /** @type {string[]} */
     this.deck = [];
     /** @type {string[]} */
     this.hand = [];
     /** @type {string[]} */
     this.discard = [];
+    /** @type {string[]} Exhausted cards — removed from combat */
+    this.exhaust = [];
   }
 
   /**
@@ -65,16 +71,73 @@ export class GameState {
   }
 
   /**
-   * Restores Oscypki, resets Garda, and draws 5 cards.
+   * Calculates effective attack damage: applies strength bonus, next_double, and weak penalty.
+   * Mutates attacker.status.next_double (resets it when consumed).
+   * @param {PlayerState | EnemyState} attacker
+   * @param {number} baseDmg
+   * @returns {number}
+   */
+  _calcAttackDamage(attacker, baseDmg) {
+    let dmg = baseDmg + attacker.status.strength;
+    if (attacker.status.next_double) {
+      dmg *= 2;
+      attacker.status.next_double = false;
+    }
+    if (attacker.status.weak > 0) {
+      dmg = Math.floor(dmg * 0.75);
+    }
+    return Math.max(0, dmg);
+  }
+
+  /**
+   * Applies damage to the Ceper (enemy), accounting for their Garda.
+   * @param {number} dmg
+   * @returns {{ raw: number, blocked: number, dealt: number }}
+   */
+  _applyDamageToEnemy(dmg) {
+    const blocked = Math.min(this.enemy.block, dmg);
+    const dealt = dmg - blocked;
+    this.enemy.block -= blocked;
+    this.enemy.hp -= dealt;
+    return { raw: dmg, blocked, dealt };
+  }
+
+  /**
+   * Applies damage to the Góral (player), accounting for their Garda.
+   * @param {number} dmg
+   * @returns {{ raw: number, blocked: number, dealt: number }}
+   */
+  _applyDamageToPlayer(dmg) {
+    const blocked = Math.min(this.player.block, dmg);
+    const dealt = dmg - blocked;
+    this.player.block -= blocked;
+    this.player.hp -= dealt;
+    return { raw: dmg, blocked, dealt };
+  }
+
+  /**
+   * Ticks down duration-based status debuffs (weak, fragile) by 1 each.
+   * @param {StatusDef} status
+   */
+  _tickStatus(status) {
+    if (status.weak > 0) status.weak--;
+    if (status.fragile > 0) status.fragile--;
+  }
+
+  /**
+   * Restores Oscypki (+energy_next_turn bonus), ticks player statuses, resets Garda, draws 5 cards.
    */
   startTurn() {
-    this.player.energy = this.player.maxEnergy;
+    this.player.energy = this.player.maxEnergy + this.player.status.energy_next_turn;
+    this.player.status.energy_next_turn = 0;
+    this._tickStatus(this.player.status);
     this.player.block = 0;
     this._drawCards(5);
   }
 
   /**
    * Plays the card at handIndex. Returns success=false if not enough Oscypki.
+   * Exhausted cards are removed from combat; others go to discard.
    * @param {number} handIndex
    * @returns {PlayCardResult}
    */
@@ -84,49 +147,33 @@ export class GameState {
     if (!card || this.player.energy < card.cost) return { success: false };
 
     this.player.energy -= card.cost;
-    this.discard.push(this.hand.splice(handIndex, 1)[0]);
-
-    if (card.type === 'attack') {
-      const raw = card.val;
-      const blocked = Math.min(this.enemy.block, raw);
-      const dealt = raw - blocked;
-      this.enemy.block -= blocked;
-      this.enemy.hp -= dealt;
-      return { success: true, effect: { type: 'attack', cardId, damage: { raw, blocked, dealt } } };
+    this.hand.splice(handIndex, 1);
+    if (card.exhaust) {
+      this.exhaust.push(cardId);
+    } else {
+      this.discard.push(cardId);
     }
 
-    if (card.type === 'skill') {
-      if (cardId === 'gasior') {
-        this.player.block += card.val;
-        return { success: true, effect: { type: 'skill', cardId, blockGained: card.val } };
-      }
-      if (cardId === 'hej') {
-        this._drawCards(2);
-        return { success: true, effect: { type: 'skill', cardId, cardsDrawn: 2 } };
-      }
-    }
-
-    return { success: true, effect: { type: card.type, cardId } };
+    const effect = card.effect(this);
+    return { success: true, effect };
   }
 
   /**
-   * Discards hand, applies enemy attack to Góral, rolls next enemy attack.
+   * Discards hand, Ceper attacks Góral, ticks enemy statuses, rolls next enemy attack.
    * @returns {EndTurnResult}
    */
   endTurn() {
     this.discard.push(...this.hand);
     this.hand = [];
 
-    const raw = this.enemy.nextAttack;
-    const blocked = Math.min(this.player.block, raw);
-    const dealt = raw - blocked;
-    this.player.block -= blocked;
-    this.player.hp -= dealt;
+    const attackDmg = this._calcAttackDamage(this.enemy, this.enemy.nextAttack);
+    const enemyAttack = this._applyDamageToPlayer(attackDmg);
 
+    this._tickStatus(this.enemy.status);
     this.enemy.block = 0;
     this.enemy.nextAttack = Math.floor(Math.random() * 6) + 5;
 
-    return { enemyAttack: { raw, blocked, dealt } };
+    return { enemyAttack };
   }
 
   /**
