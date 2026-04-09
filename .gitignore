@@ -1,0 +1,19 @@
+# Dependencies
+node_modules/
+
+# Vite build output
+dist/
+dist-ssr/
+
+# Vite cache
+.vite/
+
+# Vitest coverage
+coverage/
+
+# OS
+.DS_Store
+
+# Editor
+.vscode/
+*.local

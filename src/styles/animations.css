@@ -1,0 +1,33 @@
+/* Atak Gracza (doskok w prawo) */
+@keyframes anim-attack-p {
+    0%   { transform: translateX(0); }
+    50%  { transform: translateX(60px) scale(1.1); }
+    100% { transform: translateX(0); }
+}
+.anim-attack-p { animation: anim-attack-p 0.3s ease-out; }
+
+/* Atak Wroga (doskok w lewo) */
+@keyframes anim-attack-e {
+    0%   { transform: translateX(0); }
+    50%  { transform: translateX(-60px) scale(1.1); }
+    100% { transform: translateX(0); }
+}
+.anim-attack-e { animation: anim-attack-e 0.3s ease-out; }
+
+/* Obrażenia (trzęsienie z czerwonym cieniem) */
+@keyframes anim-damage {
+    0%   { transform: translateX(0);    filter: drop-shadow(0 0 0 red); }
+    25%  { transform: translateX(-15px); filter: drop-shadow(0 0 15px red); }
+    50%  { transform: translateX(15px);  filter: drop-shadow(0 0 15px red); }
+    75%  { transform: translateX(-15px); filter: drop-shadow(0 0 15px red); }
+    100% { transform: translateX(0);    filter: drop-shadow(0 0 0 red); }
+}
+.anim-damage { animation: anim-damage 0.4s ease-in-out; }
+
+/* Garda (niebieski puls) */
+@keyframes anim-block {
+    0%   { filter: drop-shadow(0 0 0px #4da6ff); }
+    50%  { filter: drop-shadow(0 0 25px #4da6ff); transform: scale(1.05); }
+    100% { filter: drop-shadow(0 0 0px #4da6ff); }
+}
+.anim-block { animation: anim-block 0.4s ease-out; }
