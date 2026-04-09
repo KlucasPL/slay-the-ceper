@@ -80,6 +80,40 @@ export class GameState {
   }
 
   /**
+   * Calculates final outgoing damage with status modifiers.
+   * Rules:
+   * - weak: -25% outgoing damage (floor)
+   * - strength: flat bonus
+   * - next_double: only for player attacking enemy, then consumed
+   * @param {number} baseDmg
+   * @param {PlayerState | EnemyState} sourceEntity
+   * @param {PlayerState | EnemyState} targetEntity
+   * @returns {number}
+   */
+  calculateDamage(baseDmg, sourceEntity, targetEntity) {
+    let dmg = baseDmg;
+
+    if (sourceEntity.status.weak > 0) {
+      dmg = Math.floor(dmg * 0.75);
+    }
+
+    if (sourceEntity.status.strength > 0) {
+      dmg += sourceEntity.status.strength;
+    }
+
+    if (
+      sourceEntity === this.player &&
+      targetEntity === this.enemy &&
+      sourceEntity.status.next_double
+    ) {
+      dmg *= 2;
+      sourceEntity.status.next_double = false;
+    }
+
+    return Math.max(0, dmg);
+  }
+
+  /**
    * Calculates effective attack damage: applies strength bonus, next_double, and weak penalty.
    * Mutates attacker.status.next_double (resets it when consumed).
    * @param {PlayerState | EnemyState} attacker
@@ -87,15 +121,8 @@ export class GameState {
    * @returns {number}
    */
   _calcAttackDamage(attacker, baseDmg) {
-    let dmg = baseDmg + attacker.status.strength;
-    if (attacker.status.next_double) {
-      dmg *= 2;
-      attacker.status.next_double = false;
-    }
-    if (attacker.status.weak > 0) {
-      dmg = Math.floor(dmg * 0.75);
-    }
-    return Math.max(0, dmg);
+    const target = attacker === this.player ? this.enemy : this.player;
+    return this.calculateDamage(baseDmg, attacker, target);
   }
 
   /**
@@ -139,7 +166,6 @@ export class GameState {
   startTurn() {
     this.player.energy = this.player.maxEnergy + this.player.status.energy_next_turn;
     this.player.status.energy_next_turn = 0;
-    this._tickStatus(this.player.status);
     this.player.block = 0;
     this._drawCards(5);
   }
@@ -175,7 +201,10 @@ export class GameState {
     this.discard.push(...this.hand);
     this.hand = [];
 
-    const attackDmg = this._calcAttackDamage(this.enemy, this.enemy.nextAttack);
+    // End of player turn.
+    this._tickStatus(this.player.status);
+
+    const attackDmg = this.calculateDamage(this.enemy.nextAttack, this.enemy, this.player);
     const enemyAttack = this._applyDamageToPlayer(attackDmg);
 
     this._tickStatus(this.enemy.status);

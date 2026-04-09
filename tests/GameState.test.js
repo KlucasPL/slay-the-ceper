@@ -152,6 +152,34 @@ describe('GameState', () => {
   });
 
   // ── Status effects ────────────────────────────────────────────────────────
+  describe('calculateDamage', () => {
+    it('applies weak penalty to source outgoing damage', () => {
+      const s = freshState();
+      s.player.status.weak = 1;
+      expect(s.calculateDamage(8, s.player, s.enemy)).toBe(6);
+    });
+
+    it('adds source strength as flat bonus', () => {
+      const s = freshState();
+      s.player.status.strength = 2;
+      expect(s.calculateDamage(8, s.player, s.enemy)).toBe(10);
+    });
+
+    it('consumes player next_double only when attacking enemy', () => {
+      const s = freshState();
+      s.player.status.next_double = true;
+      expect(s.calculateDamage(6, s.player, s.enemy)).toBe(12);
+      expect(s.player.status.next_double).toBe(false);
+    });
+
+    it('does not consume next_double when player is not the source', () => {
+      const s = freshState();
+      s.player.status.next_double = true;
+      expect(s.calculateDamage(8, s.enemy, s.player)).toBe(8);
+      expect(s.player.status.next_double).toBe(true);
+    });
+  });
+
   describe('strength status', () => {
     it('adds to attack damage', () => {
       const s = freshState();
@@ -205,12 +233,10 @@ describe('GameState', () => {
       s.endTurn();
       expect(s.enemy.status.weak).toBe(1);
     });
-    it('ticks player weak down at startTurn', () => {
+    it('ticks player weak down at endTurn', () => {
       const s = freshState();
-      s.hand = [];
-      s.deck = [];
       s.player.status.weak = 2;
-      s.startTurn();
+      s.endTurn();
       expect(s.player.status.weak).toBe(1);
     });
   });

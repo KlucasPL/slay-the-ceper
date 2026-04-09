@@ -25,12 +25,16 @@ export class UIManager {
    */
   updateUI() {
     const { player, enemy, deck, discard } = this.state;
+    const enemyAttackRaw = this.state.calculateDamage(enemy.nextAttack, enemy, player);
+    const enemyAttackAfterBlock = Math.max(0, enemyAttackRaw - player.block);
     document.getElementById('p-hp').textContent = player.hp;
+    document.getElementById('p-max-hp').textContent = player.maxHp;
     document.getElementById('p-block').textContent = player.block;
     document.getElementById('e-hp').textContent = enemy.hp;
+    document.getElementById('e-max-hp').textContent = enemy.maxHp;
     document.getElementById('e-block').textContent = enemy.block;
     document.getElementById('energy').textContent = player.energy;
-    document.getElementById('e-intent').textContent = `Zamiar: Atak (⚔️ ${enemy.nextAttack})`;
+    document.getElementById('e-intent').textContent = `Zamiar: Atak (⚔️ ${enemyAttackAfterBlock})`;
     document.getElementById('draw-pile-count').textContent = deck.length;
     document.getElementById('discard-pile-count').textContent = discard.length;
     this._renderStatuses('p-statuses', player.status);
@@ -47,18 +51,23 @@ export class UIManager {
     const el = document.getElementById(containerId);
     if (!el) return;
     el.innerHTML = '';
-    /** @param {string} icon @param {string} label */
-    const tag = (icon, label) => {
+
+    /** @param {number} turns */
+    const turnLabel = (turns) => (turns === 1 ? 'tura' : 'tury');
+
+    /** @param {string} text */
+    const tag = (text) => {
       const span = document.createElement('span');
       span.className = 'status-tag';
-      span.textContent = `${icon} ${label}`;
+      span.textContent = text;
       el.appendChild(span);
     };
-    if (status.strength > 0) tag('💪', status.strength);
-    if (status.weak > 0) tag('😵', status.weak);
-    if (status.fragile > 0) tag('🫧', status.fragile);
-    if (status.next_double) tag('✨', '2×');
-    if (status.energy_next_turn > 0) tag('⚡', `+${status.energy_next_turn}`);
+
+    if (status.strength > 0) tag(`💢 Siła: ${status.strength}`);
+    if (status.weak > 0) tag(`🤢 Słabość: ${status.weak} ${turnLabel(status.weak)}`);
+    if (status.fragile > 0) tag(`🫧 Kruchość: ${status.fragile} ${turnLabel(status.fragile)}`);
+    if (status.next_double) tag('✨ Następny atak: x2');
+    if (status.energy_next_turn > 0) tag(`⚡ Nast. tura: +${status.energy_next_turn} Oscypek`);
   }
 
   /**
