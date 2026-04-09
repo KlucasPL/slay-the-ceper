@@ -1,9 +1,11 @@
 import { cardLibrary } from '../data/cards.js';
+import { enemyLibrary } from '../data/enemies.js';
 
 /**
  * @typedef {import('../data/cards.js').StatusDef} StatusDef
  * @typedef {{ name: string, hp: number, maxHp: number, block: number, energy: number, maxEnergy: number, status: StatusDef }} PlayerState
- * @typedef {{ name: string, hp: number, maxHp: number, block: number, nextAttack: number, baseAttack: number, status: StatusDef }} EnemyState
+ * @typedef {import('../data/enemies.js').EnemyMoveDef} EnemyMoveDef
+ * @typedef {{ id: string, name: string, emoji: string, hp: number, maxHp: number, block: number, nextAttack: number, baseAttack: number, attackScale: number, status: StatusDef, spriteSvg: string, patternType: 'random'|'loop', pattern: EnemyMoveDef[], patternIndex: number, currentIntent: EnemyMoveDef }} EnemyState
  * @typedef {{ success: false } | { success: true, effect: import('../data/cards.js').CardEffectResult }} PlayCardResult
  * @typedef {{ enemyAttack: { raw: number, blocked: number, dealt: number } }} EndTurnResult
  */
@@ -21,10 +23,10 @@ export class GameState {
   constructor(character, enemy) {
     /** @type {PlayerState} */
     this.player = { ...character, status: defaultStatus() };
-    /** @type {EnemyState} */
-    this.enemy = { ...enemy, baseAttack: enemy.nextAttack, status: defaultStatus() };
     /** @type {number} Dutki (gold) */
     this.gold = 0;
+    /** @type {number} Number of won battles used for scaling */
+    this.battleWins = 0;
     /** @type {string[]} */
     this.deck = [];
     /** @type {string[]} */
@@ -33,6 +35,46 @@ export class GameState {
     this.discard = [];
     /** @type {string[]} Exhausted cards — removed from combat */
     this.exhaust = [];
+    /** @type {EnemyState} */
+    this.enemy = this._createEnemyState(enemy);
+  }
+
+  /**
+   * @param {import('../data/enemies.js').EnemyDef} enemyDef
+   * @returns {EnemyState}
+   */
+  _createEnemyState(enemyDef) {
+    const pattern = enemyDef.pattern ? enemyDef.pattern.map((move) => ({ ...move })) : [];
+    const maxHp = enemyDef.maxHp + this.battleWins * 10;
+    /** @type {EnemyState} */
+    const enemyState = {
+      id: enemyDef.id,
+      name: enemyDef.name,
+      emoji: enemyDef.emoji,
+      hp: maxHp,
+      maxHp,
+      block: enemyDef.block,
+      nextAttack: 0,
+      baseAttack: (enemyDef.baseAttack ?? 0) + this.battleWins * 2,
+      attackScale: enemyDef.patternType === 'loop' ? this.battleWins * 2 : 0,
+      status: defaultStatus(),
+      spriteSvg: enemyDef.spriteSvg,
+      patternType: enemyDef.patternType,
+      pattern,
+      patternIndex: 0,
+      currentIntent: { type: 'attack', name: 'Atak', damage: 0, hits: 1 },
+    };
+    enemyState.currentIntent = this._buildEnemyIntent(enemyState);
+    enemyState.nextAttack =
+      enemyState.currentIntent.type === 'attack' ? enemyState.currentIntent.damage : 0;
+    return enemyState;
+  }
+
+  /** @returns {import('../data/enemies.js').EnemyDef} */
+  _pickRandomEnemyDef() {
+    const enemyIds = Object.keys(enemyLibrary);
+    const enemyId = enemyIds[Math.floor(Math.random() * enemyIds.length)];
+    return enemyLibrary[enemyId];
   }
 
   /**
@@ -75,8 +117,35 @@ export class GameState {
    * Base 8 yields range 5..10.
    * @returns {number}
    */
-  _rollEnemyAttack() {
-    return Math.max(1, this.enemy.baseAttack - 3 + Math.floor(Math.random() * 6));
+  _rollEnemyAttack(enemyState = this.enemy) {
+    return Math.max(1, enemyState.baseAttack - 3 + Math.floor(Math.random() * 6));
+  }
+
+  /**
+   * @param {EnemyState} enemyState
+   * @returns {EnemyMoveDef}
+   */
+  _buildEnemyIntent(enemyState) {
+    if (enemyState.patternType === 'loop') {
+      const move = enemyState.pattern[enemyState.patternIndex % enemyState.pattern.length];
+      return { ...move };
+    }
+
+    return {
+      type: 'attack',
+      name: 'Robi zdjęcie',
+      damage: this._rollEnemyAttack(enemyState),
+      hits: 1,
+    };
+  }
+
+  /**
+   * Refreshes the enemy intent after state changes.
+   */
+  _refreshEnemyIntent() {
+    this.enemy.currentIntent = this._buildEnemyIntent(this.enemy);
+    this.enemy.nextAttack =
+      this.enemy.currentIntent.type === 'attack' ? this.enemy.currentIntent.damage : 0;
   }
 
   /**
@@ -152,6 +221,63 @@ export class GameState {
   }
 
   /**
+   * @returns {{ raw: number, blocked: number, dealt: number }}
+   */
+  _applyEnemyIntent() {
+    const intent = this.enemy.currentIntent;
+
+    if (intent.type === 'block') {
+      this.enemy.block += intent.block;
+      return { raw: 0, blocked: 0, dealt: 0 };
+    }
+
+    let raw = 0;
+    let blocked = 0;
+    let dealt = 0;
+    const hits = intent.hits ?? 1;
+
+    for (let hitIndex = 0; hitIndex < hits; hitIndex++) {
+      const hitDamage = this.calculateDamage(intent.damage, this.enemy, this.player);
+      const result = this._applyDamageToPlayer(hitDamage);
+      raw += result.raw;
+      blocked += result.blocked;
+      dealt += result.dealt;
+    }
+
+    return { raw, blocked, dealt };
+  }
+
+  /**
+   * @returns {number}
+   */
+  getEnemyIntentDamage() {
+    const intent = this.enemy.currentIntent;
+    if (intent.type === 'block') return 0;
+
+    const hits = intent.hits ?? 1;
+    const perHit = this.calculateDamage(intent.damage, this.enemy, this.player);
+    return Math.max(0, perHit * hits - this.player.block);
+  }
+
+  /**
+   * @returns {string}
+   */
+  getEnemyIntentText() {
+    const intent = this.enemy.currentIntent;
+    if (intent.type === 'block') {
+      return `Zamiar: ${intent.name} (🛡️ ${intent.block})`;
+    }
+
+    const hits = intent.hits ?? 1;
+    const totalDamage = this.getEnemyIntentDamage();
+    if (hits > 1) {
+      return `Zamiar: ${intent.name} (⚔️ ${totalDamage}, ${hits}x)`;
+    }
+
+    return `Zamiar: ${intent.name} (⚔️ ${totalDamage})`;
+  }
+
+  /**
    * Ticks down duration-based status debuffs (weak, fragile) by 1 each.
    * @param {StatusDef} status
    */
@@ -204,12 +330,19 @@ export class GameState {
     // End of player turn.
     this._tickStatus(this.player.status);
 
-    const attackDmg = this.calculateDamage(this.enemy.nextAttack, this.enemy, this.player);
-    const enemyAttack = this._applyDamageToPlayer(attackDmg);
+    // Enemy loses old block at the start of its own turn, before taking a new action.
+    this.enemy.block = 0;
+    const enemyAttack = this._applyEnemyIntent();
 
     this._tickStatus(this.enemy.status);
-    this.enemy.block = 0;
-    this.enemy.nextAttack = this._rollEnemyAttack();
+    if (this.enemy.id === 'busiarz') {
+      this.enemy.status.strength += 1;
+    }
+
+    if (this.enemy.patternType === 'loop') {
+      this.enemy.patternIndex = (this.enemy.patternIndex + 1) % this.enemy.pattern.length;
+    }
+    this._refreshEnemyIntent();
 
     return { enemyAttack };
   }
@@ -223,16 +356,13 @@ export class GameState {
    * - Start a fresh turn
    */
   resetBattle() {
-    this.enemy.maxHp += 10;
-    this.enemy.baseAttack += 2;
+    this.battleWins += 1;
 
     this.player.hp = Math.min(this.player.maxHp, this.player.hp + 15);
 
     this.player.block = 0;
-    this.enemy.block = 0;
 
     this.player.status = defaultStatus();
-    this.enemy.status = defaultStatus();
 
     this.deck.push(...this.hand, ...this.discard, ...this.exhaust);
     this.hand = [];
@@ -240,8 +370,7 @@ export class GameState {
     this.exhaust = [];
     this._shuffle(this.deck);
 
-    this.enemy.hp = this.enemy.maxHp;
-    this.enemy.nextAttack = this._rollEnemyAttack();
+    this.enemy = this._createEnemyState(this._pickRandomEnemyDef());
 
     this.startTurn();
   }

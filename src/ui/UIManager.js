@@ -25,8 +25,7 @@ export class UIManager {
    */
   updateUI() {
     const { player, enemy, deck, discard } = this.state;
-    const enemyAttackRaw = this.state.calculateDamage(enemy.nextAttack, enemy, player);
-    const enemyAttackAfterBlock = Math.max(0, enemyAttackRaw - player.block);
+    this._renderEnemyPresentation();
     document.getElementById('p-hp').textContent = player.hp;
     document.getElementById('p-max-hp').textContent = player.maxHp;
     document.getElementById('p-block').textContent = player.block;
@@ -34,12 +33,24 @@ export class UIManager {
     document.getElementById('e-max-hp').textContent = enemy.maxHp;
     document.getElementById('e-block').textContent = enemy.block;
     document.getElementById('energy').textContent = player.energy;
-    document.getElementById('e-intent').textContent = `Zamiar: Atak (⚔️ ${enemyAttackAfterBlock})`;
+    document.getElementById('e-intent').textContent = this.state.getEnemyIntentText();
     document.getElementById('draw-pile-count').textContent = deck.length;
     document.getElementById('discard-pile-count').textContent = discard.length;
     this._renderStatuses('p-statuses', player.status);
     this._renderStatuses('e-statuses', enemy.status);
     this._renderHand();
+  }
+
+  /**
+   * Updates enemy title and SVG sprite when enemy changes.
+   */
+  _renderEnemyPresentation() {
+    const enemyName = document.getElementById('enemy-name');
+    const enemySprite = document.getElementById('sprite-enemy');
+    enemyName.textContent = `${this.state.enemy.name} ${this.state.enemy.emoji}`;
+    if (enemySprite.innerHTML.trim() !== this.state.enemy.spriteSvg.trim()) {
+      enemySprite.innerHTML = this.state.enemy.spriteSvg;
+    }
   }
 
   /**

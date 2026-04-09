@@ -1,6 +1,7 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { GameState } from '../src/state/GameState.js';
 import { startingDeck } from '../src/data/cards.js';
+import { enemyLibrary } from '../src/data/enemies.js';
 
 const mockPlayer = {
   name: 'Jędrek',
@@ -11,7 +12,11 @@ const mockPlayer = {
   energy: 3,
   maxEnergy: 3,
 };
-const mockEnemy = { name: 'Cepr', emoji: '🧦', hp: 40, maxHp: 40, block: 0, nextAttack: 8 };
+const mockEnemy = enemyLibrary.cepr;
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
 /** @returns {GameState} */
 function makeState() {
@@ -28,6 +33,25 @@ function freshState(energy = 3) {
   s.deck = [];
   s.discard = [];
   return s;
+}
+
+/** @returns {GameState} */
+function freshBusiarzState() {
+  const s = new GameState({ ...mockPlayer }, enemyLibrary.busiarz);
+  s.player.energy = 3;
+  s.hand = [];
+  s.deck = [];
+  s.discard = [];
+  return s;
+}
+
+/**
+ * @param {GameState} state
+ * @param {import('../src/data/enemies.js').EnemyMoveDef} intent
+ */
+function setEnemyIntent(state, intent) {
+  state.enemy.currentIntent = { ...intent };
+  state.enemy.nextAttack = intent.type === 'attack' ? intent.damage : 0;
 }
 
 describe('GameState', () => {
@@ -222,7 +246,7 @@ describe('GameState', () => {
       const s = freshState();
       s.player.hp = 50;
       s.player.block = 0;
-      s.enemy.nextAttack = 8;
+      setEnemyIntent(s, { type: 'attack', name: 'Robi zdjęcie', damage: 8, hits: 1 });
       s.enemy.status.weak = 1;
       s.endTurn();
       expect(s.player.hp).toBe(44); // floor(8 × 0.75) = 6 damage
@@ -440,6 +464,53 @@ describe('GameState', () => {
     });
   });
 
+  describe('busiarz', () => {
+    it('starts with Trąbienie na pieszych as first intent', () => {
+      const s = freshBusiarzState();
+      expect(s.enemy.currentIntent).toEqual({
+        type: 'attack',
+        name: 'Trąbienie na pieszych',
+        damage: 3,
+        hits: 2,
+      });
+    });
+
+    it('gains 1 strength at the end of his turn', () => {
+      const s = freshBusiarzState();
+      s.endTurn();
+      expect(s.enemy.status.strength).toBe(1);
+    });
+
+    it('cycles to Wyprzedzanie na trzeciego on second turn', () => {
+      const s = freshBusiarzState();
+      s.endTurn();
+      expect(s.enemy.currentIntent).toEqual({
+        type: 'attack',
+        name: 'Wyprzedzanie na trzeciego',
+        damage: 8,
+        hits: 1,
+      });
+    });
+
+    it('gains 10 Garda on Zbieranie kompletu and keeps it for player turn', () => {
+      const s = freshBusiarzState();
+      s.endTurn();
+      s.endTurn();
+      expect(s.enemy.currentIntent).toEqual({
+        type: 'block',
+        name: 'Zbieranie kompletu',
+        block: 10,
+      });
+      s.endTurn();
+      expect(s.enemy.block).toBe(10);
+    });
+
+    it('intent text includes move name and total damage for multi-hit move', () => {
+      const s = freshBusiarzState();
+      expect(s.getEnemyIntentText()).toBe('Zamiar: Trąbienie na pieszych (⚔️ 6, 2x)');
+    });
+  });
+
   // ── endTurn ───────────────────────────────────────────────────────────────
   describe('endTurn', () => {
     it('moves entire hand to discard', () => {
@@ -454,7 +525,7 @@ describe('GameState', () => {
       const s = freshState();
       s.player.hp = 50;
       s.player.block = 0;
-      s.enemy.nextAttack = 8;
+      setEnemyIntent(s, { type: 'attack', name: 'Robi zdjęcie', damage: 8, hits: 1 });
       s.endTurn();
       expect(s.player.hp).toBe(42);
     });
@@ -462,7 +533,7 @@ describe('GameState', () => {
       const s = freshState();
       s.player.hp = 50;
       s.player.block = 5;
-      s.enemy.nextAttack = 8;
+      setEnemyIntent(s, { type: 'attack', name: 'Robi zdjęcie', damage: 8, hits: 1 });
       s.endTurn();
       expect(s.player.block).toBe(0);
       expect(s.player.hp).toBe(47);
@@ -471,7 +542,7 @@ describe('GameState', () => {
       const s = freshState();
       s.player.hp = 50;
       s.player.block = 10;
-      s.enemy.nextAttack = 8;
+      setEnemyIntent(s, { type: 'attack', name: 'Robi zdjęcie', damage: 8, hits: 1 });
       s.endTurn();
       expect(s.player.block).toBe(2);
       expect(s.player.hp).toBe(50);
@@ -479,7 +550,7 @@ describe('GameState', () => {
     it('returns correct damage breakdown', () => {
       const s = freshState();
       s.player.block = 3;
-      s.enemy.nextAttack = 8;
+      setEnemyIntent(s, { type: 'attack', name: 'Robi zdjęcie', damage: 8, hits: 1 });
       const result = s.endTurn();
       expect(result.enemyAttack.raw).toBe(8);
       expect(result.enemyAttack.blocked).toBe(3);
@@ -488,14 +559,18 @@ describe('GameState', () => {
     it('resets Ceper Garda after enemy attack', () => {
       const s = freshState();
       s.enemy.block = 5;
+      setEnemyIntent(s, { type: 'attack', name: 'Robi zdjęcie', damage: 8, hits: 1 });
       s.endTurn();
       expect(s.enemy.block).toBe(0);
     });
-    it('rolls a new nextAttack between 5 and 10', () => {
+    it('rolls a new Ceper attack intent between 5 and 10', () => {
       const s = freshState();
+      setEnemyIntent(s, { type: 'attack', name: 'Robi zdjęcie', damage: 8, hits: 1 });
       s.endTurn();
-      expect(s.enemy.nextAttack).toBeGreaterThanOrEqual(5);
-      expect(s.enemy.nextAttack).toBeLessThanOrEqual(10);
+      expect(s.enemy.currentIntent.type).toBe('attack');
+      if (s.enemy.currentIntent.type !== 'attack') return;
+      expect(s.enemy.currentIntent.damage).toBeGreaterThanOrEqual(5);
+      expect(s.enemy.currentIntent.damage).toBeLessThanOrEqual(10);
     });
   });
 
@@ -560,6 +635,7 @@ describe('GameState', () => {
       const s = freshState();
       const oldMaxHp = s.enemy.maxHp;
       const oldBaseAttack = s.enemy.baseAttack;
+      vi.spyOn(Math, 'random').mockReturnValue(0);
       s.resetBattle();
       expect(s.enemy.maxHp).toBe(oldMaxHp + 10);
       expect(s.enemy.baseAttack).toBe(oldBaseAttack + 2);
@@ -629,10 +705,21 @@ describe('GameState', () => {
       s.enemy.hp = 1;
       s.resetBattle();
       expect(s.enemy.hp).toBe(s.enemy.maxHp);
-      const min = s.enemy.baseAttack - 3;
-      const max = s.enemy.baseAttack + 2;
-      expect(s.enemy.nextAttack).toBeGreaterThanOrEqual(min);
-      expect(s.enemy.nextAttack).toBeLessThanOrEqual(max);
+      if (s.enemy.patternType === 'random') {
+        const min = s.enemy.baseAttack + s.enemy.attackScale - 3;
+        const max = s.enemy.baseAttack + s.enemy.attackScale + 2;
+        expect(s.enemy.nextAttack).toBeGreaterThanOrEqual(min);
+        expect(s.enemy.nextAttack).toBeLessThanOrEqual(max);
+      }
+    });
+
+    it('can load Busiarz from the enemy library after victory', () => {
+      const s = freshState();
+      vi.spyOn(Math, 'random').mockReturnValue(0.99);
+      s.resetBattle();
+      expect(s.enemy.id).toBe('busiarz');
+      expect(s.enemy.name).toBe('Wąsaty Staszek');
+      expect(s.enemy.maxHp).toBe(45);
     });
   });
 });
