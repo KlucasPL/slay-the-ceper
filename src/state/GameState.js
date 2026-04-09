@@ -3,7 +3,7 @@ import { cardLibrary } from '../data/cards.js';
 /**
  * @typedef {import('../data/cards.js').StatusDef} StatusDef
  * @typedef {{ name: string, hp: number, maxHp: number, block: number, energy: number, maxEnergy: number, status: StatusDef }} PlayerState
- * @typedef {{ name: string, hp: number, maxHp: number, block: number, nextAttack: number, status: StatusDef }} EnemyState
+ * @typedef {{ name: string, hp: number, maxHp: number, block: number, nextAttack: number, baseAttack: number, status: StatusDef }} EnemyState
  * @typedef {{ success: false } | { success: true, effect: import('../data/cards.js').CardEffectResult }} PlayCardResult
  * @typedef {{ enemyAttack: { raw: number, blocked: number, dealt: number } }} EndTurnResult
  */
@@ -22,7 +22,7 @@ export class GameState {
     /** @type {PlayerState} */
     this.player = { ...character, status: defaultStatus() };
     /** @type {EnemyState} */
-    this.enemy = { ...enemy, status: defaultStatus() };
+    this.enemy = { ...enemy, baseAttack: enemy.nextAttack, status: defaultStatus() };
     /** @type {number} Dutki (gold) */
     this.gold = 0;
     /** @type {string[]} */
@@ -68,6 +68,15 @@ export class GameState {
       }
       this.hand.push(this.deck.pop());
     }
+  }
+
+  /**
+   * Rolls enemy intent around baseAttack with a spread of 6 values.
+   * Base 8 yields range 5..10.
+   * @returns {number}
+   */
+  _rollEnemyAttack() {
+    return Math.max(1, this.enemy.baseAttack - 3 + Math.floor(Math.random() * 6));
   }
 
   /**
@@ -171,9 +180,41 @@ export class GameState {
 
     this._tickStatus(this.enemy.status);
     this.enemy.block = 0;
-    this.enemy.nextAttack = Math.floor(Math.random() * 6) + 5;
+    this.enemy.nextAttack = this._rollEnemyAttack();
 
     return { enemyAttack };
+  }
+
+  /**
+   * Resets combat after victory and scales difficulty for the next Ceper.
+   * - Enemy maxHp +10 and baseAttack +2 (permanently for this run)
+   * - Heal player by 15 (up to maxHp)
+   * - Clear blocks and statuses
+   * - Move hand/discard/exhaust back to deck and shuffle
+   * - Start a fresh turn
+   */
+  resetBattle() {
+    this.enemy.maxHp += 10;
+    this.enemy.baseAttack += 2;
+
+    this.player.hp = Math.min(this.player.maxHp, this.player.hp + 15);
+
+    this.player.block = 0;
+    this.enemy.block = 0;
+
+    this.player.status = defaultStatus();
+    this.enemy.status = defaultStatus();
+
+    this.deck.push(...this.hand, ...this.discard, ...this.exhaust);
+    this.hand = [];
+    this.discard = [];
+    this.exhaust = [];
+    this._shuffle(this.deck);
+
+    this.enemy.hp = this.enemy.maxHp;
+    this.enemy.nextAttack = this._rollEnemyAttack();
+
+    this.startTurn();
   }
 
   /**

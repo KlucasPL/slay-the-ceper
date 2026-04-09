@@ -162,10 +162,61 @@ export class UIManager {
    * @param {'player_win'|'enemy_win'} outcome
    */
   _showEndGame(outcome) {
-    const msg = outcome === 'player_win'
-      ? 'Wygrana! Ceper pogubił sandały w panice!'
-      : 'Koniec gry! Tłum turystów poprosił Cię o zrobienie im grupowego zdjęcia.';
+    if (outcome === 'player_win') {
+      this._showVictoryOverlay();
+      return;
+    }
+    const msg = 'Koniec gry! Tłum turystów poprosił Cię o zrobienie im grupowego zdjęcia.';
     setTimeout(() => alert(msg), 100);
+  }
+
+  /**
+   * Displays a victory reward overlay with 3 random non-basic cards.
+   */
+  _showVictoryOverlay() {
+    const overlay = document.getElementById('victory-overlay');
+    const rewardCards = document.getElementById('reward-cards');
+    const choices = this._pickRewardCards(3);
+
+    rewardCards.innerHTML = '';
+    choices.forEach((cardId) => {
+      const card = cardLibrary[cardId];
+      const cardEl = document.createElement('button');
+      cardEl.type = 'button';
+      cardEl.className = 'reward-card';
+      cardEl.innerHTML = `
+        <div class="reward-cost">${card.cost} Osc.</div>
+        <div class="reward-emoji">${card.emoji}</div>
+        <div class="reward-name">${card.name}</div>
+        <div class="reward-desc">${card.desc}</div>
+      `;
+      cardEl.addEventListener('click', () => {
+        this.state.deck.push(cardId);
+        this.state.resetBattle();
+        overlay.classList.add('hidden');
+        overlay.setAttribute('aria-hidden', 'true');
+        document.getElementById('end-turn-btn').disabled = false;
+        this.updateUI();
+      });
+      rewardCards.appendChild(cardEl);
+    });
+
+    overlay.classList.remove('hidden');
+    overlay.setAttribute('aria-hidden', 'false');
+  }
+
+  /**
+   * @param {number} count
+   * @returns {string[]}
+   */
+  _pickRewardCards(count) {
+    const basic = new Set(['ciupaga', 'gasior']);
+    const pool = Object.keys(cardLibrary).filter((id) => !basic.has(id));
+    for (let i = pool.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [pool[i], pool[j]] = [pool[j], pool[i]];
+    }
+    return pool.slice(0, count);
   }
 
   /**

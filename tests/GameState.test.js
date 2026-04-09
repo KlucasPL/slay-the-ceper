@@ -492,4 +492,68 @@ describe('GameState', () => {
       expect(s.deck).toHaveLength(2);
     });
   });
+
+  // ── resetBattle ───────────────────────────────────────────────────────────
+  describe('resetBattle', () => {
+    it('scales enemy maxHp by 10 and baseAttack by 2', () => {
+      const s = freshState();
+      const oldMaxHp = s.enemy.maxHp;
+      const oldBaseAttack = s.enemy.baseAttack;
+      s.resetBattle();
+      expect(s.enemy.maxHp).toBe(oldMaxHp + 10);
+      expect(s.enemy.baseAttack).toBe(oldBaseAttack + 2);
+    });
+
+    it('heals player by 15 without exceeding maxHp', () => {
+      const s = freshState();
+      s.player.hp = 30;
+      s.resetBattle();
+      expect(s.player.hp).toBe(45);
+
+      s.player.hp = 49;
+      s.resetBattle();
+      expect(s.player.hp).toBe(50);
+    });
+
+    it('clears blocks and all statuses on both sides', () => {
+      const s = freshState();
+      s.player.block = 9;
+      s.enemy.block = 6;
+      s.player.status = { strength: 2, weak: 3, fragile: 1, next_double: true, energy_next_turn: 1 };
+      s.enemy.status = { strength: 4, weak: 2, fragile: 2, next_double: true, energy_next_turn: 0 };
+
+      s.resetBattle();
+
+      expect(s.player.block).toBe(0);
+      expect(s.enemy.block).toBe(0);
+      expect(s.player.status).toEqual({ strength: 0, weak: 0, fragile: 0, next_double: false, energy_next_turn: 0 });
+      expect(s.enemy.status).toEqual({ strength: 0, weak: 0, fragile: 0, next_double: false, energy_next_turn: 0 });
+    });
+
+    it('moves hand/discard/exhaust back to deck and starts next turn', () => {
+      const s = freshState();
+      s.deck = ['ciupaga', 'gasior', 'kierpce'];
+      s.hand = ['giewont', 'hej'];
+      s.discard = ['sandaly'];
+      s.exhaust = ['sernik'];
+
+      s.resetBattle();
+
+      expect(s.hand).toHaveLength(5);
+      expect(s.discard).toHaveLength(0);
+      expect(s.exhaust).toHaveLength(0);
+      expect(s.deck.length + s.hand.length).toBe(7);
+    });
+
+    it('restores enemy hp to new maxHp and rerolls intent', () => {
+      const s = freshState();
+      s.enemy.hp = 1;
+      s.resetBattle();
+      expect(s.enemy.hp).toBe(s.enemy.maxHp);
+      const min = s.enemy.baseAttack - 3;
+      const max = s.enemy.baseAttack + 2;
+      expect(s.enemy.nextAttack).toBeGreaterThanOrEqual(min);
+      expect(s.enemy.nextAttack).toBeLessThanOrEqual(max);
+    });
+  });
 });
