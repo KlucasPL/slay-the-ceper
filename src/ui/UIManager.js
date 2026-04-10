@@ -1,4 +1,5 @@
 import { cardLibrary } from '../data/cards.js';
+import { relicLibrary } from '../data/relics.js';
 
 export class UIManager {
   /**
@@ -26,6 +27,7 @@ export class UIManager {
   updateUI() {
     const { player, enemy, deck, discard } = this.state;
     this._renderEnemyPresentation();
+    this._renderRelics();
     document.getElementById('p-hp').textContent = player.hp;
     document.getElementById('p-max-hp').textContent = player.maxHp;
     document.getElementById('p-block').textContent = player.block;
@@ -47,10 +49,39 @@ export class UIManager {
   _renderEnemyPresentation() {
     const enemyName = document.getElementById('enemy-name');
     const enemySprite = document.getElementById('sprite-enemy');
+    const enemyId = this.state.enemy.id;
     enemyName.textContent = `${this.state.enemy.name} ${this.state.enemy.emoji}`;
-    if (enemySprite.innerHTML.trim() !== this.state.enemy.spriteSvg.trim()) {
+    if (enemySprite.dataset.enemyId !== enemyId) {
       enemySprite.innerHTML = this.state.enemy.spriteSvg;
+      enemySprite.dataset.enemyId = enemyId;
     }
+  }
+
+  /**
+   * Renders the collected relic bar with tooltip descriptions.
+   */
+  _renderRelics() {
+    const bar = document.getElementById('relic-bar');
+    if (!bar) return;
+
+    bar.innerHTML = '';
+    this.state.relics.forEach((relicId) => {
+      const relic = relicLibrary[relicId];
+      if (!relic) return;
+      const chip = document.createElement('button');
+      chip.className = 'relic-chip';
+      chip.type = 'button';
+      chip.textContent = relic.emoji;
+      chip.title = `${relic.name}: ${relic.desc}`;
+      chip.setAttribute('aria-label', `${relic.name}: ${relic.desc}`);
+
+      const tooltip = document.createElement('span');
+      tooltip.className = 'relic-tooltip';
+      tooltip.textContent = `${relic.name}: ${relic.desc}`;
+      chip.appendChild(tooltip);
+
+      bar.appendChild(chip);
+    });
   }
 
   /**
@@ -161,6 +192,9 @@ export class UIManager {
 
     const result = this.state.endTurn();
     this.updateUI();
+    if (result.enemyPassiveHeal) {
+      this._showFloatingText('sprite-enemy', result.enemyPassiveHeal.text, 'floating-heal');
+    }
 
     setTimeout(() => {
       this._triggerAnim('sprite-enemy', 'anim-attack-e', 300);
@@ -202,8 +236,28 @@ export class UIManager {
    */
   _showVictoryOverlay() {
     const overlay = document.getElementById('victory-overlay');
+    const rewardRelic = document.getElementById('reward-relic');
     const rewardCards = document.getElementById('reward-cards');
     const choices = this._pickRewardCards(3);
+    const relicChoice = this._pickRewardRelic();
+
+    rewardRelic.innerHTML = '';
+    if (relicChoice) {
+      const relic = relicLibrary[relicChoice];
+      const relicBtn = document.createElement('button');
+      relicBtn.type = 'button';
+      relicBtn.className = 'reward-relic-btn';
+      relicBtn.textContent = `Zabierz Pamiątkę: ${relic.name} ${relic.emoji}`;
+      relicBtn.title = relic.desc;
+      relicBtn.addEventListener('click', () => {
+        const added = this.state.addRelic(relicChoice);
+        if (!added) return;
+        relicBtn.disabled = true;
+        relicBtn.textContent = `Pamiątka zabrana: ${relic.name} ${relic.emoji}`;
+        this.updateUI();
+      });
+      rewardRelic.appendChild(relicBtn);
+    }
 
     rewardCards.innerHTML = '';
     choices.forEach((cardId) => {
@@ -247,6 +301,20 @@ export class UIManager {
   }
 
   /**
+   * @returns {string | null}
+   */
+  _pickRewardRelic() {
+    const relicChance = 0.33;
+    if (Math.random() >= relicChance) return null;
+
+    const available = Object.keys(relicLibrary).filter((id) => !this.state.relics.includes(id));
+    if (available.length === 0) return null;
+
+    const idx = Math.floor(Math.random() * available.length);
+    return available[idx];
+  }
+
+  /**
    * @param {string} elementId
    * @param {string} animClass
    * @param {number} [duration=400]
@@ -257,6 +325,25 @@ export class UIManager {
     void el.offsetWidth;
     el.classList.add(animClass);
     setTimeout(() => el.classList.remove(animClass), duration);
+  }
+
+  /**
+   * @param {string} elementId
+   * @param {string} text
+   * @param {string} extraClass
+   */
+  _showFloatingText(elementId, text, extraClass) {
+    const anchor = document.getElementById(elementId);
+    if (!anchor) return;
+
+    const float = document.createElement('div');
+    float.className = `floating-text ${extraClass}`;
+    float.textContent = text;
+    anchor.appendChild(float);
+
+    setTimeout(() => {
+      float.remove();
+    }, 1100);
   }
 
   /**

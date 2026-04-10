@@ -45,6 +45,16 @@ function freshBusiarzState() {
   return s;
 }
 
+/** @returns {GameState} */
+function freshBabaState() {
+  const s = new GameState({ ...mockPlayer }, enemyLibrary.baba);
+  s.player.energy = 3;
+  s.hand = [];
+  s.deck = [];
+  s.discard = [];
+  return s;
+}
+
 /**
  * @param {GameState} state
  * @param {import('../src/data/enemies.js').EnemyMoveDef} intent
@@ -464,6 +474,98 @@ describe('GameState', () => {
     });
   });
 
+  describe('relics', () => {
+    it('adds a relic only once', () => {
+      const s = freshState();
+      expect(s.addRelic('bat')).toBe(true);
+      expect(s.addRelic('bat')).toBe(false);
+      expect(s.relics).toEqual(['bat']);
+    });
+
+    it('zloty_oscypek increases max energy permanently', () => {
+      const s = freshState();
+      const before = s.player.maxEnergy;
+      s.addRelic('zloty_oscypek');
+      expect(s.player.maxEnergy).toBe(before + 1);
+    });
+
+    it('pas_zbojnicki increases max HP and heals 15 on pickup', () => {
+      const s = freshState();
+      s.player.hp = 20;
+      s.addRelic('pas_zbojnicki');
+      expect(s.player.maxHp).toBe(65);
+      expect(s.player.hp).toBe(35);
+    });
+
+    it('ciupaga_dziadka gives +1 strength at battle start', () => {
+      const s = freshState();
+      s.addRelic('ciupaga_dziadka');
+      s.player.status.strength = 0;
+      s.resetBattle();
+      expect(s.player.status.strength).toBe(1);
+    });
+
+    it('termos gives +6 block at battle start', () => {
+      const s = freshState();
+      s.addRelic('termos');
+      s.resetBattle();
+      expect(s.player.block).toBe(6);
+    });
+
+    it('klisza applies weak 1 to enemy at battle start', () => {
+      const s = freshState();
+      s.addRelic('klisza');
+      s.resetBattle();
+      expect(s.enemy.status.weak).toBe(1);
+    });
+
+    it('kierpce draws one extra card each turn', () => {
+      const s = freshState();
+      s.addRelic('kierpce');
+      s.deck = [...startingDeck, ...startingDeck];
+      s.hand = [];
+      s.startTurn();
+      expect(s.hand).toHaveLength(6);
+    });
+
+    it('bat adds +1 damage to each player attack', () => {
+      const s = freshState();
+      s.addRelic('bat');
+      s.hand = ['ciupaga'];
+      s.enemy.hp = 40;
+      s.enemy.block = 0;
+      s.playCard(0);
+      expect(s.enemy.hp).toBe(33);
+    });
+
+    it('sol adds +1 block to block cards', () => {
+      const s = freshState();
+      s.addRelic('sol');
+      s.hand = ['gasior'];
+      s.playCard(0);
+      expect(s.player.block).toBe(6);
+    });
+
+    it('parzenica relic heals for unspent energy at end turn', () => {
+      const s = freshState();
+      s.addRelic('parzenica');
+      s.player.hp = 30;
+      s.player.energy = 2;
+      setEnemyIntent(s, { type: 'block', name: 'Obserwuje', block: 0 });
+      s.endTurn();
+      expect(s.player.hp).toBe(34);
+    });
+
+    it('giewont relic reduces incoming damage by 1', () => {
+      const s = freshState();
+      s.addRelic('giewont');
+      s.player.hp = 50;
+      setEnemyIntent(s, { type: 'attack', name: 'Robi zdjęcie', damage: 8, hits: 1 });
+      s.endTurn();
+      expect(s.player.hp).toBe(43);
+    });
+  });
+
   describe('busiarz', () => {
     it('starts with Trąbienie na pieszych as first intent', () => {
       const s = freshBusiarzState();
@@ -508,6 +610,58 @@ describe('GameState', () => {
     it('intent text includes move name and total damage for multi-hit move', () => {
       const s = freshBusiarzState();
       expect(s.getEnemyIntentText()).toBe('Zamiar: Trąbienie na pieszych (⚔️ 6, 2x)');
+    });
+  });
+
+  describe('baba', () => {
+    it('starts with Darmowa Degustacja as first intent', () => {
+      const s = freshBabaState();
+      expect(s.enemy.currentIntent).toEqual({
+        type: 'block',
+        name: 'Darmowa Degustacja',
+        block: 15,
+      });
+    });
+
+    it('heals 5 HP at end of player turn if she took no HP damage', () => {
+      const s = freshBabaState();
+      s.enemy.hp = 40;
+      const result = s.endTurn();
+      expect(s.enemy.hp).toBe(45);
+      expect(result.enemyPassiveHeal).toEqual({ amount: 5, text: '+5 HP (Świeży łoscypek)' });
+    });
+
+    it('does not heal at end of player turn if she took HP damage', () => {
+      const s = freshBabaState();
+      s.enemy.hp = 40;
+      s.enemy.block = 0;
+      s.hand = ['ciupaga'];
+      s.playCard(0);
+      const hpAfterHit = s.enemy.hp;
+      const result = s.endTurn();
+      expect(s.enemy.hp).toBe(hpAfterHit);
+      expect(result.enemyPassiveHeal).toBeNull();
+    });
+
+    it('applies weak:2 on Cena z kosmosu', () => {
+      const s = freshBabaState();
+      s.endTurn();
+      expect(s.enemy.currentIntent).toEqual({
+        type: 'attack',
+        name: 'Cena z kosmosu',
+        damage: 6,
+        hits: 1,
+        applyWeak: 2,
+      });
+      s.endTurn();
+      expect(s.player.status.weak).toBe(2);
+    });
+
+    it('resets tookHpDamageThisTurn at startTurn', () => {
+      const s = freshBabaState();
+      s.enemy.tookHpDamageThisTurn = true;
+      s.startTurn();
+      expect(s.enemy.tookHpDamageThisTurn).toBe(false);
     });
   });
 
@@ -641,15 +795,11 @@ describe('GameState', () => {
       expect(s.enemy.baseAttack).toBe(oldBaseAttack + 2);
     });
 
-    it('heals player by 15 without exceeding maxHp', () => {
+    it('does not heal player between battles', () => {
       const s = freshState();
       s.player.hp = 30;
       s.resetBattle();
-      expect(s.player.hp).toBe(45);
-
-      s.player.hp = 49;
-      s.resetBattle();
-      expect(s.player.hp).toBe(50);
+      expect(s.player.hp).toBe(30);
     });
 
     it('clears blocks and all statuses on both sides', () => {
@@ -715,11 +865,25 @@ describe('GameState', () => {
 
     it('can load Busiarz from the enemy library after victory', () => {
       const s = freshState();
-      vi.spyOn(Math, 'random').mockReturnValue(0.99);
+      vi.spyOn(Math, 'random').mockReturnValue(0.5);
       s.resetBattle();
       expect(s.enemy.id).toBe('busiarz');
       expect(s.enemy.name).toBe('Wąsaty Staszek');
       expect(s.enemy.maxHp).toBe(45);
+    });
+
+    it('can load Babę from the enemy library after victory', () => {
+      const s = freshState();
+      vi.spyOn(Math, 'random').mockReturnValue(0.99);
+      s.resetBattle();
+      expect(s.enemy.id).toBe('baba');
+      expect(s.enemy.name).toBe('Gaździna Maryna');
+      expect(s.enemy.maxHp).toBe(65);
+    });
+
+    it('random pool includes exactly three enemy types', () => {
+      const ids = Object.keys(enemyLibrary).sort();
+      expect(ids).toEqual(['baba', 'busiarz', 'cepr']);
     });
   });
 });

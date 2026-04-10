@@ -29,7 +29,7 @@ export const cardLibrary = {
     emoji: '🏺',
     desc: 'Zyskujesz 5 Gardy.',
     effect(state) {
-      state.player.block += 5;
+      state.gainPlayerBlockFromCard(5);
       return { playerAnim: 'anim-block' };
     },
   },
@@ -118,7 +118,7 @@ export const cardLibrary = {
     emoji: '🧶',
     desc: 'Zyskujesz 7 Gardy. Na początku kolejnej tury +1 Oscypek.',
     effect(state) {
-      state.player.block += 7;
+      state.gainPlayerBlockFromCard(7);
       state.player.status.energy_next_turn += 1;
       return { playerAnim: 'anim-block' };
     },

@@ -73,3 +73,38 @@
 .anim-block {
   animation: anim-block 0.4s ease-out;
 }
+
+@keyframes anim-float-heal {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.95);
+  }
+  15% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-28px) scale(1.03);
+  }
+}
+
+.floating-text {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+  font-weight: 700;
+  font-size: 0.95rem;
+  text-shadow:
+    0 1px 0 #103c12,
+    0 0 8px rgba(0, 0, 0, 0.5);
+  z-index: 4;
+  white-space: nowrap;
+}
+
+.floating-heal {
+  color: #a7f36f;
+  animation: anim-float-heal 1.05s ease-out forwards;
+}

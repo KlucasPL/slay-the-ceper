@@ -1,13 +1,14 @@
 import { cardLibrary } from '../data/cards.js';
 import { enemyLibrary } from '../data/enemies.js';
+import { relicLibrary } from '../data/relics.js';
 
 /**
  * @typedef {import('../data/cards.js').StatusDef} StatusDef
  * @typedef {{ name: string, hp: number, maxHp: number, block: number, energy: number, maxEnergy: number, status: StatusDef }} PlayerState
  * @typedef {import('../data/enemies.js').EnemyMoveDef} EnemyMoveDef
- * @typedef {{ id: string, name: string, emoji: string, hp: number, maxHp: number, block: number, nextAttack: number, baseAttack: number, attackScale: number, status: StatusDef, spriteSvg: string, patternType: 'random'|'loop', pattern: EnemyMoveDef[], patternIndex: number, currentIntent: EnemyMoveDef }} EnemyState
+ * @typedef {{ id: string, name: string, emoji: string, hp: number, maxHp: number, block: number, nextAttack: number, baseAttack: number, attackScale: number, status: StatusDef, spriteSvg: string, patternType: 'random'|'loop', pattern: EnemyMoveDef[], patternIndex: number, currentIntent: EnemyMoveDef, tookHpDamageThisTurn: boolean }} EnemyState
  * @typedef {{ success: false } | { success: true, effect: import('../data/cards.js').CardEffectResult }} PlayCardResult
- * @typedef {{ enemyAttack: { raw: number, blocked: number, dealt: number } }} EndTurnResult
+ * @typedef {{ enemyAttack: { raw: number, blocked: number, dealt: number }, enemyPassiveHeal: { amount: number, text: string } | null }} EndTurnResult
  */
 
 /** @returns {StatusDef} */
@@ -35,8 +36,72 @@ export class GameState {
     this.discard = [];
     /** @type {string[]} Exhausted cards — removed from combat */
     this.exhaust = [];
+    /** @type {string[]} */
+    this.relics = [];
     /** @type {EnemyState} */
     this.enemy = this._createEnemyState(enemy);
+  }
+
+  /**
+   * @param {string} relicId
+   * @returns {boolean}
+   */
+  hasRelic(relicId) {
+    return this.relics.includes(relicId);
+  }
+
+  /**
+   * @param {string} relicId
+   * @returns {boolean}
+   */
+  addRelic(relicId) {
+    if (!relicLibrary[relicId] || this.hasRelic(relicId)) return false;
+
+    this.relics.push(relicId);
+
+    if (relicId === 'zloty_oscypek') {
+      this.player.maxEnergy += 1;
+      this.player.energy += 1;
+    }
+
+    if (relicId === 'pas_zbojnicki') {
+      this.player.maxHp += 15;
+      this.player.hp = Math.min(this.player.maxHp, this.player.hp + 15);
+    }
+
+    return true;
+  }
+
+  /**
+   * @returns {number}
+   */
+  _drawPerTurn() {
+    return 5 + (this.hasRelic('kierpce') ? 1 : 0);
+  }
+
+  /**
+   * Applies one-time effects that should trigger at the start of each battle.
+   */
+  _applyBattleStartRelics() {
+    if (this.hasRelic('ciupaga_dziadka')) {
+      this.player.status.strength += 1;
+    }
+
+    if (this.hasRelic('termos')) {
+      this.player.block += 6;
+    }
+
+    if (this.hasRelic('klisza')) {
+      this.enemy.status.weak += 1;
+    }
+  }
+
+  /**
+   * @param {number} amount
+   */
+  gainPlayerBlockFromCard(amount) {
+    const relicBonus = this.hasRelic('sol') ? 1 : 0;
+    this.player.block += amount + relicBonus;
   }
 
   /**
@@ -63,6 +128,7 @@ export class GameState {
       pattern,
       patternIndex: 0,
       currentIntent: { type: 'attack', name: 'Atak', damage: 0, hits: 1 },
+      tookHpDamageThisTurn: false,
     };
     enemyState.currentIntent = this._buildEnemyIntent(enemyState);
     enemyState.nextAttack =
@@ -85,6 +151,7 @@ export class GameState {
     this.deck = [...startingDeck];
     this._shuffle(this.deck);
     this.startTurn();
+    this._applyBattleStartRelics();
   }
 
   /**
@@ -170,6 +237,10 @@ export class GameState {
       dmg += sourceEntity.status.strength;
     }
 
+    if (sourceEntity === this.player && targetEntity === this.enemy && this.hasRelic('bat')) {
+      dmg += 1;
+    }
+
     if (
       sourceEntity === this.player &&
       targetEntity === this.enemy &&
@@ -177,6 +248,10 @@ export class GameState {
     ) {
       dmg *= 2;
       sourceEntity.status.next_double = false;
+    }
+
+    if (targetEntity === this.player && this.hasRelic('giewont')) {
+      dmg -= 1;
     }
 
     return Math.max(0, dmg);
@@ -200,10 +275,14 @@ export class GameState {
    * @returns {{ raw: number, blocked: number, dealt: number }}
    */
   _applyDamageToEnemy(dmg) {
+    const hpBefore = this.enemy.hp;
     const blocked = Math.min(this.enemy.block, dmg);
     const dealt = dmg - blocked;
     this.enemy.block -= blocked;
     this.enemy.hp -= dealt;
+    if (this.enemy.hp < hpBefore) {
+      this.enemy.tookHpDamageThisTurn = true;
+    }
     return { raw: dmg, blocked, dealt };
   }
 
@@ -242,6 +321,10 @@ export class GameState {
       raw += result.raw;
       blocked += result.blocked;
       dealt += result.dealt;
+    }
+
+    if (intent.applyWeak && intent.applyWeak > 0) {
+      this.player.status.weak += intent.applyWeak;
     }
 
     return { raw, blocked, dealt };
@@ -290,10 +373,11 @@ export class GameState {
    * Restores Oscypki (+energy_next_turn bonus), ticks player statuses, resets Garda, draws 5 cards.
    */
   startTurn() {
+    this.enemy.tookHpDamageThisTurn = false;
     this.player.energy = this.player.maxEnergy + this.player.status.energy_next_turn;
     this.player.status.energy_next_turn = 0;
     this.player.block = 0;
-    this._drawCards(5);
+    this._drawCards(this._drawPerTurn());
   }
 
   /**
@@ -324,11 +408,27 @@ export class GameState {
    * @returns {EndTurnResult}
    */
   endTurn() {
+    if (this.hasRelic('parzenica') && this.player.energy > 0) {
+      const healAmount = this.player.energy * 2;
+      this.player.hp = Math.min(this.player.maxHp, this.player.hp + healAmount);
+    }
+
     this.discard.push(...this.hand);
     this.hand = [];
 
     // End of player turn.
     this._tickStatus(this.player.status);
+
+    /** @type {{ amount: number, text: string } | null} */
+    let enemyPassiveHeal = null;
+    if (this.enemy.id === 'baba' && !this.enemy.tookHpDamageThisTurn) {
+      const hpBefore = this.enemy.hp;
+      this.enemy.hp = Math.min(this.enemy.maxHp, this.enemy.hp + 5);
+      const healedAmount = this.enemy.hp - hpBefore;
+      if (healedAmount > 0) {
+        enemyPassiveHeal = { amount: healedAmount, text: `+${healedAmount} HP (Świeży łoscypek)` };
+      }
+    }
 
     // Enemy loses old block at the start of its own turn, before taking a new action.
     this.enemy.block = 0;
@@ -344,7 +444,7 @@ export class GameState {
     }
     this._refreshEnemyIntent();
 
-    return { enemyAttack };
+    return { enemyAttack, enemyPassiveHeal };
   }
 
   /**
@@ -357,8 +457,6 @@ export class GameState {
    */
   resetBattle() {
     this.battleWins += 1;
-
-    this.player.hp = Math.min(this.player.maxHp, this.player.hp + 15);
 
     this.player.block = 0;
 
@@ -373,6 +471,7 @@ export class GameState {
     this.enemy = this._createEnemyState(this._pickRandomEnemyDef());
 
     this.startTurn();
+    this._applyBattleStartRelics();
   }
 
   /**
