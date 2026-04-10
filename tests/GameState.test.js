@@ -1059,7 +1059,7 @@ describe('GameState', () => {
       vi.spyOn(Math, 'random').mockReturnValue(0.5);
       s.resetBattle();
       expect(s.enemy.id).toBe('busiarz');
-      expect(s.enemy.name).toBe('Wąsaty Staśko');
+      expect(s.enemy.name).toBe('Wąsaty Busiarz');
       expect(s.enemy.maxHp).toBe(35);
     });
 

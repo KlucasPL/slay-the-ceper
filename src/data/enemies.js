@@ -106,7 +106,7 @@ export const enemyLibrary = {
   },
   busiarz: {
     id: 'busiarz',
-    name: 'Wąsaty Staśko',
+    name: 'Wąsaty Busiarz',
     emoji: '🚐',
     hp: 35,
     maxHp: 35,
