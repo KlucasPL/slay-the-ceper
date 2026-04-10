@@ -7,7 +7,7 @@ import { relicLibrary } from '../data/relics.js';
  * @typedef {{ name: string, hp: number, maxHp: number, block: number, energy: number, maxEnergy: number, status: StatusDef }} PlayerState
  * @typedef {import('../data/enemies.js').EnemyMoveDef} EnemyMoveDef
  * @typedef {'fight' | 'shop' | 'treasure' | 'campfire' | 'boss'} MapNodeType
- * @typedef {{ type: MapNodeType, label: string, emoji: string, connections: number[] }} MapNode
+ * @typedef {{ x: number, y: number, type: MapNodeType, label: string, emoji: string, connections: number[] }} MapNode
  * @typedef {{ id: string, name: string, emoji: string, hp: number, maxHp: number, block: number, nextAttack: number, baseAttack: number, status: StatusDef, spriteSvg: string, patternType: 'random'|'loop', pattern: EnemyMoveDef[], patternIndex: number, currentIntent: EnemyMoveDef, tookHpDamageThisTurn: boolean }} EnemyState
  * @typedef {{ success: false } | { success: true, effect: import('../data/cards.js').CardEffectResult }} PlayCardResult
  * @typedef {{ enemyAttack: { raw: number, blocked: number, dealt: number }, enemyPassiveHeal: { amount: number, text: string } | null }} EndTurnResult
@@ -43,12 +43,14 @@ export class GameState {
     this.relics = [];
     /** @type {Record<string, number>} */
     this.cardDamageBonus = {};
-    /** @type {MapNode[][]} */
+    /** @type {(MapNode | null)[][]} */
     this.map = [];
     /** @type {number} */
     this.currentLevel = 0;
     /** @type {number} */
     this.currentNodeIndex = 0;
+    /** @type {{ x: number, y: number }} */
+    this.currentNode = { x: 0, y: 0 };
     /** @type {boolean} */
     this.pendingBattleDutki = true;
     /** @type {boolean} */
@@ -57,39 +59,56 @@ export class GameState {
     this.shopStock = { cards: [], relic: null };
     /** @type {string} */
     this.lastShopMessage = '';
+    /** @type {'title' | 'map' | 'battle'} */
+    this.currentScreen = 'title';
+    /** @type {boolean} */
+    this.hasStartedFirstBattle = false;
     /** @type {EnemyState} */
     this.enemy = this._createEnemyState(enemy);
     this.generateMap();
   }
 
-  /** @returns {MapNode[][]} */
+  /** @returns {(MapNode | null)[][]} */
   generateMap() {
-    /** @type {MapNode[][]} */
-    const generated = [];
-    generated.push([this._createMapNode('fight')]);
+    /** @type {(MapNode | null)[][]} */
+    const generated = Array.from({ length: 10 }, () => Array(3).fill(null));
+    generated[0][1] = this._createMapNode('fight', 1, 0);
 
-    for (let level = 1; level <= 4; level++) {
-      const count = 2 + Math.floor(Math.random() * 2);
-      const nodes = Array.from({ length: count }, () => this._createMapNode(this._rollMidNodeType()));
-      generated.push(nodes);
+    for (let y = 1; y <= 7; y++) {
+      for (let x = 0; x < 3; x++) {
+        if (Math.random() < 0.7) {
+          generated[y][x] = this._createMapNode(this._rollMidNodeType(), x, y);
+        }
+      }
+      if (!generated[y].some(Boolean)) {
+        const forcedX = Math.floor(Math.random() * 3);
+        generated[y][forcedX] = this._createMapNode(this._rollMidNodeType(), forcedX, y);
+      }
     }
 
-    generated.push([this._createMapNode('campfire')]);
-    generated.push([this._createMapNode('boss')]);
+    generated[8][1] = this._createMapNode('campfire', 1, 8);
+    generated[9][1] = this._createMapNode('boss', 1, 9);
 
-    this._connectMapLevels(generated);
+    this._seedRequiredPaths(generated);
+    this._connectOptionalGridNodes(generated);
+    this._ensureGuaranteedPathRewards(generated);
+    this._enforceSpecialNodeLimits(generated);
 
     this.map = generated;
     this.currentLevel = 0;
-    this.currentNodeIndex = 0;
+    this.currentNodeIndex = 1;
+    this.currentNode = { x: this.currentNodeIndex, y: 0 };
+    this.hasStartedFirstBattle = false;
     return this.map;
   }
 
   /**
    * @param {MapNodeType} type
+   * @param {number} x
+   * @param {number} y
    * @returns {MapNode}
    */
-  _createMapNode(type) {
+  _createMapNode(type, x, y) {
     const meta = {
       fight: { label: 'Walka', emoji: '⚔️' },
       shop: { label: 'Sklep', emoji: '🛖' },
@@ -97,7 +116,7 @@ export class GameState {
       campfire: { label: 'Watra', emoji: '🔥' },
       boss: { label: 'Boss', emoji: '💀' },
     };
-    return { ...meta[type], type, connections: [] };
+    return { ...meta[type], x, y, type, connections: [] };
   }
 
   /** @returns {MapNodeType} */
@@ -109,37 +128,327 @@ export class GameState {
   }
 
   /**
-   * @param {MapNode[][]} map
+   * @param {(MapNode | null)[][]} map
    */
-  _connectMapLevels(map) {
-    for (let level = 0; level < map.length - 1; level++) {
-      const currentLevel = map[level];
-      const nextLevel = map[level + 1];
+  _seedRequiredPaths(map) {
+    const startNode = map[0][1];
+    if (!startNode) return;
+    const campfireLevel = map.length - 2;
+    const lastMidLevel = campfireLevel - 1;
 
-      currentLevel.forEach((node) => {
-        const firstTarget = Math.floor(Math.random() * nextLevel.length);
-        node.connections = [firstTarget];
+    const firstTargets = [0, 1, 2];
+    this._shuffle(firstTargets);
+    const branchCount = 2 + Math.floor(Math.random() * 2);
+    const seededTargets = firstTargets.slice(0, branchCount).sort((a, b) => a - b);
 
-        if (nextLevel.length > 1 && Math.random() < 0.5) {
-          let secondTarget = Math.floor(Math.random() * nextLevel.length);
-          while (secondTarget === firstTarget) {
-            secondTarget = Math.floor(Math.random() * nextLevel.length);
+    seededTargets.forEach((targetX) => {
+      if (!map[1][targetX]) {
+        map[1][targetX] = this._createMapNode(this._rollMidNodeType(), targetX, 1);
+      }
+      this._linkNode(startNode, targetX);
+    });
+
+    const usedPerLevel = new Map();
+    usedPerLevel.set(1, new Set(seededTargets));
+
+    seededTargets.forEach((startX, branchIndex) => {
+      let currentX = startX;
+      for (let y = 1; y < campfireLevel; y++) {
+        let nextX;
+        if (y === lastMidLevel) {
+          nextX = 1;
+        } else {
+          const options = this._getAdjacentColumns(currentX);
+          const used = usedPerLevel.get(y + 1) ?? new Set();
+          const freshOptions = options.filter((x) => !used.has(x));
+          const pool = freshOptions.length > 0 ? freshOptions : options;
+          nextX = pool[Math.floor(Math.random() * pool.length)];
+        }
+
+        if (!map[y + 1][nextX]) {
+          const nextType = y + 1 === campfireLevel ? 'campfire' : this._rollMidNodeType();
+          map[y + 1][nextX] = this._createMapNode(nextType, nextX, y + 1);
+        }
+
+        this._linkNode(map[y][currentX], nextX);
+
+        if (!usedPerLevel.has(y + 1)) {
+          usedPerLevel.set(y + 1, new Set());
+        }
+        usedPerLevel.get(y + 1).add(nextX);
+        currentX = nextX;
+      }
+
+      if (branchIndex === 0) {
+        this._setNodeType(map[1][startX], 'shop');
+      }
+    });
+
+    this._pruneUnreachableNodes(map);
+  }
+
+  /**
+   * @param {(MapNode | null)[][]} map
+   */
+  _connectOptionalGridNodes(map) {
+    const campfireLevel = map.length - 2;
+    const lastMidLevel = campfireLevel - 1;
+
+    for (let y = 1; y <= lastMidLevel; y++) {
+      for (let x = 0; x < 3; x++) {
+        const node = map[y][x];
+        if (!node || this._hasInbound(map, y, x)) continue;
+
+        const prevCandidates = this._getAdjacentColumns(x).filter((prevX) => !!map[y - 1][prevX]);
+        const nextCandidates =
+          y === lastMidLevel
+            ? [1]
+            : this._getAdjacentColumns(x).filter((nextX) => !!map[y + 1][nextX]);
+
+        if (prevCandidates.length === 0 || nextCandidates.length === 0) {
+          map[y][x] = null;
+          continue;
+        }
+
+        const sourceX = prevCandidates[Math.floor(Math.random() * prevCandidates.length)];
+        this._linkNode(map[y - 1][sourceX], x);
+        const targetX = nextCandidates[Math.floor(Math.random() * nextCandidates.length)];
+        this._linkNode(node, targetX);
+      }
+    }
+
+    for (let y = 0; y <= lastMidLevel; y++) {
+      for (let x = 0; x < 3; x++) {
+        const node = map[y][x];
+        if (!node) continue;
+
+        const availableTargets =
+          y === lastMidLevel
+            ? [1]
+            : this._getAdjacentColumns(x).filter((nextX) => !!map[y + 1][nextX]);
+        if (availableTargets.length === 0) continue;
+
+        if (node.connections.length === 0) {
+          this._linkNode(node, availableTargets[Math.floor(Math.random() * availableTargets.length)]);
+        }
+
+        if (y < lastMidLevel && availableTargets.length > 1 && Math.random() < 0.45) {
+          const extraTargets = availableTargets.filter((targetX) => !node.connections.includes(targetX));
+          if (extraTargets.length > 0) {
+            this._linkNode(node, extraTargets[Math.floor(Math.random() * extraTargets.length)]);
           }
-          node.connections.push(secondTarget);
         }
+      }
+    }
+
+    if (map[campfireLevel][1]) {
+      map[campfireLevel][1].connections = [1];
+    }
+  }
+
+  /**
+   * @param {(MapNode | null)[][]} map
+   */
+  _ensureGuaranteedPathRewards(map) {
+    const reachable = this._getReachableCoordinates(map);
+    const reachableNodes = reachable
+      .map(({ x, y }) => map[y][x])
+      .filter((node) => node && node.y > 0 && node.y < map.length - 2);
+
+    const shopNode = reachableNodes.find((node) => node.type === 'shop');
+    const treasureNode = reachableNodes.find((node) => node.type === 'treasure');
+    if (shopNode && treasureNode) return;
+
+    const rewardCandidates = reachableNodes.filter((node) => node.y <= map.length - 3);
+    if (!shopNode) {
+      const target = rewardCandidates[0];
+      if (target) this._setNodeType(target, 'shop');
+    }
+
+    if (!treasureNode) {
+      const target = rewardCandidates.find((node) => node.type !== 'shop') ?? rewardCandidates[1];
+      if (target) this._setNodeType(target, 'treasure');
+    }
+  }
+
+  /**
+   * @param {(MapNode | null)[][]} map
+   */
+  _enforceSpecialNodeLimits(map) {
+    const reachableKeys = new Set(
+      this._getReachableCoordinates(map).map(({ x, y }) => `${x},${y}`),
+    );
+    const protectedKeys = new Set();
+
+    const reachableRewardNodes = [...reachableKeys]
+      .map((key) => {
+        const [x, y] = key.split(',').map(Number);
+        return map[y]?.[x] ?? null;
+      })
+      .filter((node) => node && node.y > 0 && node.y < map.length - 2);
+
+    const guaranteedShop = reachableRewardNodes.find((node) => node.type === 'shop');
+    const guaranteedTreasure = reachableRewardNodes.find((node) => node.type === 'treasure');
+
+    if (guaranteedShop) protectedKeys.add(`${guaranteedShop.x},${guaranteedShop.y}`);
+    if (guaranteedTreasure) protectedKeys.add(`${guaranteedTreasure.x},${guaranteedTreasure.y}`);
+
+    this._trimNodeType(map, 'treasure', 1, protectedKeys, reachableKeys);
+    this._trimNodeType(map, 'shop', 2, protectedKeys, reachableKeys);
+  }
+
+  /**
+   * @param {(MapNode | null)[][]} map
+   * @param {MapNodeType} type
+   * @param {number} maxCount
+   * @param {Set<string>} protectedKeys
+   * @param {Set<string>} reachableKeys
+   */
+  _trimNodeType(map, type, maxCount, protectedKeys, reachableKeys) {
+    const nodes = [];
+
+    for (let y = 1; y < map.length - 2; y++) {
+      for (let x = 0; x < 3; x++) {
+        const node = map[y][x];
+        if (node?.type === type) {
+          nodes.push(node);
+        }
+      }
+    }
+
+    if (nodes.length <= maxCount) return;
+
+    const removable = nodes
+      .filter((node) => !protectedKeys.has(`${node.x},${node.y}`))
+      .sort((left, right) => {
+        const leftReachable = reachableKeys.has(`${left.x},${left.y}`) ? 1 : 0;
+        const rightReachable = reachableKeys.has(`${right.x},${right.y}`) ? 1 : 0;
+        if (leftReachable !== rightReachable) {
+          return leftReachable - rightReachable;
+        }
+        return right.y - left.y;
       });
 
-      nextLevel.forEach((_, targetIndex) => {
-        const hasInbound = currentLevel.some((node) => node.connections.includes(targetIndex));
-        if (!hasInbound) {
-          const sourceIndex = Math.floor(Math.random() * currentLevel.length);
-          currentLevel[sourceIndex].connections.push(targetIndex);
+    let overflow = nodes.length - maxCount;
+    removable.forEach((node) => {
+      if (overflow <= 0) return;
+      this._setNodeType(node, 'fight');
+      overflow -= 1;
+    });
+  }
+
+  /**
+   * @param {(MapNode | null)[][]} map
+   * @returns {Array<{ x: number, y: number }>}
+   */
+  _getReachableCoordinates(map) {
+    const visited = new Set();
+    const queue = [{ x: 1, y: 0 }];
+    const output = [];
+
+    while (queue.length > 0) {
+      const current = queue.shift();
+      const key = `${current.x},${current.y}`;
+      if (visited.has(key)) continue;
+      visited.add(key);
+
+      const node = map[current.y]?.[current.x];
+      if (!node) continue;
+      output.push(current);
+
+      node.connections.forEach((targetX) => {
+        if (map[current.y + 1]?.[targetX]) {
+          queue.push({ x: targetX, y: current.y + 1 });
         }
       });
+    }
 
-      currentLevel.forEach((node) => {
-        node.connections = [...new Set(node.connections)].sort((a, b) => a - b);
-      });
+    return output;
+  }
+
+  /**
+   * @param {MapNode | null} node
+   * @param {MapNodeType} type
+   */
+  _setNodeType(node, type) {
+    if (!node) return;
+    const meta = {
+      fight: { label: 'Walka', emoji: '⚔️' },
+      shop: { label: 'Sklep', emoji: '🛖' },
+      treasure: { label: 'Skarb', emoji: '🎁' },
+      campfire: { label: 'Watra', emoji: '🔥' },
+      boss: { label: 'Boss', emoji: '💀' },
+    };
+    node.type = type;
+    node.label = meta[type].label;
+    node.emoji = meta[type].emoji;
+  }
+
+  /**
+   * @param {number} x
+   * @returns {number[]}
+   */
+  _getAdjacentColumns(x) {
+    return [x - 1, x, x + 1].filter((candidate) => candidate >= 0 && candidate <= 2);
+  }
+
+  /**
+   * @param {number} x
+   * @returns {number}
+   */
+  _pickNextColumn(x) {
+    const options = this._getAdjacentColumns(x);
+    return options[Math.floor(Math.random() * options.length)];
+  }
+
+  /**
+   * @param {MapNode | null} node
+   * @param {number} targetX
+   */
+  _linkNode(node, targetX) {
+    if (!node) return;
+    if (!node.connections.includes(targetX)) {
+      node.connections.push(targetX);
+      node.connections.sort((a, b) => a - b);
+    }
+  }
+
+  /**
+   * @param {(MapNode | null)[][]} map
+   * @param {number} y
+   * @param {number} x
+   * @returns {boolean}
+   */
+  _hasInbound(map, y, x) {
+    if (y === 0) return true;
+    return map[y - 1].some((node) => node?.connections.includes(x));
+  }
+
+  /**
+   * @param {(MapNode | null)[][]} map
+   */
+  _pruneUnreachableNodes(map) {
+    let changed = true;
+    while (changed) {
+      changed = false;
+      for (let y = 1; y <= map.length - 3; y++) {
+        for (let x = 0; x < 3; x++) {
+          const node = map[y][x];
+          if (!node) continue;
+          if (!this._hasInbound(map, y, x)) {
+            map[y][x] = null;
+            changed = true;
+          }
+        }
+      }
+
+      for (let y = 0; y <= map.length - 3; y++) {
+        for (let x = 0; x < 3; x++) {
+          const node = map[y][x];
+          if (!node) continue;
+          node.connections = node.connections.filter((targetX) => !!map[y + 1]?.[targetX]);
+        }
+      }
     }
   }
 
@@ -155,6 +464,7 @@ export class GameState {
    * @returns {boolean}
    */
   canTravelTo(level, nodeIndex) {
+    if (!this.hasStartedFirstBattle) return false;
     if (level !== this.currentLevel + 1) return false;
     const nextLevel = this.map[level];
     if (!nextLevel || !nextLevel[nodeIndex]) return false;
@@ -172,6 +482,7 @@ export class GameState {
     if (!this.canTravelTo(level, nodeIndex)) return null;
     this.currentLevel = level;
     this.currentNodeIndex = nodeIndex;
+    this.currentNode = { x: nodeIndex, y: level };
     return this.getCurrentMapNode();
   }
 

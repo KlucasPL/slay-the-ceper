@@ -7,6 +7,34 @@
     <script type="module" src="/src/main.js"></script>
   </head>
   <body>
+    <div id="title-screen" class="title-screen" aria-hidden="false">
+      <div class="title-backdrop">
+        <svg class="title-mountains" viewBox="0 0 1440 900" preserveAspectRatio="none" aria-hidden="true">
+          <defs>
+            <linearGradient id="skyGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#173328" />
+              <stop offset="60%" stop-color="#214636" />
+              <stop offset="100%" stop-color="#10241d" />
+            </linearGradient>
+          </defs>
+          <rect width="1440" height="900" fill="url(#skyGradient)" />
+          <path d="M0 620 L180 430 L310 560 L460 350 L630 610 L760 420 L930 640 L1090 370 L1280 610 L1440 450 L1440 900 L0 900 Z" fill="#274a3c" />
+          <path d="M0 690 L130 560 L250 650 L410 470 L590 720 L760 560 L910 730 L1090 520 L1240 700 L1440 600 L1440 900 L0 900 Z" fill="#1b352b" />
+          <path d="M0 780 L160 700 L320 760 L470 650 L670 810 L830 700 L1010 830 L1170 700 L1320 800 L1440 740 L1440 900 L0 900 Z" fill="#13271f" />
+        </svg>
+      </div>
+      <div class="title-panel">
+        <p class="title-kicker">Góralska przygoda dla cierpliwych</p>
+        <h1 class="title-main">USIECZ CEPRA: WYPRAWA NA GIEWONT</h1>
+        <p class="title-subtitle">Pomóż Jędrkowi odzyskać spokój na szlaku!</p>
+        <button id="title-start-btn" class="title-start-btn">ROZPOCZNIJ PRZYGODĘ</button>
+        <div class="title-charms" aria-hidden="true">
+          <span>🪓</span>
+          <span>👞</span>
+        </div>
+      </div>
+    </div>
+
     <div id="game-wrapper">
       <h1>Usiec Cepra (ang. Slay the Ceper)</h1>
       <div class="relics-wrap" aria-label="Zebrane Pamiątki">

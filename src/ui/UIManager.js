@@ -19,6 +19,9 @@ export class UIManager {
    * Binds DOM events and performs the initial render.
    */
   init() {
+    document
+      .getElementById('title-start-btn')
+      .addEventListener('click', () => this._handleTitleStart());
     document.getElementById('end-turn-btn').addEventListener('click', () => this._handleEndTurn());
     document
       .getElementById('map-continue-btn')
@@ -44,6 +47,7 @@ export class UIManager {
     window.addEventListener('resize', () => this._scaleGame());
     this._scaleGame();
     this.updateUI();
+    this._syncScreenState();
   }
 
   /**
@@ -69,6 +73,33 @@ export class UIManager {
     this._renderStatuses('p-statuses', player.status);
     this._renderStatuses('e-statuses', enemy.status);
     this._renderHand();
+    this._syncScreenState();
+  }
+
+  _handleTitleStart() {
+    const titleScreen = document.getElementById('title-screen');
+    if (!titleScreen) return;
+
+    this.state.generateMap();
+    this.state.hasStartedFirstBattle = false;
+    this.state.currentScreen = 'map';
+    this.mapMessage = '';
+    this._openMapOverlay();
+    titleScreen.classList.add('is-hiding');
+    titleScreen.setAttribute('aria-hidden', 'true');
+
+    setTimeout(() => {
+      titleScreen.classList.add('hidden');
+    }, 450);
+  }
+
+  _syncScreenState() {
+    const titleScreen = document.getElementById('title-screen');
+    if (!titleScreen) return;
+
+    const isTitle = this.state.currentScreen === 'title';
+    titleScreen.classList.toggle('hidden', !isTitle && !titleScreen.classList.contains('is-hiding'));
+    titleScreen.setAttribute('aria-hidden', String(!isTitle));
   }
 
   /**
@@ -407,6 +438,7 @@ export class UIManager {
     message.textContent = this.mapMessage;
 
     const reachable = new Set(this.state.getReachableNodes());
+    const canStartFirstFight = !this.state.hasStartedFirstBattle && this.state.currentLevel === 0;
     /** @type {HTMLElement[][]} */
     const nodeButtons = [];
 
@@ -416,6 +448,14 @@ export class UIManager {
       nodeButtons[levelIndex] = [];
 
       levelNodes.forEach((node, nodeIndex) => {
+        if (!node) {
+          const placeholder = document.createElement('div');
+          placeholder.className = 'map-node-placeholder';
+          row.appendChild(placeholder);
+          nodeButtons[levelIndex][nodeIndex] = null;
+          return;
+        }
+
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'map-node-btn';
@@ -423,7 +463,12 @@ export class UIManager {
         const isCurrent =
           levelIndex === this.state.currentLevel && nodeIndex === this.state.currentNodeIndex;
         const isDone = levelIndex < this.state.currentLevel;
-        const isSelectable = levelIndex === this.state.currentLevel + 1 && reachable.has(nodeIndex);
+        const isInitialFight = canStartFirstFight && isCurrent && node.type === 'fight';
+        const isSelectable =
+          isInitialFight ||
+          (this.state.hasStartedFirstBattle &&
+            levelIndex === this.state.currentLevel + 1 &&
+            reachable.has(nodeIndex));
 
         if (isCurrent) btn.classList.add('current');
         if (isDone) btn.classList.add('done');
@@ -441,7 +486,7 @@ export class UIManager {
         `;
 
         row.appendChild(btn);
-        nodeButtons[levelIndex].push(btn);
+        nodeButtons[levelIndex][nodeIndex] = btn;
       });
 
       levels.appendChild(row);
@@ -480,33 +525,50 @@ export class UIManager {
           const x2 = toRect.left - treeRect.left + toRect.width / 2;
           const y2 = toRect.top - treeRect.top + toRect.height / 2;
 
-          const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-          line.setAttribute('x1', String(x1));
-          line.setAttribute('y1', String(y1));
-          line.setAttribute('x2', String(x2));
-          line.setAttribute('y2', String(y2));
-          line.classList.add('map-link');
+          const curve = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+          const controlY = (y1 + y2) / 2;
+          curve.setAttribute('d', `M ${x1} ${y1} Q ${x1} ${controlY} ${x2} ${y2}`);
+          curve.classList.add('map-link');
 
           const isCurrent =
             level === this.state.currentLevel && nodeIndex === this.state.currentNodeIndex;
           const isReachable =
-            level + 1 === this.state.currentLevel + 1 && this.state.getReachableNodes().includes(targetIndex);
+            this.state.hasStartedFirstBattle &&
+            level + 1 === this.state.currentLevel + 1 &&
+            this.state.getReachableNodes().includes(targetIndex);
           if (isCurrent && isReachable) {
-            line.classList.add('active');
+            curve.classList.add('active');
           }
 
-          svg.appendChild(line);
+          svg.appendChild(curve);
         });
       });
     }
   }
 
   _handleMapNodeSelect(level, nodeIndex) {
+    const isInitialFight =
+      !this.state.hasStartedFirstBattle &&
+      level === 0 &&
+      this.state.currentLevel === 0 &&
+      nodeIndex === this.state.currentNodeIndex;
+
+    if (isInitialFight) {
+      this.state.hasStartedFirstBattle = true;
+      this.state.currentScreen = 'battle';
+      this._hideOverlay('map-overlay');
+      document.getElementById('end-turn-btn').disabled = false;
+      this.updateUI();
+      return;
+    }
+
     const node = this.state.travelTo(level, nodeIndex);
     if (!node) return;
     this.mapMessage = '';
 
     if (node.type === 'fight' || node.type === 'boss') {
+      this.state.hasStartedFirstBattle = true;
+      this.state.currentScreen = 'battle';
       this.state.resetBattle();
       this._hideOverlay('map-overlay');
       document.getElementById('end-turn-btn').disabled = false;
@@ -515,15 +577,18 @@ export class UIManager {
     }
 
     if (node.type === 'shop') {
+      this.state.currentScreen = 'map';
       this._openShop();
       return;
     }
 
     if (node.type === 'treasure') {
+      this.state.currentScreen = 'map';
       this._handleTreasureNode();
       return;
     }
 
+    this.state.currentScreen = 'map';
     this._openCampfire();
   }
 
@@ -532,6 +597,8 @@ export class UIManager {
     if (!isOnBoss) return;
 
     this.state.generateMap();
+    this.state.hasStartedFirstBattle = true;
+    this.state.currentScreen = 'battle';
     this.mapMessage = '';
     this.state.resetBattle();
     this._hideOverlay('map-overlay');

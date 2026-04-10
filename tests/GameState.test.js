@@ -68,6 +68,11 @@ function setEnemyIntent(state, intent) {
 describe('GameState', () => {
   // ── initGame ──────────────────────────────────────────────────────────────
   describe('initGame', () => {
+    it('starts on the title screen', () => {
+      const s = new GameState({ ...mockPlayer }, { ...mockEnemy });
+      expect(s.currentScreen).toBe('title');
+    });
+
     it('draws 5 cards to hand', () => {
       const s = makeState();
       expect(s.hand).toHaveLength(5);
@@ -583,32 +588,83 @@ describe('GameState', () => {
     it('starts with 50 Dutki and generated map', () => {
       const s = freshState();
       expect(s.dutki).toBe(50);
-      expect(s.map).toHaveLength(7);
-      expect(s.map[0]).toHaveLength(1);
-      expect(s.map[0]?.[0]?.type).toBe('fight');
-      expect(s.map[1].length).toBeGreaterThanOrEqual(2);
-      expect(s.map[1].length).toBeLessThanOrEqual(3);
-      expect(s.map[2].length).toBeGreaterThanOrEqual(2);
-      expect(s.map[2].length).toBeLessThanOrEqual(3);
-      expect(s.map[3].length).toBeGreaterThanOrEqual(2);
-      expect(s.map[3].length).toBeLessThanOrEqual(3);
-      expect(s.map[4].length).toBeGreaterThanOrEqual(2);
-      expect(s.map[4].length).toBeLessThanOrEqual(3);
-      expect(s.map[5]).toHaveLength(1);
-      expect(s.map[5]?.[0]?.type).toBe('campfire');
-      expect(s.map[6]).toHaveLength(1);
-      expect(s.map[6]?.[0]?.type).toBe('boss');
+      expect(s.map).toHaveLength(10);
+      s.map.forEach((level) => {
+        expect(level).toHaveLength(3);
+      });
 
-      // Every node above level 0 must have at least one incoming connection.
-      for (let level = 1; level < s.map.length; level++) {
-        const inbound = new Set();
-        s.map[level - 1].forEach((node) => {
-          node.connections.forEach((idx) => inbound.add(idx));
-        });
-        s.map[level].forEach((_, idx) => {
-          expect(inbound.has(idx)).toBe(true);
+      const startNodes = s.map[0].filter(Boolean);
+      expect(startNodes).toHaveLength(1);
+      expect(s.map[0][0]).toBeNull();
+      expect(s.map[0][1]?.type).toBe('fight');
+      expect(s.map[0][2]).toBeNull();
+      startNodes.forEach((node) => {
+        expect(node?.type).toBe('fight');
+        expect(node?.y).toBe(0);
+        expect(node?.x).toBe(1);
+      });
+      expect(s.map[0][1]?.connections.length).toBeGreaterThanOrEqual(2);
+
+      for (let level = 1; level <= 7; level++) {
+        expect(s.map[level].some(Boolean)).toBe(true);
+      }
+
+      expect(s.map[8][1]?.type).toBe('campfire');
+      expect(s.map[9][1]?.type).toBe('boss');
+
+      for (let level = 0; level < s.map.length - 1; level++) {
+        s.map[level].forEach((node, x) => {
+          if (!node) return;
+          expect(node.x).toBe(x);
+          expect(node.y).toBe(level);
+          if (level === 6) return;
+          expect(node.connections.length).toBeGreaterThan(0);
+          node.connections.forEach((targetX) => {
+            expect(Math.abs(targetX - x)).toBeLessThanOrEqual(1);
+            expect(s.map[level + 1][targetX]).not.toBeNull();
+          });
         });
       }
+
+      for (let level = 1; level < s.map.length; level++) {
+        s.map[level].forEach((node, x) => {
+          if (!node) return;
+          const hasInbound = s.map[level - 1].some((prevNode) => prevNode?.connections.includes(x));
+          expect(hasInbound).toBe(true);
+        });
+      }
+
+      s.map[7].forEach((node) => {
+        if (!node) return;
+        expect(node.connections).toEqual([1]);
+      });
+
+      const queue = [{ x: 1, y: 0 }];
+      const seen = new Set();
+      const reachableTypes = new Set();
+      while (queue.length > 0) {
+        const current = queue.shift();
+        const key = `${current.x},${current.y}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        const node = s.map[current.y]?.[current.x];
+        if (!node) continue;
+        reachableTypes.add(node.type);
+        node.connections.forEach((targetX) => {
+          if (s.map[current.y + 1]?.[targetX]) {
+            queue.push({ x: targetX, y: current.y + 1 });
+          }
+        });
+      }
+
+      expect(reachableTypes.has('shop')).toBe(true);
+      expect(reachableTypes.has('treasure')).toBe(true);
+
+      const allNodes = s.map.flat().filter(Boolean);
+      const shopCount = allNodes.filter((node) => node.type === 'shop').length;
+      const treasureCount = allNodes.filter((node) => node.type === 'treasure').length;
+      expect(shopCount).toBeLessThanOrEqual(2);
+      expect(treasureCount).toBeLessThanOrEqual(1);
     });
 
     it('battle reward grants 30-40 Dutki only once per battle', () => {
@@ -620,6 +676,17 @@ describe('GameState', () => {
       expect(first).toBeLessThanOrEqual(40);
       expect(second).toBe(0);
       expect(s.dutki).toBe(first);
+    });
+
+    it('does not allow travelling to later nodes before the first fight starts', () => {
+      const s = freshState();
+      const startNode = s.map[0][1];
+      expect(startNode).not.toBeNull();
+
+      startNode.connections.forEach((targetX) => {
+        expect(s.canTravelTo(1, targetX)).toBe(false);
+        expect(s.travelTo(1, targetX)).toBeNull();
+      });
     });
 
     it('spendDutki returns false when funds are insufficient', () => {
@@ -1008,11 +1075,12 @@ describe('GameState', () => {
     it('applies ELITARNY scaling only on boss node', () => {
       const s = freshState();
       s.map = [
-        [{ type: 'fight', label: 'Walka', emoji: '⚔️', connections: [0] }],
-        [{ type: 'boss', label: 'Boss', emoji: '💀', connections: [] }],
+        [null, { x: 1, y: 0, type: 'fight', label: 'Walka', emoji: '⚔️', connections: [1] }, null],
+        [null, { x: 1, y: 1, type: 'boss', label: 'Boss', emoji: '💀', connections: [] }, null],
       ];
       s.currentLevel = 1;
-      s.currentNodeIndex = 0;
+      s.currentNodeIndex = 1;
+      s.currentNode = { x: 1, y: 1 };
       vi.spyOn(Math, 'random').mockReturnValue(0);
       s.resetBattle();
       expect(s.enemy.id).toBe('cepr');
