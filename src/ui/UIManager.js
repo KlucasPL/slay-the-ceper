@@ -33,6 +33,12 @@ export class UIManager {
     document
       .getElementById('camp-upgrade-btn')
       .addEventListener('click', () => this._useCampfireUpgrade());
+    document.addEventListener('click', (event) => {
+      const target = event.target;
+      if (!(target instanceof Element) || !target.closest('.status-tag-hint')) {
+        this._closeStatusTooltips();
+      }
+    });
     window.addEventListener('resize', () => this._scaleGame());
     this._scaleGame();
     this.updateUI();
@@ -114,6 +120,15 @@ export class UIManager {
     if (!el) return;
     el.innerHTML = '';
 
+    const tooltipMap = {
+      strength: 'Każdy punkt Siły dodaje +1 do obrażeń ataków.',
+      weak: 'Słabość zmniejsza zadawane obrażenia o 25% i spada o 1 co turę.',
+      fragile:
+        'Kruchość to status czasowy: odlicza się co turę i jest gotowy pod kolejne mechaniki.',
+      next_double: 'Następny atak zada podwójne obrażenia, potem efekt znika.',
+      energy_next_turn: 'Na początku następnej tury dostaniesz dodatkowe Oscypki.',
+    };
+
     /** @param {number} turns */
     const turnLabel = (turns) => (turns === 1 ? 'tura' : 'tury');
 
@@ -122,22 +137,41 @@ export class UIManager {
      * @param {string} [tooltip]
      */
     const tag = (text, tooltip) => {
-      const span = document.createElement('span');
-      span.className = 'status-tag';
-      span.textContent = text;
+      const element = tooltip ? document.createElement('button') : document.createElement('span');
+      element.className = 'status-tag';
+      element.textContent = text;
       if (tooltip) {
-        span.classList.add('status-tag-hint');
-        span.title = tooltip;
-        span.setAttribute('aria-label', `${text}: ${tooltip}`);
+        element.classList.add('status-tag-hint');
+        element.type = 'button';
+        element.setAttribute('aria-label', `${text}: ${tooltip}`);
+        element.setAttribute('aria-expanded', 'false');
+
+        const tip = document.createElement('span');
+        tip.className = 'status-tooltip';
+        tip.textContent = tooltip;
+        element.appendChild(tip);
+
+        element.addEventListener('click', (event) => {
+          event.stopPropagation();
+          const isOpen = element.classList.contains('is-open');
+          this._closeStatusTooltips();
+          if (!isOpen) {
+            element.classList.add('is-open');
+            element.setAttribute('aria-expanded', 'true');
+          }
+        });
       }
-      el.appendChild(span);
+      el.appendChild(element);
     };
 
-    if (status.strength > 0) tag(`💢 Siła: ${status.strength}`);
-    if (status.weak > 0) tag(`🤢 Słabość: ${status.weak} ${turnLabel(status.weak)}`);
-    if (status.fragile > 0) tag(`🫧 Kruchość: ${status.fragile} ${turnLabel(status.fragile)}`);
-    if (status.next_double) tag('✨ Następny atak: x2');
-    if (status.energy_next_turn > 0) tag(`⚡ Nast. tura: +${status.energy_next_turn} Oscypek`);
+    if (status.strength > 0) tag(`💢 Siła: ${status.strength}`, tooltipMap.strength);
+    if (status.weak > 0)
+      tag(`🤢 Słabość: ${status.weak} ${turnLabel(status.weak)}`, tooltipMap.weak);
+    if (status.fragile > 0)
+      tag(`🫧 Kruchość: ${status.fragile} ${turnLabel(status.fragile)}`, tooltipMap.fragile);
+    if (status.next_double) tag('✨ Następny atak: x2', tooltipMap.next_double);
+    if (status.energy_next_turn > 0)
+      tag(`⚡ Nast. tura: +${status.energy_next_turn} Oscypek`, tooltipMap.energy_next_turn);
 
     if (containerId === 'e-statuses') {
       this.state.getEnemySpecialStatuses().forEach((special) => {
@@ -609,6 +643,13 @@ export class UIManager {
     const overlay = document.getElementById(overlayId);
     overlay.classList.add('hidden');
     overlay.setAttribute('aria-hidden', 'true');
+  }
+
+  _closeStatusTooltips() {
+    document.querySelectorAll('.status-tag-hint.is-open').forEach((tag) => {
+      tag.classList.remove('is-open');
+      tag.setAttribute('aria-expanded', 'false');
+    });
   }
 
   /**
