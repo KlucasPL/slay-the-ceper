@@ -106,7 +106,7 @@ export const enemyLibrary = {
   },
   busiarz: {
     id: 'busiarz',
-    name: 'Wąsaty Staszek',
+    name: 'Wąsaty Staśko',
     emoji: '🚐',
     hp: 35,
     maxHp: 35,
@@ -131,7 +131,7 @@ export const enemyLibrary = {
     spriteSvg: babaSprite,
     patternType: 'loop',
     pattern: [
-      { type: 'block', name: 'Darmowa Degustacja', block: 15 },
+      { type: 'block', name: 'Darmowa degustacja', block: 15 },
       { type: 'attack', name: 'Cena z kosmosu', damage: 6, hits: 1, applyWeak: 2 },
       { type: 'attack', name: 'Rzut redykołką', damage: 12, hits: 1 },
     ],

@@ -156,10 +156,9 @@ export class UIManager {
     const tooltipMap = {
       strength: 'Każdy punkt Siły dodaje +1 do obrażeń ataków.',
       weak: 'Słabość zmniejsza zadawane obrażenia o 25% i spada o 1 co turę.',
-      fragile:
-        'Kruchość to status czasowy: odlicza się co turę i jest gotowy pod kolejne mechaniki.',
-      next_double: 'Następny atak zada podwójne obrażenia, potem efekt znika.',
-      energy_next_turn: 'Na początku następnej tury dostaniesz dodatkowe Oscypki.',
+      fragile: 'Kruchość to status czasowy: schodzi co turę i czeka na kolejne mechaniki.',
+      next_double: 'Następny cios zada podwójne obrażenia, a potem efekt zniknie.',
+      energy_next_turn: 'Na początku następnej tury dostaniesz dodatkowy Oscypek.',
     };
 
     /** @param {number} turns */
@@ -202,7 +201,7 @@ export class UIManager {
       tag(`🤢 Słabość: ${status.weak} ${turnLabel(status.weak)}`, tooltipMap.weak);
     if (status.fragile > 0)
       tag(`🫧 Kruchość: ${status.fragile} ${turnLabel(status.fragile)}`, tooltipMap.fragile);
-    if (status.next_double) tag('✨ Następny atak: x2', tooltipMap.next_double);
+    if (status.next_double) tag('✨ Następny cios: x2', tooltipMap.next_double);
     if (status.energy_next_turn > 0)
       tag(`⚡ Nast. tura: +${status.energy_next_turn} Oscypek`, tooltipMap.energy_next_turn);
 
@@ -329,7 +328,7 @@ export class UIManager {
       this._showVictoryOverlay(droppedDutki);
       return;
     }
-    const msg = 'Koniec gry! Tłum turystów poprosił Cię o zrobienie im grupowego zdjęcia.';
+    const msg = 'Koniec gry! Tłum ceprów poprosił Cię o wspólną fotkę.';
     setTimeout(() => alert(msg), 100);
   }
 
@@ -344,7 +343,7 @@ export class UIManager {
     const choices = this._pickRewardCards(3);
     const relicChoice = this._pickRewardRelic();
 
-    rewardDutki.textContent = droppedDutki > 0 ? `Łup z walki: +${droppedDutki} Dutków` : '';
+    rewardDutki.textContent = droppedDutki > 0 ? `Łup z bitki: +${droppedDutki} dutków` : '';
 
     rewardRelic.innerHTML = '';
     if (relicChoice) {
@@ -352,13 +351,13 @@ export class UIManager {
       const relicBtn = document.createElement('button');
       relicBtn.type = 'button';
       relicBtn.className = 'reward-relic-btn';
-      relicBtn.textContent = `Zabierz Pamiątkę: ${relic.name} ${relic.emoji}`;
+      relicBtn.textContent = `Bierz pamiątkę: ${relic.name} ${relic.emoji}`;
       relicBtn.title = relic.desc;
       relicBtn.addEventListener('click', () => {
         const added = this.state.addRelic(relicChoice);
         if (!added) return;
         relicBtn.disabled = true;
-        relicBtn.textContent = `Pamiątka zabrana: ${relic.name} ${relic.emoji}`;
+        relicBtn.textContent = `Pamiątka już twoja: ${relic.name} ${relic.emoji}`;
         this.updateUI();
       });
       rewardRelic.appendChild(relicBtn);
@@ -493,7 +492,7 @@ export class UIManager {
     });
 
     const isOnBoss = this.state.currentLevel === this.state.map.length - 1;
-    continueBtn.textContent = isOnBoss ? 'Nowy szlak' : 'Ruszaj dalej';
+    continueBtn.textContent = isOnBoss ? 'Nowa perć' : 'Idź dalej';
     continueBtn.classList.toggle('hidden', !isOnBoss);
 
     requestAnimationFrame(() => this._drawMapConnections(nodeButtons));
@@ -615,7 +614,7 @@ export class UIManager {
     }
 
     const relic = relicLibrary[relicId];
-    this.mapMessage = `Skarb! Zdobywasz pamiątkę: ${relic.emoji} ${relic.name}`;
+    this.mapMessage = `Skarb! Dostajesz pamiątkę: ${relic.emoji} ${relic.name}`;
     this._openMapOverlay();
     this.updateUI();
   }
@@ -740,7 +739,7 @@ export class UIManager {
       return;
     }
     this.state.healPlayer(15);
-    message.textContent = 'Baca podał oscypek na ratunek.';
+    message.textContent = 'Baca dał oscypek na ratunek.';
     this._renderShopOffers();
     this.updateUI();
   }

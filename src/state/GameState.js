@@ -110,11 +110,11 @@ export class GameState {
    */
   _createMapNode(type, x, y) {
     const meta = {
-      fight: { label: 'Walka', emoji: '⚔️' },
-      shop: { label: 'Sklep', emoji: '🛖' },
+      fight: { label: 'Bitka', emoji: '⚔️' },
+      shop: { label: 'Kram', emoji: '🛖' },
       treasure: { label: 'Skarb', emoji: '🎁' },
       campfire: { label: 'Watra', emoji: '🔥' },
-      boss: { label: 'Boss', emoji: '💀' },
+      boss: { label: 'Harny', emoji: '💀' },
     };
     return { ...meta[type], x, y, type, connections: [] };
   }
@@ -373,11 +373,11 @@ export class GameState {
   _setNodeType(node, type) {
     if (!node) return;
     const meta = {
-      fight: { label: 'Walka', emoji: '⚔️' },
-      shop: { label: 'Sklep', emoji: '🛖' },
+      fight: { label: 'Bitka', emoji: '⚔️' },
+      shop: { label: 'Kram', emoji: '🛖' },
       treasure: { label: 'Skarb', emoji: '🎁' },
       campfire: { label: 'Watra', emoji: '🔥' },
-      boss: { label: 'Boss', emoji: '💀' },
+      boss: { label: 'Harny', emoji: '💀' },
     };
     node.type = type;
     node.label = meta[type].label;
@@ -568,7 +568,7 @@ export class GameState {
     }
 
     if (this.shopStock.relic !== item.id || this.hasRelic(item.id)) {
-      this.lastShopMessage = 'Ta pamiątka nie jest dostępna.';
+      this.lastShopMessage = 'Tej pamiątki nie ma.';
       return { success: false, message: this.lastShopMessage };
     }
     this.dutki -= item.price;
@@ -720,7 +720,7 @@ export class GameState {
     /** @type {EnemyState} */
     const enemyState = {
       id: enemyDef.id,
-      name: isBoss ? `ELITARNY ${enemyDef.name}` : enemyDef.name,
+      name: isBoss ? `HARNY ${enemyDef.name}` : enemyDef.name,
       emoji: enemyDef.emoji,
       hp: maxHp,
       maxHp,
@@ -806,7 +806,7 @@ export class GameState {
 
     return {
       type: 'attack',
-      name: 'Robi zdjęcie',
+      name: 'Pstryka fotkę',
       damage: this._rollEnemyAttack(enemyState),
       hits: 1,
     };
@@ -984,9 +984,9 @@ export class GameState {
 
     return [
       {
-        text: '🧀 Świeży łoscypek',
+        text: '🧀 Świeży oscypek',
         tooltip:
-          'Na końcu tury gracza Gaździna leczy 5 HP, jeśli nie dostała obrażeń HP w tej turze.',
+          'Na końcu tury gracza Gaździna leczy 5 Krzepy, jeśli nie dostała obrażeń w tej turze.',
       },
     ];
   }
@@ -1058,7 +1058,10 @@ export class GameState {
       this.enemy.hp = Math.min(this.enemy.maxHp, this.enemy.hp + 5);
       const healedAmount = this.enemy.hp - hpBefore;
       if (healedAmount > 0) {
-        enemyPassiveHeal = { amount: healedAmount, text: `+${healedAmount} HP (Świeży łoscypek)` };
+        enemyPassiveHeal = {
+          amount: healedAmount,
+          text: `+${healedAmount} Krzepy (Świeży oscypek)`,
+        };
       }
     }
 
@@ -1082,7 +1085,7 @@ export class GameState {
   /**
    * Resets combat after victory with fixed enemy stats from enemyLibrary.
    * - Keep player HP between battles (no auto-heal)
-   * - Boss node only: spawn ELITARNY enemy (HP x2, attacks +5)
+  * - Boss node only: spawn HARNY enemy (HP x2, attacks +5)
    * - Clear blocks and statuses
    * - Move hand/discard/exhaust back to deck and shuffle
    * - Start a fresh turn

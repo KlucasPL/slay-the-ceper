@@ -262,7 +262,7 @@ describe('GameState', () => {
       const s = freshState();
       s.player.hp = 50;
       s.player.block = 0;
-      setEnemyIntent(s, { type: 'attack', name: 'Robi zdjęcie', damage: 8, hits: 1 });
+      setEnemyIntent(s, { type: 'attack', name: 'Pstryka fotkę', damage: 8, hits: 1 });
       s.enemy.status.weak = 1;
       s.endTurn();
       expect(s.player.hp).toBe(44); // floor(8 × 0.75) = 6 damage
@@ -566,7 +566,7 @@ describe('GameState', () => {
       const s = freshState();
       s.addRelic('giewont');
       s.player.hp = 50;
-      setEnemyIntent(s, { type: 'attack', name: 'Robi zdjęcie', damage: 8, hits: 1 });
+      setEnemyIntent(s, { type: 'attack', name: 'Pstryka fotkę', damage: 8, hits: 1 });
       s.endTurn();
       expect(s.player.hp).toBe(43);
     });
@@ -798,11 +798,11 @@ describe('GameState', () => {
   });
 
   describe('baba', () => {
-    it('starts with Darmowa Degustacja as first intent', () => {
+    it('starts with Darmowa degustacja as first intent', () => {
       const s = freshBabaState();
       expect(s.enemy.currentIntent).toEqual({
         type: 'block',
-        name: 'Darmowa Degustacja',
+        name: 'Darmowa degustacja',
         block: 15,
       });
     });
@@ -812,7 +812,7 @@ describe('GameState', () => {
       s.enemy.hp = 40;
       const result = s.endTurn();
       expect(s.enemy.hp).toBe(45);
-      expect(result.enemyPassiveHeal).toEqual({ amount: 5, text: '+5 HP (Świeży łoscypek)' });
+      expect(result.enemyPassiveHeal).toEqual({ amount: 5, text: '+5 Krzepy (Świeży oscypek)' });
     });
 
     it('does not heal at end of player turn if she took HP damage', () => {
@@ -852,8 +852,8 @@ describe('GameState', () => {
       const s = freshBabaState();
       const statuses = s.getEnemySpecialStatuses();
       expect(statuses).toHaveLength(1);
-      expect(statuses[0]?.text).toBe('🧀 Świeży łoscypek');
-      expect(statuses[0]?.tooltip).toContain('leczy 5 HP');
+      expect(statuses[0]?.text).toBe('🧀 Świeży oscypek');
+      expect(statuses[0]?.tooltip).toContain('leczy 5 Krzepy');
     });
   });
 
@@ -871,7 +871,7 @@ describe('GameState', () => {
       const s = freshState();
       s.player.hp = 50;
       s.player.block = 0;
-      setEnemyIntent(s, { type: 'attack', name: 'Robi zdjęcie', damage: 8, hits: 1 });
+      setEnemyIntent(s, { type: 'attack', name: 'Pstryka fotkę', damage: 8, hits: 1 });
       s.endTurn();
       expect(s.player.hp).toBe(42);
     });
@@ -879,7 +879,7 @@ describe('GameState', () => {
       const s = freshState();
       s.player.hp = 50;
       s.player.block = 5;
-      setEnemyIntent(s, { type: 'attack', name: 'Robi zdjęcie', damage: 8, hits: 1 });
+      setEnemyIntent(s, { type: 'attack', name: 'Pstryka fotkę', damage: 8, hits: 1 });
       s.endTurn();
       expect(s.player.block).toBe(0);
       expect(s.player.hp).toBe(47);
@@ -888,7 +888,7 @@ describe('GameState', () => {
       const s = freshState();
       s.player.hp = 50;
       s.player.block = 10;
-      setEnemyIntent(s, { type: 'attack', name: 'Robi zdjęcie', damage: 8, hits: 1 });
+      setEnemyIntent(s, { type: 'attack', name: 'Pstryka fotkę', damage: 8, hits: 1 });
       s.endTurn();
       expect(s.player.block).toBe(2);
       expect(s.player.hp).toBe(50);
@@ -896,7 +896,7 @@ describe('GameState', () => {
     it('returns correct damage breakdown', () => {
       const s = freshState();
       s.player.block = 3;
-      setEnemyIntent(s, { type: 'attack', name: 'Robi zdjęcie', damage: 8, hits: 1 });
+      setEnemyIntent(s, { type: 'attack', name: 'Pstryka fotkę', damage: 8, hits: 1 });
       const result = s.endTurn();
       expect(result.enemyAttack.raw).toBe(8);
       expect(result.enemyAttack.blocked).toBe(3);
@@ -905,13 +905,13 @@ describe('GameState', () => {
     it('resets Ceper Garda after enemy attack', () => {
       const s = freshState();
       s.enemy.block = 5;
-      setEnemyIntent(s, { type: 'attack', name: 'Robi zdjęcie', damage: 8, hits: 1 });
+      setEnemyIntent(s, { type: 'attack', name: 'Pstryka fotkę', damage: 8, hits: 1 });
       s.endTurn();
       expect(s.enemy.block).toBe(0);
     });
     it('rolls a new Ceper attack intent between 5 and 10', () => {
       const s = freshState();
-      setEnemyIntent(s, { type: 'attack', name: 'Robi zdjęcie', damage: 8, hits: 1 });
+      setEnemyIntent(s, { type: 'attack', name: 'Pstryka fotkę', damage: 8, hits: 1 });
       s.endTurn();
       expect(s.enemy.currentIntent.type).toBe('attack');
       if (s.enemy.currentIntent.type !== 'attack') return;
@@ -1059,7 +1059,7 @@ describe('GameState', () => {
       vi.spyOn(Math, 'random').mockReturnValue(0.5);
       s.resetBattle();
       expect(s.enemy.id).toBe('busiarz');
-      expect(s.enemy.name).toBe('Wąsaty Staszek');
+      expect(s.enemy.name).toBe('Wąsaty Staśko');
       expect(s.enemy.maxHp).toBe(35);
     });
 
@@ -1072,11 +1072,11 @@ describe('GameState', () => {
       expect(s.enemy.maxHp).toBe(50);
     });
 
-    it('applies ELITARNY scaling only on boss node', () => {
+    it('applies HARNY scaling only on boss node', () => {
       const s = freshState();
       s.map = [
-        [null, { x: 1, y: 0, type: 'fight', label: 'Walka', emoji: '⚔️', connections: [1] }, null],
-        [null, { x: 1, y: 1, type: 'boss', label: 'Boss', emoji: '💀', connections: [] }, null],
+        [null, { x: 1, y: 0, type: 'fight', label: 'Bitka', emoji: '⚔️', connections: [1] }, null],
+        [null, { x: 1, y: 1, type: 'boss', label: 'Harny', emoji: '💀', connections: [] }, null],
       ];
       s.currentLevel = 1;
       s.currentNodeIndex = 1;
@@ -1084,7 +1084,7 @@ describe('GameState', () => {
       vi.spyOn(Math, 'random').mockReturnValue(0);
       s.resetBattle();
       expect(s.enemy.id).toBe('cepr');
-      expect(s.enemy.name).toBe('ELITARNY Cepr');
+      expect(s.enemy.name).toBe('HARNY Cepr');
       expect(s.enemy.maxHp).toBe(80);
       expect(s.enemy.baseAttack).toBe(13);
     });

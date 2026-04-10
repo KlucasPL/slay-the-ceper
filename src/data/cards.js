@@ -8,7 +8,7 @@
 export const cardLibrary = {
   ciupaga: {
     id: 'ciupaga',
-    name: 'Cios Ciupagą',
+    name: 'Cios ciupagą',
     cost: 1,
     price: 40,
     emoji: '🪓',
@@ -37,11 +37,11 @@ export const cardLibrary = {
   },
   kierpce: {
     id: 'kierpce',
-    name: 'Rzut Kierpcem',
+    name: 'Rzut kierpcem',
     cost: 2,
     price: 70,
     emoji: '👞',
-    desc: 'Zadaje 12 obrażeń. Śmierdzi.',
+    desc: 'Zadaje 12 obrażeń. Śmierdzi jak diabli.',
     effect(state) {
       const dmg = state._calcAttackDamage(state.player, 12 + state.getCardDamageBonus('kierpce'));
       const damage = state._applyDamageToEnemy(dmg);
@@ -73,7 +73,7 @@ export const cardLibrary = {
     cost: 0,
     price: 50,
     emoji: '🍰',
-    desc: 'Zyskujesz 1 Oscypek. Exhaust.',
+    desc: 'Zyskujesz 1 Oscypek. Przepado.',
     exhaust: true,
     effect(state) {
       state.player.energy += 1;
@@ -125,7 +125,7 @@ export const cardLibrary = {
     cost: 1,
     price: 85,
     emoji: '🧶',
-    desc: 'Zyskujesz 7 Gardy. Na początku kolejnej tury +1 Oscypek.',
+    desc: 'Zyskujesz 7 Gardy. Na początku następnej tury +1 Oscypek.',
     effect(state) {
       state.gainPlayerBlockFromCard(7);
       state.player.status.energy_next_turn += 1;
@@ -157,7 +157,7 @@ export const cardLibrary = {
     cost: 1,
     price: 65,
     emoji: '🥛',
-    desc: 'Leczysz 4 Krzepa.',
+    desc: 'Leczysz 4 Krzepy.',
     effect(state) {
       state.player.hp = Math.min(state.player.hp + 4, state.player.maxHp);
       return { playerAnim: 'anim-block' };
@@ -169,7 +169,7 @@ export const cardLibrary = {
     cost: 1,
     price: 95,
     emoji: '🗡️',
-    desc: 'Zadaje 7 obrażeń. Jeśli Cepr pada: +20 Dutki.',
+    desc: 'Zadaje 7 obrażeń. Jeśli Wróg pada: +20 Dutki.',
     effect(state) {
       const dmg = state._calcAttackDamage(state.player, 7 + state.getCardDamageBonus('janosik'));
       const damage = state._applyDamageToEnemy(dmg);
@@ -187,7 +187,7 @@ export const cardLibrary = {
     cost: 2,
     price: 100,
     emoji: '🔊',
-    desc: 'Twój następny atak zadaje podwójne obrażenia.',
+    desc: 'Twój następny cios zadaje podwójne obrażenia.',
     effect(state) {
       state.player.status.next_double = true;
       return { playerAnim: 'anim-block' };

@@ -26,8 +26,8 @@
       <div class="title-panel">
         <p class="title-kicker">Góralska przygoda dla cierpliwych</p>
         <h1 class="title-main">USIEC CEPRA: WYPRAWA NA GIEWONT</h1>
-        <p class="title-subtitle">Pomóz Jyndrkowi łodzyskać spokój na szlaku!</p>
-        <button id="title-start-btn" class="title-start-btn">ROZPOCNIJ PRZYGODĘ</button>
+        <p class="title-subtitle">Pomóż Jędrkowi odzyskać spokój na perci!</p>
+        <button id="title-start-btn" class="title-start-btn">RUSZAJ NA PERC</button>
         <div class="title-charms" aria-hidden="true">
           <span>🪓</span>
           <span>👞</span>
@@ -182,7 +182,7 @@
 
     <div id="victory-overlay" class="victory-overlay hidden" aria-hidden="true">
       <div class="victory-panel">
-        <h2 class="victory-title">Cepr usiecony! Wybierz łup:</h2>
+        <h2 class="victory-title">Cepr usieczony! Wybierz łup:</h2>
         <p id="victory-dutki" class="victory-dutki"></p>
         <div id="reward-relic" class="reward-relic"></div>
         <div id="reward-cards" class="reward-cards"></div>
@@ -191,19 +191,19 @@
 
     <div id="map-overlay" class="event-overlay hidden" aria-hidden="true">
       <div class="event-panel">
-        <h2 class="event-title">Szlak przez Tatry</h2>
+        <h2 class="event-title">Perć przez Tatry</h2>
         <div id="map-tree" class="map-tree">
           <svg id="map-lines" class="map-lines" aria-hidden="true"></svg>
           <div id="map-levels" class="map-levels"></div>
         </div>
         <p id="map-message" class="map-message" aria-live="polite"></p>
-        <button id="map-continue-btn" class="btn hidden">Nowy szlak</button>
+        <button id="map-continue-btn" class="btn hidden">Nowa perć</button>
       </div>
     </div>
 
     <div id="shop-overlay" class="event-overlay hidden" aria-hidden="true">
       <div class="event-panel shop-panel">
-        <h2 class="event-title">Sklep u Bacy</h2>
+        <h2 class="event-title">Kram u Bacy</h2>
         <div class="shop-header">
           <div class="baca-sprite" id="baca-sprite">
             <svg viewBox="0 0 120 100" width="160" height="120" aria-label="Baca za ladą">
@@ -236,11 +236,11 @@
               <circle cx="66" cy="33" r="2" fill="#111" />
             </svg>
           </div>
-          <p class="shop-line">"Patrzcie no! Mam towar i ciepłe oscypki!"</p>
+          <p class="shop-line">"Patrzcie no! Mom towar i ciepłe oscypki!"</p>
         </div>
         <div class="shop-sections">
           <div>
-            <h3>Karty Bacy</h3>
+            <h3>Karty od Bacy</h3>
             <div id="shop-cards" class="shop-cards"></div>
           </div>
           <div>
@@ -251,10 +251,10 @@
             <h3>Usługi Bacy</h3>
             <div class="shop-actions">
               <button id="shop-heal-btn" class="btn shop-btn">
-                Oscypek na ratunek (+15 HP) - 75 💰
+                Oscypek na ratunek (+15 Krzepy) - 75 💰
               </button>
               <div class="remove-card-box">
-                <label for="shop-remove-select">Usuwanie karty z talii - 100 💰</label>
+                <label for="shop-remove-select">Usuń kartę z talii - 100 💰</label>
                 <select id="shop-remove-select" class="camp-select"></select>
                 <button id="shop-remove-btn" class="btn shop-btn">Usuń wybraną kartę</button>
               </div>
@@ -262,21 +262,21 @@
           </div>
         </div>
         <p id="shop-message" class="shop-message" aria-live="polite"></p>
-        <button id="shop-exit-btn" class="btn">Wróć na szlak</button>
+        <button id="shop-exit-btn" class="btn">Wróć na perć</button>
       </div>
     </div>
 
     <div id="campfire-overlay" class="event-overlay hidden" aria-hidden="true">
       <div class="event-panel">
         <h2 class="event-title">Watra</h2>
-        <p class="shop-line">Przy ogniu możesz się zregenerować albo ostrzyć broń.</p>
+        <p class="shop-line">Przy watrze możesz się pokrzepić albo naostrzyć broń.</p>
         <div class="campfire-actions">
-          <button id="camp-heal-btn" class="btn shop-btn">Pieczone ziemniaki (+20% HP)</button>
-          <label for="camp-card-select">Ostrzenie ciupagi (+3 obrażenia):</label>
+          <button id="camp-heal-btn" class="btn shop-btn">Pieczone grule (+20% Krzepy)</button>
+          <label for="camp-card-select">Naostrz ciupagę (+3 obrażenia):</label>
           <select id="camp-card-select" class="camp-select"></select>
           <button id="camp-upgrade-btn" class="btn shop-btn">Naostrz wybraną kartę</button>
         </div>
-        <button id="camp-exit-btn" class="btn">Wróć na szlak</button>
+        <button id="camp-exit-btn" class="btn">Wróć na perć</button>
       </div>
     </div>
   </body>
