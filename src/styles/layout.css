@@ -704,6 +704,46 @@ h1 {
 
 /* --- Portrait mobile (narrow screens) --- */
 @media (max-width: 600px) {
+  .event-overlay {
+    padding: 10px;
+  }
+
+  .event-panel {
+    width: 100%;
+    max-height: 94dvh;
+    border-width: 6px;
+    padding: 14px;
+  }
+
+  .map-track {
+    width: 100%;
+  }
+
+  .map-node {
+    font-size: 0.95rem;
+  }
+
+  .shop-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .baca-sprite svg {
+    width: 132px;
+    height: 96px;
+  }
+
+  .shop-line {
+    font-size: 0.95rem;
+  }
+
+  .shop-card-btn,
+  .shop-btn,
+  .camp-select {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
   .sprite {
     height: 110px;
   }
