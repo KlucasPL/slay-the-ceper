@@ -583,10 +583,32 @@ describe('GameState', () => {
     it('starts with 50 Dutki and generated map', () => {
       const s = freshState();
       expect(s.dutki).toBe(50);
-      expect(s.map.length).toBeGreaterThanOrEqual(10);
-      expect(s.map.length).toBeLessThanOrEqual(12);
-      expect(s.map[0]?.type).toBe('battle');
-      expect(s.map[s.map.length - 1]?.type).toBe('boss');
+      expect(s.map).toHaveLength(7);
+      expect(s.map[0]).toHaveLength(1);
+      expect(s.map[0]?.[0]?.type).toBe('fight');
+      expect(s.map[1].length).toBeGreaterThanOrEqual(2);
+      expect(s.map[1].length).toBeLessThanOrEqual(3);
+      expect(s.map[2].length).toBeGreaterThanOrEqual(2);
+      expect(s.map[2].length).toBeLessThanOrEqual(3);
+      expect(s.map[3].length).toBeGreaterThanOrEqual(2);
+      expect(s.map[3].length).toBeLessThanOrEqual(3);
+      expect(s.map[4].length).toBeGreaterThanOrEqual(2);
+      expect(s.map[4].length).toBeLessThanOrEqual(3);
+      expect(s.map[5]).toHaveLength(1);
+      expect(s.map[5]?.[0]?.type).toBe('campfire');
+      expect(s.map[6]).toHaveLength(1);
+      expect(s.map[6]?.[0]?.type).toBe('boss');
+
+      // Every node above level 0 must have at least one incoming connection.
+      for (let level = 1; level < s.map.length; level++) {
+        const inbound = new Set();
+        s.map[level - 1].forEach((node) => {
+          node.connections.forEach((idx) => inbound.add(idx));
+        });
+        s.map[level].forEach((_, idx) => {
+          expect(inbound.has(idx)).toBe(true);
+        });
+      }
     });
 
     it('battle reward grants 30-40 Dutki only once per battle', () => {
@@ -986,10 +1008,11 @@ describe('GameState', () => {
     it('applies ELITARNY scaling only on boss node', () => {
       const s = freshState();
       s.map = [
-        { type: 'battle', label: 'Walka', emoji: '⚔️' },
-        { type: 'boss', label: 'Boss', emoji: '👑' },
+        [{ type: 'fight', label: 'Walka', emoji: '⚔️', connections: [0] }],
+        [{ type: 'boss', label: 'Boss', emoji: '💀', connections: [] }],
       ];
-      s.currentMapNode = 1;
+      s.currentLevel = 1;
+      s.currentNodeIndex = 0;
       vi.spyOn(Math, 'random').mockReturnValue(0);
       s.resetBattle();
       expect(s.enemy.id).toBe('cepr');

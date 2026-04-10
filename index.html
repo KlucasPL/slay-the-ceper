@@ -164,8 +164,12 @@
     <div id="map-overlay" class="event-overlay hidden" aria-hidden="true">
       <div class="event-panel">
         <h2 class="event-title">Szlak przez Tatry</h2>
-        <div id="map-track" class="map-track"></div>
-        <button id="map-continue-btn" class="btn">Ruszaj dalej</button>
+        <div id="map-tree" class="map-tree">
+          <svg id="map-lines" class="map-lines" aria-hidden="true"></svg>
+          <div id="map-levels" class="map-levels"></div>
+        </div>
+        <p id="map-message" class="map-message" aria-live="polite"></p>
+        <button id="map-continue-btn" class="btn hidden">Nowy szlak</button>
       </div>
     </div>
 

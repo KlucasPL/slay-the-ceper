@@ -11,6 +11,8 @@ export class UIManager {
     this.isAnimating = false;
     /** @type {boolean} */
     this.campfireUsed = false;
+    /** @type {string} */
+    this.mapMessage = '';
   }
 
   /**
@@ -396,25 +398,115 @@ export class UIManager {
   }
 
   _renderMapTrack() {
-    const track = document.getElementById('map-track');
-    if (!track) return;
+    const levels = document.getElementById('map-levels');
+    const message = document.getElementById('map-message');
+    const continueBtn = document.getElementById('map-continue-btn');
+    if (!levels || !message || !continueBtn) return;
 
-    track.innerHTML = '';
-    this.state.map.forEach((node, idx) => {
-      const item = document.createElement('div');
-      const isDone = idx < this.state.currentMapNode;
-      const isCurrent = idx === this.state.currentMapNode;
-      item.className = `map-node${isDone ? ' done' : ''}${isCurrent ? ' current' : ''}`;
-      item.textContent = `${node.emoji} ${node.label}`;
-      track.appendChild(item);
+    levels.innerHTML = '';
+    message.textContent = this.mapMessage;
+
+    const reachable = new Set(this.state.getReachableNodes());
+    /** @type {HTMLElement[][]} */
+    const nodeButtons = [];
+
+    this.state.map.forEach((levelNodes, levelIndex) => {
+      const row = document.createElement('div');
+      row.className = 'map-level';
+      nodeButtons[levelIndex] = [];
+
+      levelNodes.forEach((node, nodeIndex) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'map-node-btn';
+
+        const isCurrent =
+          levelIndex === this.state.currentLevel && nodeIndex === this.state.currentNodeIndex;
+        const isDone = levelIndex < this.state.currentLevel;
+        const isSelectable = levelIndex === this.state.currentLevel + 1 && reachable.has(nodeIndex);
+
+        if (isCurrent) btn.classList.add('current');
+        if (isDone) btn.classList.add('done');
+        if (isSelectable) {
+          btn.classList.add('available');
+          btn.addEventListener('click', () => this._handleMapNodeSelect(levelIndex, nodeIndex));
+        } else {
+          btn.classList.add('locked');
+          btn.disabled = !isCurrent;
+        }
+
+        btn.innerHTML = `
+          <span class="map-node-emoji">${node.emoji}</span>
+          <span class="map-node-label">${node.label}</span>
+        `;
+
+        row.appendChild(btn);
+        nodeButtons[levelIndex].push(btn);
+      });
+
+      levels.appendChild(row);
     });
+
+    const isOnBoss = this.state.currentLevel === this.state.map.length - 1;
+    continueBtn.textContent = isOnBoss ? 'Nowy szlak' : 'Ruszaj dalej';
+    continueBtn.classList.toggle('hidden', !isOnBoss);
+
+    requestAnimationFrame(() => this._drawMapConnections(nodeButtons));
   }
 
-  _handleMapAdvance() {
-    const node = this.state.advanceMapNode();
-    if (!node) return;
+  _drawMapConnections(nodeButtons) {
+    const tree = document.getElementById('map-tree');
+    const svg = document.getElementById('map-lines');
+    if (!tree || !svg) return;
 
-    if (node.type === 'battle' || node.type === 'boss') {
+    const width = tree.clientWidth;
+    const height = tree.clientHeight;
+    svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+    svg.innerHTML = '';
+
+    const treeRect = tree.getBoundingClientRect();
+    for (let level = 0; level < this.state.map.length - 1; level++) {
+      this.state.map[level].forEach((node, nodeIndex) => {
+        const fromEl = nodeButtons[level]?.[nodeIndex];
+        if (!fromEl) return;
+        const fromRect = fromEl.getBoundingClientRect();
+        const x1 = fromRect.left - treeRect.left + fromRect.width / 2;
+        const y1 = fromRect.top - treeRect.top + fromRect.height / 2;
+
+        node.connections.forEach((targetIndex) => {
+          const toEl = nodeButtons[level + 1]?.[targetIndex];
+          if (!toEl) return;
+          const toRect = toEl.getBoundingClientRect();
+          const x2 = toRect.left - treeRect.left + toRect.width / 2;
+          const y2 = toRect.top - treeRect.top + toRect.height / 2;
+
+          const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+          line.setAttribute('x1', String(x1));
+          line.setAttribute('y1', String(y1));
+          line.setAttribute('x2', String(x2));
+          line.setAttribute('y2', String(y2));
+          line.classList.add('map-link');
+
+          const isCurrent =
+            level === this.state.currentLevel && nodeIndex === this.state.currentNodeIndex;
+          const isReachable =
+            level + 1 === this.state.currentLevel + 1 && this.state.getReachableNodes().includes(targetIndex);
+          if (isCurrent && isReachable) {
+            line.classList.add('active');
+          }
+
+          svg.appendChild(line);
+        });
+      });
+    }
+  }
+
+  _handleMapNodeSelect(level, nodeIndex) {
+    const node = this.state.travelTo(level, nodeIndex);
+    if (!node) return;
+    this.mapMessage = '';
+
+    if (node.type === 'fight' || node.type === 'boss') {
       this.state.resetBattle();
       this._hideOverlay('map-overlay');
       document.getElementById('end-turn-btn').disabled = false;
@@ -427,7 +519,38 @@ export class UIManager {
       return;
     }
 
+    if (node.type === 'treasure') {
+      this._handleTreasureNode();
+      return;
+    }
+
     this._openCampfire();
+  }
+
+  _handleMapAdvance() {
+    const isOnBoss = this.state.currentLevel === this.state.map.length - 1;
+    if (!isOnBoss) return;
+
+    this.state.generateMap();
+    this.mapMessage = '';
+    this.state.resetBattle();
+    this._hideOverlay('map-overlay');
+    document.getElementById('end-turn-btn').disabled = false;
+    this.updateUI();
+  }
+
+  _handleTreasureNode() {
+    const relicId = this.state.grantTreasureRelic();
+    if (!relicId) {
+      this.mapMessage = 'Skrzynia była pusta... ani jednej pamiątki.';
+      this._openMapOverlay();
+      return;
+    }
+
+    const relic = relicLibrary[relicId];
+    this.mapMessage = `Skarb! Zdobywasz pamiątkę: ${relic.emoji} ${relic.name}`;
+    this._openMapOverlay();
+    this.updateUI();
   }
 
   _openShop() {

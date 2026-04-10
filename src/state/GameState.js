@@ -6,7 +6,8 @@ import { relicLibrary } from '../data/relics.js';
  * @typedef {import('../data/cards.js').StatusDef} StatusDef
  * @typedef {{ name: string, hp: number, maxHp: number, block: number, energy: number, maxEnergy: number, status: StatusDef }} PlayerState
  * @typedef {import('../data/enemies.js').EnemyMoveDef} EnemyMoveDef
- * @typedef {{ type: 'battle' | 'shop' | 'campfire' | 'boss', label: string, emoji: string }} MapNode
+ * @typedef {'fight' | 'shop' | 'treasure' | 'campfire' | 'boss'} MapNodeType
+ * @typedef {{ type: MapNodeType, label: string, emoji: string, connections: number[] }} MapNode
  * @typedef {{ id: string, name: string, emoji: string, hp: number, maxHp: number, block: number, nextAttack: number, baseAttack: number, status: StatusDef, spriteSvg: string, patternType: 'random'|'loop', pattern: EnemyMoveDef[], patternIndex: number, currentIntent: EnemyMoveDef, tookHpDamageThisTurn: boolean }} EnemyState
  * @typedef {{ success: false } | { success: true, effect: import('../data/cards.js').CardEffectResult }} PlayCardResult
  * @typedef {{ enemyAttack: { raw: number, blocked: number, dealt: number }, enemyPassiveHeal: { amount: number, text: string } | null }} EndTurnResult
@@ -42,10 +43,12 @@ export class GameState {
     this.relics = [];
     /** @type {Record<string, number>} */
     this.cardDamageBonus = {};
-    /** @type {MapNode[]} */
+    /** @type {MapNode[][]} */
     this.map = [];
     /** @type {number} */
-    this.currentMapNode = 0;
+    this.currentLevel = 0;
+    /** @type {number} */
+    this.currentNodeIndex = 0;
     /** @type {boolean} */
     this.pendingBattleDutki = true;
     /** @type {boolean} */
@@ -59,55 +62,133 @@ export class GameState {
     this.generateMap();
   }
 
-  /** @returns {MapNode[]} */
+  /** @returns {MapNode[][]} */
   generateMap() {
-    const length = 10 + Math.floor(Math.random() * 3);
-    /** @type {MapNode[]} */
+    /** @type {MapNode[][]} */
     const generated = [];
-    for (let i = 0; i < length; i++) {
-      if (i === 0) {
-        generated.push({ type: 'battle', label: 'Walka', emoji: '⚔️' });
-        continue;
-      }
-      if (i === length - 1) {
-        generated.push({ type: 'boss', label: 'Boss', emoji: '👑' });
-        continue;
-      }
-      generated.push({ type: 'battle', label: 'Walka', emoji: '⚔️' });
+    generated.push([this._createMapNode('fight')]);
+
+    for (let level = 1; level <= 4; level++) {
+      const count = 2 + Math.floor(Math.random() * 2);
+      const nodes = Array.from({ length: count }, () => this._createMapNode(this._rollMidNodeType()));
+      generated.push(nodes);
     }
 
-    const middle = Array.from({ length: length - 2 }, (_, idx) => idx + 1);
-    const shopIndex = middle[Math.floor(Math.random() * middle.length)];
-    let campIndex = middle[Math.floor(Math.random() * middle.length)];
-    while (campIndex === shopIndex) {
-      campIndex = middle[Math.floor(Math.random() * middle.length)];
-    }
+    generated.push([this._createMapNode('campfire')]);
+    generated.push([this._createMapNode('boss')]);
 
-    generated[shopIndex] = { type: 'shop', label: 'Sklep u Bacy', emoji: '🛒' };
-    generated[campIndex] = { type: 'campfire', label: 'Watra', emoji: '🔥' };
+    this._connectMapLevels(generated);
 
     this.map = generated;
-    this.currentMapNode = 0;
+    this.currentLevel = 0;
+    this.currentNodeIndex = 0;
     return this.map;
   }
 
   /**
+   * @param {MapNodeType} type
+   * @returns {MapNode}
+   */
+  _createMapNode(type) {
+    const meta = {
+      fight: { label: 'Walka', emoji: '⚔️' },
+      shop: { label: 'Sklep', emoji: '🛖' },
+      treasure: { label: 'Skarb', emoji: '🎁' },
+      campfire: { label: 'Watra', emoji: '🔥' },
+      boss: { label: 'Boss', emoji: '💀' },
+    };
+    return { ...meta[type], type, connections: [] };
+  }
+
+  /** @returns {MapNodeType} */
+  _rollMidNodeType() {
+    const roll = Math.random();
+    if (roll < 0.6) return 'fight';
+    if (roll < 0.85) return 'shop';
+    return 'treasure';
+  }
+
+  /**
+   * @param {MapNode[][]} map
+   */
+  _connectMapLevels(map) {
+    for (let level = 0; level < map.length - 1; level++) {
+      const currentLevel = map[level];
+      const nextLevel = map[level + 1];
+
+      currentLevel.forEach((node) => {
+        const firstTarget = Math.floor(Math.random() * nextLevel.length);
+        node.connections = [firstTarget];
+
+        if (nextLevel.length > 1 && Math.random() < 0.5) {
+          let secondTarget = Math.floor(Math.random() * nextLevel.length);
+          while (secondTarget === firstTarget) {
+            secondTarget = Math.floor(Math.random() * nextLevel.length);
+          }
+          node.connections.push(secondTarget);
+        }
+      });
+
+      nextLevel.forEach((_, targetIndex) => {
+        const hasInbound = currentLevel.some((node) => node.connections.includes(targetIndex));
+        if (!hasInbound) {
+          const sourceIndex = Math.floor(Math.random() * currentLevel.length);
+          currentLevel[sourceIndex].connections.push(targetIndex);
+        }
+      });
+
+      currentLevel.forEach((node) => {
+        node.connections = [...new Set(node.connections)].sort((a, b) => a - b);
+      });
+    }
+  }
+
+  /** @returns {number[]} */
+  getReachableNodes() {
+    const node = this.getCurrentMapNode();
+    return node ? [...node.connections] : [];
+  }
+
+  /**
+   * @param {number} level
+   * @param {number} nodeIndex
+   * @returns {boolean}
+   */
+  canTravelTo(level, nodeIndex) {
+    if (level !== this.currentLevel + 1) return false;
+    const nextLevel = this.map[level];
+    if (!nextLevel || !nextLevel[nodeIndex]) return false;
+    const currentNode = this.getCurrentMapNode();
+    if (!currentNode) return false;
+    return currentNode.connections.includes(nodeIndex);
+  }
+
+  /**
+   * @param {number} level
+   * @param {number} nodeIndex
    * @returns {MapNode | null}
    */
-  advanceMapNode() {
-    this.currentMapNode += 1;
-    if (this.currentMapNode >= this.map.length) {
-      this.generateMap();
-      this.currentMapNode = 1;
-    }
-    return this.map[this.currentMapNode] ?? null;
+  travelTo(level, nodeIndex) {
+    if (!this.canTravelTo(level, nodeIndex)) return null;
+    this.currentLevel = level;
+    this.currentNodeIndex = nodeIndex;
+    return this.getCurrentMapNode();
   }
 
   /**
    * @returns {MapNode | null}
    */
   getCurrentMapNode() {
-    return this.map[this.currentMapNode] ?? null;
+    return this.map[this.currentLevel]?.[this.currentNodeIndex] ?? null;
+  }
+
+  /** @returns {string | null} */
+  grantTreasureRelic() {
+    const pool = Object.keys(relicLibrary).filter((id) => !this.relics.includes(id));
+    if (pool.length === 0) return null;
+    const relicId = pool[Math.floor(Math.random() * pool.length)];
+    this.addRelic(relicId);
+    return relicId;
   }
 
   /**
