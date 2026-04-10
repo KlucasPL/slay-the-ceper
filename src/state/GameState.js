@@ -6,9 +6,11 @@ import { relicLibrary } from '../data/relics.js';
  * @typedef {import('../data/cards.js').StatusDef} StatusDef
  * @typedef {{ name: string, hp: number, maxHp: number, block: number, energy: number, maxEnergy: number, status: StatusDef }} PlayerState
  * @typedef {import('../data/enemies.js').EnemyMoveDef} EnemyMoveDef
- * @typedef {{ id: string, name: string, emoji: string, hp: number, maxHp: number, block: number, nextAttack: number, baseAttack: number, attackScale: number, status: StatusDef, spriteSvg: string, patternType: 'random'|'loop', pattern: EnemyMoveDef[], patternIndex: number, currentIntent: EnemyMoveDef, tookHpDamageThisTurn: boolean }} EnemyState
+ * @typedef {{ type: 'battle' | 'shop' | 'campfire' | 'boss', label: string, emoji: string }} MapNode
+ * @typedef {{ id: string, name: string, emoji: string, hp: number, maxHp: number, block: number, nextAttack: number, baseAttack: number, status: StatusDef, spriteSvg: string, patternType: 'random'|'loop', pattern: EnemyMoveDef[], patternIndex: number, currentIntent: EnemyMoveDef, tookHpDamageThisTurn: boolean }} EnemyState
  * @typedef {{ success: false } | { success: true, effect: import('../data/cards.js').CardEffectResult }} PlayCardResult
  * @typedef {{ enemyAttack: { raw: number, blocked: number, dealt: number }, enemyPassiveHeal: { amount: number, text: string } | null }} EndTurnResult
+ * @typedef {{ cards: string[], relic: string | null }} ShopStock
  */
 
 /** @returns {StatusDef} */
@@ -24,8 +26,8 @@ export class GameState {
   constructor(character, enemy) {
     /** @type {PlayerState} */
     this.player = { ...character, status: defaultStatus() };
-    /** @type {number} Dutki (gold) */
-    this.gold = 0;
+    /** @type {number} */
+    this.dutki = 50;
     /** @type {number} Number of won battles used for scaling */
     this.battleWins = 0;
     /** @type {string[]} */
@@ -38,8 +40,74 @@ export class GameState {
     this.exhaust = [];
     /** @type {string[]} */
     this.relics = [];
+    /** @type {Record<string, number>} */
+    this.cardDamageBonus = {};
+    /** @type {MapNode[]} */
+    this.map = [];
+    /** @type {number} */
+    this.currentMapNode = 0;
+    /** @type {boolean} */
+    this.pendingBattleDutki = true;
+    /** @type {boolean} */
+    this.firstAttackUsedThisTurn = false;
+    /** @type {ShopStock} */
+    this.shopStock = { cards: [], relic: null };
+    /** @type {string} */
+    this.lastShopMessage = '';
     /** @type {EnemyState} */
     this.enemy = this._createEnemyState(enemy);
+    this.generateMap();
+  }
+
+  /** @returns {MapNode[]} */
+  generateMap() {
+    const length = 10 + Math.floor(Math.random() * 3);
+    /** @type {MapNode[]} */
+    const generated = [];
+    for (let i = 0; i < length; i++) {
+      if (i === 0) {
+        generated.push({ type: 'battle', label: 'Walka', emoji: '⚔️' });
+        continue;
+      }
+      if (i === length - 1) {
+        generated.push({ type: 'boss', label: 'Boss', emoji: '👑' });
+        continue;
+      }
+      generated.push({ type: 'battle', label: 'Walka', emoji: '⚔️' });
+    }
+
+    const middle = Array.from({ length: length - 2 }, (_, idx) => idx + 1);
+    const shopIndex = middle[Math.floor(Math.random() * middle.length)];
+    let campIndex = middle[Math.floor(Math.random() * middle.length)];
+    while (campIndex === shopIndex) {
+      campIndex = middle[Math.floor(Math.random() * middle.length)];
+    }
+
+    generated[shopIndex] = { type: 'shop', label: 'Sklep u Bacy', emoji: '🛒' };
+    generated[campIndex] = { type: 'campfire', label: 'Watra', emoji: '🔥' };
+
+    this.map = generated;
+    this.currentMapNode = 0;
+    return this.map;
+  }
+
+  /**
+   * @returns {MapNode | null}
+   */
+  advanceMapNode() {
+    this.currentMapNode += 1;
+    if (this.currentMapNode >= this.map.length) {
+      this.generateMap();
+      this.currentMapNode = 1;
+    }
+    return this.map[this.currentMapNode] ?? null;
+  }
+
+  /**
+   * @returns {MapNode | null}
+   */
+  getCurrentMapNode() {
+    return this.map[this.currentMapNode] ?? null;
   }
 
   /**
@@ -48,6 +116,96 @@ export class GameState {
    */
   hasRelic(relicId) {
     return this.relics.includes(relicId);
+  }
+
+  /**
+   * @param {number} cost
+   * @returns {boolean}
+   */
+  spendDutki(cost) {
+    if (this.dutki < cost) return false;
+    this.dutki -= cost;
+    return true;
+  }
+
+  /**
+   * @returns {ShopStock}
+   */
+  generateShopStock() {
+    const cardPool = Object.keys(cardLibrary);
+    for (let i = cardPool.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [cardPool[i], cardPool[j]] = [cardPool[j], cardPool[i]];
+    }
+
+    const relicPool = Object.keys(relicLibrary).filter((id) => !this.relics.includes(id));
+    for (let i = relicPool.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [relicPool[i], relicPool[j]] = [relicPool[j], relicPool[i]];
+    }
+
+    this.shopStock = {
+      cards: cardPool.slice(0, 3),
+      relic: relicPool.length > 0 ? relicPool[0] : null,
+    };
+    this.lastShopMessage = '';
+    return this.shopStock;
+  }
+
+  /**
+   * @param {import('../data/cards.js').CardDef | import('../data/relics.js').RelicDef} item
+   * @param {'card' | 'relic'} type
+   * @returns {{ success: boolean, message: string }}
+   */
+  buyItem(item, type) {
+    if (this.dutki < item.price) {
+      this.lastShopMessage = 'Ni mos tela dutków, synek!';
+      return { success: false, message: this.lastShopMessage };
+    }
+
+    if (type === 'card') {
+      if (!this.shopStock.cards.includes(item.id)) {
+        this.lastShopMessage = 'To już wykupione.';
+        return { success: false, message: this.lastShopMessage };
+      }
+      this.dutki -= item.price;
+      this.deck.push(item.id);
+      this.shopStock.cards = this.shopStock.cards.filter((id) => id !== item.id);
+      this.lastShopMessage = `Kupiono kartę: ${item.name}`;
+      return { success: true, message: this.lastShopMessage };
+    }
+
+    if (this.shopStock.relic !== item.id || this.hasRelic(item.id)) {
+      this.lastShopMessage = 'Ta pamiątka nie jest dostępna.';
+      return { success: false, message: this.lastShopMessage };
+    }
+    this.dutki -= item.price;
+    this.addRelic(item.id);
+    this.shopStock.relic = null;
+    this.lastShopMessage = `Kupiono pamiątkę: ${item.name}`;
+    return { success: true, message: this.lastShopMessage };
+  }
+
+  /**
+   * @param {string} cardId
+   * @returns {boolean}
+   */
+  removeCardFromDeck(cardId) {
+    const removeFrom = (arr) => {
+      const idx = arr.indexOf(cardId);
+      if (idx >= 0) {
+        arr.splice(idx, 1);
+        return true;
+      }
+      return false;
+    };
+
+    return (
+      removeFrom(this.deck) ||
+      removeFrom(this.hand) ||
+      removeFrom(this.discard) ||
+      removeFrom(this.exhaust)
+    );
   }
 
   /**
@@ -70,6 +228,57 @@ export class GameState {
     }
 
     return true;
+  }
+
+  /**
+   * @param {number} amount
+   */
+  healPlayer(amount) {
+    this.player.hp = Math.min(this.player.maxHp, this.player.hp + amount);
+  }
+
+  /**
+   * @param {string} cardId
+   * @param {number} amount
+   */
+  upgradeCardDamage(cardId, amount = 3) {
+    this.cardDamageBonus[cardId] = (this.cardDamageBonus[cardId] ?? 0) + amount;
+  }
+
+  /**
+   * @param {string} cardId
+   * @returns {number}
+   */
+  getCardDamageBonus(cardId) {
+    return this.cardDamageBonus[cardId] ?? 0;
+  }
+
+  /**
+   * @returns {string[]}
+   */
+  getUpgradeableAttackCards() {
+    const pool = [...this.deck, ...this.hand, ...this.discard, ...this.exhaust];
+    const attackIds = new Set([
+      'ciupaga',
+      'kierpce',
+      'redyk',
+      'zadyma',
+      'janosik',
+      'sandaly',
+      'giewont',
+    ]);
+    return [...new Set(pool.filter((id) => attackIds.has(id)))];
+  }
+
+  /**
+   * @returns {number}
+   */
+  grantBattleDutki() {
+    if (!this.pendingBattleDutki) return 0;
+    const drop = 30 + Math.floor(Math.random() * 11);
+    this.dutki += drop;
+    this.pendingBattleDutki = false;
+    return drop;
   }
 
   /**
@@ -108,20 +317,24 @@ export class GameState {
    * @param {import('../data/enemies.js').EnemyDef} enemyDef
    * @returns {EnemyState}
    */
-  _createEnemyState(enemyDef) {
-    const pattern = enemyDef.pattern ? enemyDef.pattern.map((move) => ({ ...move })) : [];
-    const maxHp = enemyDef.maxHp + this.battleWins * 10;
+  _createEnemyState(enemyDef, isBoss = false) {
+    const pattern = enemyDef.pattern
+      ? enemyDef.pattern.map((move) => {
+          if (!isBoss || move.type !== 'attack') return { ...move };
+          return { ...move, damage: move.damage + 5 };
+        })
+      : [];
+    const maxHp = isBoss ? enemyDef.maxHp * 2 : enemyDef.maxHp;
     /** @type {EnemyState} */
     const enemyState = {
       id: enemyDef.id,
-      name: enemyDef.name,
+      name: isBoss ? `ELITARNY ${enemyDef.name}` : enemyDef.name,
       emoji: enemyDef.emoji,
       hp: maxHp,
       maxHp,
       block: enemyDef.block,
       nextAttack: 0,
-      baseAttack: (enemyDef.baseAttack ?? 0) + this.battleWins * 2,
-      attackScale: enemyDef.patternType === 'loop' ? this.battleWins * 2 : 0,
+      baseAttack: (enemyDef.baseAttack ?? 0) + (isBoss ? 5 : 0),
       status: defaultStatus(),
       spriteSvg: enemyDef.spriteSvg,
       patternType: enemyDef.patternType,
@@ -152,6 +365,7 @@ export class GameState {
     this._shuffle(this.deck);
     this.startTurn();
     this._applyBattleStartRelics();
+    this.pendingBattleDutki = true;
   }
 
   /**
@@ -239,6 +453,16 @@ export class GameState {
 
     if (sourceEntity === this.player && targetEntity === this.enemy && this.hasRelic('bat')) {
       dmg += 1;
+    }
+
+    if (
+      sourceEntity === this.player &&
+      targetEntity === this.enemy &&
+      this.hasRelic('zakopane') &&
+      !this.firstAttackUsedThisTurn
+    ) {
+      dmg = Math.floor(dmg * 1.5);
+      this.firstAttackUsedThisTurn = true;
     }
 
     if (
@@ -361,6 +585,21 @@ export class GameState {
   }
 
   /**
+   * @returns {Array<{ text: string, tooltip: string }>}
+   */
+  getEnemySpecialStatuses() {
+    if (this.enemy.id !== 'baba') return [];
+
+    return [
+      {
+        text: '🧀 Świeży łoscypek',
+        tooltip:
+          'Na końcu tury gracza Gaździna leczy 5 HP, jeśli nie dostała obrażeń HP w tej turze.',
+      },
+    ];
+  }
+
+  /**
    * Ticks down duration-based status debuffs (weak, fragile) by 1 each.
    * @param {StatusDef} status
    */
@@ -374,6 +613,7 @@ export class GameState {
    */
   startTurn() {
     this.enemy.tookHpDamageThisTurn = false;
+    this.firstAttackUsedThisTurn = false;
     this.player.energy = this.player.maxEnergy + this.player.status.energy_next_turn;
     this.player.status.energy_next_turn = 0;
     this.player.block = 0;
@@ -448,9 +688,9 @@ export class GameState {
   }
 
   /**
-   * Resets combat after victory and scales difficulty for the next Ceper.
-   * - Enemy maxHp +10 and baseAttack +2 (permanently for this run)
-   * - Heal player by 15 (up to maxHp)
+   * Resets combat after victory with fixed enemy stats from enemyLibrary.
+   * - Keep player HP between battles (no auto-heal)
+   * - Boss node only: spawn ELITARNY enemy (HP x2, attacks +5)
    * - Clear blocks and statuses
    * - Move hand/discard/exhaust back to deck and shuffle
    * - Start a fresh turn
@@ -468,7 +708,10 @@ export class GameState {
     this.exhaust = [];
     this._shuffle(this.deck);
 
-    this.enemy = this._createEnemyState(this._pickRandomEnemyDef());
+    const currentNode = this.getCurrentMapNode();
+    const isBossNode = currentNode?.type === 'boss';
+    this.enemy = this._createEnemyState(this._pickRandomEnemyDef(), isBossNode);
+    this.pendingBattleDutki = true;
 
     this.startTurn();
     this._applyBattleStartRelics();

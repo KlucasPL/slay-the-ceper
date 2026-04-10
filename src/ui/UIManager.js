@@ -9,6 +9,8 @@ export class UIManager {
     this.state = state;
     /** @type {boolean} */
     this.isAnimating = false;
+    /** @type {boolean} */
+    this.campfireUsed = false;
   }
 
   /**
@@ -16,6 +18,21 @@ export class UIManager {
    */
   init() {
     document.getElementById('end-turn-btn').addEventListener('click', () => this._handleEndTurn());
+    document
+      .getElementById('map-continue-btn')
+      .addEventListener('click', () => this._handleMapAdvance());
+    document.getElementById('shop-exit-btn').addEventListener('click', () => this._closeShop());
+    document.getElementById('shop-heal-btn').addEventListener('click', () => this._buyShopHeal());
+    document
+      .getElementById('shop-remove-btn')
+      .addEventListener('click', () => this._buyCardRemoval());
+    document.getElementById('camp-exit-btn').addEventListener('click', () => this._closeCampfire());
+    document
+      .getElementById('camp-heal-btn')
+      .addEventListener('click', () => this._useCampfireHeal());
+    document
+      .getElementById('camp-upgrade-btn')
+      .addEventListener('click', () => this._useCampfireUpgrade());
     window.addEventListener('resize', () => this._scaleGame());
     this._scaleGame();
     this.updateUI();
@@ -30,11 +47,14 @@ export class UIManager {
     this._renderRelics();
     document.getElementById('p-hp').textContent = player.hp;
     document.getElementById('p-max-hp').textContent = player.maxHp;
+    const hpLine = document.getElementById('p-hp-line');
+    hpLine.classList.toggle('low-hp', player.hp / player.maxHp < 0.3);
     document.getElementById('p-block').textContent = player.block;
     document.getElementById('e-hp').textContent = enemy.hp;
     document.getElementById('e-max-hp').textContent = enemy.maxHp;
     document.getElementById('e-block').textContent = enemy.block;
     document.getElementById('energy').textContent = player.energy;
+    document.getElementById('dutki').textContent = this.state.dutki;
     document.getElementById('e-intent').textContent = this.state.getEnemyIntentText();
     document.getElementById('draw-pile-count').textContent = deck.length;
     document.getElementById('discard-pile-count').textContent = discard.length;
@@ -97,11 +117,19 @@ export class UIManager {
     /** @param {number} turns */
     const turnLabel = (turns) => (turns === 1 ? 'tura' : 'tury');
 
-    /** @param {string} text */
-    const tag = (text) => {
+    /**
+     * @param {string} text
+     * @param {string} [tooltip]
+     */
+    const tag = (text, tooltip) => {
       const span = document.createElement('span');
       span.className = 'status-tag';
       span.textContent = text;
+      if (tooltip) {
+        span.classList.add('status-tag-hint');
+        span.title = tooltip;
+        span.setAttribute('aria-label', `${text}: ${tooltip}`);
+      }
       el.appendChild(span);
     };
 
@@ -110,6 +138,12 @@ export class UIManager {
     if (status.fragile > 0) tag(`🫧 Kruchość: ${status.fragile} ${turnLabel(status.fragile)}`);
     if (status.next_double) tag('✨ Następny atak: x2');
     if (status.energy_next_turn > 0) tag(`⚡ Nast. tura: +${status.energy_next_turn} Oscypek`);
+
+    if (containerId === 'e-statuses') {
+      this.state.getEnemySpecialStatuses().forEach((special) => {
+        tag(special.text, special.tooltip);
+      });
+    }
   }
 
   /**
@@ -224,7 +258,8 @@ export class UIManager {
    */
   _showEndGame(outcome) {
     if (outcome === 'player_win') {
-      this._showVictoryOverlay();
+      const droppedDutki = this.state.grantBattleDutki();
+      this._showVictoryOverlay(droppedDutki);
       return;
     }
     const msg = 'Koniec gry! Tłum turystów poprosił Cię o zrobienie im grupowego zdjęcia.';
@@ -234,12 +269,15 @@ export class UIManager {
   /**
    * Displays a victory reward overlay with 3 random non-basic cards.
    */
-  _showVictoryOverlay() {
+  _showVictoryOverlay(droppedDutki) {
     const overlay = document.getElementById('victory-overlay');
+    const rewardDutki = document.getElementById('victory-dutki');
     const rewardRelic = document.getElementById('reward-relic');
     const rewardCards = document.getElementById('reward-cards');
     const choices = this._pickRewardCards(3);
     const relicChoice = this._pickRewardRelic();
+
+    rewardDutki.textContent = droppedDutki > 0 ? `Łup z walki: +${droppedDutki} Dutków` : '';
 
     rewardRelic.innerHTML = '';
     if (relicChoice) {
@@ -273,10 +311,9 @@ export class UIManager {
       `;
       cardEl.addEventListener('click', () => {
         this.state.deck.push(cardId);
-        this.state.resetBattle();
         overlay.classList.add('hidden');
         overlay.setAttribute('aria-hidden', 'true');
-        document.getElementById('end-turn-btn').disabled = false;
+        this._openMapOverlay();
         this.updateUI();
       });
       rewardCards.appendChild(cardEl);
@@ -284,6 +321,7 @@ export class UIManager {
 
     overlay.classList.remove('hidden');
     overlay.setAttribute('aria-hidden', 'false');
+    document.getElementById('end-turn-btn').disabled = true;
   }
 
   /**
@@ -307,11 +345,270 @@ export class UIManager {
     const relicChance = 0.33;
     if (Math.random() >= relicChance) return null;
 
-    const available = Object.keys(relicLibrary).filter((id) => !this.state.relics.includes(id));
+    const available = Object.keys(relicLibrary).filter(
+      (id) => !this.state.relics.includes(id) && id !== 'zakopane'
+    );
     if (available.length === 0) return null;
 
     const idx = Math.floor(Math.random() * available.length);
     return available[idx];
+  }
+
+  _openMapOverlay() {
+    this._renderMapTrack();
+    const overlay = document.getElementById('map-overlay');
+    overlay.classList.remove('hidden');
+    overlay.setAttribute('aria-hidden', 'false');
+  }
+
+  _renderMapTrack() {
+    const track = document.getElementById('map-track');
+    if (!track) return;
+
+    track.innerHTML = '';
+    this.state.map.forEach((node, idx) => {
+      const item = document.createElement('div');
+      const isDone = idx < this.state.currentMapNode;
+      const isCurrent = idx === this.state.currentMapNode;
+      item.className = `map-node${isDone ? ' done' : ''}${isCurrent ? ' current' : ''}`;
+      item.textContent = `${node.emoji} ${node.label}`;
+      track.appendChild(item);
+    });
+  }
+
+  _handleMapAdvance() {
+    const node = this.state.advanceMapNode();
+    if (!node) return;
+
+    if (node.type === 'battle' || node.type === 'boss') {
+      this.state.resetBattle();
+      this._hideOverlay('map-overlay');
+      document.getElementById('end-turn-btn').disabled = false;
+      this.updateUI();
+      return;
+    }
+
+    if (node.type === 'shop') {
+      this._openShop();
+      return;
+    }
+
+    this._openCampfire();
+  }
+
+  _openShop() {
+    this._hideOverlay('map-overlay');
+    const overlay = document.getElementById('shop-overlay');
+    overlay.classList.remove('hidden');
+    overlay.setAttribute('aria-hidden', 'false');
+    this.state.generateShopStock();
+    this._renderShopOffers();
+  }
+
+  _closeShop() {
+    this._hideOverlay('shop-overlay');
+    this._openMapOverlay();
+    this.updateUI();
+  }
+
+  _renderShopOffers() {
+    const cardContainer = document.getElementById('shop-cards');
+    const relicContainer = document.getElementById('shop-relic');
+    const healBtn = document.getElementById('shop-heal-btn');
+    const removeBtn = document.getElementById('shop-remove-btn');
+    const message = document.getElementById('shop-message');
+    const cards = this.state.shopStock.cards;
+
+    cardContainer.innerHTML = '';
+    cards.forEach((cardId) => {
+      const card = cardLibrary[cardId];
+      if (!card) return;
+
+      const cardBox = document.createElement('div');
+      cardBox.className = 'shop-item';
+
+      const title = document.createElement('div');
+      title.className = 'shop-item-title';
+      title.textContent = `${card.emoji} ${card.name}`;
+      title.title = card.desc;
+      title.setAttribute('aria-label', `${card.name}: ${card.desc}`);
+
+      const desc = document.createElement('div');
+      desc.className = 'shop-item-desc';
+      desc.textContent = card.desc;
+
+      const price = document.createElement('div');
+      price.className = 'shop-item-price';
+      price.textContent = `${card.price} 💰`;
+
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'shop-card-btn';
+      btn.textContent = 'Kup';
+      btn.title = `${card.name}: ${card.desc}`;
+      btn.setAttribute('aria-label', `Kup kartę ${card.name}. ${card.desc}`);
+      btn.disabled = this.state.dutki < card.price;
+      btn.addEventListener('click', () => {
+        const result = this.state.buyItem(card, 'card');
+        message.textContent = result.message;
+        this._renderShopOffers();
+        this.updateUI();
+      });
+
+      cardBox.append(title, desc, price, btn);
+      cardContainer.appendChild(cardBox);
+    });
+
+    relicContainer.innerHTML = '';
+    if (this.state.shopStock.relic) {
+      const relic = relicLibrary[this.state.shopStock.relic];
+      if (relic) {
+        const relicBox = document.createElement('div');
+        relicBox.className = 'shop-item';
+
+        const title = document.createElement('div');
+        title.className = 'shop-item-title';
+        title.textContent = `${relic.emoji} ${relic.name}`;
+        title.title = relic.desc;
+        title.setAttribute('aria-label', `${relic.name}: ${relic.desc}`);
+
+        const desc = document.createElement('div');
+        desc.className = 'shop-item-desc';
+        desc.textContent = relic.desc;
+
+        const price = document.createElement('div');
+        price.className = 'shop-item-price';
+        price.textContent = `${relic.price} 💰`;
+
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'shop-card-btn';
+        btn.textContent = 'Kup';
+        btn.title = `${relic.name}: ${relic.desc}`;
+        btn.setAttribute('aria-label', `Kup pamiątkę ${relic.name}. ${relic.desc}`);
+        btn.disabled = this.state.dutki < relic.price;
+        btn.addEventListener('click', () => {
+          const result = this.state.buyItem(relic, 'relic');
+          message.textContent = result.message;
+          this._renderShopOffers();
+          this.updateUI();
+        });
+
+        relicBox.append(title, desc, price, btn);
+        relicContainer.appendChild(relicBox);
+      }
+    }
+
+    healBtn.disabled = this.state.dutki < 75 || this.state.player.hp >= this.state.player.maxHp;
+    this._populateRemoveCardSelect();
+    const select = document.getElementById('shop-remove-select');
+    removeBtn.disabled = this.state.dutki < 100 || !select.value;
+
+    if (!message.textContent) {
+      message.textContent = this.state.lastShopMessage;
+    }
+  }
+
+  _buyShopHeal() {
+    const message = document.getElementById('shop-message');
+    if (!this.state.spendDutki(75)) {
+      message.textContent = 'Ni mos tela dutków, synek!';
+      return;
+    }
+    this.state.healPlayer(15);
+    message.textContent = 'Baca podał oscypek na ratunek.';
+    this._renderShopOffers();
+    this.updateUI();
+  }
+
+  _buyCardRemoval() {
+    const select = document.getElementById('shop-remove-select');
+    const message = document.getElementById('shop-message');
+    const cardId = select.value;
+    if (!cardId) return;
+    if (!this.state.spendDutki(100)) {
+      message.textContent = 'Ni mos tela dutków, synek!';
+      return;
+    }
+    const removed = this.state.removeCardFromDeck(cardId);
+    if (!removed) {
+      message.textContent = 'Nie ma tej karty do usunięcia.';
+      return;
+    }
+    message.textContent = `Usunięto kartę: ${cardLibrary[cardId]?.name ?? cardId}`;
+    this._renderShopOffers();
+    this.updateUI();
+  }
+
+  _populateRemoveCardSelect() {
+    const select = document.getElementById('shop-remove-select');
+    const pool = [
+      ...this.state.deck,
+      ...this.state.hand,
+      ...this.state.discard,
+      ...this.state.exhaust,
+    ];
+    const unique = [...new Set(pool)];
+    select.innerHTML = '';
+    unique.forEach((cardId) => {
+      const option = document.createElement('option');
+      option.value = cardId;
+      option.textContent = cardLibrary[cardId]?.name ?? cardId;
+      select.appendChild(option);
+    });
+  }
+
+  _openCampfire() {
+    this.campfireUsed = false;
+    this._hideOverlay('map-overlay');
+    const overlay = document.getElementById('campfire-overlay');
+    overlay.classList.remove('hidden');
+    overlay.setAttribute('aria-hidden', 'false');
+
+    const select = document.getElementById('camp-card-select');
+    select.innerHTML = '';
+    const options = this.state.getUpgradeableAttackCards();
+    options.forEach((cardId) => {
+      const option = document.createElement('option');
+      option.value = cardId;
+      option.textContent = cardLibrary[cardId]?.name ?? cardId;
+      select.appendChild(option);
+    });
+
+    document.getElementById('camp-upgrade-btn').disabled = options.length === 0;
+  }
+
+  _closeCampfire() {
+    this._hideOverlay('campfire-overlay');
+    this._openMapOverlay();
+    this.updateUI();
+  }
+
+  _useCampfireHeal() {
+    if (this.campfireUsed) return;
+    const healAmount = Math.max(1, Math.floor(this.state.player.maxHp * 0.2));
+    this.state.healPlayer(healAmount);
+    this.campfireUsed = true;
+    this._closeCampfire();
+  }
+
+  _useCampfireUpgrade() {
+    if (this.campfireUsed) return;
+    const select = document.getElementById('camp-card-select');
+    const cardId = select.value;
+    if (!cardId) return;
+    this.state.upgradeCardDamage(cardId, 3);
+    this.campfireUsed = true;
+    this._closeCampfire();
+  }
+
+  /**
+   * @param {string} overlayId
+   */
+  _hideOverlay(overlayId) {
+    const overlay = document.getElementById(overlayId);
+    overlay.classList.add('hidden');
+    overlay.setAttribute('aria-hidden', 'true');
   }
 
   /**

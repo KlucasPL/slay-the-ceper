@@ -1,7 +1,7 @@
 /**
  * @typedef {{ strength: number, weak: number, fragile: number, next_double: boolean, energy_next_turn: number }} StatusDef
  * @typedef {{ playerAnim?: string, enemyAnim?: string, damage?: { raw: number, blocked: number, dealt: number } }} CardEffectResult
- * @typedef {{ id: string, name: string, cost: number, emoji: string, desc: string, exhaust?: boolean, effect: (state: import('../state/GameState.js').GameState) => CardEffectResult }} CardDef
+ * @typedef {{ id: string, name: string, cost: number, price: number, emoji: string, desc: string, exhaust?: boolean, effect: (state: import('../state/GameState.js').GameState) => CardEffectResult }} CardDef
  */
 
 /** @type {Record<string, CardDef>} */
@@ -10,10 +10,11 @@ export const cardLibrary = {
     id: 'ciupaga',
     name: 'Cios Ciupagą',
     cost: 1,
+    price: 40,
     emoji: '🪓',
     desc: 'Zadaje 6 obrażeń.',
     effect(state) {
-      const dmg = state._calcAttackDamage(state.player, 6);
+      const dmg = state._calcAttackDamage(state.player, 6 + state.getCardDamageBonus('ciupaga'));
       const damage = state._applyDamageToEnemy(dmg);
       return {
         playerAnim: 'anim-attack-p',
@@ -26,6 +27,7 @@ export const cardLibrary = {
     id: 'gasior',
     name: 'Łyk z Gąsiora',
     cost: 1,
+    price: 35,
     emoji: '🏺',
     desc: 'Zyskujesz 5 Gardy.',
     effect(state) {
@@ -37,10 +39,11 @@ export const cardLibrary = {
     id: 'kierpce',
     name: 'Rzut Kierpcem',
     cost: 2,
+    price: 70,
     emoji: '👞',
     desc: 'Zadaje 12 obrażeń. Śmierdzi.',
     effect(state) {
-      const dmg = state._calcAttackDamage(state.player, 12);
+      const dmg = state._calcAttackDamage(state.player, 12 + state.getCardDamageBonus('kierpce'));
       const damage = state._applyDamageToEnemy(dmg);
       return {
         playerAnim: 'anim-attack-p',
@@ -53,6 +56,7 @@ export const cardLibrary = {
     id: 'hej',
     name: 'Góralskie Hej!',
     cost: 0,
+    price: 60,
     emoji: '🗣️',
     desc: 'Dobierz 2 karty. Hej!',
     effect(state) {
@@ -67,6 +71,7 @@ export const cardLibrary = {
     id: 'sernik',
     name: 'Sernik',
     cost: 0,
+    price: 50,
     emoji: '🍰',
     desc: 'Zyskujesz 1 Oscypek. Exhaust.',
     exhaust: true,
@@ -79,14 +84,16 @@ export const cardLibrary = {
     id: 'redyk',
     name: 'Redyk',
     cost: 1,
+    price: 80,
     emoji: '🐑',
     desc: 'Atakuje 4 razy po 2 obrażenia (+Siła).',
     effect(state) {
       let totalDealt = 0;
       let totalBlocked = 0;
+      const baseHit = 2 + state.getCardDamageBonus('redyk');
       for (let i = 0; i < 4; i++) {
         if (state.enemy.hp <= 0) break;
-        const dmg = state._calcAttackDamage(state.player, 2);
+        const dmg = state._calcAttackDamage(state.player, baseHit);
         const damage = state._applyDamageToEnemy(dmg);
         totalDealt += damage.dealt;
         totalBlocked += damage.blocked;
@@ -102,6 +109,7 @@ export const cardLibrary = {
     id: 'halny',
     name: 'Halny',
     cost: 2,
+    price: 90,
     emoji: '🌬️',
     desc: 'Odrzuć rękę, dobierz 3 karty.',
     effect(state) {
@@ -115,6 +123,7 @@ export const cardLibrary = {
     id: 'parzenica',
     name: 'Parzenica',
     cost: 1,
+    price: 85,
     emoji: '🧶',
     desc: 'Zyskujesz 7 Gardy. Na początku kolejnej tury +1 Oscypek.',
     effect(state) {
@@ -127,11 +136,13 @@ export const cardLibrary = {
     id: 'zadyma',
     name: 'Zadyma',
     cost: 1,
+    price: 75,
     emoji: '💥',
     desc: 'Zadaje 8 obrażeń. Jeśli wróg ma Gardę: 12 obrażeń.',
     effect(state) {
+      const bonus = state.getCardDamageBonus('zadyma');
       const base = state.enemy.block > 0 ? 12 : 8;
-      const dmg = state._calcAttackDamage(state.player, base);
+      const dmg = state._calcAttackDamage(state.player, base + bonus);
       const damage = state._applyDamageToEnemy(dmg);
       return {
         playerAnim: 'anim-attack-p',
@@ -144,6 +155,7 @@ export const cardLibrary = {
     id: 'zyntyca',
     name: 'Żyntyca',
     cost: 1,
+    price: 65,
     emoji: '🥛',
     desc: 'Leczysz 4 Krzepa.',
     effect(state) {
@@ -155,12 +167,13 @@ export const cardLibrary = {
     id: 'janosik',
     name: 'Janosik',
     cost: 1,
+    price: 95,
     emoji: '🗡️',
     desc: 'Zadaje 7 obrażeń. Jeśli Cepr pada: +20 Dutki.',
     effect(state) {
-      const dmg = state._calcAttackDamage(state.player, 7);
+      const dmg = state._calcAttackDamage(state.player, 7 + state.getCardDamageBonus('janosik'));
       const damage = state._applyDamageToEnemy(dmg);
-      if (state.enemy.hp <= 0) state.gold += 20;
+      if (state.enemy.hp <= 0) state.dutki += 20;
       return {
         playerAnim: 'anim-attack-p',
         enemyAnim: damage.dealt > 0 ? 'anim-damage' : 'anim-block',
@@ -172,6 +185,7 @@ export const cardLibrary = {
     id: 'echo',
     name: 'Echo',
     cost: 2,
+    price: 100,
     emoji: '🔊',
     desc: 'Twój następny atak zadaje podwójne obrażenia.',
     effect(state) {
@@ -183,10 +197,11 @@ export const cardLibrary = {
     id: 'sandaly',
     name: 'Sandały',
     cost: 1,
+    price: 70,
     emoji: '👡',
     desc: 'Zadaje 5 obrażeń. Nakłada Słabość 2 na wroga.',
     effect(state) {
-      const dmg = state._calcAttackDamage(state.player, 5);
+      const dmg = state._calcAttackDamage(state.player, 5 + state.getCardDamageBonus('sandaly'));
       const damage = state._applyDamageToEnemy(dmg);
       state.enemy.status.weak += 2;
       return {
@@ -200,10 +215,11 @@ export const cardLibrary = {
     id: 'giewont',
     name: 'Giewont',
     cost: 3,
+    price: 120,
     emoji: '⛰️',
     desc: 'Zadaje 25 obrażeń.',
     effect(state) {
-      const dmg = state._calcAttackDamage(state.player, 25);
+      const dmg = state._calcAttackDamage(state.player, 25 + state.getCardDamageBonus('giewont'));
       const damage = state._applyDamageToEnemy(dmg);
       return {
         playerAnim: 'anim-attack-p',

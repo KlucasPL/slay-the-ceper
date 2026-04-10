@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { GameState } from '../src/state/GameState.js';
-import { startingDeck } from '../src/data/cards.js';
+import { cardLibrary, startingDeck } from '../src/data/cards.js';
 import { enemyLibrary } from '../src/data/enemies.js';
+import { relicLibrary } from '../src/data/relics.js';
 
 const mockPlayer = {
   name: 'Jędrek',
@@ -421,18 +422,18 @@ describe('GameState', () => {
       s.hand = ['janosik'];
       s.enemy.hp = 5;
       s.enemy.block = 0;
-      s.gold = 0;
+      s.dutki = 0;
       s.playCard(0);
-      expect(s.gold).toBe(20);
+      expect(s.dutki).toBe(20);
     });
     it('does not grant Dutki if enemy survives', () => {
       const s = freshState();
       s.hand = ['janosik'];
       s.enemy.hp = 40;
       s.enemy.block = 0;
-      s.gold = 0;
+      s.dutki = 0;
       s.playCard(0);
-      expect(s.gold).toBe(0);
+      expect(s.dutki).toBe(0);
     });
   });
 
@@ -564,6 +565,100 @@ describe('GameState', () => {
       s.endTurn();
       expect(s.player.hp).toBe(43);
     });
+
+    it('zakopane boosts only first attack in turn by 50%', () => {
+      const s = freshState();
+      s.addRelic('zakopane');
+      s.hand = ['ciupaga', 'ciupaga'];
+      s.enemy.hp = 40;
+      s.enemy.block = 0;
+      s.playCard(0);
+      s.playCard(0);
+      // first hit: floor(6*1.5)=9, second hit: 6
+      expect(s.enemy.hp).toBe(25);
+    });
+  });
+
+  describe('map and economy', () => {
+    it('starts with 50 Dutki and generated map', () => {
+      const s = freshState();
+      expect(s.dutki).toBe(50);
+      expect(s.map.length).toBeGreaterThanOrEqual(10);
+      expect(s.map.length).toBeLessThanOrEqual(12);
+      expect(s.map[0]?.type).toBe('battle');
+      expect(s.map[s.map.length - 1]?.type).toBe('boss');
+    });
+
+    it('battle reward grants 30-40 Dutki only once per battle', () => {
+      const s = freshState();
+      s.dutki = 0;
+      const first = s.grantBattleDutki();
+      const second = s.grantBattleDutki();
+      expect(first).toBeGreaterThanOrEqual(30);
+      expect(first).toBeLessThanOrEqual(40);
+      expect(second).toBe(0);
+      expect(s.dutki).toBe(first);
+    });
+
+    it('spendDutki returns false when funds are insufficient', () => {
+      const s = freshState();
+      s.dutki = 10;
+      expect(s.spendDutki(75)).toBe(false);
+      expect(s.dutki).toBe(10);
+    });
+
+    it('all cards expose numeric shop price', () => {
+      Object.values(cardLibrary).forEach((card) => {
+        expect(typeof card.price).toBe('number');
+        expect(card.price).toBeGreaterThan(0);
+      });
+    });
+
+    it('all relics expose numeric shop price', () => {
+      Object.values(relicLibrary).forEach((relic) => {
+        expect(typeof relic.price).toBe('number');
+        expect(relic.price).toBeGreaterThan(0);
+      });
+    });
+
+    it('buyItem buys a shop card once and removes it from stock', () => {
+      const s = freshState();
+      s.dutki = 500;
+      s.shopStock = { cards: ['ciupaga'], relic: null };
+      const result = s.buyItem(cardLibrary.ciupaga, 'card');
+      expect(result.success).toBe(true);
+      expect(s.deck).toContain('ciupaga');
+      expect(s.shopStock.cards).not.toContain('ciupaga');
+      const secondTry = s.buyItem(cardLibrary.ciupaga, 'card');
+      expect(secondTry.success).toBe(false);
+    });
+
+    it('buyItem rejects purchase when Dutki are insufficient', () => {
+      const s = freshState();
+      s.dutki = 0;
+      s.shopStock = { cards: ['giewont'], relic: null };
+      const result = s.buyItem(cardLibrary.giewont, 'card');
+      expect(result.success).toBe(false);
+      expect(result.message).toBe('Ni mos tela dutków, synek!');
+    });
+
+    it('buyItem buys relic and removes it from display slot', () => {
+      const s = freshState();
+      s.dutki = 500;
+      s.shopStock = { cards: [], relic: 'termos' };
+      const result = s.buyItem(relicLibrary.termos, 'relic');
+      expect(result.success).toBe(true);
+      expect(s.relics).toContain('termos');
+      expect(s.shopStock.relic).toBeNull();
+    });
+
+    it('removeCardFromDeck permanently removes selected card copy', () => {
+      const s = freshState();
+      s.deck = ['ciupaga', 'gasior'];
+      const removed = s.removeCardFromDeck('gasior');
+      expect(removed).toBe(true);
+      expect(s.deck).not.toContain('gasior');
+    });
   });
 
   describe('busiarz', () => {
@@ -572,7 +667,7 @@ describe('GameState', () => {
       expect(s.enemy.currentIntent).toEqual({
         type: 'attack',
         name: 'Trąbienie na pieszych',
-        damage: 3,
+        damage: 5,
         hits: 2,
       });
     });
@@ -609,7 +704,7 @@ describe('GameState', () => {
 
     it('intent text includes move name and total damage for multi-hit move', () => {
       const s = freshBusiarzState();
-      expect(s.getEnemyIntentText()).toBe('Zamiar: Trąbienie na pieszych (⚔️ 6, 2x)');
+      expect(s.getEnemyIntentText()).toBe('Zamiar: Trąbienie na pieszych (⚔️ 10, 2x)');
     });
   });
 
@@ -662,6 +757,14 @@ describe('GameState', () => {
       s.enemy.tookHpDamageThisTurn = true;
       s.startTurn();
       expect(s.enemy.tookHpDamageThisTurn).toBe(false);
+    });
+
+    it('exposes special healing status description for UI', () => {
+      const s = freshBabaState();
+      const statuses = s.getEnemySpecialStatuses();
+      expect(statuses).toHaveLength(1);
+      expect(statuses[0]?.text).toBe('🧀 Świeży łoscypek');
+      expect(statuses[0]?.tooltip).toContain('leczy 5 HP');
     });
   });
 
@@ -785,14 +888,13 @@ describe('GameState', () => {
 
   // ── resetBattle ───────────────────────────────────────────────────────────
   describe('resetBattle', () => {
-    it('scales enemy maxHp by 10 and baseAttack by 2', () => {
+    it('keeps enemy base stats from library on regular nodes', () => {
       const s = freshState();
-      const oldMaxHp = s.enemy.maxHp;
-      const oldBaseAttack = s.enemy.baseAttack;
       vi.spyOn(Math, 'random').mockReturnValue(0);
       s.resetBattle();
-      expect(s.enemy.maxHp).toBe(oldMaxHp + 10);
-      expect(s.enemy.baseAttack).toBe(oldBaseAttack + 2);
+      expect(s.enemy.id).toBe('cepr');
+      expect(s.enemy.maxHp).toBe(enemyLibrary.cepr.maxHp);
+      expect(s.enemy.baseAttack).toBe(enemyLibrary.cepr.baseAttack);
     });
 
     it('does not heal player between battles', () => {
@@ -856,8 +958,8 @@ describe('GameState', () => {
       s.resetBattle();
       expect(s.enemy.hp).toBe(s.enemy.maxHp);
       if (s.enemy.patternType === 'random') {
-        const min = s.enemy.baseAttack + s.enemy.attackScale - 3;
-        const max = s.enemy.baseAttack + s.enemy.attackScale + 2;
+        const min = s.enemy.baseAttack - 3;
+        const max = s.enemy.baseAttack + 2;
         expect(s.enemy.nextAttack).toBeGreaterThanOrEqual(min);
         expect(s.enemy.nextAttack).toBeLessThanOrEqual(max);
       }
@@ -869,7 +971,7 @@ describe('GameState', () => {
       s.resetBattle();
       expect(s.enemy.id).toBe('busiarz');
       expect(s.enemy.name).toBe('Wąsaty Staszek');
-      expect(s.enemy.maxHp).toBe(45);
+      expect(s.enemy.maxHp).toBe(35);
     });
 
     it('can load Babę from the enemy library after victory', () => {
@@ -878,7 +980,22 @@ describe('GameState', () => {
       s.resetBattle();
       expect(s.enemy.id).toBe('baba');
       expect(s.enemy.name).toBe('Gaździna Maryna');
-      expect(s.enemy.maxHp).toBe(65);
+      expect(s.enemy.maxHp).toBe(50);
+    });
+
+    it('applies ELITARNY scaling only on boss node', () => {
+      const s = freshState();
+      s.map = [
+        { type: 'battle', label: 'Walka', emoji: '⚔️' },
+        { type: 'boss', label: 'Boss', emoji: '👑' },
+      ];
+      s.currentMapNode = 1;
+      vi.spyOn(Math, 'random').mockReturnValue(0);
+      s.resetBattle();
+      expect(s.enemy.id).toBe('cepr');
+      expect(s.enemy.name).toBe('ELITARNY Cepr');
+      expect(s.enemy.maxHp).toBe(80);
+      expect(s.enemy.baseAttack).toBe(13);
     });
 
     it('random pool includes exactly three enemy types', () => {
