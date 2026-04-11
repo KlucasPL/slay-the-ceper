@@ -74,8 +74,6 @@ export class GameState {
     /** @type {'title' | 'map' | 'battle'} */
     this.currentScreen = 'title';
     /** @type {boolean} */
-    this.isMusicMuted = false;
-    /** @type {boolean} */
     this.hasStartedFirstBattle = false;
     /** @type {EnemyState} */
     this.enemy = this._createEnemyState(enemy);

@@ -4,11 +4,9 @@ import { relicLibrary } from '../data/relics.js';
 export class UIManager {
   /**
    * @param {import('../state/GameState.js').GameState} state
-   * @param {import('../audio/AudioManager.js').AudioManager} audioManager
    */
-  constructor(state, audioManager) {
+  constructor(state) {
     this.state = state;
-    this.audioManager = audioManager;
     /** @type {boolean} */
     this.isAnimating = false;
     /** @type {boolean} */
@@ -21,23 +19,6 @@ export class UIManager {
    * Binds DOM events and performs the initial render.
    */
   init() {
-    const titleScreen = document.getElementById('title-screen');
-    const unlockMenuMusic = () => {
-      if (this.state.currentScreen !== 'title') return;
-      this.audioManager.unlockAndPlayMenu();
-    };
-
-    titleScreen?.addEventListener('click', unlockMenuMusic);
-    titleScreen?.addEventListener('pointerdown', unlockMenuMusic);
-    document
-      .getElementById('title-btn-normal')
-      .addEventListener('mouseenter', unlockMenuMusic, { passive: true });
-    document
-      .getElementById('title-btn-hard')
-      .addEventListener('mouseenter', unlockMenuMusic, { passive: true });
-    document.getElementById('title-btn-normal').addEventListener('focus', unlockMenuMusic);
-    document.getElementById('title-btn-hard').addEventListener('focus', unlockMenuMusic);
-
     document
       .getElementById('title-btn-normal')
       .addEventListener('click', () => this._handleTitleStart('normal'));
@@ -60,8 +41,6 @@ export class UIManager {
     document
       .getElementById('camp-upgrade-btn')
       .addEventListener('click', () => this._useCampfireUpgrade());
-    const muteBtn = document.getElementById('mute-btn');
-    if (muteBtn) muteBtn.addEventListener('click', () => this._toggleMusicMute());
     document.addEventListener('click', (event) => {
       const target = event.target;
       if (!(target instanceof Element) || !target.closest('.status-tag-hint')) {
@@ -72,7 +51,6 @@ export class UIManager {
     this._scaleGame();
     this.updateUI();
     this._syncScreenState();
-    this._renderMuteButton();
   }
 
   /**
@@ -113,9 +91,6 @@ export class UIManager {
     const titleScreen = document.getElementById('title-screen');
     if (!titleScreen) return;
 
-    this.audioManager.unlockAndPlayMenu();
-    this.audioManager.setContext('inGame');
-
     this.state.difficulty = difficulty;
     this.state.enemyScaleFactor = 1.0;
     this.state.generateMap();
@@ -141,23 +116,6 @@ export class UIManager {
       !isTitle && !titleScreen.classList.contains('is-hiding')
     );
     titleScreen.setAttribute('aria-hidden', String(!isTitle));
-    this.audioManager.setContext(isTitle ? 'title' : 'inGame');
-  }
-
-  _toggleMusicMute() {
-    this.audioManager.toggleMusicMute();
-    this._renderMuteButton();
-  }
-
-  _renderMuteButton() {
-    const muteBtn = document.getElementById('mute-btn');
-    if (!muteBtn) return;
-    const muted = this.state.isMusicMuted;
-    muteBtn.textContent = muted ? '🔇' : '🔊';
-    muteBtn.classList.toggle('is-muted', muted);
-    muteBtn.setAttribute('aria-pressed', String(muted));
-    muteBtn.setAttribute('aria-label', muted ? 'Włącz muzykę' : 'Wycisz muzykę');
-    muteBtn.title = muted ? 'Muzyka wyłączona' : 'Muzyka włączona';
   }
 
   /**
@@ -339,7 +297,6 @@ export class UIManager {
     if (!result.success) return;
 
     const { effect } = result;
-    this.audioManager.playSfx('cardClick');
 
     if (effect.enemyAnim) {
       // Attack card: player lunges, then enemy reacts
@@ -349,11 +306,6 @@ export class UIManager {
 
       setTimeout(() => {
         this._triggerAnim('sprite-enemy', effect.enemyAnim);
-        if (effect.damage && effect.damage.dealt > 0) {
-          this.audioManager.playSfx('attackHit');
-        } else {
-          this.audioManager.playSfx('block');
-        }
         this.updateUI();
 
         setTimeout(() => {
@@ -365,7 +317,6 @@ export class UIManager {
     } else {
       // Skill / utility card: instant feedback on player
       if (effect.playerAnim) this._triggerAnim('sprite-player', effect.playerAnim);
-      this.audioManager.playSfx('skill');
       this.updateUI();
     }
   }
@@ -391,7 +342,6 @@ export class UIManager {
 
       setTimeout(() => {
         const anim = result.enemyAttack.dealt > 0 ? 'anim-damage' : 'anim-block';
-        this.audioManager.playSfx(result.enemyAttack.dealt > 0 ? 'enemyHit' : 'block');
         this._triggerAnim('sprite-player', anim);
         this.updateUI();
 
