@@ -2,6 +2,7 @@ import { describe, it, expect, vi, afterEach } from 'vitest';
 import { GameState } from '../src/state/GameState.js';
 import { cardLibrary, startingDeck } from '../src/data/cards.js';
 import { enemyLibrary } from '../src/data/enemies.js';
+import { eventLibrary } from '../src/data/events.js';
 import { relicLibrary } from '../src/data/relics.js';
 
 const mockPlayer = {
@@ -855,6 +856,12 @@ describe('GameState', () => {
   });
 
   describe('map and economy', () => {
+    it('rollMidNodeType can generate event nodes with 30% chance', () => {
+      const s = freshState();
+      vi.spyOn(Math, 'random').mockReturnValue(0.2);
+      expect(s._rollMidNodeType()).toBe('event');
+    });
+
     it('starts with 50 Dutki and generated map', () => {
       const s = freshState();
       expect(s.dutki).toBe(50);
@@ -1028,6 +1035,54 @@ describe('GameState', () => {
         expect(relic.price).toBeGreaterThanOrEqual(range.min);
         expect(relic.price).toBeLessThanOrEqual(range.max);
       });
+    });
+
+    it('fiakier event heal choice costs 30 and heals up to max HP', () => {
+      const s = freshState();
+      s.setActiveEvent('fiakier_event');
+      s.player.hp = 40;
+      s.dutki = 50;
+
+      const result = s.applyActiveEventChoice(0);
+
+      expect(result.success).toBe(true);
+      expect(s.player.hp).toBe(50);
+      expect(s.dutki).toBe(20);
+    });
+
+    it('fiakier event rejects choice if player cannot afford the cost', () => {
+      const s = freshState();
+      s.setActiveEvent('fiakier_event');
+      s.dutki = 9;
+
+      const result = s.applyActiveEventChoice(1);
+
+      expect(result.success).toBe(false);
+      expect(result.message).toBe('Nie masz tyle Dutków.');
+      expect(s.dutki).toBe(9);
+    });
+
+    it('fiakier ride choice enables jump-to-boss shortcut and forces main boss', () => {
+      const s = freshState();
+      s.setActiveEvent('fiakier_event');
+      s.dutki = 200;
+      s.currentLevel = 1;
+      s.currentNodeIndex = 1;
+      s.currentNode = { x: 1, y: 1 };
+      s.hasStartedFirstBattle = true;
+
+      const result = s.applyActiveEventChoice(2);
+
+      expect(result.success).toBe(true);
+      expect(s.jumpToBoss).toBe(true);
+      expect(s.forceMainBossNextBattle).toBe(true);
+      expect(s.dutki).toBe(50);
+
+      const jumped = s.applyJumpToBossShortcut();
+      expect(jumped).toBe(true);
+      expect(s.currentLevel).toBe(s.map.length - 2);
+      expect(s.currentNodeIndex).toBe(1);
+      expect(s.jumpToBoss).toBe(false);
     });
 
     it('buyItem buys a shop card once and removes it from stock', () => {
@@ -1206,16 +1261,16 @@ describe('GameState', () => {
       expect(s.enemy.currentIntent).toEqual({
         type: 'block',
         name: 'Darmowa degustacja',
-        block: 15,
+        block: 12,
       });
     });
 
-    it('heals 5 HP at end of player turn if she took no HP damage', () => {
+    it('heals 3 HP at end of player turn if she took no HP damage', () => {
       const s = freshBabaState();
       s.enemy.hp = 40;
       const result = s.endTurn();
-      expect(s.enemy.hp).toBe(45);
-      expect(result.enemyPassiveHeal).toEqual({ amount: 5, text: '+5 Krzepy (Świeży oscypek)' });
+      expect(s.enemy.hp).toBe(43);
+      expect(result.enemyPassiveHeal).toEqual({ amount: 3, text: '+3 Krzepy (Świeży oscypek)' });
     });
 
     it('does not heal at end of player turn if she took HP damage', () => {
@@ -1230,7 +1285,7 @@ describe('GameState', () => {
       expect(result.enemyPassiveHeal).toBeNull();
     });
 
-    it('applies weak:2 on Cena z kosmosu', () => {
+    it('applies weak:1 on Cena z kosmosu', () => {
       const s = freshBabaState();
       s.endTurn();
       expect(s.enemy.currentIntent).toEqual({
@@ -1238,10 +1293,10 @@ describe('GameState', () => {
         name: 'Cena z kosmosu',
         damage: 8,
         hits: 1,
-        applyWeak: 2,
+        applyWeak: 1,
       });
       s.endTurn();
-      expect(s.player.status.weak).toBe(2);
+      expect(s.player.status.weak).toBe(1);
     });
 
     it('resets tookHpDamageThisTurn at startTurn', () => {
@@ -1256,7 +1311,7 @@ describe('GameState', () => {
       const statuses = s.getEnemySpecialStatuses();
       const babaStatus = statuses.find((item) => item.label === 'Świeży oscypek');
       expect(babaStatus).toBeTruthy();
-      expect(babaStatus?.tooltip).toContain('leczy 5 Krzepy');
+      expect(babaStatus?.tooltip).toContain('leczy 3 Krzepy');
     });
 
     it('targowanie_sie: immune to bankruptcy — rachunek does not kill her', () => {
@@ -1481,7 +1536,7 @@ describe('GameState', () => {
       s.resetBattle();
       expect(s.enemy.id).toBe('baba');
       expect(s.enemy.name).toBe('Gaździna Maryna');
-      expect(s.enemy.maxHp).toBe(95);
+      expect(s.enemy.maxHp).toBe(88);
     });
 
     it('spawns Król Krupówek on boss node when boss variant is rolled', () => {
@@ -1521,6 +1576,11 @@ describe('GameState', () => {
     it('enemy library includes final boss definition', () => {
       const ids = Object.keys(enemyLibrary).sort();
       expect(ids).toEqual(['baba', 'boss', 'busiarz', 'cepr', 'fiakier', 'influencerka', 'parkingowy']);
+    });
+
+    it('event library includes fiakier event definition', () => {
+      const ids = Object.keys(eventLibrary).sort();
+      expect(ids).toEqual(['fiakier_event']);
     });
 
     it('does not scale enemies in normal mode', () => {

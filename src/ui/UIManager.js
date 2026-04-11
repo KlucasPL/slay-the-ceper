@@ -87,6 +87,9 @@ export class UIManager {
       .addEventListener('click', () => this._buyCardRemoval());
     document.getElementById('camp-exit-btn').addEventListener('click', () => this._closeCampfire());
     document
+      .getElementById('random-event-continue-btn')
+      .addEventListener('click', () => this._continueAfterRandomEvent());
+    document
       .getElementById('camp-heal-btn')
       .addEventListener('click', () => this._useCampfireHeal());
     document
@@ -353,7 +356,7 @@ export class UIManager {
       vulnerable: { icon: '💥', label: 'Podatność', tooltip: 'Otrzymujesz 50% więcej obrażeń. Spada o 1 co turę.' },
       next_double: { icon: '✨', label: 'Podwójny cios', tooltip: 'Następny cios zada podwójne obrażenia, a potem efekt zniknie.' },
       energy_next_turn: { icon: '⚡', label: 'Bonus Oscypek', tooltip: 'Na początku następnej tury dostaniesz dodatkowy Oscypek.' },
-      lans: { icon: '🕶️', label: 'Lans', tooltip: 'Gdy zabraknie Gardy, obrażenia są opłacane dudkami (1 dmg = 2 dutki), aż do rozbicia lansu.' },
+      lans: { icon: '🕶️', label: 'Lans', tooltip: 'Gdy zabraknie Gardy, obrażenia są opłacane dutkami (1 dmg = 2 dutki), aż do rozbicia lansu.' },
       stunned: { icon: '😵', label: 'Ogłuszony', tooltip: 'Nie możesz zagrywać kart w tej turze po rozbiciu lansu.' },
     };
 
@@ -980,6 +983,12 @@ export class UIManager {
       return;
     }
 
+    if (node.type === 'event') {
+      this.state.currentScreen = 'event';
+      this._openRandomEvent();
+      return;
+    }
+
     if (node.type === 'treasure') {
       this.state.currentScreen = 'map';
       this._handleTreasureNode();
@@ -1013,6 +1022,90 @@ export class UIManager {
     }
 
     this.showRelicScreen(relicId, 'treasure');
+    this.updateUI();
+  }
+
+  _openRandomEvent() {
+    const overlay = document.getElementById('random-event-overlay');
+    const title = document.getElementById('random-event-title');
+    const image = document.getElementById('random-event-image');
+    const description = document.getElementById('random-event-description');
+    const choicesContainer = document.getElementById('random-event-choices');
+    const result = document.getElementById('random-event-result');
+    const continueBtn = document.getElementById('random-event-continue-btn');
+    if (!overlay || !title || !image || !description || !choicesContainer || !result || !continueBtn) {
+      return;
+    }
+
+    const eventDef = this.state.pickRandomEventDef();
+    if (!eventDef) {
+      this.mapMessage = 'Cisza na szlaku... dziś nic się nie wydarzyło.';
+      this.state.currentScreen = 'map';
+      this._openMapOverlay();
+      return;
+    }
+
+    this.state.setActiveEvent(eventDef.id);
+
+    title.textContent = eventDef.title;
+    image.innerHTML = eventDef.image;
+    description.textContent = eventDef.description;
+    result.textContent = '';
+    continueBtn.classList.add('hidden');
+
+    choicesContainer.innerHTML = '';
+    eventDef.choices.forEach((choice, choiceIndex) => {
+      const choiceBtn = document.createElement('button');
+      choiceBtn.type = 'button';
+      choiceBtn.className = 'random-event-choice';
+      choiceBtn.disabled = this.state.dutki < choice.cost;
+      choiceBtn.innerHTML = `
+        <span class="random-event-choice-title">${choice.text}</span>
+        <span class="random-event-choice-desc">${choice.description}</span>
+      `;
+      choiceBtn.addEventListener('click', () => this._handleRandomEventChoice(choiceIndex));
+      choicesContainer.appendChild(choiceBtn);
+    });
+
+    this._hideOverlay('map-overlay');
+    overlay.classList.remove('hidden');
+    overlay.setAttribute('aria-hidden', 'false');
+    this.updateUI();
+  }
+
+  /**
+   * @param {number} choiceIndex
+   */
+  _handleRandomEventChoice(choiceIndex) {
+    const result = this.state.applyActiveEventChoice(choiceIndex);
+    const resultEl = document.getElementById('random-event-result');
+    const continueBtn = document.getElementById('random-event-continue-btn');
+    if (!resultEl || !continueBtn) return;
+
+    resultEl.textContent = result.message;
+    if (!result.success) return;
+
+    document.querySelectorAll('#random-event-choices .random-event-choice').forEach((btn) => {
+      if (btn instanceof HTMLButtonElement) {
+        btn.disabled = true;
+      }
+    });
+    continueBtn.classList.remove('hidden');
+    this.updateUI();
+  }
+
+  _continueAfterRandomEvent() {
+    this._hideOverlay('random-event-overlay');
+
+    if (this.state.applyJumpToBossShortcut()) {
+      this.mapMessage = 'Fiakier skrócił drogę. Następny przystanek: finał wyprawy.';
+    } else {
+      this.mapMessage = '';
+    }
+
+    this.state.clearActiveEvent();
+    this.state.currentScreen = 'map';
+    this._openMapOverlay();
     this.updateUI();
   }
 

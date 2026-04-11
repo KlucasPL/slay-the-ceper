@@ -1,5 +1,6 @@
 import { cardLibrary } from '../data/cards.js';
 import { enemyLibrary } from '../data/enemies.js';
+import { eventLibrary } from '../data/events.js';
 import { relicLibrary } from '../data/relics.js';
 import { weatherLibrary } from '../data/weather.js';
 
@@ -14,8 +15,9 @@ const RARITY_WEIGHTS = {
  * @typedef {{ name: string, hp: number, maxHp: number, block: number, energy: number, maxEnergy: number, status: StatusDef, hasLans: boolean, stunned: boolean, cardsPlayedThisTurn: number }} PlayerState
  * @typedef {import('../data/enemies.js').EnemyMoveDef} EnemyMoveDef
  * @typedef {import('../data/weather.js').WeatherId} WeatherId
- * @typedef {'fight' | 'elite' | 'shop' | 'treasure' | 'campfire' | 'boss'} MapNodeType
+ * @typedef {'fight' | 'elite' | 'shop' | 'treasure' | 'event' | 'campfire' | 'boss'} MapNodeType
  * @typedef {{ x: number, y: number, type: MapNodeType, label: string, emoji: string, weather: WeatherId, connections: number[] }} MapNode
+ * @typedef {import('../data/events.js').GameEventDef} GameEventDef
  * @typedef {{ id: string, name: string, emoji: string, hp: number, maxHp: number, block: number, nextAttack: number, baseAttack: number, status: StatusDef, rachunek: number, ped: number, spriteSvg: string, patternType: 'random'|'loop', pattern: EnemyMoveDef[], patternIndex: number, currentIntent: EnemyMoveDef, tookHpDamageThisTurn: boolean, bossArtifact?: number, passive: string | null }} EnemyState
  * @typedef {{ success: false, reason?: string } | { success: true, effect: import('../data/cards.js').CardEffectResult }} PlayCardResult
  * @typedef {{ enemyAttack: { raw: number, blocked: number, dealt: number }, enemyPassiveHeal: { amount: number, text: string } | null, playerPassiveHeal: { amount: number, text: string } | null }} EndTurnResult
@@ -85,8 +87,14 @@ export class GameState {
     this.lastShopMessage = '';
     /** @type {string} */
     this.lastVictoryMessage = '';
-    /** @type {'title' | 'map' | 'battle'} */
+    /** @type {'title' | 'map' | 'battle' | 'event'} */
     this.currentScreen = 'title';
+    /** @type {string | null} */
+    this.activeEventId = null;
+    /** @type {boolean} */
+    this.jumpToBoss = false;
+    /** @type {boolean} */
+    this.forceMainBossNextBattle = false;
     /** @type {WeatherId} */
     this.currentWeather = 'clear';
     /** @type {{ firstAttackUsed: boolean, activeSide: 'player' | 'enemy', playerAttackMissCheck: boolean, playerAttackMissRolled: boolean, playerAttackMissed: boolean, missEventTarget: 'player' | 'enemy' | null }} */
@@ -160,6 +168,7 @@ export class GameState {
       elite: { label: 'Elita', emoji: '⚔️' },
       shop: { label: 'Kram', emoji: '🛖' },
       treasure: { label: 'Skarb', emoji: '🎁' },
+      event: { label: 'Wydarzenie', emoji: '❓' },
       campfire: { label: 'Watra', emoji: '🔥' },
       boss: { label: 'Boss', emoji: '👑' },
     };
@@ -170,9 +179,10 @@ export class GameState {
   /** @returns {MapNodeType} */
   _rollMidNodeType() {
     const roll = Math.random();
-    if (roll < 0.5) return 'fight';
-    if (roll < 0.6) return 'elite';
-    if (roll < 0.85) return 'shop';
+    if (roll < 0.3) return 'event';
+    if (roll < 0.65) return 'fight';
+    if (roll < 0.72) return 'elite';
+    if (roll < 0.89) return 'shop';
     return 'treasure';
   }
 
@@ -446,6 +456,7 @@ export class GameState {
       elite: { label: 'Elita', emoji: '⚔️' },
       shop: { label: 'Kram', emoji: '🛖' },
       treasure: { label: 'Skarb', emoji: '🎁' },
+      event: { label: 'Wydarzenie', emoji: '❓' },
       campfire: { label: 'Watra', emoji: '🔥' },
       boss: { label: 'Boss', emoji: '👑' },
     };
@@ -562,6 +573,70 @@ export class GameState {
    */
   getCurrentMapNode() {
     return this.map[this.currentLevel]?.[this.currentNodeIndex] ?? null;
+  }
+
+  /** @returns {GameEventDef | null} */
+  pickRandomEventDef() {
+    const eventIds = Object.keys(eventLibrary);
+    if (eventIds.length === 0) return null;
+    const eventId = eventIds[Math.floor(Math.random() * eventIds.length)];
+    return eventLibrary[eventId] ?? null;
+  }
+
+  /**
+   * @param {string | null} eventId
+   */
+  setActiveEvent(eventId) {
+    this.activeEventId = eventId;
+  }
+
+  /** @returns {GameEventDef | null} */
+  getActiveEventDef() {
+    if (!this.activeEventId) return null;
+    return eventLibrary[this.activeEventId] ?? null;
+  }
+
+  clearActiveEvent() {
+    this.activeEventId = null;
+  }
+
+  /**
+   * @param {number} choiceIndex
+   * @returns {{ success: boolean, message: string }}
+   */
+  applyActiveEventChoice(choiceIndex) {
+    const eventDef = this.getActiveEventDef();
+    if (!eventDef) {
+      return { success: false, message: 'To wydarzenie już się skończyło.' };
+    }
+
+    const choice = eventDef.choices[choiceIndex];
+    if (!choice) {
+      return { success: false, message: 'Nieprawidłowy wybór.' };
+    }
+
+    if (this.dutki < choice.cost) {
+      return { success: false, message: 'Nie masz tyle Dutków.' };
+    }
+
+    this.dutki -= choice.cost;
+    return { success: true, message: choice.effect(this) };
+  }
+
+  /** @returns {boolean} */
+  applyJumpToBossShortcut() {
+    if (!this.jumpToBoss) return false;
+    const campfireLevel = this.map.length - 2;
+    const campfireNode = this.map[campfireLevel]?.[1];
+    if (!campfireNode) return false;
+
+    this.currentLevel = campfireLevel;
+    this.currentNodeIndex = 1;
+    this.currentNode = { x: 1, y: campfireLevel };
+    this.jumpToBoss = false;
+    this.hasStartedFirstBattle = true;
+    this._setCurrentWeatherFromNode();
+    return true;
   }
 
   /** @returns {import('../data/weather.js').WeatherDef} */
@@ -1435,7 +1510,7 @@ export class GameState {
         label: 'Świeży oscypek',
         value: null,
         tooltip:
-          'Na końcu tury gracza Gaździna leczy 5 Krzepy, jeśli nie dostała obrażeń w tej turze.',
+          'Na końcu tury gracza Gaździna leczy 3 Krzepy, jeśli nie dostała obrażeń w tej turze.',
       });
     }
 
@@ -1718,7 +1793,7 @@ export class GameState {
     let enemyPassiveHeal = null;
     if (this.enemy.id === 'baba' && !this.enemy.tookHpDamageThisTurn) {
       const hpBefore = this.enemy.hp;
-      this.enemy.hp = Math.min(this.enemy.maxHp, this.enemy.hp + 5);
+      this.enemy.hp = Math.min(this.enemy.maxHp, this.enemy.hp + 3);
       const healedAmount = this.enemy.hp - hpBefore;
       if (healedAmount > 0) {
         enemyPassiveHeal = {
@@ -1804,7 +1879,14 @@ export class GameState {
 
     const currentNode = this.getCurrentMapNode();
     const isBossNode = currentNode?.type === 'boss';
-    const nextEnemy = isBossNode ? this._pickFinalBossDef() : this._pickRandomEnemyDef();
+    const nextEnemy = isBossNode
+      ? this.forceMainBossNextBattle
+        ? enemyLibrary.boss
+        : this._pickFinalBossDef()
+      : this._pickRandomEnemyDef();
+    if (isBossNode) {
+      this.forceMainBossNextBattle = false;
+    }
     this.enemy = this._createEnemyState(nextEnemy);
     this._setCurrentWeatherFromNode();
     this.pendingBattleDutki = true;

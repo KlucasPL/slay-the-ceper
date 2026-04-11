@@ -177,7 +177,7 @@ export const cardLibrary = {
     cost: 1,
     price: 85,
     emoji: '🥽',
-    desc: 'Zyskaj status Lans. Otrzymujesz obrażenia w Dudkach zamiast HP.',
+    desc: 'Zyskaj status Lans. Otrzymujesz obrażenia w Dutkach zamiast HP.',
     exhaust: true,
     effect(state) {
       state.player.hasLans = true;
@@ -192,7 +192,7 @@ export const cardLibrary = {
     cost: 1,
     price: 80,
     emoji: '📸',
-    desc: 'Jeśli masz aktywny Lans, zyskaj 20 Dudków. Inaczej nic się nie dzieje.',
+    desc: 'Jeśli masz aktywny Lans, zyskaj 20 Dutków. Inaczej nic się nie dzieje.',
     effect(state) {
       if (state.player.hasLans) {
         state.dutki += 20;
