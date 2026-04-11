@@ -13,6 +13,7 @@ export const releaseNotesData = [
       '🐴 FIAKIER: Wolniej narzuca Rachunek, ma mniej Krzepy, słabsze Przyspieszenie i zabiera mniej Dutków.',
       '🧾 BALANS KART: Paragon za Gofra ma teraz PRZEPADO, żeby trudniej było nim spamować w długich walkach.',
       '🎴 NAGRODY PO BITCE: Rzadkie karty wpadają teraz częściej w rewardach, więc łatwiej złożyć build z mocniejszym payoffem.',
+      '❓ MAPA: Szansa na wydarzenie losowe na środkowych polach została zmniejszona z 30% do 20%, żeby run częściej prowadził przez walki i sklepy.',
     ],
   },
   {

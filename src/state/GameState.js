@@ -185,7 +185,7 @@ export class GameState {
   /** @returns {MapNodeType} */
   _rollMidNodeType() {
     const roll = Math.random();
-    if (roll < 0.3) return 'event';
+    if (roll < 0.2) return 'event';
     if (roll < 0.65) return 'fight';
     if (roll < 0.72) return 'elite';
     if (roll < 0.89) return 'shop';

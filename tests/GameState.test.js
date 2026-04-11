@@ -863,9 +863,9 @@ describe('GameState', () => {
   });
 
   describe('map and economy', () => {
-    it('rollMidNodeType can generate event nodes with 30% chance', () => {
+    it('rollMidNodeType can generate event nodes with 20% chance', () => {
       const s = freshState();
-      vi.spyOn(Math, 'random').mockReturnValue(0.2);
+      vi.spyOn(Math, 'random').mockReturnValue(0.19);
       expect(s._rollMidNodeType()).toBe('event');
     });
 
