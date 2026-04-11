@@ -10,7 +10,7 @@ import { relicLibrary } from '../data/relics.js';
  * @typedef {{ x: number, y: number, type: MapNodeType, label: string, emoji: string, connections: number[] }} MapNode
  * @typedef {{ id: string, name: string, emoji: string, hp: number, maxHp: number, block: number, nextAttack: number, baseAttack: number, status: StatusDef, spriteSvg: string, patternType: 'random'|'loop', pattern: EnemyMoveDef[], patternIndex: number, currentIntent: EnemyMoveDef, tookHpDamageThisTurn: boolean }} EnemyState
  * @typedef {{ success: false } | { success: true, effect: import('../data/cards.js').CardEffectResult }} PlayCardResult
- * @typedef {{ enemyAttack: { raw: number, blocked: number, dealt: number }, enemyPassiveHeal: { amount: number, text: string } | null }} EndTurnResult
+ * @typedef {{ enemyAttack: { raw: number, blocked: number, dealt: number }, enemyPassiveHeal: { amount: number, text: string } | null, playerPassiveHeal: { amount: number, text: string } | null }} EndTurnResult
  * @typedef {{ cards: string[], relic: string | null }} ShopStock
  */
 
@@ -53,8 +53,20 @@ export class GameState {
     this.currentNode = { x: 0, y: 0 };
     /** @type {boolean} */
     this.pendingBattleDutki = true;
-    /** @type {boolean} */
-    this.firstAttackUsedThisTurn = false;
+    /** @type {'normal' | 'hard'} */
+    this.difficulty = 'normal';
+    /** @type {number} Cumulative HP/damage multiplier for hard mode scaling */
+    this.enemyScaleFactor = 1.0;
+    /** @type {number} Attack cards played this battle (bilet_tpn) */
+    this.attackCardsPlayedThisBattle = 0;
+    /** @type {boolean} Whether pocztowka_giewont effect has fired this battle */
+    this.pocztowkaUsedThisBattle = false;
+    /** @type {string | null} Card ID being kept by smycz_zakopane for next turn */
+    this.smyczKeptCardId = null;
+    /** @type {Record<string, number>} Random cost overrides for cards in hand (flaszka_sliwowicy) */
+    this.flaszkaCostSeed = {};
+    /** @type {number} Parity for zepsuty_termometr: 0=tick enemy status, 1=skip */
+    this.termometerTurnParity = 0;
     /** @type {ShopStock} */
     this.shopStock = { cards: [], relic: null };
     /** @type {string} */
@@ -229,11 +241,16 @@ export class GameState {
         if (availableTargets.length === 0) continue;
 
         if (node.connections.length === 0) {
-          this._linkNode(node, availableTargets[Math.floor(Math.random() * availableTargets.length)]);
+          this._linkNode(
+            node,
+            availableTargets[Math.floor(Math.random() * availableTargets.length)]
+          );
         }
 
         if (y < lastMidLevel && availableTargets.length > 1 && Math.random() < 0.45) {
-          const extraTargets = availableTargets.filter((targetX) => !node.connections.includes(targetX));
+          const extraTargets = availableTargets.filter(
+            (targetX) => !node.connections.includes(targetX)
+          );
           if (extraTargets.length > 0) {
             this._linkNode(node, extraTargets[Math.floor(Math.random() * extraTargets.length)]);
           }
@@ -276,7 +293,7 @@ export class GameState {
    */
   _enforceSpecialNodeLimits(map) {
     const reachableKeys = new Set(
-      this._getReachableCoordinates(map).map(({ x, y }) => `${x},${y}`),
+      this._getReachableCoordinates(map).map(({ x, y }) => `${x},${y}`)
     );
     const protectedKeys = new Set();
 
@@ -609,16 +626,6 @@ export class GameState {
 
     this.relics.push(relicId);
 
-    if (relicId === 'zloty_oscypek') {
-      this.player.maxEnergy += 1;
-      this.player.energy += 1;
-    }
-
-    if (relicId === 'pas_zbojnicki') {
-      this.player.maxHp += 15;
-      this.player.hp = Math.min(this.player.maxHp, this.player.hp + 15);
-    }
-
     return true;
   }
 
@@ -626,6 +633,7 @@ export class GameState {
    * @param {number} amount
    */
   healPlayer(amount) {
+    if (this.hasRelic('dzwonek_owcy')) return;
     this.player.hp = Math.min(this.player.maxHp, this.player.hp + amount);
   }
 
@@ -663,6 +671,27 @@ export class GameState {
   }
 
   /**
+   * Returns the effective cost of a card in hand, accounting for flaszka_sliwowicy overrides.
+   * @param {string} cardId
+   * @returns {number}
+   */
+  getCardCostInHand(cardId) {
+    if (this.hasRelic('flaszka_sliwowicy') && cardId in this.flaszkaCostSeed) {
+      return this.flaszkaCostSeed[cardId];
+    }
+    return cardLibrary[cardId]?.cost ?? 0;
+  }
+
+  /**
+   * Marks a card to be kept for next turn (smycz_zakopane). Toggles if same card clicked again.
+   * @param {string} cardId
+   */
+  setSmyczKeptCard(cardId) {
+    if (!this.hasRelic('smycz_zakopane')) return;
+    this.smyczKeptCardId = this.smyczKeptCardId === cardId ? null : cardId;
+  }
+
+  /**
    * @returns {number}
    */
   grantBattleDutki() {
@@ -677,23 +706,19 @@ export class GameState {
    * @returns {number}
    */
   _drawPerTurn() {
-    return 5 + (this.hasRelic('kierpce') ? 1 : 0);
+    return 5;
   }
 
   /**
    * Applies one-time effects that should trigger at the start of each battle.
    */
   _applyBattleStartRelics() {
-    if (this.hasRelic('ciupaga_dziadka')) {
-      this.player.status.strength += 1;
+    if (this.hasRelic('flaszka_sliwowicy')) {
+      this.player.status.strength += 5;
     }
 
-    if (this.hasRelic('termos')) {
-      this.player.block += 6;
-    }
-
-    if (this.hasRelic('klisza')) {
-      this.enemy.status.weak += 1;
+    if (this.hasRelic('papryczka_marka')) {
+      this.player.status.strength += 3;
     }
   }
 
@@ -701,8 +726,7 @@ export class GameState {
    * @param {number} amount
    */
   gainPlayerBlockFromCard(amount) {
-    const relicBonus = this.hasRelic('sol') ? 1 : 0;
-    this.player.block += amount + relicBonus;
+    this.player.block += amount;
   }
 
   /**
@@ -710,13 +734,17 @@ export class GameState {
    * @returns {EnemyState}
    */
   _createEnemyState(enemyDef, isBoss = false) {
+    const scale = this.enemyScaleFactor;
     const pattern = enemyDef.pattern
       ? enemyDef.pattern.map((move) => {
-          if (!isBoss || move.type !== 'attack') return { ...move };
-          return { ...move, damage: move.damage + 5 };
+          if (move.type !== 'attack') return { ...move };
+          const bossBonus = isBoss ? 5 : 0;
+          return { ...move, damage: Math.round(move.damage * scale) + bossBonus };
         })
       : [];
-    const maxHp = isBoss ? enemyDef.maxHp * 2 : enemyDef.maxHp;
+    const baseMaxHp = isBoss ? enemyDef.maxHp * 2 : enemyDef.maxHp;
+    const dzwonekMod = this.hasRelic('dzwonek_owcy') ? 0.8 : 1.0;
+    const maxHp = Math.round(baseMaxHp * scale * dzwonekMod);
     /** @type {EnemyState} */
     const enemyState = {
       id: enemyDef.id,
@@ -726,7 +754,7 @@ export class GameState {
       maxHp,
       block: enemyDef.block,
       nextAttack: 0,
-      baseAttack: (enemyDef.baseAttack ?? 0) + (isBoss ? 5 : 0),
+      baseAttack: Math.round((enemyDef.baseAttack ?? 0) * scale) + (isBoss ? 5 : 0),
       status: defaultStatus(),
       spriteSvg: enemyDef.spriteSvg,
       patternType: enemyDef.patternType,
@@ -755,6 +783,11 @@ export class GameState {
   initGame(startingDeck) {
     this.deck = [...startingDeck];
     this._shuffle(this.deck);
+    this.attackCardsPlayedThisBattle = 0;
+    this.pocztowkaUsedThisBattle = false;
+    this.smyczKeptCardId = null;
+    this.flaszkaCostSeed = {};
+    this.termometerTurnParity = 0;
     this.startTurn();
     this._applyBattleStartRelics();
     this.pendingBattleDutki = true;
@@ -843,20 +876,6 @@ export class GameState {
       dmg += sourceEntity.status.strength;
     }
 
-    if (sourceEntity === this.player && targetEntity === this.enemy && this.hasRelic('bat')) {
-      dmg += 1;
-    }
-
-    if (
-      sourceEntity === this.player &&
-      targetEntity === this.enemy &&
-      this.hasRelic('zakopane') &&
-      !this.firstAttackUsedThisTurn
-    ) {
-      dmg = Math.floor(dmg * 1.5);
-      this.firstAttackUsedThisTurn = true;
-    }
-
     if (
       sourceEntity === this.player &&
       targetEntity === this.enemy &&
@@ -864,10 +883,6 @@ export class GameState {
     ) {
       dmg *= 2;
       sourceEntity.status.next_double = false;
-    }
-
-    if (targetEntity === this.player && this.hasRelic('giewont')) {
-      dmg -= 1;
     }
 
     return Math.max(0, dmg);
@@ -912,6 +927,9 @@ export class GameState {
     const dealt = dmg - blocked;
     this.player.block -= blocked;
     this.player.hp -= dealt;
+    if (dealt > 0 && this.hasRelic('kierpce_wyprzedazy')) {
+      this._drawCards(1);
+    }
     return { raw: dmg, blocked, dealt };
   }
 
@@ -1005,11 +1023,43 @@ export class GameState {
    */
   startTurn() {
     this.enemy.tookHpDamageThisTurn = false;
-    this.firstAttackUsedThisTurn = false;
     this.player.energy = this.player.maxEnergy + this.player.status.energy_next_turn;
     this.player.status.energy_next_turn = 0;
     this.player.block = 0;
     this._drawCards(this._drawPerTurn());
+
+    // Smycz Zakopane: re-add kept card to front of hand
+    if (this.smyczKeptCardId) {
+      this.hand.unshift(this.smyczKeptCardId);
+      this.smyczKeptCardId = null;
+    }
+
+    // Wiatr Halny: 50% draw +2, 50% discard random card from hand
+    if (this.hasRelic('wiatr_halny')) {
+      if (Math.random() < 0.5) {
+        this._drawCards(2);
+      } else if (this.hand.length > 0) {
+        const idx = Math.floor(Math.random() * this.hand.length);
+        this.discard.push(this.hand.splice(idx, 1)[0]);
+      }
+    }
+
+    // Flaszka Śliwowicy: randomize card costs per card type in hand this turn
+    if (this.hasRelic('flaszka_sliwowicy')) {
+      this.flaszkaCostSeed = {};
+      for (const cardId of this.hand) {
+        if (!(cardId in this.flaszkaCostSeed)) {
+          this.flaszkaCostSeed[cardId] = Math.floor(Math.random() * 4); // 0–3
+        }
+      }
+    } else {
+      this.flaszkaCostSeed = {};
+    }
+
+    // Papryczka Marka: –2 HP per turn (min 1)
+    if (this.hasRelic('papryczka_marka')) {
+      this.player.hp = Math.max(1, this.player.hp - 2);
+    }
   }
 
   /**
@@ -1021,9 +1071,15 @@ export class GameState {
   playCard(handIndex) {
     const cardId = this.hand[handIndex];
     const card = cardLibrary[cardId];
-    if (!card || this.player.energy < card.cost) return { success: false };
+    const actualCost = this.getCardCostInHand(cardId);
+    if (!card || this.player.energy < actualCost) return { success: false };
 
-    this.player.energy -= card.cost;
+    this.player.energy -= actualCost;
+
+    const isFirstCardThisBattle =
+      this.hasRelic('pocztowka_giewont') && !this.pocztowkaUsedThisBattle;
+    this.pocztowkaUsedThisBattle = true;
+
     this.hand.splice(handIndex, 1);
     if (card.exhaust) {
       this.exhaust.push(cardId);
@@ -1032,6 +1088,25 @@ export class GameState {
     }
 
     const effect = card.effect(this);
+
+    // Pocztówka z Giewontem: first card in battle fires twice
+    if (isFirstCardThisBattle) {
+      card.effect(this);
+    }
+
+    // Ciupaga-Długopis: every skill card deals 4 bonus dmg
+    if (this.hasRelic('ciupaga_dlugopis') && card.type === 'skill') {
+      this._applyDamageToEnemy(4);
+    }
+
+    // Bilet TPN: every 3rd attack card this battle grants +1 energy
+    if (card.type === 'attack') {
+      this.attackCardsPlayedThisBattle += 1;
+      if (this.attackCardsPlayedThisBattle % 3 === 0 && this.hasRelic('bilet_tpn')) {
+        this.player.energy += 1;
+      }
+    }
+
     return { success: true, effect };
   }
 
@@ -1040,9 +1115,15 @@ export class GameState {
    * @returns {EndTurnResult}
    */
   endTurn() {
-    if (this.hasRelic('parzenica') && this.player.energy > 0) {
-      const healAmount = this.player.energy * 2;
-      this.player.hp = Math.min(this.player.maxHp, this.player.hp + healAmount);
+    // Smycz Zakopane: extract kept card from hand before discarding
+    if (this.hasRelic('smycz_zakopane') && this.smyczKeptCardId) {
+      const keptIdx = this.hand.indexOf(this.smyczKeptCardId);
+      if (keptIdx >= 0) {
+        this.hand.splice(keptIdx, 1);
+        // smyczKeptCardId stays set so startTurn can re-add it
+      } else {
+        this.smyczKeptCardId = null;
+      }
     }
 
     this.discard.push(...this.hand);
@@ -1050,6 +1131,18 @@ export class GameState {
 
     // End of player turn.
     this._tickStatus(this.player.status);
+
+    // Krokus pod Ochroną: heal 2 HP if block >= 5 (before enemy attacks clear block)
+    /** @type {{ amount: number, text: string } | null} */
+    let playerPassiveHeal = null;
+    if (this.hasRelic('krokus') && this.player.block >= 5) {
+      const hpBefore = this.player.hp;
+      this.healPlayer(2);
+      const healed = this.player.hp - hpBefore;
+      if (healed > 0) {
+        playerPassiveHeal = { amount: healed, text: `+${healed} HP (Krokus)` };
+      }
+    }
 
     /** @type {{ amount: number, text: string } | null} */
     let enemyPassiveHeal = null;
@@ -1069,7 +1162,14 @@ export class GameState {
     this.enemy.block = 0;
     const enemyAttack = this._applyEnemyIntent();
 
-    this._tickStatus(this.enemy.status);
+    // Zepsuty Termometr: enemy status ticks every other turn
+    if (!this.hasRelic('zepsuty_termometr') || this.termometerTurnParity === 0) {
+      this._tickStatus(this.enemy.status);
+    }
+    if (this.hasRelic('zepsuty_termometr')) {
+      this.termometerTurnParity = 1 - this.termometerTurnParity;
+    }
+
     if (this.enemy.id === 'busiarz') {
       this.enemy.status.strength += 1;
     }
@@ -1079,13 +1179,13 @@ export class GameState {
     }
     this._refreshEnemyIntent();
 
-    return { enemyAttack, enemyPassiveHeal };
+    return { enemyAttack, enemyPassiveHeal, playerPassiveHeal };
   }
 
   /**
    * Resets combat after victory with fixed enemy stats from enemyLibrary.
    * - Keep player HP between battles (no auto-heal)
-  * - Boss node only: spawn HARNY enemy (HP x2, attacks +5)
+   * - Boss node only: spawn HARNY enemy (HP x2, attacks +5)
    * - Clear blocks and statuses
    * - Move hand/discard/exhaust back to deck and shuffle
    * - Start a fresh turn
@@ -1093,7 +1193,17 @@ export class GameState {
   resetBattle() {
     this.battleWins += 1;
 
+    if (this.difficulty === 'hard') {
+      this.enemyScaleFactor = Math.round(this.enemyScaleFactor * 1.1 * 100) / 100;
+    }
+
     this.player.block = 0;
+
+    this.attackCardsPlayedThisBattle = 0;
+    this.pocztowkaUsedThisBattle = false;
+    this.smyczKeptCardId = null;
+    this.flaszkaCostSeed = {};
+    this.termometerTurnParity = 0;
 
     this.player.status = defaultStatus();
 

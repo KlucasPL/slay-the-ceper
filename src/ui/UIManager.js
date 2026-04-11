@@ -20,8 +20,11 @@ export class UIManager {
    */
   init() {
     document
-      .getElementById('title-start-btn')
-      .addEventListener('click', () => this._handleTitleStart());
+      .getElementById('title-btn-normal')
+      .addEventListener('click', () => this._handleTitleStart('normal'));
+    document
+      .getElementById('title-btn-hard')
+      .addEventListener('click', () => this._handleTitleStart('hard'));
     document.getElementById('end-turn-btn').addEventListener('click', () => this._handleEndTurn());
     document
       .getElementById('map-continue-btn')
@@ -74,12 +77,21 @@ export class UIManager {
     this._renderStatuses('e-statuses', enemy.status);
     this._renderHand();
     this._syncScreenState();
+    const gameWrapper = document.getElementById('game-wrapper');
+    if (gameWrapper) {
+      gameWrapper.classList.toggle('hard-mode', this.state.difficulty === 'hard');
+    }
   }
 
-  _handleTitleStart() {
+  /**
+   * @param {'normal' | 'hard'} difficulty
+   */
+  _handleTitleStart(difficulty) {
     const titleScreen = document.getElementById('title-screen');
     if (!titleScreen) return;
 
+    this.state.difficulty = difficulty;
+    this.state.enemyScaleFactor = 1.0;
     this.state.generateMap();
     this.state.hasStartedFirstBattle = false;
     this.state.currentScreen = 'map';
@@ -98,7 +110,10 @@ export class UIManager {
     if (!titleScreen) return;
 
     const isTitle = this.state.currentScreen === 'title';
-    titleScreen.classList.toggle('hidden', !isTitle && !titleScreen.classList.contains('is-hiding'));
+    titleScreen.classList.toggle(
+      'hidden',
+      !isTitle && !titleScreen.classList.contains('is-hiding')
+    );
     titleScreen.setAttribute('aria-hidden', String(!isTitle));
   }
 
@@ -222,10 +237,12 @@ export class UIManager {
 
     hand.forEach((cardId, index) => {
       const card = cardLibrary[cardId];
-      const canPlay = player.energy >= card.cost;
+      const actualCost = this.state.getCardCostInHand(cardId);
+      const canPlay = player.energy >= actualCost;
 
       const cardEl = document.createElement('div');
-      cardEl.className = `card${canPlay ? '' : ' disabled'}`;
+      const isKept = this.state.smyczKeptCardId === cardId;
+      cardEl.className = `card${canPlay ? '' : ' disabled'}${isKept ? ' card--kept' : ''}`;
 
       if (canPlay && player.hp > 0 && enemy.hp > 0) {
         cardEl.addEventListener('click', () => {
@@ -235,7 +252,7 @@ export class UIManager {
 
       const costEl = document.createElement('div');
       costEl.className = 'card-cost';
-      costEl.textContent = card.cost;
+      costEl.textContent = actualCost;
       const titleEl = document.createElement('div');
       titleEl.className = 'card-title';
       titleEl.textContent = card.name;
@@ -247,6 +264,21 @@ export class UIManager {
       descEl.textContent = card.desc;
 
       cardEl.append(costEl, titleEl, imgEl, descEl);
+
+      if (this.state.hasRelic('smycz_zakopane') && player.hp > 0 && enemy.hp > 0) {
+        const keepBtn = document.createElement('button');
+        keepBtn.type = 'button';
+        keepBtn.className = 'card-keep-btn';
+        keepBtn.textContent = '📿';
+        keepBtn.title = isKept ? 'Anuluj zachowanie' : 'Zachowaj na następną turę';
+        keepBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.state.setSmyczKeptCard(cardId);
+          this.updateUI();
+        });
+        cardEl.appendChild(keepBtn);
+      }
+
       handDiv.appendChild(cardEl);
     });
   }
@@ -294,6 +326,9 @@ export class UIManager {
     this.updateUI();
     if (result.enemyPassiveHeal) {
       this._showFloatingText('sprite-enemy', result.enemyPassiveHeal.text, 'floating-heal');
+    }
+    if (result.playerPassiveHeal) {
+      this._showFloatingText('sprite-player', result.playerPassiveHeal.text, 'floating-heal');
     }
 
     setTimeout(() => {
@@ -432,6 +467,14 @@ export class UIManager {
     const message = document.getElementById('map-message');
     const continueBtn = document.getElementById('map-continue-btn');
     if (!levels || !message || !continueBtn) return;
+
+    const mapTitle = document.querySelector('#map-overlay .event-title');
+    if (mapTitle) {
+      const isHard = this.state.difficulty === 'hard';
+      mapTitle.innerHTML = isHard
+        ? `Perć przez Tatry <span class="hard-badge">🌶️ HARD</span>`
+        : 'Perć przez Tatry';
+    }
 
     levels.innerHTML = '';
     message.textContent = this.mapMessage;

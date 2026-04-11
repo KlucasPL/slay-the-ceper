@@ -1,7 +1,7 @@
 /**
  * @typedef {{ strength: number, weak: number, fragile: number, next_double: boolean, energy_next_turn: number }} StatusDef
  * @typedef {{ playerAnim?: string, enemyAnim?: string, damage?: { raw: number, blocked: number, dealt: number } }} CardEffectResult
- * @typedef {{ id: string, name: string, cost: number, price: number, emoji: string, desc: string, exhaust?: boolean, effect: (state: import('../state/GameState.js').GameState) => CardEffectResult }} CardDef
+ * @typedef {{ id: string, name: string, type: 'attack' | 'skill', cost: number, price: number, emoji: string, desc: string, exhaust?: boolean, effect: (state: import('../state/GameState.js').GameState) => CardEffectResult }} CardDef
  */
 
 /** @type {Record<string, CardDef>} */
@@ -9,6 +9,7 @@ export const cardLibrary = {
   ciupaga: {
     id: 'ciupaga',
     name: 'Cios ciupagą',
+    type: 'attack',
     cost: 1,
     price: 40,
     emoji: '🪓',
@@ -26,6 +27,7 @@ export const cardLibrary = {
   gasior: {
     id: 'gasior',
     name: 'Łyk z Gąsiora',
+    type: 'skill',
     cost: 1,
     price: 35,
     emoji: '🏺',
@@ -38,6 +40,7 @@ export const cardLibrary = {
   kierpce: {
     id: 'kierpce',
     name: 'Rzut kierpcem',
+    type: 'attack',
     cost: 2,
     price: 70,
     emoji: '👞',
@@ -55,6 +58,7 @@ export const cardLibrary = {
   hej: {
     id: 'hej',
     name: 'Góralskie Hej!',
+    type: 'skill',
     cost: 0,
     price: 60,
     emoji: '🗣️',
@@ -70,6 +74,7 @@ export const cardLibrary = {
   sernik: {
     id: 'sernik',
     name: 'Sernik',
+    type: 'skill',
     cost: 0,
     price: 50,
     emoji: '🍰',
@@ -83,6 +88,7 @@ export const cardLibrary = {
   redyk: {
     id: 'redyk',
     name: 'Redyk',
+    type: 'attack',
     cost: 1,
     price: 80,
     emoji: '🐑',
@@ -108,6 +114,7 @@ export const cardLibrary = {
   halny: {
     id: 'halny',
     name: 'Halny',
+    type: 'skill',
     cost: 2,
     price: 90,
     emoji: '🌬️',
@@ -122,6 +129,7 @@ export const cardLibrary = {
   parzenica: {
     id: 'parzenica',
     name: 'Parzenica',
+    type: 'skill',
     cost: 1,
     price: 85,
     emoji: '🧶',
@@ -135,6 +143,7 @@ export const cardLibrary = {
   zadyma: {
     id: 'zadyma',
     name: 'Zadyma',
+    type: 'attack',
     cost: 1,
     price: 75,
     emoji: '💥',
@@ -154,18 +163,20 @@ export const cardLibrary = {
   zyntyca: {
     id: 'zyntyca',
     name: 'Żyntyca',
+    type: 'skill',
     cost: 1,
     price: 65,
     emoji: '🥛',
     desc: 'Leczysz 4 Krzepy.',
     effect(state) {
-      state.player.hp = Math.min(state.player.hp + 4, state.player.maxHp);
+      state.healPlayer(4);
       return { playerAnim: 'anim-block' };
     },
   },
   janosik: {
     id: 'janosik',
     name: 'Janosik',
+    type: 'attack',
     cost: 1,
     price: 95,
     emoji: '🗡️',
@@ -184,6 +195,7 @@ export const cardLibrary = {
   echo: {
     id: 'echo',
     name: 'Echo',
+    type: 'skill',
     cost: 2,
     price: 100,
     emoji: '🔊',
@@ -196,6 +208,7 @@ export const cardLibrary = {
   sandaly: {
     id: 'sandaly',
     name: 'Sandały',
+    type: 'attack',
     cost: 1,
     price: 70,
     emoji: '👡',
@@ -214,6 +227,7 @@ export const cardLibrary = {
   giewont: {
     id: 'giewont',
     name: 'Giewont',
+    type: 'attack',
     cost: 3,
     price: 120,
     emoji: '⛰️',

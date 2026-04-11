@@ -109,6 +109,59 @@ body {
     0 10px 26px rgba(0, 0, 0, 0.4);
 }
 
+.title-start-btn--hard {
+  border-color: #c0392b;
+  color: #ff9f9f;
+  background:
+    linear-gradient(180deg, rgba(130, 30, 20, 0.96), rgba(80, 15, 10, 0.98)),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.06) 0 8px, rgba(0, 0, 0, 0.06) 8px 16px);
+  box-shadow:
+    0 0 0 2px rgba(100, 20, 15, 0.7) inset,
+    0 10px 26px rgba(0, 0, 0, 0.35);
+}
+
+.title-start-btn--hard:hover,
+.title-start-btn--hard:focus-visible {
+  box-shadow:
+    0 0 0 2px rgba(100, 20, 15, 0.7) inset,
+    0 0 22px rgba(255, 80, 60, 0.35),
+    0 10px 26px rgba(0, 0, 0, 0.4);
+}
+
+.title-btn-row {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.title-difficulty-hint {
+  margin: 14px auto 0;
+  max-width: 480px;
+  font-size: clamp(0.78rem, 1.8vw, 0.95rem);
+  color: #e8c8a0;
+  opacity: 0.85;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.3);
+}
+
+.hard-badge {
+  display: inline-block;
+  background: rgba(160, 30, 20, 0.85);
+  color: #ff9f9f;
+  font-size: 0.65em;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  padding: 2px 8px;
+  border-radius: 6px;
+  border: 1px solid #c0392b;
+  vertical-align: middle;
+  margin-left: 8px;
+}
+
+#game-wrapper.hard-mode .battlefield {
+  background: radial-gradient(ellipse at center, rgba(80, 10, 10, 0.22) 0%, transparent 70%);
+}
+
 .title-charms {
   margin-top: 16px;
   display: flex;
@@ -415,6 +468,27 @@ h1 {
   background: rgba(0, 0, 0, 0.1);
   padding: 5px;
   border-radius: 5px;
+}
+
+.card-keep-btn {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid #f4c;
+  border-radius: 4px;
+  padding: 2px 5px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  line-height: 1;
+  z-index: 1;
+}
+.card-keep-btn:hover {
+  background: rgba(180, 0, 100, 0.5);
+}
+.card--kept {
+  outline: 2px solid #f4c;
+  box-shadow: 0 0 12px rgba(255, 120, 200, 0.5);
 }
 
 .statuses {

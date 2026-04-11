@@ -483,104 +483,190 @@ describe('GameState', () => {
   describe('relics', () => {
     it('adds a relic only once', () => {
       const s = freshState();
-      expect(s.addRelic('bat')).toBe(true);
-      expect(s.addRelic('bat')).toBe(false);
-      expect(s.relics).toEqual(['bat']);
+      expect(s.addRelic('kierpce_wyprzedazy')).toBe(true);
+      expect(s.addRelic('kierpce_wyprzedazy')).toBe(false);
+      expect(s.relics).toEqual(['kierpce_wyprzedazy']);
     });
 
-    it('zloty_oscypek increases max energy permanently', () => {
+    it('flaszka_sliwowicy gives +5 strength at battle start', () => {
       const s = freshState();
-      const before = s.player.maxEnergy;
-      s.addRelic('zloty_oscypek');
-      expect(s.player.maxEnergy).toBe(before + 1);
-    });
-
-    it('pas_zbojnicki increases max HP and heals 15 on pickup', () => {
-      const s = freshState();
-      s.player.hp = 20;
-      s.addRelic('pas_zbojnicki');
-      expect(s.player.maxHp).toBe(65);
-      expect(s.player.hp).toBe(35);
-    });
-
-    it('ciupaga_dziadka gives +1 strength at battle start', () => {
-      const s = freshState();
-      s.addRelic('ciupaga_dziadka');
+      s.addRelic('flaszka_sliwowicy');
       s.player.status.strength = 0;
       s.resetBattle();
-      expect(s.player.status.strength).toBe(1);
+      expect(s.player.status.strength).toBe(5);
     });
 
-    it('termos gives +6 block at battle start', () => {
+    it('papryczka_marka gives +3 strength at battle start', () => {
       const s = freshState();
-      s.addRelic('termos');
+      s.addRelic('papryczka_marka');
+      s.player.status.strength = 0;
       s.resetBattle();
-      expect(s.player.block).toBe(6);
+      expect(s.player.status.strength).toBe(3);
     });
 
-    it('klisza applies weak 1 to enemy at battle start', () => {
+    it('papryczka_marka drains 2 HP each turn start (min 1)', () => {
       const s = freshState();
-      s.addRelic('klisza');
-      s.resetBattle();
-      expect(s.enemy.status.weak).toBe(1);
-    });
-
-    it('kierpce draws one extra card each turn', () => {
-      const s = freshState();
-      s.addRelic('kierpce');
+      s.addRelic('papryczka_marka');
+      s.player.hp = 5;
       s.deck = [...startingDeck, ...startingDeck];
       s.hand = [];
       s.startTurn();
-      expect(s.hand).toHaveLength(6);
+      expect(s.player.hp).toBe(3);
+      // HP at 1 should not go below 1
+      s.player.hp = 1;
+      s.startTurn();
+      expect(s.player.hp).toBe(1);
     });
 
-    it('bat adds +1 damage to each player attack', () => {
+    it('dzwonek_owcy blocks healing', () => {
       const s = freshState();
-      s.addRelic('bat');
+      s.addRelic('dzwonek_owcy');
+      s.player.hp = 20;
+      s.healPlayer(10);
+      expect(s.player.hp).toBe(20);
+    });
+
+    it('dzwonek_owcy reduces enemy maxHp by 20%', () => {
+      const s = freshState();
+      const baseMaxHp = s.enemy.maxHp; // cepr base = 40
+      s.addRelic('dzwonek_owcy');
+      s.deck = [...startingDeck, ...startingDeck];
+      vi.spyOn(s, '_pickRandomEnemyDef').mockReturnValue(enemyLibrary.cepr);
+      s.resetBattle();
+      expect(s.enemy.maxHp).toBe(Math.round(baseMaxHp * 0.8));
+    });
+
+    it('kierpce_wyprzedazy draws a card when player takes HP damage', () => {
+      const s = freshState();
+      s.addRelic('kierpce_wyprzedazy');
+      s.deck = [...startingDeck, ...startingDeck];
+      s.hand = [];
+      setEnemyIntent(s, { type: 'attack', name: 'Pstryka fotkę', damage: 8, hits: 1 });
+      s.player.block = 0;
+      s.endTurn();
+      // endTurn does not call startTurn; kierpce draws exactly 1 card during damage
+      expect(s.hand.length).toBe(1);
+    });
+
+    it('krokus heals 2 HP at end of turn when block >= 5', () => {
+      const s = freshState();
+      s.addRelic('krokus');
+      s.player.hp = 30;
+      s.player.block = 6;
+      setEnemyIntent(s, { type: 'block', name: 'Obserwuje', block: 0 });
+      const { playerPassiveHeal } = s.endTurn();
+      expect(s.player.hp).toBe(32);
+      expect(playerPassiveHeal).not.toBeNull();
+    });
+
+    it('krokus does not heal when block < 5', () => {
+      const s = freshState();
+      s.addRelic('krokus');
+      s.player.hp = 30;
+      s.player.block = 4;
+      setEnemyIntent(s, { type: 'block', name: 'Obserwuje', block: 0 });
+      const { playerPassiveHeal } = s.endTurn();
+      expect(s.player.hp).toBe(30);
+      expect(playerPassiveHeal).toBeNull();
+    });
+
+    it('ciupaga_dlugopis deals 4 bonus damage when a skill card is played', () => {
+      const s = freshState();
+      s.addRelic('ciupaga_dlugopis');
+      s.hand = ['gasior']; // gasior is a skill card (costs 1, gives block)
+      s.enemy.hp = 40;
+      s.enemy.block = 0;
+      s.playCard(0);
+      // gasior has no direct damage; ciupaga_dlugopis should deal 4 dmg
+      expect(s.enemy.hp).toBe(36);
+    });
+
+    it('bilet_tpn grants +1 energy on every 3rd attack card played', () => {
+      const s = freshState();
+      s.addRelic('bilet_tpn');
+      s.player.energy = 10;
+      s.hand = ['ciupaga', 'ciupaga', 'ciupaga'];
+      s.enemy.hp = 100;
+      s.enemy.block = 0;
+      const energyAfterTwo = () => {
+        s.playCard(0);
+        s.playCard(0);
+        return s.player.energy;
+      };
+      const e2 = energyAfterTwo();
+      // energy went down by 2 (two ciupagas at cost 1 each), no bonus yet
+      expect(e2).toBe(8);
+      // 3rd attack – should grant +1
+      s.hand = ['ciupaga'];
+      s.playCard(0);
+      expect(s.player.energy).toBe(8); // 8 - 1 (cost) + 1 (bilet bonus) = 8
+    });
+
+    it('pocztowka_giewont fires first card effect twice per battle', () => {
+      const s = freshState();
+      s.addRelic('pocztowka_giewont');
       s.hand = ['ciupaga'];
       s.enemy.hp = 40;
       s.enemy.block = 0;
       s.playCard(0);
-      expect(s.enemy.hp).toBe(33);
+      // ciupaga deals 6 dmg twice = 12
+      expect(s.enemy.hp).toBe(28);
     });
 
-    it('sol adds +1 block to block cards', () => {
+    it('pocztowka_giewont does not double the second card in same battle', () => {
       const s = freshState();
-      s.addRelic('sol');
-      s.hand = ['gasior'];
-      s.playCard(0);
-      expect(s.player.block).toBe(6);
-    });
-
-    it('parzenica relic heals for unspent energy at end turn', () => {
-      const s = freshState();
-      s.addRelic('parzenica');
-      s.player.hp = 30;
-      s.player.energy = 2;
-      setEnemyIntent(s, { type: 'block', name: 'Obserwuje', block: 0 });
-      s.endTurn();
-      expect(s.player.hp).toBe(34);
-    });
-
-    it('giewont relic reduces incoming damage by 1', () => {
-      const s = freshState();
-      s.addRelic('giewont');
-      s.player.hp = 50;
-      setEnemyIntent(s, { type: 'attack', name: 'Pstryka fotkę', damage: 8, hits: 1 });
-      s.endTurn();
-      expect(s.player.hp).toBe(43);
-    });
-
-    it('zakopane boosts only first attack in turn by 50%', () => {
-      const s = freshState();
-      s.addRelic('zakopane');
+      s.addRelic('pocztowka_giewont');
       s.hand = ['ciupaga', 'ciupaga'];
       s.enemy.hp = 40;
       s.enemy.block = 0;
-      s.playCard(0);
-      s.playCard(0);
-      // first hit: floor(6*1.5)=9, second hit: 6
-      expect(s.enemy.hp).toBe(25);
+      s.playCard(0); // doubled: -12
+      s.playCard(0); // normal: -6
+      expect(s.enemy.hp).toBe(22);
+    });
+
+    it('smycz_zakopane keeps card from end-of-turn discard and re-adds it next turn', () => {
+      const s = freshState();
+      s.addRelic('smycz_zakopane');
+      s.deck = [...startingDeck, ...startingDeck, ...startingDeck];
+      s.hand = ['ciupaga', 'gasior'];
+      s.setSmyczKeptCard('ciupaga');
+      expect(s.smyczKeptCardId).toBe('ciupaga');
+      setEnemyIntent(s, { type: 'block', name: 'Obserwuje', block: 0 });
+      s.endTurn();
+      // smyczKeptCardId should still be 'ciupaga' (not null) after endTurn
+      expect(s.smyczKeptCardId).toBe('ciupaga');
+      // After startTurn, 'ciupaga' should be in hand
+      s.startTurn();
+      expect(s.hand).toContain('ciupaga');
+      expect(s.smyczKeptCardId).toBeNull();
+    });
+
+    it('zepsuty_termometr skips enemy status tick on every other turn', () => {
+      const s = freshState();
+      s.addRelic('zepsuty_termometr');
+      s.enemy.status.weak = 3;
+      setEnemyIntent(s, { type: 'block', name: 'Obserwuje', block: 0 });
+      // Turn 1 (parity=0): tick fires → weak becomes 2
+      s.endTurn();
+      expect(s.enemy.status.weak).toBe(2);
+      // Turn 2 (parity=1): tick skipped → weak stays 2
+      s.endTurn();
+      expect(s.enemy.status.weak).toBe(2);
+      // Turn 3 (parity=0): tick fires → weak becomes 1
+      s.endTurn();
+      expect(s.enemy.status.weak).toBe(1);
+    });
+
+    it('getCardCostInHand returns flaszka-seeded cost when relic equipped', () => {
+      const s = freshState();
+      s.addRelic('flaszka_sliwowicy');
+      s.flaszkaCostSeed = { ciupaga: 0 };
+      expect(s.getCardCostInHand('ciupaga')).toBe(0);
+    });
+
+    it('getCardCostInHand falls back to card base cost without relic', () => {
+      const s = freshState();
+      expect(s.getCardCostInHand('ciupaga')).toBe(1);
     });
   });
 
@@ -734,10 +820,10 @@ describe('GameState', () => {
     it('buyItem buys relic and removes it from display slot', () => {
       const s = freshState();
       s.dutki = 500;
-      s.shopStock = { cards: [], relic: 'termos' };
-      const result = s.buyItem(relicLibrary.termos, 'relic');
+      s.shopStock = { cards: [], relic: 'krokus' };
+      const result = s.buyItem(relicLibrary.krokus, 'relic');
       expect(result.success).toBe(true);
-      expect(s.relics).toContain('termos');
+      expect(s.relics).toContain('krokus');
       expect(s.shopStock.relic).toBeNull();
     });
 
@@ -1092,6 +1178,36 @@ describe('GameState', () => {
     it('random pool includes exactly three enemy types', () => {
       const ids = Object.keys(enemyLibrary).sort();
       expect(ids).toEqual(['baba', 'busiarz', 'cepr']);
+    });
+
+    it('does not scale enemies in normal mode', () => {
+      const s = freshState();
+      s.difficulty = 'normal';
+      vi.spyOn(Math, 'random').mockReturnValue(0);
+      s.resetBattle();
+      expect(s.enemyScaleFactor).toBe(1.0);
+      expect(s.enemy.maxHp).toBe(enemyLibrary.cepr.maxHp);
+      expect(s.enemy.baseAttack).toBe(enemyLibrary.cepr.baseAttack);
+    });
+
+    it('increases enemyScaleFactor by ~10% on each win in hard mode', () => {
+      const s = freshState();
+      s.difficulty = 'hard';
+      vi.spyOn(Math, 'random').mockReturnValue(0);
+      s.resetBattle();
+      expect(s.enemyScaleFactor).toBeCloseTo(1.1, 5);
+      s.resetBattle();
+      expect(s.enemyScaleFactor).toBeCloseTo(1.21, 5);
+    });
+
+    it('applies scale factor to enemy HP and baseAttack in hard mode', () => {
+      const s = freshState();
+      s.difficulty = 'hard';
+      s.enemyScaleFactor = 1.1;
+      vi.spyOn(Math, 'random').mockReturnValue(0);
+      s.resetBattle(); // increments scale to 1.21, then creates enemy with that scale
+      expect(s.enemy.maxHp).toBe(Math.round(enemyLibrary.cepr.maxHp * 1.21));
+      expect(s.enemy.baseAttack).toBe(Math.round(enemyLibrary.cepr.baseAttack * 1.21));
     });
   });
 });
