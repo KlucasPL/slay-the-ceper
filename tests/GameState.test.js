@@ -360,12 +360,12 @@ describe('GameState', () => {
   });
 
   describe('paragon_za_gofra', () => {
-    it('adds 15 rachunek to enemy', () => {
+    it('adds 10 rachunek to enemy', () => {
       const s = freshState();
       s.hand = ['paragon_za_gofra'];
       s.enemy.rachunek = 0;
       s.playCard(0);
-      expect(s.enemy.rachunek).toBe(15);
+      expect(s.enemy.rachunek).toBe(10);
     });
 
     it('can bankrupt enemy when rachunek reaches current hp', () => {
@@ -376,7 +376,7 @@ describe('GameState', () => {
       s.playCard(0);
       expect(s.checkWinCondition()).toBe('player_win');
       expect(s.enemy.hp).toBe(0);
-      expect(s.dutki).toBe(57);
+      expect(s.dutki).toBe(55);
       expect(s.lastVictoryMessage).toContain('Wróg zbankrutował');
     });
   });

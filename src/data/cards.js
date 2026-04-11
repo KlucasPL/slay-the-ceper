@@ -147,9 +147,9 @@ export const cardLibrary = {
     cost: 1,
     price: 55,
     emoji: '🧾',
-    desc: 'Dodaj 15 do Rachunku wroga.',
+    desc: 'Dodaj 10 do Rachunku wroga.',
     effect(state) {
-      state.addEnemyRachunek(15);
+      state.addEnemyRachunek(10);
       return { playerAnim: 'anim-block' };
     },
   },
