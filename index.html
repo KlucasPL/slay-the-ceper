@@ -207,12 +207,24 @@
     </div>
     <!-- #game-wrapper -->
 
-    <div id="victory-overlay" class="victory-overlay hidden" aria-hidden="true">
+    <div id="relic-reward-screen" class="victory-overlay hidden" aria-hidden="true">
+      <div class="victory-panel relic-reward-panel">
+        <h2 class="victory-title">Pamiątka z potyczki</h2>
+        <div class="relic-glow-wrap">
+          <div id="reward-relic" class="reward-relic-emoji"></div>
+        </div>
+        <h3 id="reward-relic-name" class="reward-relic-name"></h3>
+        <p id="reward-relic-desc" class="reward-relic-desc"></p>
+        <button id="claim-relic-btn" class="reward-relic-btn">Zgarnij Pamiątkę</button>
+      </div>
+    </div>
+
+    <div id="card-reward-screen" class="victory-overlay hidden" aria-hidden="true">
       <div class="victory-panel">
         <h2 class="victory-title">Cepr usieczony! Wybierz łup:</h2>
         <p id="victory-dutki" class="victory-dutki"></p>
-        <div id="reward-relic" class="reward-relic"></div>
         <div id="reward-cards" class="reward-cards"></div>
+        <button id="reward-skip-btn" class="reward-skip-btn" type="button">Pomiń Karty</button>
       </div>
     </div>
 

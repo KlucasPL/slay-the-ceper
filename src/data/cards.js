@@ -1,7 +1,7 @@
 /**
  * @typedef {{ strength: number, weak: number, fragile: number, next_double: boolean, energy_next_turn: number }} StatusDef
  * @typedef {{ playerAnim?: string, enemyAnim?: string, damage?: { raw: number, blocked: number, dealt: number } }} CardEffectResult
- * @typedef {{ id: string, name: string, type: 'attack' | 'skill', cost: number, price: number, emoji: string, desc: string, exhaust?: boolean, effect: (state: import('../state/GameState.js').GameState) => CardEffectResult }} CardDef
+ * @typedef {{ id: string, name: string, type: 'attack' | 'skill', cost: number, price: number, emoji: string, desc: string, isStarter?: boolean, exhaust?: boolean, effect: (state: import('../state/GameState.js').GameState) => CardEffectResult }} CardDef
  */
 
 /** @type {Record<string, CardDef>} */
@@ -12,6 +12,7 @@ export const cardLibrary = {
     type: 'attack',
     cost: 1,
     price: 40,
+    isStarter: true,
     emoji: '🪓',
     desc: 'Zadaje 6 obrażeń.',
     effect(state) {
@@ -30,6 +31,7 @@ export const cardLibrary = {
     type: 'skill',
     cost: 1,
     price: 35,
+    isStarter: true,
     emoji: '🏺',
     desc: 'Zyskujesz 5 Gardy.',
     effect(state) {
@@ -61,6 +63,7 @@ export const cardLibrary = {
     type: 'skill',
     cost: 0,
     price: 60,
+    isStarter: true,
     emoji: '🗣️',
     desc: 'Dobierz 2 karty.',
     exhaust: true,

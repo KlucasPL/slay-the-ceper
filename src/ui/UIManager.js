@@ -15,6 +15,8 @@ export class UIManager {
     this.campfireUsed = false;
     /** @type {string} */
     this.mapMessage = '';
+    /** @type {(() => void) | null} */
+    this.pendingBattleRelicClaimAction = null;
   }
 
   /**
@@ -406,12 +408,9 @@ export class UIManager {
    */
   _showEndGame(outcome) {
     if (outcome === 'player_win') {
-      if (this.state.enemy.id === 'boss') {
-        this.showVictoryScreen();
-        return;
-      }
       const droppedDutki = this.state.grantBattleDutki();
-      this._showVictoryOverlay(droppedDutki);
+      const isBossFight = this.state.enemy.id === 'boss';
+      this._showVictoryOverlay(droppedDutki, isBossFight);
       return;
     }
     const msg = 'Koniec gry! Tłum ceprów poprosił Cię o wspólną fotkę.';
@@ -437,35 +436,88 @@ export class UIManager {
   /**
    * Displays a victory reward overlay with 3 random non-basic cards.
    */
-  _showVictoryOverlay(droppedDutki) {
-    const overlay = document.getElementById('victory-overlay');
-    const rewardDutki = document.getElementById('victory-dutki');
-    const rewardRelic = document.getElementById('reward-relic');
-    const rewardCards = document.getElementById('reward-cards');
+  _showVictoryOverlay(droppedDutki, isBossFight = false) {
+    const relicScreen = document.getElementById('relic-reward-screen');
     const choices = this._pickRewardCards(3);
-    const relicChoice = this._pickRewardRelic();
+    const relicChoice = this._pickRewardRelic(isBossFight);
 
-    rewardDutki.textContent = droppedDutki > 0 ? `Łup z bitki: +${droppedDutki} dutków` : '';
+    const goToCardPhase = () => {
+      this._showCardRewardScreen(droppedDutki, choices, isBossFight);
+    };
 
-    rewardRelic.innerHTML = '';
     if (relicChoice) {
-      const relic = relicLibrary[relicChoice];
-      const relicBtn = document.createElement('button');
-      relicBtn.type = 'button';
-      relicBtn.className = 'reward-relic-btn';
-      relicBtn.textContent = `Bierz pamiątkę: ${relic.name} ${relic.emoji}`;
-      relicBtn.title = relic.desc;
-      relicBtn.addEventListener('click', () => {
-        const added = this.state.addRelic(relicChoice);
-        if (!added) return;
-        relicBtn.disabled = true;
-        relicBtn.textContent = `Pamiątka już twoja: ${relic.name} ${relic.emoji}`;
-        this.updateUI();
-      });
-      rewardRelic.appendChild(relicBtn);
+      this.pendingBattleRelicClaimAction = goToCardPhase;
+      this.showRelicScreen(relicChoice, 'battle');
+    } else {
+      this.pendingBattleRelicClaimAction = null;
+      relicScreen.classList.add('hidden');
+      relicScreen.setAttribute('aria-hidden', 'true');
+      goToCardPhase();
     }
 
+    document.getElementById('end-turn-btn').disabled = true;
+  }
+
+  /**
+   * @param {string} relicId
+   * @param {'battle' | 'treasure'} source
+   */
+  showRelicScreen(relicId, source) {
+    const relic = relicLibrary[relicId];
+    if (!relic) return;
+
+    const relicScreen = document.getElementById('relic-reward-screen');
+    const cardScreen = document.getElementById('card-reward-screen');
+    const titleEl = relicScreen?.querySelector('.victory-title');
+    const rewardRelic = document.getElementById('reward-relic');
+    const rewardRelicName = document.getElementById('reward-relic-name');
+    const rewardRelicDesc = document.getElementById('reward-relic-desc');
+    const claimBtn = document.getElementById('claim-relic-btn');
+    if (!relicScreen || !cardScreen || !titleEl || !rewardRelic || !rewardRelicName || !rewardRelicDesc || !claimBtn) {
+      return;
+    }
+
+    titleEl.textContent = source === 'treasure' ? 'Znalazłeś Skarb!' : 'Łup z wroga!';
+    rewardRelic.textContent = relic.emoji;
+    rewardRelicName.textContent = relic.name;
+    rewardRelicDesc.textContent = relic.desc;
+
+    claimBtn.onclick = () => {
+      this.state.addRelic(relicId);
+      relicScreen.classList.add('hidden');
+      relicScreen.setAttribute('aria-hidden', 'true');
+
+      if (source === 'battle') {
+        const goToCardPhase = this.pendingBattleRelicClaimAction;
+        this.pendingBattleRelicClaimAction = null;
+        if (goToCardPhase) {
+          goToCardPhase();
+        }
+      } else {
+        this.pendingBattleRelicClaimAction = null;
+        this.state.currentScreen = 'map';
+        this._openMapOverlay();
+      }
+
+      this.updateUI();
+    };
+
+    this._hideOverlay('map-overlay');
+    cardScreen.classList.add('hidden');
+    cardScreen.setAttribute('aria-hidden', 'true');
+    relicScreen.classList.remove('hidden');
+    relicScreen.setAttribute('aria-hidden', 'false');
+  }
+
+  _showCardRewardScreen(droppedDutki, choices, isBossFight = false) {
+    const cardScreen = document.getElementById('card-reward-screen');
+    const rewardDutki = document.getElementById('victory-dutki');
+    const rewardCards = document.getElementById('reward-cards');
+    const skipBtn = document.getElementById('reward-skip-btn');
+
+    rewardDutki.textContent = droppedDutki > 0 ? `Łup z bitki: +${droppedDutki} dutków` : '';
     rewardCards.innerHTML = '';
+
     choices.forEach((cardId) => {
       const card = cardLibrary[cardId];
       const cardEl = document.createElement('button');
@@ -483,17 +535,33 @@ export class UIManager {
       }
       cardEl.addEventListener('click', () => {
         this.state.deck.push(cardId);
-        overlay.classList.add('hidden');
-        overlay.setAttribute('aria-hidden', 'true');
-        this._openMapOverlay();
-        this.updateUI();
+        this._closeRewardScreens(isBossFight);
       });
       rewardCards.appendChild(cardEl);
     });
 
-    overlay.classList.remove('hidden');
-    overlay.setAttribute('aria-hidden', 'false');
-    document.getElementById('end-turn-btn').disabled = true;
+    skipBtn.onclick = () => this._closeRewardScreens(isBossFight);
+
+    cardScreen.classList.remove('hidden');
+    cardScreen.setAttribute('aria-hidden', 'false');
+  }
+
+  _closeRewardScreens(isBossFight = false) {
+    const relicScreen = document.getElementById('relic-reward-screen');
+    const cardScreen = document.getElementById('card-reward-screen');
+
+    relicScreen.classList.add('hidden');
+    relicScreen.setAttribute('aria-hidden', 'true');
+    cardScreen.classList.add('hidden');
+    cardScreen.setAttribute('aria-hidden', 'true');
+
+    if (isBossFight) {
+      this.showVictoryScreen();
+      return;
+    }
+
+    this._openMapOverlay();
+    this.updateUI();
   }
 
   /**
@@ -501,8 +569,7 @@ export class UIManager {
    * @returns {string[]}
    */
   _pickRewardCards(count) {
-    const basic = new Set(['ciupaga', 'gasior']);
-    const pool = Object.keys(cardLibrary).filter((id) => !basic.has(id));
+    const pool = Object.keys(cardLibrary).filter((id) => !cardLibrary[id]?.isStarter);
     for (let i = pool.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [pool[i], pool[j]] = [pool[j], pool[i]];
@@ -513,8 +580,8 @@ export class UIManager {
   /**
    * @returns {string | null}
    */
-  _pickRewardRelic() {
-    return this.state.generateRelicReward();
+  _pickRewardRelic(forceDrop = false) {
+    return this.state.generateRelicReward(forceDrop);
   }
 
   _openMapOverlay() {
@@ -711,16 +778,14 @@ export class UIManager {
   }
 
   _handleTreasureNode() {
-    const relicId = this.state.grantTreasureRelic();
+    const relicId = this.state.generateRelicReward(true);
     if (!relicId) {
       this.mapMessage = 'Skrzynia była pusta... ani jednej pamiątki.';
       this._openMapOverlay();
       return;
     }
 
-    const relic = relicLibrary[relicId];
-    this.mapMessage = `Skarb! Dostajesz pamiątkę: ${relic.emoji} ${relic.name}`;
-    this._openMapOverlay();
+    this.showRelicScreen(relicId, 'treasure');
     this.updateUI();
   }
 

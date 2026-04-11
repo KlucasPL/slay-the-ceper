@@ -672,6 +672,14 @@ h1 {
   padding: 24px;
 }
 
+.relic-reward-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+}
+
 .victory-title {
   margin: 0 0 20px;
   text-align: center;
@@ -695,10 +703,42 @@ h1 {
   gap: 16px;
 }
 
-.reward-relic {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 16px;
+.relic-glow-wrap {
+  position: relative;
+  width: 130px;
+  height: 130px;
+  display: grid;
+  place-items: center;
+  margin: 6px 0;
+}
+
+.relic-glow-wrap::before {
+  content: '';
+  position: absolute;
+  inset: 8px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 214, 98, 0.42), rgba(255, 214, 98, 0));
+  filter: blur(8px);
+}
+
+.reward-relic-emoji {
+  position: relative;
+  z-index: 1;
+  font-size: 4rem;
+  line-height: 1;
+}
+
+.reward-relic-name {
+  margin: 0;
+  color: #ffe1a3;
+  font-size: 1.3rem;
+}
+
+.reward-relic-desc {
+  margin: 0;
+  max-width: 560px;
+  color: #f6e8ca;
+  opacity: 0.95;
 }
 
 .reward-relic-btn {
@@ -724,6 +764,23 @@ h1 {
   opacity: 0.75;
   cursor: default;
   transform: none;
+}
+
+.reward-skip-btn {
+  display: block;
+  margin: 14px auto 0;
+  border: 1px solid rgba(255, 220, 114, 0.5);
+  background: rgba(44, 26, 12, 0.85);
+  color: #efddb9;
+  border-radius: 999px;
+  padding: 7px 14px;
+  font-size: 0.84rem;
+  cursor: pointer;
+  transition: filter 0.2s ease;
+}
+
+.reward-skip-btn:hover {
+  filter: brightness(1.08);
 }
 
 .event-overlay {

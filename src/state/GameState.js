@@ -529,11 +529,12 @@ export class GameState {
   }
 
   /**
+   * @param {boolean} [forceDrop=false]
    * @returns {string | null}
    */
-  generateRelicReward() {
+  generateRelicReward(forceDrop = false) {
     const relicChance = 0.33;
-    if (Math.random() >= relicChance) return null;
+    if (!forceDrop && Math.random() >= relicChance) return null;
 
     const pool = this._buildAvailableRelicPool();
     if (pool.length === 0) return null;
@@ -608,7 +609,7 @@ export class GameState {
    * @returns {ShopStock}
    */
   generateShopStock() {
-    const cardPool = Object.keys(cardLibrary);
+    const cardPool = Object.keys(cardLibrary).filter((id) => !cardLibrary[id]?.isStarter);
     for (let i = cardPool.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [cardPool[i], cardPool[j]] = [cardPool[j], cardPool[i]];

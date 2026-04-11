@@ -797,6 +797,14 @@ describe('GameState', () => {
       });
     });
 
+    it('shop stock excludes starter cards', () => {
+      const s = freshState();
+      const stock = s.generateShopStock();
+      stock.cards.forEach((cardId) => {
+        expect(cardLibrary[cardId]?.isStarter).not.toBe(true);
+      });
+    });
+
     it('all relics expose numeric shop price', () => {
       Object.values(relicLibrary).forEach((relic) => {
         expect(typeof relic.price).toBe('number');
