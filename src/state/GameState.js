@@ -625,6 +625,9 @@ export class GameState {
   addEnemyRachunek(amount) {
     if (amount <= 0) return;
     this.enemy.rachunek += amount;
+    if (this.hasRelic('pekniete_liczydlo')) {
+      this.enemy.hp = Math.max(0, this.enemy.hp - 3);
+    }
     this._checkEnemyBankruptcy();
   }
 
@@ -953,7 +956,10 @@ export class GameState {
    */
   grantBattleDutki() {
     if (!this.pendingBattleDutki) return 0;
-    const drop = 30 + Math.floor(Math.random() * 11);
+    const base = 30 + Math.floor(Math.random() * 11);
+    const drop = (this.enemy.isBankrupt && this.hasRelic('magnes_na_lodowke'))
+      ? Math.floor(base * 1.5)
+      : base;
     this.dutki += drop;
     this.pendingBattleDutki = false;
     return drop;
@@ -977,13 +983,20 @@ export class GameState {
     if (this.hasRelic('papryczka_marka')) {
       this.player.status.strength += 3;
     }
+
+    if (this.hasRelic('blacha_przewodnika')) {
+      this.player.hasLans = true;
+    }
   }
 
   /**
    * @param {number} amount
    */
   gainPlayerBlockFromCard(amount) {
-    const effective = this.player.status.fragile > 0 ? Math.floor(amount * 0.75) : amount;
+    let effective = this.player.status.fragile > 0 ? Math.floor(amount * 0.75) : amount;
+    if (this.hasRelic('lustrzane_gogle') && this.player.hasLans) {
+      effective += 2;
+    }
     this.player.block += effective;
   }
 
@@ -1051,8 +1064,8 @@ export class GameState {
     this.flaszkaCostSeed = {};
     this.termometerTurnParity = 0;
     this._setCurrentWeatherFromNode();
-    this.startTurn();
     this._applyBattleStartRelics();
+    this.startTurn();
     this.pendingBattleDutki = true;
   }
 
@@ -1648,6 +1661,15 @@ export class GameState {
       }
     }
 
+    if (this.hasRelic('papucie_po_babci') && this.player.hasLans) {
+      const hpBefore = this.player.hp;
+      this.healPlayer(2);
+      const healed = this.player.hp - hpBefore;
+      if (healed > 0 && !playerPassiveHeal) {
+        playerPassiveHeal = { amount: healed, text: `+${healed} HP (Papucie)` };
+      }
+    }
+
     /** @type {{ amount: number, text: string } | null} */
     let enemyPassiveHeal = null;
     if (this.enemy.id === 'baba' && !this.enemy.tookHpDamageThisTurn) {
@@ -1743,8 +1765,8 @@ export class GameState {
     this._setCurrentWeatherFromNode();
     this.pendingBattleDutki = true;
 
-    this.startTurn();
     this._applyBattleStartRelics();
+    this.startTurn();
   }
 
   /**

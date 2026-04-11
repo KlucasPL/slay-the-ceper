@@ -93,6 +93,46 @@ export const relicLibrary = {
     desc: 'Na start walki: +3 Siły. Na początku każdej tury: –2 HP.',
     price: 350,
   },
+  papucie_po_babci: {
+    id: 'papucie_po_babci',
+    name: 'Papucie po Babci',
+    rarity: 'common',
+    emoji: '🥿',
+    desc: 'Na koniec tury: jeśli masz aktywny Lans, ulecz 2 HP.',
+    price: 90,
+  },
+  magnes_na_lodowke: {
+    id: 'magnes_na_lodowke',
+    name: 'Magnes na Lodówkę',
+    rarity: 'common',
+    emoji: '🧲',
+    desc: 'Zwycięstwo przez Bankructwo daje +50% więcej Dutków.',
+    price: 100,
+  },
+  pekniete_liczydlo: {
+    id: 'pekniete_liczydlo',
+    name: 'Pęknięte Liczydło',
+    rarity: 'uncommon',
+    emoji: '🧮',
+    desc: 'Za każdym razem, gdy nakładasz Rachunek na wroga, zadajesz mu 3 obrażenia w HP.',
+    price: 175,
+  },
+  blacha_przewodnika: {
+    id: 'blacha_przewodnika',
+    name: 'Blacha Przewodnika',
+    rarity: 'uncommon',
+    emoji: '🏅',
+    desc: 'Rozpoczynasz każdą walkę z aktywnym Lansem.',
+    price: 160,
+  },
+  lustrzane_gogle: {
+    id: 'lustrzane_gogle',
+    name: 'Lustrzane Gogle',
+    rarity: 'rare',
+    emoji: '🥽',
+    desc: 'Dopóki masz aktywny Lans, każda karta Gardy daje +2 pkt pancerza więcej.',
+    price: 300,
+  },
 };
 
 /**

@@ -678,6 +678,82 @@ describe('GameState', () => {
       expect(playerPassiveHeal).toBeNull();
     });
 
+    it('papucie_po_babci heals 2 HP at end of turn when hasLans', () => {
+      const s = freshState();
+      s.addRelic('papucie_po_babci');
+      s.player.hp = 25;
+      s.player.hasLans = true;
+      setEnemyIntent(s, { type: 'block', name: 'Obserwuje', block: 0 });
+      const { playerPassiveHeal } = s.endTurn();
+      expect(s.player.hp).toBe(27);
+      expect(playerPassiveHeal).not.toBeNull();
+    });
+
+    it('papucie_po_babci does not heal when hasLans is false', () => {
+      const s = freshState();
+      s.addRelic('papucie_po_babci');
+      s.player.hp = 25;
+      s.player.hasLans = false;
+      setEnemyIntent(s, { type: 'block', name: 'Obserwuje', block: 0 });
+      s.endTurn();
+      expect(s.player.hp).toBe(25);
+    });
+
+    it('magnes_na_lodowke grants +50% dutki when enemy is bankrupt', () => {
+      const s = freshState();
+      s.addRelic('magnes_na_lodowke');
+      s.enemy.isBankrupt = true;
+      s.pendingBattleDutki = true;
+      const drop = s.grantBattleDutki();
+      expect(drop).toBeGreaterThanOrEqual(45);
+      expect(drop).toBeLessThanOrEqual(60);
+    });
+
+    it('grantBattleDutki normal drop without magnes_na_lodowke', () => {
+      const s = freshState();
+      s.enemy.isBankrupt = true;
+      s.pendingBattleDutki = true;
+      const drop = s.grantBattleDutki();
+      expect(drop).toBeGreaterThanOrEqual(30);
+      expect(drop).toBeLessThanOrEqual(40);
+    });
+
+    it('pekniete_liczydlo deals 3 HP to enemy when rachunek is added', () => {
+      const s = freshState();
+      s.addRelic('pekniete_liczydlo');
+      s.enemy.hp = 50;
+      s.enemy.rachunek = 0;
+      s.enemy.maxRachunek = 9999;
+      s.addEnemyRachunek(5);
+      expect(s.enemy.hp).toBe(47);
+    });
+
+    it('blacha_przewodnika starts battle with hasLans active', () => {
+      const s = freshState();
+      s.addRelic('blacha_przewodnika');
+      s.player.hasLans = false;
+      s._applyBattleStartRelics();
+      expect(s.player.hasLans).toBe(true);
+    });
+
+    it('lustrzane_gogle adds +2 block per block card when hasLans', () => {
+      const s = freshState();
+      s.addRelic('lustrzane_gogle');
+      s.player.hasLans = true;
+      s.player.block = 0;
+      s.gainPlayerBlockFromCard(5);
+      expect(s.player.block).toBe(7);
+    });
+
+    it('lustrzane_gogle does not add bonus block without hasLans', () => {
+      const s = freshState();
+      s.addRelic('lustrzane_gogle');
+      s.player.hasLans = false;
+      s.player.block = 0;
+      s.gainPlayerBlockFromCard(5);
+      expect(s.player.block).toBe(5);
+    });
+
     it('ciupaga_dlugopis deals 4 bonus damage when a skill card is played', () => {
       const s = freshState();
       s.addRelic('ciupaga_dlugopis');
@@ -1363,6 +1439,7 @@ describe('GameState', () => {
 
     it('moves hand/discard/exhaust back to deck and starts next turn', () => {
       const s = freshState();
+      vi.spyOn(s, '_pickRandomEnemyDef').mockReturnValue(enemyLibrary.cepr);
       s.deck = ['ciupaga', 'gasior', 'kierpce'];
       s.hand = ['giewont', 'hej'];
       s.discard = ['sandaly'];
