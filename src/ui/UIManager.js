@@ -245,6 +245,11 @@ export class UIManager {
       const isKept = this.state.smyczKeptCardId === cardId;
       cardEl.className = `card${canPlay ? '' : ' disabled'}${isKept ? ' card--kept' : ''}`;
 
+      if (card.exhaust) {
+        cardEl.classList.add('card-exhaust');
+        cardEl.appendChild(this._createExhaustBadge());
+      }
+
       if (canPlay && player.hp > 0 && enemy.hp > 0) {
         cardEl.addEventListener('click', () => {
           if (!this.isAnimating) this._handlePlayCard(index);
@@ -264,12 +269,7 @@ export class UIManager {
       descEl.className = 'card-desc';
       descEl.textContent = card.desc;
 
-      const exhaustEl = document.createElement('div');
-      exhaustEl.className = 'card-exhaust';
-      exhaustEl.textContent = 'Przepado';
-      exhaustEl.hidden = !card.exhaust;
-
-      cardEl.append(costEl, titleEl, imgEl, descEl, exhaustEl);
+      cardEl.append(costEl, titleEl, imgEl, descEl);
 
       if (this.state.hasRelic('smycz_zakopane') && player.hp > 0 && enemy.hp > 0) {
         const keepBtn = document.createElement('button');
@@ -436,6 +436,10 @@ export class UIManager {
         <div class="reward-name">${card.name}</div>
         <div class="reward-desc">${card.desc}</div>
       `;
+      if (card.exhaust) {
+        cardEl.classList.add('card-exhaust');
+        cardEl.prepend(this._createExhaustBadge());
+      }
       cardEl.addEventListener('click', () => {
         this.state.deck.push(cardId);
         overlay.classList.add('hidden');
@@ -469,16 +473,7 @@ export class UIManager {
    * @returns {string | null}
    */
   _pickRewardRelic() {
-    const relicChance = 0.33;
-    if (Math.random() >= relicChance) return null;
-
-    const available = Object.keys(relicLibrary).filter(
-      (id) => !this.state.relics.includes(id) && id !== 'zakopane'
-    );
-    if (available.length === 0) return null;
-
-    const idx = Math.floor(Math.random() * available.length);
-    return available[idx];
+    return this.state.generateRelicReward();
   }
 
   _openMapOverlay() {
@@ -718,6 +713,10 @@ export class UIManager {
 
       const cardBox = document.createElement('div');
       cardBox.className = 'shop-item';
+      if (card.exhaust) {
+        cardBox.classList.add('card-exhaust');
+        cardBox.appendChild(this._createExhaustBadge());
+      }
 
       const title = document.createElement('div');
       title.className = 'shop-item-title';
@@ -799,6 +798,16 @@ export class UIManager {
     if (!message.textContent) {
       message.textContent = this.state.lastShopMessage;
     }
+  }
+
+  /**
+   * @returns {HTMLDivElement}
+   */
+  _createExhaustBadge() {
+    const badge = document.createElement('div');
+    badge.className = 'card-exhaust-badge';
+    badge.innerHTML = '<span class="card-exhaust-fire">🔥</span> <b>PRZEPADO</b>';
+    return badge;
   }
 
   _buyShopHeal() {

@@ -41,6 +41,10 @@ export class GameState {
     this.exhaust = [];
     /** @type {string[]} */
     this.relics = [];
+    /** @type {string[]} Relics that have already appeared as offers/rewards in this run */
+    this.seenRelicOffers = [];
+    /** @type {boolean} Whether the first hard-mode shop guarantee has been consumed */
+    this.hardFirstShopRolled = false;
     /** @type {Record<string, number>} */
     this.cardDamageBonus = {};
     /** @type {(MapNode | null)[][]} */
@@ -513,11 +517,71 @@ export class GameState {
 
   /** @returns {string | null} */
   grantTreasureRelic() {
-    const pool = Object.keys(relicLibrary).filter((id) => !this.relics.includes(id));
+    const pool = this._buildAvailableRelicPool();
     if (pool.length === 0) return null;
-    const relicId = pool[Math.floor(Math.random() * pool.length)];
+    const relicId = this._pickRelicFromPool(pool);
+    if (!relicId) return null;
+    this._markRelicAsSeen(relicId);
     this.addRelic(relicId);
     return relicId;
+  }
+
+  /**
+   * @returns {string | null}
+   */
+  generateRelicReward() {
+    const relicChance = 0.33;
+    if (Math.random() >= relicChance) return null;
+
+    const pool = this._buildAvailableRelicPool();
+    if (pool.length === 0) return null;
+    const relicId = this._pickRelicFromPool(pool);
+    if (!relicId) return null;
+    this._markRelicAsSeen(relicId);
+    return relicId;
+  }
+
+  /**
+   * @returns {string[]}
+   */
+  _buildAvailableRelicPool() {
+    return Object.keys(relicLibrary).filter(
+      (id) => !this.relics.includes(id) && !this.seenRelicOffers.includes(id)
+    );
+  }
+
+  /**
+   * @param {string} relicId
+   */
+  _markRelicAsSeen(relicId) {
+    if (!this.seenRelicOffers.includes(relicId)) {
+      this.seenRelicOffers.push(relicId);
+    }
+  }
+
+  /**
+   * @param {string[]} pool
+   * @returns {string | null}
+   */
+  _pickRelicFromPool(pool) {
+    if (!pool || pool.length === 0) return null;
+    const shuffled = [...pool];
+    this._shuffle(shuffled);
+
+    const picked = shuffled[0];
+    if (picked !== 'papryczka_marka' || this.difficulty !== 'normal') {
+      return picked;
+    }
+
+    if (Math.random() <= 0.05) {
+      return picked;
+    }
+
+    const withoutPapryczka = shuffled.filter((id) => id !== 'papryczka_marka');
+    if (withoutPapryczka.length === 0) {
+      return null;
+    }
+    return withoutPapryczka[0];
   }
 
   /**
@@ -548,15 +612,28 @@ export class GameState {
       [cardPool[i], cardPool[j]] = [cardPool[j], cardPool[i]];
     }
 
-    const relicPool = Object.keys(relicLibrary).filter((id) => !this.relics.includes(id));
-    for (let i = relicPool.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [relicPool[i], relicPool[j]] = [relicPool[j], relicPool[i]];
+    const relicPool = this._buildAvailableRelicPool();
+    let relicId = null;
+    const shouldForceHardPapryczka = this.difficulty === 'hard' && !this.hardFirstShopRolled;
+
+    if (shouldForceHardPapryczka) {
+      this.hardFirstShopRolled = true;
+      if (relicPool.includes('papryczka_marka')) {
+        relicId = 'papryczka_marka';
+      }
+    }
+
+    if (!relicId) {
+      relicId = this._pickRelicFromPool(relicPool);
+    }
+
+    if (relicId) {
+      this._markRelicAsSeen(relicId);
     }
 
     this.shopStock = {
       cards: cardPool.slice(0, 3),
-      relic: relicPool.length > 0 ? relicPool[0] : null,
+      relic: relicId,
     };
     this.lastShopMessage = '';
     return this.shopStock;
@@ -626,6 +703,7 @@ export class GameState {
     if (!relicLibrary[relicId] || this.hasRelic(relicId)) return false;
 
     this.relics.push(relicId);
+    this._markRelicAsSeen(relicId);
 
     return true;
   }

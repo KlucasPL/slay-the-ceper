@@ -470,13 +470,37 @@ h1 {
   border-radius: 5px;
 }
 
-.card-exhaust {
-  margin-top: 4px;
-  text-align: center;
-  font-size: 0.82em;
-  font-weight: 700;
-  color: #6b140f;
-  letter-spacing: 0.03em;
+.card.card-exhaust,
+.reward-card.card-exhaust,
+.shop-item.card-exhaust {
+  border-color: #c73a27;
+  box-shadow:
+    0 10px 22px rgba(0, 0, 0, 0.4),
+    0 0 0 2px rgba(199, 58, 39, 0.28) inset;
+  background-image: linear-gradient(160deg, rgba(199, 58, 39, 0.18), rgba(0, 0, 0, 0));
+}
+
+.card-exhaust-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 7px;
+  border-radius: 999px;
+  border: 1px solid #ff8e84;
+  background: linear-gradient(180deg, #c23624 0%, #9f1e16 100%);
+  color: #fff5ec;
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.35);
+  z-index: 3;
+  pointer-events: none;
+}
+
+.card-exhaust-fire {
+  display: inline-flex;
 }
 
 .card-keep-btn {
@@ -868,6 +892,7 @@ h1 {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  position: relative;
 }
 
 .shop-item-title {
@@ -932,6 +957,7 @@ h1 {
   justify-content: flex-start;
   text-align: center;
   cursor: pointer;
+  position: relative;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
   transition:
     transform 0.25s ease,

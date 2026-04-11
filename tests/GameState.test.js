@@ -835,6 +835,45 @@ describe('GameState', () => {
       expect(s.shopStock.relic).toBeNull();
     });
 
+    it('does not offer the same relic twice across the run', () => {
+      const s = freshState();
+      const targetRelic = 'krokus';
+      s.relics = Object.keys(relicLibrary).filter((id) => id !== targetRelic);
+
+      const firstStock = s.generateShopStock();
+      expect(firstStock.relic).toBe(targetRelic);
+
+      const secondStock = s.generateShopStock();
+      expect(secondStock.relic).toBeNull();
+    });
+
+    it('guarantees papryczka_marka in the first hard-mode shop when available', () => {
+      const s = freshState();
+      s.difficulty = 'hard';
+
+      const firstStock = s.generateShopStock();
+      expect(firstStock.relic).toBe('papryczka_marka');
+      expect(s.hardFirstShopRolled).toBe(true);
+    });
+
+    it('keeps papryczka_marka at 5% acceptance in normal reward rolls', () => {
+      const s = freshState();
+      s.difficulty = 'normal';
+      s.relics = Object.keys(relicLibrary).filter((id) => id !== 'papryczka_marka');
+
+      vi
+        .spyOn(Math, 'random')
+        .mockReturnValueOnce(0)
+        .mockReturnValueOnce(0.99)
+        .mockReturnValueOnce(0)
+        .mockReturnValueOnce(0.01);
+      const rejected = s.generateRelicReward();
+      expect(rejected).toBeNull();
+
+      const accepted = s.generateRelicReward();
+      expect(accepted).toBe('papryczka_marka');
+    });
+
     it('removeCardFromDeck permanently removes selected card copy', () => {
       const s = freshState();
       s.deck = ['ciupaga', 'gasior'];
