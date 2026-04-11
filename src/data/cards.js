@@ -62,7 +62,8 @@ export const cardLibrary = {
     cost: 0,
     price: 60,
     emoji: '🗣️',
-    desc: 'Dobierz 2 karty. Hej!',
+    desc: 'Dobierz 2 karty.',
+    exhaust: true,
     effect(state) {
       state._drawCards(2);
       return { playerAnim: 'anim-block' };
@@ -167,24 +168,26 @@ export const cardLibrary = {
     cost: 1,
     price: 65,
     emoji: '🥛',
-    desc: 'Leczysz 4 Krzepy.',
+    desc: 'Leczysz 7 Krzepy.',
+    exhaust: true,
     effect(state) {
-      state.healPlayer(4);
+      state.healPlayer(7);
       return { playerAnim: 'anim-block' };
     },
   },
   janosik: {
     id: 'janosik',
-    name: 'Janosik',
+    name: 'Janosikowe',
     type: 'attack',
     cost: 1,
     price: 95,
     emoji: '🗡️',
-    desc: 'Zadaje 7 obrażeń. Jeśli Wróg pada: +20 Dutki.',
+    desc: 'Zadaje 9 obrażeń. Jeśli Wróg pada: +30 Dutki.',
+    exhaust: true,
     effect(state) {
-      const dmg = state._calcAttackDamage(state.player, 7 + state.getCardDamageBonus('janosik'));
+      const dmg = state._calcAttackDamage(state.player, 9 + state.getCardDamageBonus('janosik'));
       const damage = state._applyDamageToEnemy(dmg);
-      if (state.enemy.hp <= 0) state.dutki += 20;
+      if (state.enemy.hp <= 0) state.dutki += 30;
       return {
         playerAnim: 'anim-attack-p',
         enemyAnim: damage.dealt > 0 ? 'anim-damage' : 'anim-block',
@@ -194,14 +197,16 @@ export const cardLibrary = {
   },
   echo: {
     id: 'echo',
-    name: 'Echo',
+    name: 'Echo w Tatrach',
     type: 'skill',
     cost: 2,
     price: 100,
     emoji: '🔊',
-    desc: 'Twój następny cios zadaje podwójne obrażenia.',
+    desc: 'Twój następny cios zadaje podwójne obrażenia. Dobierz 1 kartę.',
+    exhaust: true,
     effect(state) {
       state.player.status.next_double = true;
+      state._drawCards(1);
       return { playerAnim: 'anim-block' };
     },
   },
@@ -216,7 +221,7 @@ export const cardLibrary = {
     effect(state) {
       const dmg = state._calcAttackDamage(state.player, 5 + state.getCardDamageBonus('sandaly'));
       const damage = state._applyDamageToEnemy(dmg);
-      state.enemy.status.weak += 2;
+      state.applyEnemyDebuff('weak', 2);
       return {
         playerAnim: 'anim-attack-p',
         enemyAnim: damage.dealt > 0 ? 'anim-damage' : 'anim-block',
@@ -226,14 +231,15 @@ export const cardLibrary = {
   },
   giewont: {
     id: 'giewont',
-    name: 'Giewont',
+    name: 'Gniew Giewontu',
     type: 'attack',
     cost: 3,
     price: 120,
     emoji: '⛰️',
-    desc: 'Zadaje 25 obrażeń.',
+    desc: 'Zadaje 30 obrażeń.',
+    exhaust: true,
     effect(state) {
-      const dmg = state._calcAttackDamage(state.player, 25 + state.getCardDamageBonus('giewont'));
+      const dmg = state._calcAttackDamage(state.player, 30 + state.getCardDamageBonus('giewont'));
       const damage = state._applyDamageToEnemy(dmg);
       return {
         playerAnim: 'anim-attack-p',

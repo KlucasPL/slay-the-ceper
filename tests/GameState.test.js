@@ -182,12 +182,14 @@ describe('GameState', () => {
   });
 
   describe('hej', () => {
-    it('draws 2 cards', () => {
-      const s = freshState();
+    it('draws 2 cards and exhausts', () => {
+      const s = freshState(1);
       s.hand = ['hej'];
-      s.deck = ['ciupaga', 'ciupaga', 'ciupaga'];
+      s.deck = ['ciupaga', 'gasior', 'ciupaga'];
       s.playCard(0);
       expect(s.hand).toHaveLength(2);
+      expect(s.exhaust).toContain('hej');
+      expect(s.discard).not.toContain('hej');
     });
   });
 
@@ -397,12 +399,13 @@ describe('GameState', () => {
   });
 
   describe('zyntyca', () => {
-    it('heals 4 Krzepa', () => {
+    it('heals 7 Krzepa and exhausts', () => {
       const s = freshState();
       s.hand = ['zyntyca'];
       s.player.hp = 30;
       s.playCard(0);
-      expect(s.player.hp).toBe(34);
+      expect(s.player.hp).toBe(37);
+      expect(s.exhaust).toContain('zyntyca');
     });
     it('does not exceed maxHp', () => {
       const s = freshState();
@@ -414,22 +417,23 @@ describe('GameState', () => {
   });
 
   describe('janosik', () => {
-    it('deals 7 damage', () => {
+    it('deals 9 damage', () => {
       const s = freshState();
       s.hand = ['janosik'];
       s.enemy.hp = 40;
       s.enemy.block = 0;
       s.playCard(0);
-      expect(s.enemy.hp).toBe(33);
+      expect(s.enemy.hp).toBe(31);
     });
-    it('grants +20 Dutki if enemy dies', () => {
+    it('grants +30 Dutki if enemy dies and exhausts', () => {
       const s = freshState();
       s.hand = ['janosik'];
       s.enemy.hp = 5;
       s.enemy.block = 0;
       s.dutki = 0;
       s.playCard(0);
-      expect(s.dutki).toBe(20);
+      expect(s.dutki).toBe(30);
+      expect(s.exhaust).toContain('janosik');
     });
     it('does not grant Dutki if enemy survives', () => {
       const s = freshState();
@@ -443,11 +447,14 @@ describe('GameState', () => {
   });
 
   describe('echo', () => {
-    it('sets next_double on player', () => {
+    it('sets next_double, draws 1 and exhausts', () => {
       const s = freshState(3);
       s.hand = ['echo'];
+      s.deck = ['ciupaga'];
       s.playCard(0);
       expect(s.player.status.next_double).toBe(true);
+      expect(s.hand).toHaveLength(1);
+      expect(s.exhaust).toContain('echo');
     });
   });
 
@@ -470,13 +477,14 @@ describe('GameState', () => {
   });
 
   describe('giewont', () => {
-    it('deals 25 damage', () => {
+    it('deals 30 damage and exhausts', () => {
       const s = freshState(3);
       s.hand = ['giewont'];
       s.enemy.hp = 40;
       s.enemy.block = 0;
       s.playCard(0);
-      expect(s.enemy.hp).toBe(15);
+      expect(s.enemy.hp).toBe(10);
+      expect(s.exhaust).toContain('giewont');
     });
   });
 
@@ -1158,26 +1166,25 @@ describe('GameState', () => {
       expect(s.enemy.maxHp).toBe(50);
     });
 
-    it('applies HARNY scaling only on boss node', () => {
+    it('spawns Król Krupówek on boss node with artifact', () => {
       const s = freshState();
       s.map = [
         [null, { x: 1, y: 0, type: 'fight', label: 'Bitka', emoji: '⚔️', connections: [1] }, null],
-        [null, { x: 1, y: 1, type: 'boss', label: 'Harny', emoji: '💀', connections: [] }, null],
+        [null, { x: 1, y: 1, type: 'boss', label: 'Boss', emoji: '👑', connections: [] }, null],
       ];
       s.currentLevel = 1;
       s.currentNodeIndex = 1;
       s.currentNode = { x: 1, y: 1 };
-      vi.spyOn(Math, 'random').mockReturnValue(0);
       s.resetBattle();
-      expect(s.enemy.id).toBe('cepr');
-      expect(s.enemy.name).toBe('HARNY Cepr');
-      expect(s.enemy.maxHp).toBe(80);
-      expect(s.enemy.baseAttack).toBe(13);
+      expect(s.enemy.id).toBe('boss');
+      expect(s.enemy.name).toBe('Król Krupówek - Biały Misiek (Zdzisiek)');
+      expect(s.enemy.maxHp).toBe(250);
+      expect(s.enemy.bossArtifact).toBe(3);
     });
 
-    it('random pool includes exactly three enemy types', () => {
+    it('enemy library includes final boss definition', () => {
       const ids = Object.keys(enemyLibrary).sort();
-      expect(ids).toEqual(['baba', 'busiarz', 'cepr']);
+      expect(ids).toEqual(['baba', 'boss', 'busiarz', 'cepr']);
     });
 
     it('does not scale enemies in normal mode', () => {
@@ -1208,6 +1215,85 @@ describe('GameState', () => {
       s.resetBattle(); // increments scale to 1.21, then creates enemy with that scale
       expect(s.enemy.maxHp).toBe(Math.round(enemyLibrary.cepr.maxHp * 1.21));
       expect(s.enemy.baseAttack).toBe(Math.round(enemyLibrary.cepr.baseAttack * 1.21));
+    });
+
+    it('boss has 350 HP on hard mode', () => {
+      const s = freshState();
+      s.difficulty = 'hard';
+      s.map = [
+        [null, { x: 1, y: 0, type: 'fight', label: 'Bitka', emoji: '⚔️', connections: [1] }, null],
+        [null, { x: 1, y: 1, type: 'boss', label: 'Boss', emoji: '👑', connections: [] }, null],
+      ];
+      s.currentLevel = 1;
+      s.currentNodeIndex = 1;
+      s.currentNode = { x: 1, y: 1 };
+      s.resetBattle();
+      expect(s.enemy.id).toBe('boss');
+      expect(s.enemy.maxHp).toBe(350);
+    });
+  });
+
+  describe('boss - Król Krupówek', () => {
+    /** @returns {GameState} */
+    function freshBossState() {
+      const s = new GameState({ ...mockPlayer }, enemyLibrary.boss);
+      s.player.energy = 3;
+      s.hand = [];
+      s.deck = [];
+      s.discard = [];
+      return s;
+    }
+
+    it('blocks first three debuffs with artifact', () => {
+      const s = freshBossState();
+      s.applyEnemyDebuff('weak', 2);
+      s.applyEnemyDebuff('weak', 2);
+      s.applyEnemyDebuff('weak', 2);
+      expect(s.enemy.status.weak).toBe(0);
+      expect(s.enemy.bossArtifact).toBe(0);
+      s.applyEnemyDebuff('weak', 2);
+      expect(s.enemy.status.weak).toBe(2);
+    });
+
+    it('phase 1 steals 15 dutki on attack', () => {
+      const s = freshBossState();
+      s.enemy.hp = 200;
+      s.dutki = 50;
+      s.endTurn();
+      expect(s.dutki).toBe(35);
+    });
+
+    it('phase 1 gains block when player has no dutki', () => {
+      const s = freshBossState();
+      s.enemy.hp = 200;
+      s.dutki = 0;
+      s.endTurn();
+      expect(s.enemy.block).toBe(5);
+    });
+
+    it('phase 2 applies vulnerable (fragile) and gains strength', () => {
+      const s = freshBossState();
+      s.enemy.hp = 120;
+      s.endTurn();
+      expect(s.player.status.fragile).toBe(2);
+      expect(s.enemy.status.strength).toBe(1);
+    });
+
+    it('phase 3 performs two hits of 10 damage', () => {
+      const s = freshBossState();
+      s.enemy.hp = 70;
+      s.player.hp = 50;
+      s.endTurn();
+      expect(s.player.hp).toBe(30);
+    });
+
+    it('financial motivation boosts damage by 50% above 200 dutki', () => {
+      const s = freshBossState();
+      s.enemy.hp = 200;
+      s.player.hp = 50;
+      s.dutki = 250;
+      s.endTurn();
+      expect(s.player.hp).toBe(32);
     });
   });
 });
