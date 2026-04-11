@@ -470,6 +470,15 @@ h1 {
   border-radius: 5px;
 }
 
+.card-exhaust {
+  margin-top: 4px;
+  text-align: center;
+  font-size: 0.82em;
+  font-weight: 700;
+  color: #6b140f;
+  letter-spacing: 0.03em;
+}
+
 .card-keep-btn {
   position: absolute;
   bottom: 4px;
@@ -988,7 +997,7 @@ h1 {
 
 .piles {
   display: flex;
-  justify-content: space-between;
+  justify-content: space-around;
   width: 95%;
   max-width: 800px;
   box-sizing: border-box;

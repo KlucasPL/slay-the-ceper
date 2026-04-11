@@ -57,7 +57,7 @@ export class UIManager {
    * Re-renders all stat displays, statuses, and the card hand.
    */
   updateUI() {
-    const { player, enemy, deck, discard } = this.state;
+    const { player, enemy, deck, discard, exhaust } = this.state;
     this._renderEnemyPresentation();
     this._renderRelics();
     document.getElementById('p-hp').textContent = player.hp;
@@ -73,6 +73,7 @@ export class UIManager {
     document.getElementById('e-intent').textContent = this.state.getEnemyIntentText();
     document.getElementById('draw-pile-count').textContent = deck.length;
     document.getElementById('discard-pile-count').textContent = discard.length;
+    document.getElementById('exhaust-pile-count').textContent = exhaust.length;
     this._renderStatuses('p-statuses', player.status);
     this._renderStatuses('e-statuses', enemy.status);
     this._renderHand();
@@ -263,7 +264,12 @@ export class UIManager {
       descEl.className = 'card-desc';
       descEl.textContent = card.desc;
 
-      cardEl.append(costEl, titleEl, imgEl, descEl);
+      const exhaustEl = document.createElement('div');
+      exhaustEl.className = 'card-exhaust';
+      exhaustEl.textContent = 'Przepado';
+      exhaustEl.hidden = !card.exhaust;
+
+      cardEl.append(costEl, titleEl, imgEl, descEl, exhaustEl);
 
       if (this.state.hasRelic('smycz_zakopane') && player.hp > 0 && enemy.hp > 0) {
         const keepBtn = document.createElement('button');
@@ -359,12 +365,32 @@ export class UIManager {
    */
   _showEndGame(outcome) {
     if (outcome === 'player_win') {
+      if (this.state.enemy.id === 'boss') {
+        this.showVictoryScreen();
+        return;
+      }
       const droppedDutki = this.state.grantBattleDutki();
       this._showVictoryOverlay(droppedDutki);
       return;
     }
     const msg = 'Koniec gry! Tłum ceprów poprosił Cię o wspólną fotkę.';
     setTimeout(() => alert(msg), 100);
+  }
+
+  /**
+   * Shows the final victory message after defeating the boss.
+   */
+  showVictoryScreen() {
+    const msg = 'Usiękłeś Króla Krupówek! Giewont zdobyty, a portfel (prawie) bezpieczny!';
+    setTimeout(() => alert(msg), 100);
+
+    this.state.generateMap();
+    this.state.hasStartedFirstBattle = false;
+    this.state.currentScreen = 'map';
+    this.mapMessage = 'Nowa perć czeka na kolejnego cepra.';
+    this._openMapOverlay();
+    document.getElementById('end-turn-btn').disabled = true;
+    this.updateUI();
   }
 
   /**

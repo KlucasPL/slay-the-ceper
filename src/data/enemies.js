@@ -1,5 +1,5 @@
 /**
- * @typedef {{ type: 'attack', name: string, damage: number, hits?: number, applyWeak?: number } | { type: 'block', name: string, block: number }} EnemyMoveDef
+ * @typedef {{ type: 'attack', name: string, damage: number, hits?: number, applyWeak?: number, applyFragile?: number } | { type: 'block', name: string, block: number }} EnemyMoveDef
  * @typedef {{ id: string, name: string, emoji: string, hp: number, maxHp: number, block: number, baseAttack?: number, spriteSvg: string, patternType: 'random'|'loop', pattern?: EnemyMoveDef[] }} EnemyDef
  */
 
@@ -91,6 +91,42 @@ const babaSprite = `
   <circle cx="31" cy="39" r="3" fill="#f4cfb0"/>
 </svg>`;
 
+const bossSprite = `
+<svg viewBox="0 0 100 120" width="130" height="150">
+  <g transform="translate(50,8) rotate(-12)">
+    <polygon points="-16,12 -8,0 0,10 8,0 16,12" fill="#d4b24b" stroke="#7a5a16" stroke-width="2"/>
+    <circle cx="-8" cy="10" r="2" fill="#f6df8a"/>
+    <circle cx="0" cy="8" r="2" fill="#f6df8a"/>
+    <circle cx="8" cy="10" r="2" fill="#f6df8a"/>
+  </g>
+
+  <ellipse cx="50" cy="72" rx="24" ry="33" fill="#f5f8fa" stroke="#cfd8de" stroke-width="2"/>
+  <ellipse cx="31" cy="50" rx="10" ry="10" fill="#f8fbfd" stroke="#cfd8de" stroke-width="2"/>
+  <ellipse cx="69" cy="50" rx="10" ry="10" fill="#f8fbfd" stroke="#cfd8de" stroke-width="2"/>
+  <ellipse cx="50" cy="42" rx="20" ry="18" fill="#ffffff" stroke="#cfd8de" stroke-width="2"/>
+
+  <ellipse cx="50" cy="44" rx="11" ry="11" fill="#e2c2a4" stroke="#9d6f4c" stroke-width="1.5"/>
+  <path d="M 40,42 Q 44,37 48,42" fill="none" stroke="#2a2a2a" stroke-width="1.8"/>
+  <path d="M 52,42 Q 56,37 60,42" fill="none" stroke="#2a2a2a" stroke-width="1.8"/>
+  <circle cx="45" cy="44" r="1.6" fill="#1a1a1a"/>
+  <circle cx="55" cy="44" r="1.6" fill="#1a1a1a"/>
+  <path d="M 44,50 Q 50,53 56,50" fill="none" stroke="#5f3a28" stroke-width="1.8"/>
+  <rect x="58" y="49" width="8" height="2" rx="1" fill="#cfd4d8"/>
+  <rect x="64" y="48.7" width="8" height="2.6" rx="1" fill="#f2efe7" stroke="#8d7b69" stroke-width="0.8"/>
+  <circle cx="72" cy="50" r="1.2" fill="#f18f8f"/>
+
+  <rect x="34" y="66" width="32" height="33" rx="11" fill="#f9fcff" stroke="#cfd8de" stroke-width="2"/>
+  <ellipse cx="50" cy="86" rx="10" ry="7" fill="#eef3f7"/>
+
+  <line x1="42" y1="98" x2="38" y2="114" stroke="#f7fbff" stroke-width="6"/>
+  <line x1="58" y1="98" x2="62" y2="114" stroke="#f7fbff" stroke-width="6"/>
+  <ellipse cx="37" cy="116" rx="8" ry="3.5" fill="#2d2d2d"/>
+  <ellipse cx="63" cy="116" rx="8" ry="3.5" fill="#2d2d2d"/>
+
+  <line x1="31" y1="72" x2="18" y2="84" stroke="#f7fbff" stroke-width="6" stroke-linecap="round"/>
+  <line x1="69" y1="72" x2="82" y2="84" stroke="#f7fbff" stroke-width="6" stroke-linecap="round"/>
+</svg>`;
+
 /** @type {Record<string, EnemyDef>} */
 export const enemyLibrary = {
   cepr: {
@@ -135,6 +171,18 @@ export const enemyLibrary = {
       { type: 'attack', name: 'Cena z kosmosu', damage: 6, hits: 1, applyWeak: 2 },
       { type: 'attack', name: 'Rzut redykołką', damage: 12, hits: 1 },
     ],
+  },
+  boss: {
+    id: 'boss',
+    name: 'Król Krupówek - Biały Misiek (Zdzisiek)',
+    emoji: '🐻‍❄️',
+    hp: 250,
+    maxHp: 250,
+    block: 0,
+    baseAttack: 0,
+    spriteSvg: bossSprite,
+    patternType: 'loop',
+    pattern: [{ type: 'attack', name: 'Podatek od zdjęcia', damage: 12, hits: 1 }],
   },
 };
 
