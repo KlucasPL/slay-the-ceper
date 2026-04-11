@@ -4,9 +4,11 @@ import { relicLibrary } from '../data/relics.js';
 export class UIManager {
   /**
    * @param {import('../state/GameState.js').GameState} state
+   * @param {import('../audio/AudioManager.js').AudioManager} audioManager
    */
-  constructor(state) {
+  constructor(state, audioManager) {
     this.state = state;
+    this.audioManager = audioManager;
     /** @type {boolean} */
     this.isAnimating = false;
     /** @type {boolean} */
@@ -19,12 +21,31 @@ export class UIManager {
    * Binds DOM events and performs the initial render.
    */
   init() {
+    const titleScreen = document.getElementById('title-screen');
+    const unlockMenuMusic = () => {
+      if (this.state.currentScreen !== 'title') return;
+      this.audioManager.unlockAndPlayMenu();
+    };
+    titleScreen?.addEventListener('click', unlockMenuMusic);
+    titleScreen?.addEventListener('pointerdown', unlockMenuMusic);
+
+    const muteBtn = document.getElementById('mute-btn');
+    if (muteBtn) muteBtn.addEventListener('click', () => this._toggleMute());
+
     document
       .getElementById('title-btn-normal')
       .addEventListener('click', () => this._handleTitleStart('normal'));
     document
       .getElementById('title-btn-hard')
       .addEventListener('click', () => this._handleTitleStart('hard'));
+    document
+      .getElementById('title-btn-normal')
+      .addEventListener('mouseenter', unlockMenuMusic, { passive: true });
+    document
+      .getElementById('title-btn-hard')
+      .addEventListener('mouseenter', unlockMenuMusic, { passive: true });
+    document.getElementById('title-btn-normal').addEventListener('focus', unlockMenuMusic);
+    document.getElementById('title-btn-hard').addEventListener('focus', unlockMenuMusic);
     document.getElementById('end-turn-btn').addEventListener('click', () => this._handleEndTurn());
     document
       .getElementById('map-continue-btn')
@@ -51,6 +72,23 @@ export class UIManager {
     this._scaleGame();
     this.updateUI();
     this._syncScreenState();
+    this._renderMuteButton();
+  }
+
+  _toggleMute() {
+    this.audioManager.toggleMute();
+    this._renderMuteButton();
+  }
+
+  _renderMuteButton() {
+    const muteBtn = document.getElementById('mute-btn');
+    if (!muteBtn) return;
+    const muted = this.audioManager.isMuted;
+    muteBtn.textContent = muted ? '🔇' : '🔊';
+    muteBtn.classList.toggle('is-muted', muted);
+    muteBtn.setAttribute('aria-pressed', String(muted));
+    muteBtn.setAttribute('aria-label', muted ? 'Włącz dźwięk' : 'Wycisz dźwięk');
+    muteBtn.title = muted ? 'Dźwięk wyłączony' : 'Dźwięk włączony';
   }
 
   /**
@@ -78,6 +116,7 @@ export class UIManager {
     this._renderStatuses('e-statuses', enemy.status);
     this._renderHand();
     this._syncScreenState();
+    this._renderMuteButton();
     const gameWrapper = document.getElementById('game-wrapper');
     if (gameWrapper) {
       gameWrapper.classList.toggle('hard-mode', this.state.difficulty === 'hard');
@@ -97,6 +136,7 @@ export class UIManager {
     this.state.hasStartedFirstBattle = false;
     this.state.currentScreen = 'map';
     this.mapMessage = '';
+    this.audioManager.setContext('inGame');
     this._openMapOverlay();
     titleScreen.classList.add('is-hiding');
     titleScreen.setAttribute('aria-hidden', 'true');
@@ -116,6 +156,7 @@ export class UIManager {
       !isTitle && !titleScreen.classList.contains('is-hiding')
     );
     titleScreen.setAttribute('aria-hidden', String(!isTitle));
+    this.audioManager.setContext(isTitle ? 'title' : 'inGame');
   }
 
   /**

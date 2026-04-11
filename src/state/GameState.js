@@ -77,6 +77,8 @@ export class GameState {
     this.lastShopMessage = '';
     /** @type {'title' | 'map' | 'battle'} */
     this.currentScreen = 'title';
+    /** @type {boolean} Global audio mute flag */
+    this.isMuted = false;
     /** @type {boolean} */
     this.hasStartedFirstBattle = false;
     /** @type {EnemyState} */
