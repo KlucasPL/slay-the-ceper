@@ -343,6 +343,7 @@ h1 {
 }
 
 .battlefield {
+  position: relative;
   display: flex;
   justify-content: space-around;
   width: 95%;
@@ -354,6 +355,56 @@ h1 {
   border: 4px solid #8b5a2b;
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
   margin-bottom: 20px;
+}
+
+.weather-banner {
+  position: absolute;
+  top: -16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+}
+
+.weather-indicator {
+  border: 2px solid #d8b67b;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-weight: 700;
+  color: #2f2117;
+  background: linear-gradient(180deg, #f3dfbd 0%, #e3cb9e 100%);
+  position: relative;
+  cursor: pointer;
+}
+
+.weather-tooltip {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 8px);
+  transform: translateX(-50%) translateY(6px);
+  min-width: 230px;
+  max-width: 320px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(32, 20, 10, 0.96);
+  color: #f7e7cc;
+  font-size: 0.78rem;
+  text-align: left;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.16s ease,
+    transform 0.16s ease,
+    visibility 0.16s ease;
+}
+
+.weather-indicator:hover .weather-tooltip,
+.weather-indicator:focus-visible .weather-tooltip,
+.weather-hint-trigger.is-open .weather-tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
 }
 
 .entity {
@@ -1018,6 +1069,7 @@ h1 {
 .map-node-btn {
   width: 100%;
   min-height: 56px;
+  position: relative;
   border-radius: 12px;
   border: 2px solid rgba(255, 255, 255, 0.25);
   background: rgba(255, 255, 255, 0.08);
@@ -1041,6 +1093,49 @@ h1 {
 
 .map-node-btn .map-node-label {
   font-size: 0.75rem;
+}
+
+.map-node-wrap {
+  min-height: 56px;
+  position: relative;
+}
+
+.map-weather-hint {
+  position: absolute;
+  top: -10px;
+  right: -12px;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: rgba(28, 18, 10, 0.92);
+  color: #f9e4bc;
+  font-size: 0.76rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 4;
+  cursor: pointer;
+}
+
+.map-weather-hint .weather-tooltip {
+  left: auto;
+  right: 0;
+  bottom: calc(100% + 7px);
+  transform: translateY(6px);
+  min-width: 190px;
+  max-width: 240px;
+}
+
+.map-weather-hint:hover .weather-tooltip,
+.map-weather-hint:focus-visible .weather-tooltip,
+.map-weather-hint.is-open .weather-tooltip {
+  transform: translateY(0);
+}
+
+.map-weather-hint:focus-visible {
+  outline: 2px solid #ffd45e;
+  outline-offset: 1px;
 }
 
 .map-node-btn.done {

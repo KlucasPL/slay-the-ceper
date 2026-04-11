@@ -1,5 +1,6 @@
 import { cardLibrary } from '../data/cards.js';
 import { relicLibrary } from '../data/relics.js';
+import { weatherLibrary } from '../data/weather.js';
 
 export class UIManager {
   /**
@@ -95,10 +96,17 @@ export class UIManager {
     document
       .getElementById('library-back-btn')
       .addEventListener('click', () => this._closeLibraryOverlay());
+    document
+      .getElementById('weather-indicator')
+      .addEventListener('click', (event) => this._toggleWeatherTooltip(event.currentTarget));
     document.addEventListener('click', (event) => {
       const target = event.target;
-      if (!(target instanceof Element) || !target.closest('.status-tag-hint')) {
+      if (
+        !(target instanceof Element) ||
+        (!target.closest('.status-tag-hint') && !target.closest('.weather-hint-trigger'))
+      ) {
         this._closeStatusTooltips();
+        this._closeWeatherTooltips();
       }
     });
     window.addEventListener('resize', () => this._scaleGame());
@@ -130,6 +138,7 @@ export class UIManager {
   updateUI() {
     const { player, enemy, deck, discard, exhaust } = this.state;
     this._renderEnemyPresentation();
+    this._renderWeatherIndicator();
     this._renderRelics();
     document.getElementById('p-hp').textContent = player.hp;
     document.getElementById('p-max-hp').textContent = player.maxHp;
@@ -148,6 +157,7 @@ export class UIManager {
     this._renderStatuses('p-statuses', player.status);
     this._renderStatuses('e-statuses', enemy.status);
     this._renderHand();
+    this._syncEndTurnButtonState();
     this._syncScreenState();
     this._renderMuteButton();
     const gameWrapper = document.getElementById('game-wrapper');
@@ -192,6 +202,15 @@ export class UIManager {
     this.audioManager.setContext(isTitle ? 'title' : 'inGame');
   }
 
+  _syncEndTurnButtonState() {
+    const endTurnBtn = document.getElementById('end-turn-btn');
+    if (!endTurnBtn) return;
+
+    const inBattle = this.state.currentScreen === 'battle';
+    const battleActive = this.state.player.hp > 0 && this.state.enemy.hp > 0;
+    endTurnBtn.disabled = this.isAnimating || !inBattle || !battleActive;
+  }
+
   /**
    * Updates enemy title and SVG sprite when enemy changes.
    */
@@ -204,6 +223,18 @@ export class UIManager {
       enemySprite.innerHTML = this.state.enemy.spriteSvg;
       enemySprite.dataset.enemyId = enemyId;
     }
+  }
+
+  _renderWeatherIndicator() {
+    const weather = this.state.getCurrentWeather();
+    const badge = document.getElementById('weather-indicator');
+    const tip = document.getElementById('weather-tooltip');
+    if (!badge || !tip || !weather) return;
+
+    badge.textContent = `${weather.emoji} ${weather.name}`;
+    badge.appendChild(tip);
+    badge.setAttribute('aria-label', `${weather.name}: ${weather.desc}`);
+    tip.textContent = weather.desc;
   }
 
   /**
@@ -375,6 +406,12 @@ export class UIManager {
     if (!result.success) return;
 
     const { effect } = result;
+    const missEvent = this.state.consumeWeatherMissEvent();
+    if (missEvent) {
+      this.audioManager.playMissSound();
+      const targetSprite = missEvent.target === 'enemy' ? 'sprite-enemy' : 'sprite-player';
+      this._showFloatingText(targetSprite, missEvent.text, 'floating-damage');
+    }
 
     if (effect.enemyAnim) {
       // Attack card: player lunges, then enemy reacts
@@ -402,12 +439,20 @@ export class UIManager {
    * Handles the end-of-turn sequence: discard, enemy attack animation, then start next turn.
    */
   _handleEndTurn() {
-    if (this.isAnimating) return;
+    if (this.isAnimating || this.state.currentScreen !== 'battle') return;
+    if (this.state.enemy.hp <= 0 || this.state.player.hp <= 0) return;
+
     this.isAnimating = true;
-    document.getElementById('end-turn-btn').disabled = true;
+    this._syncEndTurnButtonState();
 
     const result = this.state.endTurn();
     this.updateUI();
+    const missEvent = this.state.consumeWeatherMissEvent();
+    if (missEvent) {
+      this.audioManager.playMissSound();
+      const targetSprite = missEvent.target === 'enemy' ? 'sprite-enemy' : 'sprite-player';
+      this._showFloatingText(targetSprite, missEvent.text, 'floating-damage');
+    }
     if (result.enemyPassiveHeal) {
       this._showFloatingText('sprite-enemy', result.enemyPassiveHeal.text, 'floating-heal');
     }
@@ -430,7 +475,6 @@ export class UIManager {
             this._showEndGame(win);
           } else {
             this.state.startTurn();
-            document.getElementById('end-turn-btn').disabled = false;
             this.updateUI();
           }
         }, 500);
@@ -671,6 +715,9 @@ export class UIManager {
           return;
         }
 
+        const wrap = document.createElement('div');
+        wrap.className = 'map-node-wrap';
+
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'map-node-btn';
@@ -700,7 +747,35 @@ export class UIManager {
           <span class="map-node-label">${node.label}</span>
         `;
 
-        row.appendChild(btn);
+        wrap.appendChild(btn);
+
+        if (node.weather !== 'clear') {
+          const weather = weatherLibrary[node.weather];
+          const hint = document.createElement('button');
+          hint.type = 'button';
+          hint.className = 'map-weather-hint weather-hint-trigger';
+          hint.textContent = weather?.emoji ?? '🌤️';
+          hint.title = weather ? `${weather.name}: ${weather.desc}` : 'Pogoda';
+          hint.setAttribute(
+            'aria-label',
+            weather ? `Pogoda na polu ${node.label}: ${weather.name}. ${weather.desc}` : 'Pogoda na polu'
+          );
+          hint.setAttribute('aria-expanded', 'false');
+
+          const tooltip = document.createElement('span');
+          tooltip.className = 'weather-tooltip';
+          tooltip.textContent = weather ? `${weather.name}: ${weather.desc}` : 'Brak danych o pogodzie.';
+          hint.appendChild(tooltip);
+
+          hint.addEventListener('click', (event) => {
+            event.stopPropagation();
+            this._toggleWeatherTooltip(hint);
+          });
+
+          wrap.appendChild(hint);
+        }
+
+        row.appendChild(wrap);
         nodeButtons[levelIndex][nodeIndex] = btn;
       });
 
@@ -781,7 +856,7 @@ export class UIManager {
     if (!node) return;
     this.mapMessage = '';
 
-    if (node.type === 'fight' || node.type === 'boss') {
+    if (node.type === 'fight' || node.type === 'elite' || node.type === 'boss') {
       this.state.hasStartedFirstBattle = true;
       this.state.currentScreen = 'battle';
       this.state.resetBattle();
@@ -1195,6 +1270,29 @@ export class UIManager {
     document.querySelectorAll('.status-tag-hint.is-open').forEach((tag) => {
       tag.classList.remove('is-open');
       tag.setAttribute('aria-expanded', 'false');
+    });
+  }
+
+  /**
+   * @param {EventTarget | null} target
+   */
+  _toggleWeatherTooltip(target) {
+    if (!(target instanceof Element)) return;
+    const trigger = target.closest('.weather-hint-trigger');
+    if (!trigger) return;
+
+    const isOpen = trigger.classList.contains('is-open');
+    this._closeWeatherTooltips();
+    if (!isOpen) {
+      trigger.classList.add('is-open');
+      trigger.setAttribute('aria-expanded', 'true');
+    }
+  }
+
+  _closeWeatherTooltips() {
+    document.querySelectorAll('.weather-hint-trigger.is-open').forEach((hint) => {
+      hint.classList.remove('is-open');
+      hint.setAttribute('aria-expanded', 'false');
     });
   }
 

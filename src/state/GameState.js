@@ -1,6 +1,7 @@
 import { cardLibrary } from '../data/cards.js';
 import { enemyLibrary } from '../data/enemies.js';
 import { relicLibrary } from '../data/relics.js';
+import { weatherLibrary } from '../data/weather.js';
 
 const RARITY_WEIGHTS = {
   common: 0.7,
@@ -12,8 +13,9 @@ const RARITY_WEIGHTS = {
  * @typedef {import('../data/cards.js').StatusDef} StatusDef
  * @typedef {{ name: string, hp: number, maxHp: number, block: number, energy: number, maxEnergy: number, status: StatusDef }} PlayerState
  * @typedef {import('../data/enemies.js').EnemyMoveDef} EnemyMoveDef
- * @typedef {'fight' | 'shop' | 'treasure' | 'campfire' | 'boss'} MapNodeType
- * @typedef {{ x: number, y: number, type: MapNodeType, label: string, emoji: string, connections: number[] }} MapNode
+ * @typedef {import('../data/weather.js').WeatherId} WeatherId
+ * @typedef {'fight' | 'elite' | 'shop' | 'treasure' | 'campfire' | 'boss'} MapNodeType
+ * @typedef {{ x: number, y: number, type: MapNodeType, label: string, emoji: string, weather: WeatherId, connections: number[] }} MapNode
  * @typedef {{ id: string, name: string, emoji: string, hp: number, maxHp: number, block: number, nextAttack: number, baseAttack: number, status: StatusDef, spriteSvg: string, patternType: 'random'|'loop', pattern: EnemyMoveDef[], patternIndex: number, currentIntent: EnemyMoveDef, tookHpDamageThisTurn: boolean, bossArtifact?: number }} EnemyState
  * @typedef {{ success: false } | { success: true, effect: import('../data/cards.js').CardEffectResult }} PlayCardResult
  * @typedef {{ enemyAttack: { raw: number, blocked: number, dealt: number }, enemyPassiveHeal: { amount: number, text: string } | null, playerPassiveHeal: { amount: number, text: string } | null }} EndTurnResult
@@ -83,6 +85,17 @@ export class GameState {
     this.lastShopMessage = '';
     /** @type {'title' | 'map' | 'battle'} */
     this.currentScreen = 'title';
+    /** @type {WeatherId} */
+    this.currentWeather = 'clear';
+    /** @type {{ firstAttackUsed: boolean, activeSide: 'player' | 'enemy', playerAttackMissCheck: boolean, playerAttackMissRolled: boolean, playerAttackMissed: boolean, missEventTarget: 'player' | 'enemy' | null }} */
+    this.combat = {
+      firstAttackUsed: false,
+      activeSide: 'player',
+      playerAttackMissCheck: false,
+      playerAttackMissRolled: false,
+      playerAttackMissed: false,
+      missEventTarget: null,
+    };
     /** @type {boolean} Global audio mute flag */
     this.isMuted = false;
     /** @type {boolean} */
@@ -136,20 +149,38 @@ export class GameState {
   _createMapNode(type, x, y) {
     const meta = {
       fight: { label: 'Bitka', emoji: '⚔️' },
+      elite: { label: 'Elita', emoji: '⚔️' },
       shop: { label: 'Kram', emoji: '🛖' },
       treasure: { label: 'Skarb', emoji: '🎁' },
       campfire: { label: 'Watra', emoji: '🔥' },
       boss: { label: 'Boss', emoji: '👑' },
     };
-    return { ...meta[type], x, y, type, connections: [] };
+    const weather = this._rollNodeWeather(type);
+    return { ...meta[type], x, y, type, weather, connections: [] };
   }
 
   /** @returns {MapNodeType} */
   _rollMidNodeType() {
     const roll = Math.random();
-    if (roll < 0.6) return 'fight';
+    if (roll < 0.5) return 'fight';
+    if (roll < 0.6) return 'elite';
     if (roll < 0.85) return 'shop';
     return 'treasure';
+  }
+
+  /**
+   * @param {MapNodeType} nodeType
+   * @returns {WeatherId}
+   */
+  _rollNodeWeather(nodeType) {
+    if (nodeType === 'boss') return 'halny';
+    if (nodeType !== 'fight' && nodeType !== 'elite') return 'clear';
+
+    const roll = Math.random();
+    if (roll < 0.5) return 'clear';
+    if (roll < 0.65) return 'halny';
+    if (roll < 0.8) return 'frozen';
+    return 'fog';
   }
 
   /**
@@ -404,6 +435,7 @@ export class GameState {
     if (!node) return;
     const meta = {
       fight: { label: 'Bitka', emoji: '⚔️' },
+      elite: { label: 'Elita', emoji: '⚔️' },
       shop: { label: 'Kram', emoji: '🛖' },
       treasure: { label: 'Skarb', emoji: '🎁' },
       campfire: { label: 'Watra', emoji: '🔥' },
@@ -412,6 +444,7 @@ export class GameState {
     node.type = type;
     node.label = meta[type].label;
     node.emoji = meta[type].emoji;
+    node.weather = this._rollNodeWeather(type);
   }
 
   /**
@@ -521,6 +554,39 @@ export class GameState {
    */
   getCurrentMapNode() {
     return this.map[this.currentLevel]?.[this.currentNodeIndex] ?? null;
+  }
+
+  /** @returns {import('../data/weather.js').WeatherDef} */
+  getCurrentWeather() {
+    return weatherLibrary[this.currentWeather] ?? weatherLibrary.clear;
+  }
+
+  _setCurrentWeatherFromNode() {
+    const node = this.getCurrentMapNode();
+    this.currentWeather = node?.weather ?? 'clear';
+  }
+
+  /**
+   * @param {'player' | 'enemy'} side
+   */
+  _registerWeatherMiss(side) {
+    this.combat.missEventTarget = side;
+  }
+
+  /** @returns {{ target: 'player' | 'enemy', text: string } | null} */
+  consumeWeatherMissEvent() {
+    if (!this.combat.missEventTarget) return null;
+    const target = this.combat.missEventTarget;
+    this.combat.missEventTarget = null;
+    return { target, text: 'PUDŁO!' };
+  }
+
+  /**
+   * @param {PlayerState | EnemyState} entity
+   */
+  _applyHalnyBlockDrain(entity) {
+    if (this.currentWeather !== 'halny') return;
+    entity.block = Math.max(0, entity.block - 2);
   }
 
   /** @returns {string | null} */
@@ -933,6 +999,7 @@ export class GameState {
     this.smyczKeptCardId = null;
     this.flaszkaCostSeed = {};
     this.termometerTurnParity = 0;
+    this._setCurrentWeatherFromNode();
     this.startTurn();
     this._applyBattleStartRelics();
     this.pendingBattleDutki = true;
@@ -1048,7 +1115,8 @@ export class GameState {
     let dmg = baseDmg;
 
     if (sourceEntity.status.weak > 0) {
-      dmg = Math.floor(dmg * 0.75);
+      const weakMultiplier = this.currentWeather === 'frozen' ? 0.5 : 0.75;
+      dmg = Math.floor(dmg * weakMultiplier);
     }
 
     if (sourceEntity.status.strength > 0) {
@@ -1085,6 +1153,23 @@ export class GameState {
    * @returns {{ raw: number, blocked: number, dealt: number }}
    */
   _applyDamageToEnemy(dmg) {
+    if (
+      this.currentWeather === 'fog' &&
+      this.combat.activeSide === 'player' &&
+      this.combat.playerAttackMissCheck
+    ) {
+      if (!this.combat.playerAttackMissRolled) {
+        this.combat.playerAttackMissRolled = true;
+        this.combat.playerAttackMissed = Math.random() < 0.5;
+        if (this.combat.playerAttackMissed) {
+          this._registerWeatherMiss('enemy');
+        }
+      }
+      if (this.combat.playerAttackMissed) {
+        return { raw: 0, blocked: 0, dealt: 0 };
+      }
+    }
+
     const hpBefore = this.enemy.hp;
     const blocked = Math.min(this.enemy.block, dmg);
     const dealt = dmg - blocked;
@@ -1127,6 +1212,14 @@ export class GameState {
       return { raw: 0, blocked: 0, dealt: 0 };
     }
 
+    if (!this.combat.firstAttackUsed) {
+      this.combat.firstAttackUsed = true;
+      if (this.currentWeather === 'fog' && Math.random() < 0.5) {
+        this._registerWeatherMiss('player');
+        return { raw: 0, blocked: 0, dealt: 0 };
+      }
+    }
+
     let raw = 0;
     let blocked = 0;
     let dealt = 0;
@@ -1160,6 +1253,14 @@ export class GameState {
     let dealt = 0;
     const hits = intent.hits ?? 1;
     const multiplier = this._bossFinancialMultiplier();
+
+    if (!this.combat.firstAttackUsed) {
+      this.combat.firstAttackUsed = true;
+      if (this.currentWeather === 'fog' && Math.random() < 0.5) {
+        this._registerWeatherMiss('player');
+        return { raw: 0, blocked: 0, dealt: 0 };
+      }
+    }
 
     if (phase === 2 && intent.applyFragile) {
       this.player.status.fragile += intent.applyFragile;
@@ -1265,7 +1366,14 @@ export class GameState {
    * Restores Oscypki (+energy_next_turn bonus), ticks player statuses, resets Garda, draws 5 cards.
    */
   startTurn() {
+    this.combat.activeSide = 'player';
+    this.combat.firstAttackUsed = false;
+    this.combat.playerAttackMissCheck = false;
+    this.combat.playerAttackMissRolled = false;
+    this.combat.playerAttackMissed = false;
+
     this.enemy.tookHpDamageThisTurn = false;
+    this._applyHalnyBlockDrain(this.player);
     this.player.energy = this.player.maxEnergy + this.player.status.energy_next_turn;
     this.player.status.energy_next_turn = 0;
     this.player.block = 0;
@@ -1322,6 +1430,17 @@ export class GameState {
     const isFirstCardThisBattle =
       this.hasRelic('pocztowka_giewont') && !this.pocztowkaUsedThisBattle;
     this.pocztowkaUsedThisBattle = true;
+    const isAttackCard = card.type === 'attack';
+
+    if (isAttackCard) {
+      this.combat.playerAttackMissCheck =
+        this.currentWeather === 'fog' && !this.combat.firstAttackUsed;
+      this.combat.playerAttackMissRolled = false;
+      this.combat.playerAttackMissed = false;
+      this.combat.firstAttackUsed = true;
+    } else {
+      this.combat.playerAttackMissCheck = false;
+    }
 
     this.hand.splice(handIndex, 1);
     if (card.exhaust) {
@@ -1349,6 +1468,10 @@ export class GameState {
         this.player.energy += 1;
       }
     }
+
+    this.combat.playerAttackMissCheck = false;
+    this.combat.playerAttackMissRolled = false;
+    this.combat.playerAttackMissed = false;
 
     return { success: true, effect };
   }
@@ -1402,6 +1525,9 @@ export class GameState {
     }
 
     // Enemy loses old block at the start of its own turn, before taking a new action.
+    this.combat.activeSide = 'enemy';
+    this.combat.firstAttackUsed = false;
+    this._applyHalnyBlockDrain(this.enemy);
     this.enemy.block = 0;
     const enemyAttack = this._applyEnemyIntent();
 
@@ -1460,6 +1586,7 @@ export class GameState {
     const isBossNode = currentNode?.type === 'boss';
     const nextEnemy = isBossNode ? enemyLibrary.boss : this._pickRandomEnemyDef();
     this.enemy = this._createEnemyState(nextEnemy);
+    this._setCurrentWeatherFromNode();
     this.pendingBattleDutki = true;
 
     this.startTurn();

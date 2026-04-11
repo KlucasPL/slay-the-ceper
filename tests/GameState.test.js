@@ -220,6 +220,13 @@ describe('GameState', () => {
       expect(s.calculateDamage(8, s.enemy, s.player)).toBe(8);
       expect(s.player.status.next_double).toBe(true);
     });
+
+    it('uses 50% weak penalty in frozen weather', () => {
+      const s = freshState();
+      s.currentWeather = 'frozen';
+      s.player.status.weak = 1;
+      expect(s.calculateDamage(8, s.player, s.enemy)).toBe(4);
+    });
   });
 
   describe('strength status', () => {
@@ -808,6 +815,22 @@ describe('GameState', () => {
       const stock = s.generateShopStock();
       stock.cards.forEach((cardId) => {
         expect(cardLibrary[cardId]?.isStarter).not.toBe(true);
+      });
+    });
+
+    it('assigns weather to combat nodes and halny to boss node', () => {
+      const s = freshState();
+      const weatherIds = ['clear', 'halny', 'frozen', 'fog'];
+      s.map.forEach((level) => {
+        level.forEach((node) => {
+          if (!node) return;
+          if (node.type === 'fight' || node.type === 'elite') {
+            expect(weatherIds).toContain(node.weather);
+          }
+          if (node.type === 'boss') {
+            expect(node.weather).toBe('halny');
+          }
+        });
       });
     });
 
