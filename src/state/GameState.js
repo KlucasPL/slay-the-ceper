@@ -16,7 +16,7 @@ const RARITY_WEIGHTS = {
  * @typedef {import('../data/weather.js').WeatherId} WeatherId
  * @typedef {'fight' | 'elite' | 'shop' | 'treasure' | 'campfire' | 'boss'} MapNodeType
  * @typedef {{ x: number, y: number, type: MapNodeType, label: string, emoji: string, weather: WeatherId, connections: number[] }} MapNode
- * @typedef {{ id: string, name: string, emoji: string, hp: number, maxHp: number, block: number, nextAttack: number, baseAttack: number, status: StatusDef, rachunek: number, spriteSvg: string, patternType: 'random'|'loop', pattern: EnemyMoveDef[], patternIndex: number, currentIntent: EnemyMoveDef, tookHpDamageThisTurn: boolean, bossArtifact?: number }} EnemyState
+ * @typedef {{ id: string, name: string, emoji: string, hp: number, maxHp: number, block: number, nextAttack: number, baseAttack: number, status: StatusDef, rachunek: number, spriteSvg: string, patternType: 'random'|'loop', pattern: EnemyMoveDef[], patternIndex: number, currentIntent: EnemyMoveDef, tookHpDamageThisTurn: boolean, bossArtifact?: number, passive: string | null }} EnemyState
  * @typedef {{ success: false } | { success: true, effect: import('../data/cards.js').CardEffectResult }} PlayCardResult
  * @typedef {{ enemyAttack: { raw: number, blocked: number, dealt: number }, enemyPassiveHeal: { amount: number, text: string } | null, playerPassiveHeal: { amount: number, text: string } | null }} EndTurnResult
  * @typedef {{ cards: string[], relic: string | null }} ShopStock
@@ -598,6 +598,8 @@ export class GameState {
 
   _checkEnemyBankruptcy() {
     if (this.enemyBankruptFlag) return;
+    if (this.enemy.passive === 'targowanie_sie') return;
+    if (this.enemy.rachunek <= 0) return;
     if (this.enemy.rachunek < this.enemy.hp) return;
     this.enemyBankrupt();
   }
@@ -606,6 +608,7 @@ export class GameState {
     if (this.enemyBankruptFlag) return;
     this.enemyBankruptFlag = true;
     this.enemy.hp = 0;
+    this.enemy.isBankrupt = true;
     const bonus = Math.floor(this.enemy.rachunek / 2);
     this.enemyBankruptcyBonus = bonus;
     if (bonus > 0) {
@@ -1019,6 +1022,7 @@ export class GameState {
       currentIntent: { type: 'attack', name: 'Atak', damage: 0, hits: 1 },
       tookHpDamageThisTurn: false,
       bossArtifact: isFinalBoss ? 3 : 0,
+      passive: enemyDef.passive ?? null,
     };
     enemyState.currentIntent = this._buildEnemyIntent(enemyState);
     enemyState.nextAttack =
@@ -1090,23 +1094,6 @@ export class GameState {
    * @returns {EnemyMoveDef}
    */
   _buildEnemyIntent(enemyState) {
-    if (enemyState.id === 'boss') {
-      const phase = this._getBossPhase(enemyState.hp);
-      if (phase === 1) {
-        return { type: 'attack', name: 'Podatek od zdjęcia', damage: 12, hits: 1 };
-      }
-      if (phase === 2) {
-        return {
-          type: 'attack',
-          name: 'Agresywny Marketing',
-          damage: 15,
-          hits: 1,
-          applyFragile: 2,
-        };
-      }
-      return { type: 'attack', name: 'Furia Zdziśka', damage: 10, hits: 2 };
-    }
-
     if (enemyState.patternType === 'loop') {
       const move = enemyState.pattern[enemyState.patternIndex % enemyState.pattern.length];
       return { ...move };
@@ -1118,23 +1105,6 @@ export class GameState {
       damage: this._rollEnemyAttack(enemyState),
       hits: 1,
     };
-  }
-
-  /**
-   * @param {number} currentHp
-   * @returns {1 | 2 | 3}
-   */
-  _getBossPhase(currentHp) {
-    if (currentHp > 150) return 1;
-    if (currentHp >= 80) return 2;
-    return 3;
-  }
-
-  /**
-   * @returns {number}
-   */
-  _bossFinancialMultiplier() {
-    return this.dutki > 200 ? 1.5 : 1;
   }
 
   /**
@@ -1225,6 +1195,9 @@ export class GameState {
       this.enemy.tookHpDamageThisTurn = true;
     }
     this._checkEnemyBankruptcy();
+    if (dmg > 0 && this.enemy.passive === 'ochrona_wizerunku' && this.combat.activeSide === 'player') {
+      this.player.hp -= 1;
+    }
     return { raw: dmg, blocked, dealt };
   }
 
@@ -1265,6 +1238,9 @@ export class GameState {
     if (dealt > 0 && this.hasRelic('kierpce_wyprzedazy')) {
       this._drawCards(1);
     }
+    if (dealt > 0 && this.enemy.passive === 'brak_reszty') {
+      this.dutki = Math.max(0, this.dutki - 3);
+    }
     return { raw: amount, blocked, dealt };
   }
 
@@ -1272,14 +1248,31 @@ export class GameState {
    * @returns {{ raw: number, blocked: number, dealt: number }}
    */
   _applyEnemyIntent() {
-    if (this.enemy.id === 'boss') {
-      return this.executeBossTurn();
-    }
-
     const intent = this.enemy.currentIntent;
 
     if (intent.type === 'block') {
       this.enemy.block += intent.block;
+      if (intent.heal && intent.heal > 0) {
+        this.enemy.hp = Math.min(this.enemy.maxHp, this.enemy.hp + intent.heal);
+      }
+      return { raw: 0, blocked: 0, dealt: 0 };
+    }
+
+    if (intent.type === 'buff') {
+      if (intent.strengthGain && intent.strengthGain > 0) {
+        this.enemy.status.strength += intent.strengthGain;
+      }
+      if (intent.block && intent.block > 0) {
+        this.enemy.block += intent.block;
+      }
+      return { raw: 0, blocked: 0, dealt: 0 };
+    }
+
+    if (intent.type === 'status') {
+      const amount = intent.amount ?? 1;
+      for (let i = 0; i < amount; i++) {
+        this.discard.push(intent.addStatusCard);
+      }
       return { raw: 0, blocked: 0, dealt: 0 };
     }
 
@@ -1308,54 +1301,8 @@ export class GameState {
       this.player.status.weak += intent.applyWeak;
     }
 
-    return { raw, blocked, dealt };
-  }
-
-  /**
-   * Executes Król Krupówek turn with phase-based logic.
-   * @returns {{ raw: number, blocked: number, dealt: number }}
-   */
-  executeBossTurn() {
-    const phase = this._getBossPhase(this.enemy.hp);
-    const intent = this._buildEnemyIntent(this.enemy);
-
-    let raw = 0;
-    let blocked = 0;
-    let dealt = 0;
-    const hits = intent.hits ?? 1;
-    const multiplier = this._bossFinancialMultiplier();
-
-    if (!this.combat.firstAttackUsed) {
-      this.combat.firstAttackUsed = true;
-      if (this.currentWeather === 'fog' && Math.random() < 0.5) {
-        this._registerWeatherMiss('player');
-        return { raw: 0, blocked: 0, dealt: 0 };
-      }
-    }
-
-    if (phase === 2 && intent.applyFragile) {
-      this.player.status.fragile += intent.applyFragile;
-    }
-
-    for (let hitIndex = 0; hitIndex < hits; hitIndex++) {
-      const baseHit = this.calculateDamage(intent.damage, this.enemy, this.player);
-      const hitDamage = Math.floor(baseHit * multiplier);
-      const result = this._applyDamageToPlayer(hitDamage);
-      raw += result.raw;
-      blocked += result.blocked;
-      dealt += result.dealt;
-
-      if (phase === 1) {
-        if (this.dutki > 0) {
-          this.dutki = Math.max(0, this.dutki - 15);
-        } else {
-          this.enemy.block += 5;
-        }
-      }
-    }
-
-    if (phase === 2) {
-      this.enemy.status.strength += 1;
+    if (intent.applyFrail && intent.applyFrail > 0) {
+      this.player.status.fragile += intent.applyFrail;
     }
 
     return { raw, blocked, dealt };
@@ -1366,13 +1313,10 @@ export class GameState {
    */
   getEnemyIntentDamage() {
     const intent = this.enemy.currentIntent;
-    if (intent.type === 'block') return 0;
+    if (intent.type !== 'attack') return 0;
 
     const hits = intent.hits ?? 1;
-    let perHit = this.calculateDamage(intent.damage, this.enemy, this.player);
-    if (this.enemy.id === 'boss') {
-      perHit = Math.floor(perHit * this._bossFinancialMultiplier());
-    }
+    const perHit = this.calculateDamage(intent.damage, this.enemy, this.player);
     return Math.max(0, perHit * hits - this.player.block);
   }
 
@@ -1383,6 +1327,14 @@ export class GameState {
     const intent = this.enemy.currentIntent;
     if (intent.type === 'block') {
       return `Zamiar: ${intent.name} (🛡️ ${intent.block})`;
+    }
+
+    if (intent.type === 'buff') {
+      return `Zamiar: ${intent.name} (💪)`;
+    }
+
+    if (intent.type === 'status') {
+      return `Zamiar: ${intent.name} (📄 ×${intent.amount ?? 1})`;
     }
 
     const hits = intent.hits ?? 1;
@@ -1426,14 +1378,35 @@ export class GameState {
           label: 'Artefakt',
           value: this.enemy.bossArtifact ?? 0,
           tooltip: 'Blokuje pierwsze 3 negatywne statusy nałożone przez gracza.',
-        },
-        {
-          icon: '💰',
-          label: 'Motywacja Finansowa',
-          value: null,
-          tooltip: 'Gdy masz ponad 200 dutków, ataki bossa zadają o 50% więcej obrażeń.',
         }
       );
+    }
+
+    if (this.enemy.passive === 'brak_reszty') {
+      specials.push({
+        icon: '💸',
+        label: 'Brak Reszty',
+        value: null,
+        tooltip: 'Gdy zadaje obrażenia HP, kradnie 3 Dutki.',
+      });
+    }
+
+    if (this.enemy.passive === 'targowanie_sie') {
+      specials.push({
+        icon: '🤝',
+        label: 'Targowanie się',
+        value: null,
+        tooltip: 'Odporny na Rachunek — nie może zbankrutować.',
+      });
+    }
+
+    if (this.enemy.passive === 'ochrona_wizerunku') {
+      specials.push({
+        icon: '🪞',
+        label: 'Ochrona Wizerunku',
+        value: 1,
+        tooltip: 'Każde trafienie zadaje graczowi 1 obrażenie zwrotne.',
+      });
     }
 
     return specials;
@@ -1516,6 +1489,7 @@ export class GameState {
     const card = cardLibrary[cardId];
     const actualCost = this.getCardCostInHand(cardId);
     if (!card || this.player.energy < actualCost) return { success: false };
+    if (card.unplayable) return { success: false };
 
     this.player.energy -= actualCost;
 
@@ -1681,7 +1655,8 @@ export class GameState {
     this.player.hasLans = false;
     this.player.stunned = false;
 
-    this.deck.push(...this.hand, ...this.discard, ...this.exhaust);
+    const allCards = [...this.hand, ...this.discard, ...this.exhaust, ...this.deck];
+    this.deck = allCards.filter(id => cardLibrary[id]?.type !== 'status');
     this.hand = [];
     this.discard = [];
     this.exhaust = [];

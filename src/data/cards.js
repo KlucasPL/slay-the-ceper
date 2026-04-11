@@ -2,7 +2,7 @@
  * @typedef {{ strength: number, weak: number, fragile: number, next_double: boolean, energy_next_turn: number }} StatusDef
  * @typedef {{ playerAnim?: string, enemyAnim?: string, damage?: { raw: number, blocked: number, dealt: number } }} CardEffectResult
  * @typedef {'common' | 'uncommon' | 'rare'} RarityDef
- * @typedef {{ id: string, name: string, type: 'attack' | 'skill', cost: number, price: number, rarity: RarityDef, emoji: string, desc: string, isStarter?: boolean, exhaust?: boolean, effect: (state: import('../state/GameState.js').GameState) => CardEffectResult }} CardDef
+ * @typedef {{ id: string, name: string, type: 'attack' | 'skill' | 'status', cost: number, price: number, rarity: RarityDef, emoji: string, desc: string, isStarter?: boolean, exhaust?: boolean, unplayable?: boolean, effect: (state: import('../state/GameState.js').GameState) => CardEffectResult }} CardDef
  */
 
 /** @type {Record<string, CardDef>} */
@@ -326,6 +326,24 @@ export const cardLibrary = {
         enemyAnim: damage.dealt > 0 ? 'anim-damage' : 'anim-block',
         damage,
       };
+    },
+  },
+
+  ulotka: {
+    id: 'ulotka',
+    name: 'Ulotka',
+    type: 'status',
+    rarity: 'common',
+    cost: 0,
+    price: 1,
+    isStarter: true,
+    exhaust: true,
+    unplayable: true,
+    emoji: '📄',
+    desc: 'Zapycha rękę. PRZEPADO.',
+    effect(state) {
+      void state;
+      return { playerAnim: 'anim-block' };
     },
   },
 };

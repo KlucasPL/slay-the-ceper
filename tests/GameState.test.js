@@ -1030,6 +1030,24 @@ describe('GameState', () => {
       expect(s.deck).not.toContain('gasior');
     });
   });
+  
+  describe('cepr - Pytanie o drogę (status action)', () => {
+    it('adds 2 ulotka cards to player discard on second loop move', () => {
+      const s = freshState();
+      s.endTurn();
+      expect(s.enemy.currentIntent.name).toBe('Pytanie o drogę');
+      s.endTurn();
+      expect(s.discard.filter((id) => id === 'ulotka').length).toBeGreaterThanOrEqual(2);
+    });
+
+    it('ulotka card is unplayable', () => {
+      const s = freshState();
+      s.hand = ['ulotka'];
+      s.player.energy = 3;
+      const result = s.playCard(0);
+      expect(result.success).toBe(false);
+    });
+  });
 
   describe('busiarz', () => {
     it('starts with Trąbienie na pieszych as first intent', () => {
@@ -1037,7 +1055,7 @@ describe('GameState', () => {
       expect(s.enemy.currentIntent).toEqual({
         type: 'attack',
         name: 'Trąbienie na pieszych',
-        damage: 5,
+        damage: 4,
         hits: 2,
       });
     });
@@ -1056,6 +1074,7 @@ describe('GameState', () => {
         name: 'Wyprzedzanie na trzeciego',
         damage: 8,
         hits: 1,
+        applyFrail: 1,
       });
     });
 
@@ -1067,6 +1086,7 @@ describe('GameState', () => {
         type: 'block',
         name: 'Zbieranie kompletu',
         block: 10,
+        heal: 5,
       });
       s.endTurn();
       expect(s.enemy.block).toBe(10);
@@ -1074,7 +1094,33 @@ describe('GameState', () => {
 
     it('intent text includes move name and total damage for multi-hit move', () => {
       const s = freshBusiarzState();
-      expect(s.getEnemyIntentText()).toBe('Zamiar: Trąbienie na pieszych (⚔️ 10, 2x)');
+      expect(s.getEnemyIntentText()).toBe('Zamiar: Trąbienie na pieszych (⚔️ 8, 2x)');
+    });
+
+    it('brak_reszty: steals 3 dutki whenever a hit deals HP damage', () => {
+      const s = freshBusiarzState();
+      s.dutki = 30;
+      s.player.hp = 50;
+      s.player.block = 0;
+      s.endTurn();
+      expect(s.dutki).toBe(24);
+    });
+
+    it('brak_reszty: does not steal dutki when all damage is blocked', () => {
+      const s = freshBusiarzState();
+      s.dutki = 30;
+      s.player.block = 999;
+      s.endTurn();
+      expect(s.dutki).toBe(30);
+    });
+
+    it('Zbieranie kompletu heals enemy by 5', () => {
+      const s = freshBusiarzState();
+      s.endTurn();
+      s.endTurn();
+      s.enemy.hp = s.enemy.maxHp - 10;
+      s.endTurn();
+      expect(s.enemy.hp).toBe(s.enemy.maxHp - 5);
     });
   });
 
@@ -1114,7 +1160,7 @@ describe('GameState', () => {
       expect(s.enemy.currentIntent).toEqual({
         type: 'attack',
         name: 'Cena z kosmosu',
-        damage: 6,
+        damage: 8,
         hits: 1,
         applyWeak: 2,
       });
@@ -1135,6 +1181,15 @@ describe('GameState', () => {
       const babaStatus = statuses.find((item) => item.label === 'Świeży oscypek');
       expect(babaStatus).toBeTruthy();
       expect(babaStatus?.tooltip).toContain('leczy 5 Krzepy');
+    });
+
+    it('targowanie_sie: immune to bankruptcy — rachunek does not kill her', () => {
+      const s = freshBabaState();
+      s.enemy.hp = 20;
+      s.enemy.rachunek = 50;
+      s._checkEnemyBankruptcy();
+      expect(s.checkWinCondition()).not.toBe('player_win');
+      expect(s.enemy.hp).toBe(20);
     });
   });
 
@@ -1190,14 +1245,11 @@ describe('GameState', () => {
       s.endTurn();
       expect(s.enemy.block).toBe(0);
     });
-    it('rolls a new Ceper attack intent between 5 and 10', () => {
+    it('rolls next Ceper intent from the loop pattern', () => {
       const s = freshState();
       setEnemyIntent(s, { type: 'attack', name: 'Pstryka fotkę', damage: 8, hits: 1 });
       s.endTurn();
-      expect(s.enemy.currentIntent.type).toBe('attack');
-      if (s.enemy.currentIntent.type !== 'attack') return;
-      expect(s.enemy.currentIntent.damage).toBeGreaterThanOrEqual(5);
-      expect(s.enemy.currentIntent.damage).toBeLessThanOrEqual(10);
+      expect(['attack', 'status']).toContain(s.enemy.currentIntent.type);
     });
   });
 
@@ -1341,7 +1393,7 @@ describe('GameState', () => {
       s.resetBattle();
       expect(s.enemy.id).toBe('busiarz');
       expect(s.enemy.name).toBe('Wąsaty Busiarz');
-      expect(s.enemy.maxHp).toBe(35);
+      expect(s.enemy.maxHp).toBe(65);
     });
 
     it('can load Babę from the enemy library after victory', () => {
@@ -1350,7 +1402,7 @@ describe('GameState', () => {
       s.resetBattle();
       expect(s.enemy.id).toBe('baba');
       expect(s.enemy.name).toBe('Gaździna Maryna');
-      expect(s.enemy.maxHp).toBe(50);
+      expect(s.enemy.maxHp).toBe(95);
     });
 
     it('spawns Król Krupówek on boss node with artifact', () => {
@@ -1442,45 +1494,47 @@ describe('GameState', () => {
       expect(s.enemy.status.weak).toBe(2);
     });
 
-    it('phase 1 steals 15 dutki on attack', () => {
+    it('first intent is Górski Ryk (buff)', () => {
       const s = freshBossState();
-      s.enemy.hp = 200;
-      s.dutki = 50;
-      s.endTurn();
-      expect(s.dutki).toBe(35);
+      expect(s.enemy.currentIntent.type).toBe('buff');
+      expect(s.enemy.currentIntent.name).toBe('Górski Ryk');
     });
 
-    it('phase 1 gains block when player has no dutki', () => {
+    it('Górski Ryk gives +2 strength and +10 block when executed', () => {
       const s = freshBossState();
-      s.enemy.hp = 200;
-      s.dutki = 0;
       s.endTurn();
-      expect(s.enemy.block).toBe(5);
+      expect(s.enemy.status.strength).toBe(2);
+      expect(s.enemy.block).toBeGreaterThanOrEqual(10);
     });
 
-    it('phase 2 applies vulnerable (fragile) and gains strength', () => {
+    it('second intent is Agresywne pozowanie (3-hit attack)', () => {
       const s = freshBossState();
-      s.enemy.hp = 120;
       s.endTurn();
-      expect(s.player.status.fragile).toBe(2);
-      expect(s.enemy.status.strength).toBe(1);
+      expect(s.enemy.currentIntent.type).toBe('attack');
+      expect(s.enemy.currentIntent.name).toBe('Agresywne pozowanie');
+      expect(s.enemy.currentIntent.hits).toBe(3);
     });
 
-    it('phase 3 performs two hits of 10 damage', () => {
+    it('ochrona_wizerunku deals 1 thorns to player per attack hit', () => {
       const s = freshBossState();
-      s.enemy.hp = 70;
       s.player.hp = 50;
-      s.endTurn();
-      expect(s.player.hp).toBe(30);
+      s.enemy.hp = 300;
+      s.enemy.block = 0;
+      s.hand = ['ciupaga'];
+      s.player.energy = 3;
+      s.playCard(0);
+      expect(s.player.hp).toBe(49);
     });
 
-    it('financial motivation boosts damage by 50% above 200 dutki', () => {
+    it('ochrona_wizerunku also triggers when damage is fully blocked', () => {
       const s = freshBossState();
-      s.enemy.hp = 200;
       s.player.hp = 50;
-      s.dutki = 250;
-      s.endTurn();
-      expect(s.player.hp).toBe(32);
+      s.enemy.hp = 300;
+      s.enemy.block = 999;
+      s.hand = ['ciupaga'];
+      s.player.energy = 3;
+      s.playCard(0);
+      expect(s.player.hp).toBe(49);
     });
   });
 });

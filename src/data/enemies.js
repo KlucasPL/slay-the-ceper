@@ -1,6 +1,6 @@
 /**
- * @typedef {{ type: 'attack', name: string, damage: number, hits?: number, applyWeak?: number, applyFragile?: number } | { type: 'block', name: string, block: number }} EnemyMoveDef
- * @typedef {{ id: string, name: string, emoji: string, hp: number, maxHp: number, block: number, baseAttack?: number, spriteSvg: string, patternType: 'random'|'loop', pattern?: EnemyMoveDef[] }} EnemyDef
+ * @typedef {{ type: 'attack', name: string, damage: number, hits?: number, applyWeak?: number, applyFrail?: number } | { type: 'block', name: string, block: number, heal?: number } | { type: 'buff', name: string, strengthGain?: number, block?: number } | { type: 'status', name: string, addStatusCard: string, amount?: number }} EnemyMoveDef
+ * @typedef {{ id: string, name: string, emoji: string, hp: number, maxHp: number, block: number, baseAttack?: number, passive?: string, spriteSvg: string, patternType: 'random'|'loop', pattern?: EnemyMoveDef[] }} EnemyDef
  */
 
 const ceprSprite = `
@@ -133,56 +133,69 @@ export const enemyLibrary = {
     id: 'cepr',
     name: 'Cepr',
     emoji: '🧦',
-    hp: 40,
-    maxHp: 40,
+    hp: 70,
+    maxHp: 70,
     block: 0,
-    baseAttack: 8,
+    baseAttack: 0,
     spriteSvg: ceprSprite,
-    patternType: 'random',
+    patternType: 'loop',
+    pattern: [
+      { type: 'attack', name: 'Rzut klapkiem', damage: 6, hits: 1 },
+      { type: 'status', name: 'Pytanie o drogę', addStatusCard: 'ulotka', amount: 2 },
+      { type: 'attack', name: 'Złość turysty', damage: 10, hits: 1 },
+    ],
   },
   busiarz: {
     id: 'busiarz',
     name: 'Wąsaty Busiarz',
     emoji: '🚐',
-    hp: 35,
-    maxHp: 35,
+    hp: 65,
+    maxHp: 65,
     block: 0,
-    baseAttack: 5,
+    baseAttack: 0,
     spriteSvg: busiarzSprite,
     patternType: 'loop',
+    passive: 'brak_reszty',
     pattern: [
-      { type: 'attack', name: 'Trąbienie na pieszych', damage: 5, hits: 2 },
-      { type: 'attack', name: 'Wyprzedzanie na trzeciego', damage: 8, hits: 1 },
-      { type: 'block', name: 'Zbieranie kompletu', block: 10 },
+      { type: 'attack', name: 'Trąbienie na pieszych', damage: 4, hits: 2 },
+      { type: 'attack', name: 'Wyprzedzanie na trzeciego', damage: 8, hits: 1, applyFrail: 1 },
+      { type: 'block', name: 'Zbieranie kompletu', block: 10, heal: 5 },
     ],
   },
   baba: {
     id: 'baba',
     name: 'Gaździna Maryna',
     emoji: '🧀',
-    hp: 50,
-    maxHp: 50,
+    hp: 95,
+    maxHp: 95,
     block: 0,
     baseAttack: 0,
     spriteSvg: babaSprite,
     patternType: 'loop',
+    passive: 'targowanie_sie',
     pattern: [
       { type: 'block', name: 'Darmowa degustacja', block: 15 },
-      { type: 'attack', name: 'Cena z kosmosu', damage: 6, hits: 1, applyWeak: 2 },
-      { type: 'attack', name: 'Rzut redykołką', damage: 12, hits: 1 },
+      { type: 'attack', name: 'Cena z kosmosu', damage: 8, hits: 1, applyWeak: 2 },
+      { type: 'attack', name: 'Rzut redykołką', damage: 14, hits: 1 },
     ],
   },
   boss: {
     id: 'boss',
     name: 'Król Krupówek - Biały Misiek (Zdzisiek)',
     emoji: '🐻‍❄️',
-    hp: 250,
-    maxHp: 250,
+    hp: 300,
+    maxHp: 300,
     block: 0,
     baseAttack: 0,
     spriteSvg: bossSprite,
     patternType: 'loop',
-    pattern: [{ type: 'attack', name: 'Podatek od zdjęcia', damage: 12, hits: 1 }],
+    passive: 'ochrona_wizerunku',
+    pattern: [
+      { type: 'buff', name: 'Górski Ryk', strengthGain: 2, block: 10 },
+      { type: 'attack', name: 'Agresywne pozowanie', damage: 5, hits: 3 },
+      { type: 'attack', name: 'Podatek od zdjęcia', damage: 15, hits: 1, applyFrail: 2 },
+      { type: 'attack', name: 'Uścisk Krupówek', damage: 25, hits: 1 },
+    ],
   },
 };
 

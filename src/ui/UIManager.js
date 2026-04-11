@@ -222,6 +222,11 @@ export class UIManager {
       enemySprite.innerHTML = this.state.enemy.spriteSvg;
       enemySprite.dataset.enemyId = enemyId;
     }
+    if (this.state.enemy.isBankrupt && this.state.enemy.rachunek > 0) {
+      enemySprite.classList.add('bankrupt-animation');
+    } else {
+      enemySprite.classList.remove('bankrupt-animation');
+    }
   }
 
   _renderWeatherIndicator() {
@@ -351,7 +356,7 @@ export class UIManager {
     hand.forEach((cardId, index) => {
       const card = cardLibrary[cardId];
       const actualCost = this.state.getCardCostInHand(cardId);
-      const canPlay = player.energy >= actualCost;
+      const canPlay = player.energy >= actualCost && !card.unplayable;
 
       const cardEl = document.createElement('div');
       const isKept = this.state.smyczKeptCardId === cardId;
@@ -505,6 +510,18 @@ export class UIManager {
     if (outcome === 'player_win') {
       const droppedDutki = this.state.grantBattleDutki();
       const isBossFight = this.state.enemy.id === 'boss';
+      const isBankrupt = this.state.enemy.isBankrupt;
+      const bankruptBonus = this.state.enemyBankruptcyBonus;
+      if (isBankrupt) {
+        this.updateUI();
+        if (bankruptBonus > 0) {
+          this._showFloatingText('sprite-enemy', `+${bankruptBonus} Dutków!`, 'floating-dutki');
+        }
+        setTimeout(() => {
+          this._showVictoryOverlay(droppedDutki, isBossFight);
+        }, 2500);
+        return;
+      }
       this._showVictoryOverlay(droppedDutki, isBossFight);
       return;
     }
