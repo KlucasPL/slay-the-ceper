@@ -1,5 +1,6 @@
 import { cardLibrary } from '../data/cards.js';
 import { relicLibrary } from '../data/relics.js';
+import { releaseNotesData } from '../data/releaseNotes.js';
 import { weatherLibrary } from '../data/weather.js';
 
 export class UIManager {
@@ -56,6 +57,25 @@ export class UIManager {
     document
       .getElementById('title-btn-library')
       .addEventListener('click', () => this._openLibraryOverlay());
+    document
+      .getElementById('btn-release-notes')
+      .addEventListener('click', () => this._openReleaseNotesModal());
+    document
+      .querySelector('#release-notes-modal .close-btn')
+      .addEventListener('click', () => this._closeReleaseNotesModal());
+    document
+      .querySelector('#release-notes-modal .close-btn')
+      .addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          this._closeReleaseNotesModal();
+        }
+      });
+    document.getElementById('release-notes-modal').addEventListener('click', (event) => {
+      if (event.target === event.currentTarget) {
+        this._closeReleaseNotesModal();
+      }
+    });
     document.getElementById('end-turn-btn').addEventListener('click', () => this._handleEndTurn());
     document
       .getElementById('map-continue-btn')
@@ -111,6 +131,7 @@ export class UIManager {
     });
     window.addEventListener('resize', () => this._scaleGame());
     this._scaleGame();
+    this._renderReleaseNotes();
     this.updateUI();
     this._syncScreenState();
     this._renderMuteButton();
@@ -173,6 +194,8 @@ export class UIManager {
     const titleScreen = document.getElementById('title-screen');
     if (!titleScreen) return;
 
+    this._closeReleaseNotesModal();
+
     this.state.difficulty = difficulty;
     this.state.enemyScaleFactor = 1.0;
     this.state.generateMap();
@@ -187,6 +210,49 @@ export class UIManager {
     setTimeout(() => {
       titleScreen.classList.add('hidden');
     }, 450);
+  }
+
+  _renderReleaseNotes() {
+    const container = document.getElementById('release-notes-container');
+    if (!container) return;
+
+    container.innerHTML = '';
+    releaseNotesData.forEach((entry) => {
+      const section = document.createElement('section');
+
+      const version = document.createElement('h3');
+      version.className = 'note-version';
+      version.textContent = entry.version;
+
+      const date = document.createElement('p');
+      date.className = 'note-date';
+      date.textContent = entry.date;
+
+      const list = document.createElement('ul');
+      list.className = 'note-changes';
+      entry.changes.forEach((changeText) => {
+        const item = document.createElement('li');
+        item.textContent = changeText;
+        list.appendChild(item);
+      });
+
+      section.append(version, date, list);
+      container.appendChild(section);
+    });
+  }
+
+  _openReleaseNotesModal() {
+    const modal = document.getElementById('release-notes-modal');
+    if (!modal) return;
+    modal.classList.remove('hidden');
+    modal.setAttribute('aria-hidden', 'false');
+  }
+
+  _closeReleaseNotesModal() {
+    const modal = document.getElementById('release-notes-modal');
+    if (!modal) return;
+    modal.classList.add('hidden');
+    modal.setAttribute('aria-hidden', 'true');
   }
 
   _syncScreenState() {

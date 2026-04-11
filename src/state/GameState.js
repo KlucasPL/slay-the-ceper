@@ -11,13 +11,13 @@ const RARITY_WEIGHTS = {
 
 /**
  * @typedef {import('../data/cards.js').StatusDef} StatusDef
- * @typedef {{ name: string, hp: number, maxHp: number, block: number, energy: number, maxEnergy: number, status: StatusDef, hasLans: boolean, stunned: boolean }} PlayerState
+ * @typedef {{ name: string, hp: number, maxHp: number, block: number, energy: number, maxEnergy: number, status: StatusDef, hasLans: boolean, stunned: boolean, cardsPlayedThisTurn: number }} PlayerState
  * @typedef {import('../data/enemies.js').EnemyMoveDef} EnemyMoveDef
  * @typedef {import('../data/weather.js').WeatherId} WeatherId
  * @typedef {'fight' | 'elite' | 'shop' | 'treasure' | 'campfire' | 'boss'} MapNodeType
  * @typedef {{ x: number, y: number, type: MapNodeType, label: string, emoji: string, weather: WeatherId, connections: number[] }} MapNode
- * @typedef {{ id: string, name: string, emoji: string, hp: number, maxHp: number, block: number, nextAttack: number, baseAttack: number, status: StatusDef, rachunek: number, spriteSvg: string, patternType: 'random'|'loop', pattern: EnemyMoveDef[], patternIndex: number, currentIntent: EnemyMoveDef, tookHpDamageThisTurn: boolean, bossArtifact?: number, passive: string | null }} EnemyState
- * @typedef {{ success: false } | { success: true, effect: import('../data/cards.js').CardEffectResult }} PlayCardResult
+ * @typedef {{ id: string, name: string, emoji: string, hp: number, maxHp: number, block: number, nextAttack: number, baseAttack: number, status: StatusDef, rachunek: number, ped: number, spriteSvg: string, patternType: 'random'|'loop', pattern: EnemyMoveDef[], patternIndex: number, currentIntent: EnemyMoveDef, tookHpDamageThisTurn: boolean, bossArtifact?: number, passive: string | null }} EnemyState
+ * @typedef {{ success: false, reason?: string } | { success: true, effect: import('../data/cards.js').CardEffectResult }} PlayCardResult
  * @typedef {{ enemyAttack: { raw: number, blocked: number, dealt: number }, enemyPassiveHeal: { amount: number, text: string } | null, playerPassiveHeal: { amount: number, text: string } | null }} EndTurnResult
  * @typedef {{ cards: string[], relic: string | null }} ShopStock
  */
@@ -34,7 +34,7 @@ export class GameState {
    */
   constructor(character, enemy) {
     /** @type {PlayerState} */
-    this.player = { ...character, status: defaultStatus(), hasLans: false, stunned: false };
+    this.player = { ...character, status: defaultStatus(), hasLans: false, stunned: false, cardsPlayedThisTurn: 0 };
     /** @type {number} */
     this.dutki = 50;
     /** @type {number} Number of won battles used for scaling */
@@ -1005,8 +1005,9 @@ export class GameState {
    * @returns {EnemyState}
    */
   _createEnemyState(enemyDef) {
-    const isFinalBoss = enemyDef.id === 'boss';
-    const scale = isFinalBoss ? 1 : this.enemyScaleFactor;
+    const isFinalBossVariant = enemyDef.id === 'boss' || enemyDef.id === 'fiakier';
+    const isMainBoss = enemyDef.id === 'boss';
+    const scale = isFinalBossVariant ? 1 : this.enemyScaleFactor;
     const pattern = enemyDef.pattern
       ? enemyDef.pattern.map((move) => {
           if (move.type !== 'attack') return { ...move };
@@ -1014,7 +1015,7 @@ export class GameState {
         })
       : [];
     const bossBaseHp = this.difficulty === 'hard' ? 350 : 250;
-    const baseMaxHp = isFinalBoss ? bossBaseHp : enemyDef.maxHp;
+    const baseMaxHp = isMainBoss ? bossBaseHp : enemyDef.maxHp;
     const dzwonekMod = this.hasRelic('dzwonek_owcy') ? 0.8 : 1.0;
     const maxHp = Math.round(baseMaxHp * scale * dzwonekMod);
     /** @type {EnemyState} */
@@ -1029,13 +1030,14 @@ export class GameState {
       baseAttack: Math.round((enemyDef.baseAttack ?? 0) * scale),
       status: defaultStatus(),
       rachunek: 0,
+      ped: 0,
       spriteSvg: enemyDef.spriteSvg,
       patternType: enemyDef.patternType,
       pattern,
       patternIndex: 0,
       currentIntent: { type: 'attack', name: 'Atak', damage: 0, hits: 1 },
       tookHpDamageThisTurn: false,
-      bossArtifact: isFinalBoss ? 3 : 0,
+      bossArtifact: isMainBoss ? 3 : 0,
       passive: enemyDef.passive ?? null,
     };
     enemyState.currentIntent = this._buildEnemyIntent(enemyState);
@@ -1046,9 +1048,16 @@ export class GameState {
 
   /** @returns {import('../data/enemies.js').EnemyDef} */
   _pickRandomEnemyDef() {
-    const enemyIds = Object.keys(enemyLibrary).filter((id) => id !== 'boss');
+    const enemyIds = Object.keys(enemyLibrary).filter((id) => id !== 'boss' && id !== 'fiakier');
     const enemyId = enemyIds[Math.floor(Math.random() * enemyIds.length)];
     return enemyLibrary[enemyId];
+  }
+
+  /** @returns {import('../data/enemies.js').EnemyDef} */
+  _pickFinalBossDef() {
+    const bossIds = ['boss', 'fiakier'];
+    const bossId = bossIds[Math.floor(Math.random() * bossIds.length)];
+    return enemyLibrary[bossId];
   }
 
   /**
@@ -1083,10 +1092,7 @@ export class GameState {
    * @param {number} amount
    */
   _drawCards(amount) {
-    let effectiveAmount = amount;
-    if (this.enemy.passive === 'brak_wolnych_miejsc') {
-      effectiveAmount = Math.min(effectiveAmount, Math.max(0, 3 - this.hand.length));
-    }
+    const effectiveAmount = amount;
     for (let i = 0; i < effectiveAmount; i++) {
       if (this.deck.length === 0) {
         if (this.discard.length === 0) break;
@@ -1316,8 +1322,11 @@ export class GameState {
     let dealt = 0;
     const hits = intent.hits ?? 1;
 
+    const intentDamage = intent.usePed ? intent.damage + (this.enemy.ped ?? 0) : intent.damage;
+    if (intent.usePed) this.enemy.ped = 0;
+
     for (let hitIndex = 0; hitIndex < hits; hitIndex++) {
-      const hitDamage = this.calculateDamage(intent.damage, this.enemy, this.player);
+      const hitDamage = this.calculateDamage(intentDamage, this.enemy, this.player);
       const result = this._applyDamageToPlayer(hitDamage);
       raw += result.raw;
       blocked += result.blocked;
@@ -1336,6 +1345,19 @@ export class GameState {
       this.player.status.vulnerable += intent.applyVulnerable;
     }
 
+    if (intent.gainPed && intent.gainPed > 0) {
+      this.enemy.ped = (this.enemy.ped ?? 0) + intent.gainPed;
+    }
+
+    if (intent.stealDutki && intent.stealDutki > 0) {
+      if (this.dutki >= intent.stealDutki) {
+        this.dutki -= intent.stealDutki;
+      } else {
+        this.dutki = 0;
+        this.player.status.weak += 2;
+      }
+    }
+
     return { raw, blocked, dealt };
   }
 
@@ -1346,9 +1368,8 @@ export class GameState {
     const intent = this.enemy.currentIntent;
     if (intent.type !== 'attack') return 0;
 
-    const baseDmg = intent.damagePerCardInHand
-      ? intent.damage + this.hand.length
-      : intent.damage;
+    let baseDmg = intent.damagePerCardInHand ? intent.damage + this.hand.length : intent.damage;
+    if (intent.usePed) baseDmg += this.enemy.ped ?? 0;
     const hits = intent.hits ?? 1;
     const perHit = this.calculateDamage(baseDmg, this.enemy, this.player);
     return Math.max(0, perHit * hits - this.player.block);
@@ -1381,15 +1402,16 @@ export class GameState {
       if (intent.applyFrail) parts.push(`🫧 ×${intent.applyFrail}`);
       if (intent.applyWeak) parts.push(`🤢 ×${intent.applyWeak}`);
       if (intent.applyVulnerable) parts.push(`💥 ×${intent.applyVulnerable}`);
+      if (intent.stealDutki) parts.push(`💰 -${intent.stealDutki}`);
       return `Zamiar: ${intent.name} (${parts.join(', ') || 'efekt'})`;
     }
 
     const totalDamage = this.getEnemyIntentDamage();
     if (hits > 1) {
-      return `Zamiar: ${intent.name} (⚔️ ${totalDamage}, ${hits}x)`;
+      return `Zamiar: ${intent.name} (⚔️ ${totalDamage}, ${hits}x${intent.stealDutki ? `, 💰 -${intent.stealDutki}` : ''})`;
     }
 
-    return `Zamiar: ${intent.name} (⚔️ ${totalDamage})`;
+    return `Zamiar: ${intent.name} (⚔️ ${totalDamage}${intent.stealDutki ? `, 💰 -${intent.stealDutki}` : ''})`;
   }
 
   /**
@@ -1464,12 +1486,21 @@ export class GameState {
       });
     }
 
-    if (this.enemy.passive === 'brak_wolnych_miejsc') {
+    if (this.enemy.passive === 'blokada_parkingowa') {
       specials.push({
         icon: '🚧',
-        label: 'Brak Wolnych Miejsc',
+        label: 'Blokada Parkingowa',
         value: null,
-        tooltip: 'Gracz może mieć maksymalnie 3 karty na ręce.',
+        tooltip: 'Gracz może zagrać maksymalnie 3 karty na turę.',
+      });
+    }
+
+    if ((this.enemy.ped ?? 0) > 0) {
+      specials.push({
+        icon: '💨',
+        label: 'Pęd',
+        value: this.enemy.ped,
+        tooltip: 'Fiakier nabrał pędu. Następny atak „Przyspieszenie" zadada o tyle więcej obrażeń.',
       });
     }
 
@@ -1497,6 +1528,13 @@ export class GameState {
     this.combat.playerAttackMissed = false;
 
     this.enemy.tookHpDamageThisTurn = false;
+    this.player.cardsPlayedThisTurn = 0;
+
+    // Fiakier: add 2 Rachunek to itself at the start of each player turn
+    if (this.enemy.passive === 'rachunek_za_kurs') {
+      this.addEnemyRachunek(2);
+    }
+
     this._applyHalnyBlockDrain(this.player);
     this.player.energy = this.player.maxEnergy + this.player.status.energy_next_turn;
     this.player.status.energy_next_turn = 0;
@@ -1556,6 +1594,10 @@ export class GameState {
     if (!card || this.player.energy < actualCost) return { success: false };
     if (card.unplayable) return { success: false };
 
+    if (this.enemy.passive === 'blokada_parkingowa' && this.player.cardsPlayedThisTurn >= 3) {
+      return { success: false, reason: 'blokada' };
+    }
+
     this.player.energy -= actualCost;
 
     const isFirstCardThisBattle =
@@ -1603,6 +1645,8 @@ export class GameState {
     this.combat.playerAttackMissCheck = false;
     this.combat.playerAttackMissRolled = false;
     this.combat.playerAttackMissed = false;
+
+    this.player.cardsPlayedThisTurn += 1;
 
     return { success: true, effect };
   }
@@ -1723,7 +1767,7 @@ export class GameState {
   /**
    * Resets combat after victory with fixed enemy stats from enemyLibrary.
    * - Keep player HP between battles (no auto-heal)
-   * - Boss node: spawn final boss (Król Krupówek)
+  * - Boss node: spawn random final boss variant (Król Krupówek or Fiakier)
    * - Clear blocks and statuses
    * - Move hand/discard/exhaust back to deck and shuffle
    * - Start a fresh turn
@@ -1760,7 +1804,7 @@ export class GameState {
 
     const currentNode = this.getCurrentMapNode();
     const isBossNode = currentNode?.type === 'boss';
-    const nextEnemy = isBossNode ? enemyLibrary.boss : this._pickRandomEnemyDef();
+    const nextEnemy = isBossNode ? this._pickFinalBossDef() : this._pickRandomEnemyDef();
     this.enemy = this._createEnemyState(nextEnemy);
     this._setCurrentWeatherFromNode();
     this.pendingBattleDutki = true;

@@ -1477,14 +1477,14 @@ describe('GameState', () => {
 
     it('can load Babę from the enemy library after victory', () => {
       const s = freshState();
-      vi.spyOn(Math, 'random').mockReturnValue(0.5);
+      vi.spyOn(s, '_pickRandomEnemyDef').mockReturnValue(enemyLibrary.baba);
       s.resetBattle();
       expect(s.enemy.id).toBe('baba');
       expect(s.enemy.name).toBe('Gaździna Maryna');
       expect(s.enemy.maxHp).toBe(95);
     });
 
-    it('spawns Król Krupówek on boss node with artifact', () => {
+    it('spawns Król Krupówek on boss node when boss variant is rolled', () => {
       const s = freshState();
       s.map = [
         [null, { x: 1, y: 0, type: 'fight', label: 'Bitka', emoji: '⚔️', connections: [1] }, null],
@@ -1493,6 +1493,7 @@ describe('GameState', () => {
       s.currentLevel = 1;
       s.currentNodeIndex = 1;
       s.currentNode = { x: 1, y: 1 };
+      vi.spyOn(Math, 'random').mockReturnValue(0);
       s.resetBattle();
       expect(s.enemy.id).toBe('boss');
       expect(s.enemy.name).toBe('Król Krupówek - Biały Misiek (Zdzisiek)');
@@ -1500,9 +1501,26 @@ describe('GameState', () => {
       expect(s.enemy.bossArtifact).toBe(3);
     });
 
+    it('spawns Fiakier on boss node when fiakier variant is rolled', () => {
+      const s = freshState();
+      s.map = [
+        [null, { x: 1, y: 0, type: 'fight', label: 'Bitka', emoji: '⚔️', connections: [1] }, null],
+        [null, { x: 1, y: 1, type: 'boss', label: 'Boss', emoji: '👑', connections: [] }, null],
+      ];
+      s.currentLevel = 1;
+      s.currentNodeIndex = 1;
+      s.currentNode = { x: 1, y: 1 };
+      vi.spyOn(Math, 'random').mockReturnValue(0.99);
+      s.resetBattle();
+      expect(s.enemy.id).toBe('fiakier');
+      expect(s.enemy.name).toBe('Fiakier spod Krupówek');
+      expect(s.enemy.maxHp).toBe(280);
+      expect(s.enemy.bossArtifact).toBe(0);
+    });
+
     it('enemy library includes final boss definition', () => {
       const ids = Object.keys(enemyLibrary).sort();
-      expect(ids).toEqual(['baba', 'boss', 'busiarz', 'cepr', 'influencerka', 'parkingowy']);
+      expect(ids).toEqual(['baba', 'boss', 'busiarz', 'cepr', 'fiakier', 'influencerka', 'parkingowy']);
     });
 
     it('does not scale enemies in normal mode', () => {
@@ -1535,7 +1553,7 @@ describe('GameState', () => {
       expect(s.enemy.baseAttack).toBe(Math.round(enemyLibrary.cepr.baseAttack * 1.21));
     });
 
-    it('boss has 350 HP on hard mode', () => {
+    it('boss has 350 HP on hard mode when boss variant is rolled', () => {
       const s = freshState();
       s.difficulty = 'hard';
       s.map = [
@@ -1545,6 +1563,7 @@ describe('GameState', () => {
       s.currentLevel = 1;
       s.currentNodeIndex = 1;
       s.currentNode = { x: 1, y: 1 };
+      vi.spyOn(Math, 'random').mockReturnValue(0);
       s.resetBattle();
       expect(s.enemy.id).toBe('boss');
       expect(s.enemy.maxHp).toBe(350);

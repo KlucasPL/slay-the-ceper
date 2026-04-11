@@ -14,8 +14,25 @@ const menuTracks = import.meta.glob('./audio/*.mp3', {
 });
 const [menuTrackUrl] = Object.values(menuTracks);
 
-const state = new GameState(characters.jedrek, enemyLibrary.cepr);
+const params = new URLSearchParams(window.location.search);
+const debugBoss = params.get('debugBoss');
+
+/** @type {import('./data/enemies.js').EnemyDef} */
+let initialEnemy = enemyLibrary.cepr;
+if (debugBoss === 'boss') {
+	initialEnemy = enemyLibrary.boss;
+} else if (debugBoss === 'fiakier') {
+	initialEnemy = enemyLibrary.fiakier;
+} else if (debugBoss === 'random-boss') {
+	initialEnemy = Math.random() < 0.5 ? enemyLibrary.boss : enemyLibrary.fiakier;
+}
+
+const state = new GameState(characters.jedrek, initialEnemy);
 state.initGame(startingDeck);
+
+if (debugBoss === 'boss' || debugBoss === 'fiakier' || debugBoss === 'random-boss') {
+	state.currentScreen = 'battle';
+}
 
 const audioManager = new AudioManager({ menuTrackUrl, state });
 

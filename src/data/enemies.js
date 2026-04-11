@@ -1,5 +1,5 @@
 /**
- * @typedef {{ type: 'attack', name: string, damage: number, hits?: number, applyWeak?: number, applyFrail?: number, applyVulnerable?: number, damagePerCardInHand?: boolean } | { type: 'block', name: string, block: number, heal?: number } | { type: 'buff', name: string, strengthGain?: number, block?: number } | { type: 'status', name: string, addStatusCard?: string, amount?: number, applyStun?: number }} EnemyMoveDef
+ * @typedef {{ type: 'attack', name: string, damage: number, hits?: number, applyWeak?: number, applyFrail?: number, applyVulnerable?: number, damagePerCardInHand?: boolean, gainPed?: number, usePed?: boolean, stealDutki?: number } | { type: 'block', name: string, block: number, heal?: number } | { type: 'buff', name: string, strengthGain?: number, block?: number } | { type: 'status', name: string, addStatusCard?: string, amount?: number, applyStun?: number }} EnemyMoveDef
  * @typedef {{ id: string, name: string, emoji: string, hp: number, maxHp: number, block: number, baseAttack?: number, passive?: string, spriteSvg: string, patternType: 'random'|'loop', pattern?: EnemyMoveDef[] }} EnemyDef
  */
 
@@ -153,6 +153,67 @@ const influencerkaSprite = `
   <path d="M 32,26 Q 40,16 50,14 Q 60,16 68,26" fill="none" stroke="#e8d8b0" stroke-width="4" stroke-linecap="round"/>
 </svg>`;
 
+const fiakierSprite = `
+<svg viewBox="0 0 100 100" width="120" height="120">
+  <!-- Left wheel -->
+  <circle cx="22" cy="82" r="14" fill="none" stroke="#3a1800" stroke-width="3"/>
+  <circle cx="22" cy="82" r="4" fill="#3a1800"/>
+  <line x1="22" y1="68" x2="22" y2="96" stroke="#3a1800" stroke-width="1.8"/>
+  <line x1="8" y1="82" x2="36" y2="82" stroke="#3a1800" stroke-width="1.8"/>
+  <line x1="12" y1="72" x2="32" y2="92" stroke="#3a1800" stroke-width="1.8"/>
+  <line x1="12" y1="92" x2="32" y2="72" stroke="#3a1800" stroke-width="1.8"/>
+  <circle cx="22" cy="82" r="10" fill="none" stroke="#cc3300" stroke-width="1.5" stroke-dasharray="3,3"/>
+  <!-- Right wheel -->
+  <circle cx="78" cy="82" r="14" fill="none" stroke="#3a1800" stroke-width="3"/>
+  <circle cx="78" cy="82" r="4" fill="#3a1800"/>
+  <line x1="78" y1="68" x2="78" y2="96" stroke="#3a1800" stroke-width="1.8"/>
+  <line x1="64" y1="82" x2="92" y2="82" stroke="#3a1800" stroke-width="1.8"/>
+  <line x1="68" y1="72" x2="88" y2="92" stroke="#3a1800" stroke-width="1.8"/>
+  <line x1="68" y1="92" x2="88" y2="72" stroke="#3a1800" stroke-width="1.8"/>
+  <circle cx="78" cy="82" r="10" fill="none" stroke="#cc3300" stroke-width="1.5" stroke-dasharray="3,3"/>
+  <!-- Axle -->
+  <line x1="22" y1="78" x2="78" y2="78" stroke="#3a1800" stroke-width="2"/>
+  <!-- Carriage body -->
+  <rect x="18" y="54" width="64" height="26" rx="5" fill="#5a2f0a" stroke="#3a1800" stroke-width="2"/>
+  <!-- Góralskie zigzag on carriage -->
+  <polyline points="22,60 26,56 30,60 34,56 38,60 42,56 46,60 50,56 54,60 58,56 62,60 66,56 70,60 74,56 78,60" fill="none" stroke="#e8c420" stroke-width="1.5"/>
+  <!-- Windows -->
+  <rect x="24" y="60" width="20" height="13" rx="3" fill="#aad4ee" opacity="0.8" stroke="#3a1800" stroke-width="1"/>
+  <rect x="56" y="60" width="20" height="13" rx="3" fill="#aad4ee" opacity="0.8" stroke="#3a1800" stroke-width="1"/>
+  <!-- Coachman seat -->
+  <rect x="8" y="48" width="24" height="8" rx="3" fill="#7a4520"/>
+  <!-- Body (seated) -->
+  <rect x="10" y="28" width="20" height="22" rx="5" fill="#1a3a80" stroke="#0f244a" stroke-width="2"/>
+  <!-- Jacket buttons -->
+  <circle cx="20" cy="33" r="1" fill="#ffd700"/>
+  <circle cx="20" cy="38" r="1" fill="#ffd700"/>
+  <circle cx="20" cy="43" r="1" fill="#ffd700"/>
+  <!-- Left arm (reins) -->
+  <line x1="10" y1="38" x2="2" y2="50" stroke="#f0c090" stroke-width="5" stroke-linecap="round"/>
+  <line x1="2" y1="50" x2="2" y2="55" stroke="#7a4520" stroke-width="1.5"/>
+  <!-- Right arm (whip) -->
+  <line x1="30" y1="34" x2="60" y2="16" stroke="f0c090" stroke-width="5" stroke-linecap="round"/>
+  <line x1="30" y1="34" x2="60" y2="16" stroke="#f0c090" stroke-width="5" stroke-linecap="round"/>
+  <!-- Whip handle -->
+  <line x1="60" y1="16" x2="74" y2="8" stroke="#7a4520" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- Whip lash -->
+  <path d="M 74,8 Q 88,4 90,14" fill="none" stroke="#5a3010" stroke-width="1.5" stroke-linecap="round"/>
+  <!-- Head -->
+  <circle cx="20" cy="21" r="11" fill="#f0c090"/>
+  <!-- Mustache (big, góralski) -->
+  <path d="M 12,26 Q 16,22 20,24 Q 24,22 28,26" fill="#4a2a00"/>
+  <!-- Eyes (squinting) -->
+  <line x1="16" y1="20" x2="19" y2="19" stroke="#222" stroke-width="2" stroke-linecap="round"/>
+  <line x1="21" y1="19" x2="24" y2="20" stroke="#222" stroke-width="2" stroke-linecap="round"/>
+  <!-- Hat (wide-brimmed black) -->
+  <rect x="10" y="11" width="20" height="9" rx="2" fill="#111"/>
+  <rect x="7" y="19" width="26" height="3" rx="1" fill="#0a0a0a"/>
+  <!-- Hat band - góralskie red -->
+  <rect x="7" y="18" width="26" height="2" fill="#cc3300"/>
+  <!-- Feather -->
+  <path d="M 31,12 Q 38,8 36,4 Q 33,7 30,12" fill="#22aa22"/>
+</svg>`;
+
 const parkingowySprite = `
 <svg viewBox="0 0 100 100" width="120" height="120">
   <polygon points="84,98 90,98 89,80 85,80" fill="#ff6600"/>
@@ -263,17 +324,35 @@ export const enemyLibrary = {
     id: 'parkingowy',
     name: 'Parkingowy z Palenicy',
     emoji: '🚧',
-    hp: 120,
-    maxHp: 120,
+    hp: 110,
+    maxHp: 110,
     block: 0,
     baseAttack: 0,
     spriteSvg: parkingowySprite,
     patternType: 'loop',
-    passive: 'brak_wolnych_miejsc',
+    passive: 'blokada_parkingowa',
     pattern: [
       { type: 'attack', name: 'Bilet za wycieraczką', damage: 5, hits: 1, damagePerCardInHand: true },
       { type: 'attack', name: 'Kłótnia o rezerwację', damage: 0, hits: 0, applyFrail: 2 },
       { type: 'status', name: 'Blokada na koło', applyStun: 1 },
+    ],
+  },
+  fiakier: {
+    id: 'fiakier',
+    name: 'Fiakier spod Krupówek',
+    emoji: '🐴',
+    hp: 280,
+    maxHp: 280,
+    block: 0,
+    baseAttack: 0,
+    spriteSvg: fiakierSprite,
+    patternType: 'loop',
+    passive: 'rachunek_za_kurs',
+    pattern: [
+      { type: 'attack', name: 'Batogiem po grzbiecie', damage: 8, hits: 1, gainPed: 3 },
+      { type: 'attack', name: 'Przyspieszenie', damage: 15, hits: 1, usePed: true },
+      { type: 'attack', name: 'Opłata za kurs', damage: 5, hits: 1, stealDutki: 10 },
+      { type: 'attack', name: 'Zamach Batem', damage: 0, hits: 0, applyVulnerable: 2 },
     ],
   },
   boss: {

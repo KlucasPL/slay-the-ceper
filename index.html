@@ -53,6 +53,9 @@
           <button id="title-btn-library" class="title-start-btn title-start-btn--library">
             Biblioteka
           </button>
+          <button id="btn-release-notes" class="menu-btn title-start-btn title-start-btn--library">
+            📜 Co nowego? (v1.0)
+          </button>
         </div>
         <p class="title-difficulty-hint">
           W trybie Dla Marka przeciwnicy stają się silniejsi z każdą walką!
@@ -61,6 +64,14 @@
           <span>🪓</span>
           <span>👞</span>
         </div>
+      </div>
+    </div>
+
+    <div id="release-notes-modal" class="modal hidden" aria-hidden="true">
+      <div class="modal-content">
+        <span class="close-btn" role="button" tabindex="0" aria-label="Zamknij">&times;</span>
+        <h2>Dziennik Zmian</h2>
+        <div id="release-notes-container"></div>
       </div>
     </div>
 
