@@ -17,6 +17,10 @@ export class UIManager {
     this.mapMessage = '';
     /** @type {(() => void) | null} */
     this.pendingBattleRelicClaimAction = null;
+    /** @type {'cards' | 'relics'} */
+    this.libraryTab = 'cards';
+    /** @type {'all' | 'common' | 'uncommon' | 'rare'} */
+    this.libraryRarityFilter = 'all';
   }
 
   /**
@@ -48,6 +52,9 @@ export class UIManager {
       .addEventListener('mouseenter', unlockMenuMusic, { passive: true });
     document.getElementById('title-btn-normal').addEventListener('focus', unlockMenuMusic);
     document.getElementById('title-btn-hard').addEventListener('focus', unlockMenuMusic);
+    document
+      .getElementById('title-btn-library')
+      .addEventListener('click', () => this._openLibraryOverlay());
     document.getElementById('end-turn-btn').addEventListener('click', () => this._handleEndTurn());
     document
       .getElementById('map-continue-btn')
@@ -64,6 +71,30 @@ export class UIManager {
     document
       .getElementById('camp-upgrade-btn')
       .addEventListener('click', () => this._useCampfireUpgrade());
+    document
+      .getElementById('library-tab-cards')
+      .addEventListener('click', () => this._setLibraryTab('cards'));
+    document
+      .getElementById('library-tab-relics')
+      .addEventListener('click', () => this._setLibraryTab('relics'));
+    document
+      .querySelectorAll('.library-filter')
+      .forEach((filterBtn) => {
+        filterBtn.addEventListener('click', () => {
+          const rarity = filterBtn.dataset.rarity;
+          if (
+            rarity === 'all' ||
+            rarity === 'common' ||
+            rarity === 'uncommon' ||
+            rarity === 'rare'
+          ) {
+            this._setLibraryFilter(rarity);
+          }
+        });
+      });
+    document
+      .getElementById('library-back-btn')
+      .addEventListener('click', () => this._closeLibraryOverlay());
     document.addEventListener('click', (event) => {
       const target = event.target;
       if (!(target instanceof Element) || !target.closest('.status-tag-hint')) {
@@ -188,6 +219,7 @@ export class UIManager {
       if (!relic) return;
       const chip = document.createElement('button');
       chip.className = 'relic-chip';
+      chip.classList.add(this._rarityClass(relic.rarity));
       chip.type = 'button';
       chip.textContent = relic.emoji;
       chip.title = `${relic.name}: ${relic.desc}`;
@@ -286,7 +318,7 @@ export class UIManager {
 
       const cardEl = document.createElement('div');
       const isKept = this.state.smyczKeptCardId === cardId;
-      cardEl.className = `card${canPlay ? '' : ' disabled'}${isKept ? ' card--kept' : ''}`;
+      cardEl.className = `card ${this._rarityClass(card.rarity)}${canPlay ? '' : ' disabled'}${isKept ? ' card--kept' : ''}`;
 
       if (card.exhaust) {
         cardEl.classList.add('card-exhaust');
@@ -305,6 +337,9 @@ export class UIManager {
       const titleEl = document.createElement('div');
       titleEl.className = 'card-title';
       titleEl.textContent = card.name;
+      const rarityEl = document.createElement('div');
+      rarityEl.className = 'card-rarity';
+      rarityEl.textContent = this._rarityLabel(card.rarity, 'card');
       const imgEl = document.createElement('div');
       imgEl.className = 'card-img';
       imgEl.textContent = card.emoji;
@@ -312,7 +347,7 @@ export class UIManager {
       descEl.className = 'card-desc';
       descEl.textContent = card.desc;
 
-      cardEl.append(costEl, titleEl, imgEl, descEl);
+      cardEl.append(costEl, titleEl, rarityEl, imgEl, descEl);
 
       if (this.state.hasRelic('smycz_zakopane') && player.hp > 0 && enemy.hp > 0) {
         const keepBtn = document.createElement('button');
@@ -469,13 +504,26 @@ export class UIManager {
     const relicScreen = document.getElementById('relic-reward-screen');
     const cardScreen = document.getElementById('card-reward-screen');
     const titleEl = relicScreen?.querySelector('.victory-title');
+    const glowWrap = relicScreen?.querySelector('.relic-glow-wrap');
     const rewardRelic = document.getElementById('reward-relic');
     const rewardRelicName = document.getElementById('reward-relic-name');
     const rewardRelicDesc = document.getElementById('reward-relic-desc');
     const claimBtn = document.getElementById('claim-relic-btn');
-    if (!relicScreen || !cardScreen || !titleEl || !rewardRelic || !rewardRelicName || !rewardRelicDesc || !claimBtn) {
+    if (
+      !relicScreen ||
+      !cardScreen ||
+      !titleEl ||
+      !glowWrap ||
+      !rewardRelic ||
+      !rewardRelicName ||
+      !rewardRelicDesc ||
+      !claimBtn
+    ) {
       return;
     }
+
+    glowWrap.classList.remove('rarity-common', 'rarity-uncommon', 'rarity-rare');
+    glowWrap.classList.add(this._rarityClass(relic.rarity));
 
     titleEl.textContent = source === 'treasure' ? 'Znalazłeś Skarb!' : 'Łup z wroga!';
     rewardRelic.textContent = relic.emoji;
@@ -522,11 +570,12 @@ export class UIManager {
       const card = cardLibrary[cardId];
       const cardEl = document.createElement('button');
       cardEl.type = 'button';
-      cardEl.className = 'reward-card';
+      cardEl.className = `reward-card ${this._rarityClass(card.rarity)}`;
       cardEl.innerHTML = `
         <div class="reward-cost">${card.cost} Osc.</div>
         <div class="reward-emoji">${card.emoji}</div>
         <div class="reward-name">${card.name}</div>
+        <div class="reward-rarity">${this._rarityLabel(card.rarity, 'card')}</div>
         <div class="reward-desc">${card.desc}</div>
       `;
       if (card.exhaust) {
@@ -569,12 +618,7 @@ export class UIManager {
    * @returns {string[]}
    */
   _pickRewardCards(count) {
-    const pool = Object.keys(cardLibrary).filter((id) => !cardLibrary[id]?.isStarter);
-    for (let i = pool.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [pool[i], pool[j]] = [pool[j], pool[i]];
-    }
-    return pool.slice(0, count);
+    return this.state.generateCardRewardChoices(count);
   }
 
   /**
@@ -818,7 +862,7 @@ export class UIManager {
       if (!card) return;
 
       const cardBox = document.createElement('div');
-      cardBox.className = 'shop-item';
+      cardBox.className = `shop-item ${this._rarityClass(card.rarity)}`;
       if (card.exhaust) {
         cardBox.classList.add('card-exhaust');
         cardBox.appendChild(this._createExhaustBadge());
@@ -833,6 +877,10 @@ export class UIManager {
       const desc = document.createElement('div');
       desc.className = 'shop-item-desc';
       desc.textContent = card.desc;
+
+      const rarity = document.createElement('div');
+      rarity.className = 'shop-item-rarity';
+      rarity.textContent = this._rarityLabel(card.rarity, 'card');
 
       const price = document.createElement('div');
       price.className = 'shop-item-price';
@@ -852,7 +900,7 @@ export class UIManager {
         this.updateUI();
       });
 
-      cardBox.append(title, desc, price, btn);
+      cardBox.append(title, rarity, desc, price, btn);
       cardContainer.appendChild(cardBox);
     });
 
@@ -861,7 +909,7 @@ export class UIManager {
       const relic = relicLibrary[this.state.shopStock.relic];
       if (relic) {
         const relicBox = document.createElement('div');
-        relicBox.className = 'shop-item';
+        relicBox.className = `shop-item ${this._rarityClass(relic.rarity)}`;
 
         const title = document.createElement('div');
         title.className = 'shop-item-title';
@@ -872,6 +920,10 @@ export class UIManager {
         const desc = document.createElement('div');
         desc.className = 'shop-item-desc';
         desc.textContent = relic.desc;
+
+        const rarity = document.createElement('div');
+        rarity.className = 'shop-item-rarity';
+        rarity.textContent = this._rarityLabel(relic.rarity, 'relic');
 
         const price = document.createElement('div');
         price.className = 'shop-item-price';
@@ -891,7 +943,7 @@ export class UIManager {
           this.updateUI();
         });
 
-        relicBox.append(title, desc, price, btn);
+        relicBox.append(title, rarity, desc, price, btn);
         relicContainer.appendChild(relicBox);
       }
     }
@@ -985,6 +1037,105 @@ export class UIManager {
     document.getElementById('camp-upgrade-btn').disabled = options.length === 0;
   }
 
+  _openLibraryOverlay() {
+    this.libraryTab = 'cards';
+    this.libraryRarityFilter = 'all';
+    this._renderLibrary();
+    const overlay = document.getElementById('library-overlay');
+    overlay.classList.remove('hidden');
+    overlay.setAttribute('aria-hidden', 'false');
+  }
+
+  _closeLibraryOverlay() {
+    this._hideOverlay('library-overlay');
+    this._syncScreenState();
+  }
+
+  /**
+   * @param {'cards' | 'relics'} tab
+   */
+  _setLibraryTab(tab) {
+    this.libraryTab = tab;
+    this._renderLibrary();
+  }
+
+  /**
+   * @param {'all' | 'common' | 'uncommon' | 'rare'} rarity
+   */
+  _setLibraryFilter(rarity) {
+    this.libraryRarityFilter = rarity;
+    this._renderLibrary();
+  }
+
+  _renderLibrary() {
+    const grid = document.getElementById('library-grid');
+    const cardsTabBtn = document.getElementById('library-tab-cards');
+    const relicsTabBtn = document.getElementById('library-tab-relics');
+    if (!grid || !cardsTabBtn || !relicsTabBtn) return;
+
+    cardsTabBtn.classList.toggle('is-active', this.libraryTab === 'cards');
+    cardsTabBtn.setAttribute('aria-selected', String(this.libraryTab === 'cards'));
+    relicsTabBtn.classList.toggle('is-active', this.libraryTab === 'relics');
+    relicsTabBtn.setAttribute('aria-selected', String(this.libraryTab === 'relics'));
+
+    document.querySelectorAll('.library-filter').forEach((btn) => {
+      if (!(btn instanceof HTMLButtonElement)) return;
+      const isActive = btn.dataset.rarity === this.libraryRarityFilter;
+      btn.classList.toggle('is-active', isActive);
+      btn.setAttribute('aria-pressed', String(isActive));
+    });
+
+    grid.innerHTML = '';
+    const entries =
+      this.libraryTab === 'cards'
+        ? Object.values(cardLibrary)
+            .filter((card) =>
+              this.libraryRarityFilter === 'all' ? true : card.rarity === this.libraryRarityFilter
+            )
+            .sort((a, b) => a.cost - b.cost || a.name.localeCompare(b.name, 'pl'))
+        : Object.values(relicLibrary)
+            .filter((relic) =>
+              this.libraryRarityFilter === 'all'
+                ? true
+                : relic.rarity === this.libraryRarityFilter
+            )
+            .sort((a, b) => a.name.localeCompare(b.name, 'pl'));
+
+    entries.forEach((item) => {
+      const card = document.createElement('article');
+      card.className = `library-item ${this._rarityClass(item.rarity)}`;
+
+      const title = document.createElement('h3');
+      title.className = 'library-item-title';
+      title.textContent = `${item.emoji} ${item.name}`;
+
+      const rarity = document.createElement('p');
+      rarity.className = 'library-item-rarity';
+      rarity.textContent = this._rarityLabel(item.rarity, this.libraryTab === 'cards' ? 'card' : 'relic');
+
+      const desc = document.createElement('p');
+      desc.className = 'library-item-desc';
+      desc.textContent = item.desc;
+
+      card.append(title, rarity, desc);
+
+      if (this.libraryTab === 'cards') {
+        const cardDef = /** @type {import('../data/cards.js').CardDef} */ (item);
+        const cost = document.createElement('span');
+        cost.className = 'library-item-cost';
+        cost.textContent = `${cardDef.cost} Osc.`;
+        card.prepend(cost);
+
+        if (cardDef.exhaust) {
+          card.classList.add('card-exhaust');
+          card.appendChild(this._createExhaustBadge());
+        }
+      }
+
+      grid.appendChild(card);
+    });
+  }
+
   _closeCampfire() {
     this._hideOverlay('campfire-overlay');
     this._openMapOverlay();
@@ -1016,6 +1167,28 @@ export class UIManager {
     const overlay = document.getElementById(overlayId);
     overlay.classList.add('hidden');
     overlay.setAttribute('aria-hidden', 'true');
+  }
+
+  /**
+   * @param {'common' | 'uncommon' | 'rare' | undefined} rarity
+   * @returns {string}
+   */
+  _rarityClass(rarity) {
+    return `rarity-${rarity ?? 'common'}`;
+  }
+
+  /**
+   * @param {'common' | 'uncommon' | 'rare' | undefined} rarity
+   * @param {'card' | 'relic'} type
+   * @returns {string}
+   */
+  _rarityLabel(rarity, type) {
+    const labels = {
+      common: type === 'card' ? 'Powszechna karta' : 'Powszechna pamiątka',
+      uncommon: type === 'card' ? 'Niepowszechna karta' : 'Niepowszechna pamiątka',
+      rare: type === 'card' ? 'Rzadka karta' : 'Rzadka pamiątka',
+    };
+    return labels[rarity ?? 'common'];
   }
 
   _closeStatusTooltips() {

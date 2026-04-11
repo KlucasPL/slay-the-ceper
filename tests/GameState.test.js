@@ -797,6 +797,12 @@ describe('GameState', () => {
       });
     });
 
+    it('all cards expose supported rarity values', () => {
+      Object.values(cardLibrary).forEach((card) => {
+        expect(['common', 'uncommon', 'rare']).toContain(card.rarity);
+      });
+    });
+
     it('shop stock excludes starter cards', () => {
       const s = freshState();
       const stock = s.generateShopStock();
@@ -809,6 +815,26 @@ describe('GameState', () => {
       Object.values(relicLibrary).forEach((relic) => {
         expect(typeof relic.price).toBe('number');
         expect(relic.price).toBeGreaterThan(0);
+      });
+    });
+
+    it('all relics expose supported rarity values', () => {
+      Object.values(relicLibrary).forEach((relic) => {
+        expect(['common', 'uncommon', 'rare']).toContain(relic.rarity);
+      });
+    });
+
+    it('relic prices stay within rarity price bands', () => {
+      const ranges = {
+        common: { min: 80, max: 120 },
+        uncommon: { min: 150, max: 200 },
+        rare: { min: 250, max: 350 },
+      };
+
+      Object.values(relicLibrary).forEach((relic) => {
+        const range = ranges[relic.rarity];
+        expect(relic.price).toBeGreaterThanOrEqual(range.min);
+        expect(relic.price).toBeLessThanOrEqual(range.max);
       });
     });
 
@@ -864,22 +890,20 @@ describe('GameState', () => {
       expect(s.hardFirstShopRolled).toBe(true);
     });
 
-    it('keeps papryczka_marka at 5% acceptance in normal reward rolls', () => {
+    it('getRandomItem rolls rarity first, then item from that rarity', () => {
       const s = freshState();
-      s.difficulty = 'normal';
-      s.relics = Object.keys(relicLibrary).filter((id) => id !== 'papryczka_marka');
+      const pool = ['ciupaga', 'echo', 'giewont'];
 
-      vi
-        .spyOn(Math, 'random')
-        .mockReturnValueOnce(0)
+      vi.spyOn(Math, 'random')
         .mockReturnValueOnce(0.99)
         .mockReturnValueOnce(0)
-        .mockReturnValueOnce(0.01);
-      const rejected = s.generateRelicReward();
-      expect(rejected).toBeNull();
+        .mockReturnValueOnce(0.2)
+        .mockReturnValueOnce(0);
+      const pickedRare = s.getRandomItem(pool, cardLibrary);
+      expect(pickedRare).toBe('giewont');
 
-      const accepted = s.generateRelicReward();
-      expect(accepted).toBe('papryczka_marka');
+      const pickedCommon = s.getRandomItem(pool, cardLibrary);
+      expect(pickedCommon).toBe('ciupaga');
     });
 
     it('removeCardFromDeck permanently removes selected card copy', () => {

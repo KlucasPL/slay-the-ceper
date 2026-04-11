@@ -14,6 +14,12 @@ body {
   overflow: hidden;
 }
 
+:root {
+  --rarity-common: #a9a9a9;
+  --rarity-uncommon: #2e8b57;
+  --rarity-rare: #1e90ff;
+}
+
 .mute-btn {
   position: fixed;
   top: 14px;
@@ -170,6 +176,26 @@ body {
     0 10px 26px rgba(0, 0, 0, 0.4);
 }
 
+.title-start-btn--library {
+  border-color: #b78f5a;
+  color: #ffe8b7;
+  background:
+    linear-gradient(180deg, rgba(112, 78, 43, 0.96), rgba(84, 56, 30, 0.98)),
+    repeating-linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.06) 0 8px,
+      rgba(0, 0, 0, 0.06) 8px 16px
+    );
+}
+
+.title-start-btn--library:hover,
+.title-start-btn--library:focus-visible {
+  box-shadow:
+    0 0 0 2px rgba(73, 42, 18, 0.7) inset,
+    0 0 18px rgba(216, 184, 124, 0.32),
+    0 10px 26px rgba(0, 0, 0, 0.4);
+}
+
 .title-btn-row {
   display: flex;
   justify-content: center;
@@ -264,7 +290,7 @@ h1 {
   font-size: 1rem;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.35);
+  border: 3px solid var(--rarity-border-color, var(--rarity-common));
   cursor: help;
   position: relative;
   padding: 0;
@@ -442,7 +468,7 @@ h1 {
   width: 160px;
   height: 230px;
   border-radius: 10px;
-  border: 3px solid #555;
+  border: 3px solid var(--rarity-border-color, var(--rarity-common));
   padding: 10px;
   display: flex;
   flex-direction: column;
@@ -456,7 +482,7 @@ h1 {
 }
 .card:hover {
   transform: translateY(-20px);
-  border-color: #e6b800;
+  border-color: var(--rarity-border-color, var(--rarity-common));
 }
 .card.disabled {
   opacity: 0.5;
@@ -464,7 +490,23 @@ h1 {
 }
 .card.disabled:hover {
   transform: none;
-  border-color: #555;
+  border-color: var(--rarity-border-color, var(--rarity-common));
+}
+
+.card-rarity,
+.reward-rarity,
+.shop-item-rarity {
+  text-align: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #6f5a43;
+  opacity: 0.95;
+}
+
+.card-rarity {
+  margin-top: 4px;
 }
 
 .card-cost {
@@ -510,16 +552,6 @@ h1 {
   background: rgba(0, 0, 0, 0.1);
   padding: 5px;
   border-radius: 5px;
-}
-
-.card.card-exhaust,
-.reward-card.card-exhaust,
-.shop-item.card-exhaust {
-  border-color: #c73a27;
-  box-shadow:
-    0 10px 22px rgba(0, 0, 0, 0.4),
-    0 0 0 2px rgba(199, 58, 39, 0.28) inset;
-  background-image: linear-gradient(160deg, rgba(199, 58, 39, 0.18), rgba(0, 0, 0, 0));
 }
 
 .card-exhaust-badge {
@@ -707,6 +739,8 @@ h1 {
   position: relative;
   width: 130px;
   height: 130px;
+  border: 3px solid var(--rarity-border-color, var(--rarity-common));
+  border-radius: 50%;
   display: grid;
   place-items: center;
   margin: 6px 0;
@@ -809,6 +843,119 @@ h1 {
   box-shadow:
     0 0 0 4px #3a210f,
     0 12px 40px rgba(0, 0, 0, 0.65);
+}
+
+.library-panel {
+  width: min(1080px, 96vw);
+  max-height: 95vh;
+  background:
+    radial-gradient(circle at 78% 16%, rgba(255, 235, 178, 0.14), transparent 34%),
+    radial-gradient(circle at 16% 82%, rgba(101, 68, 40, 0.25), transparent 38%),
+    repeating-linear-gradient(
+      45deg,
+      rgba(90, 61, 35, 0.1) 0 10px,
+      rgba(46, 29, 16, 0.08) 10px 20px
+    ),
+    linear-gradient(180deg, #7f5732 0%, #5f3f24 54%, #4a2f1c 100%);
+  border-color: #8d6339;
+}
+
+#library-overlay {
+  z-index: 3500;
+}
+
+.library-subtitle {
+  margin: -6px 0 14px;
+  text-align: center;
+  color: #f2dfb9;
+}
+
+.library-toolbar {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.library-tabs,
+.library-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+.library-tab,
+.library-filter {
+  border: 2px solid #b58a54;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #f3e0bf 0%, #e3cda7 100%);
+  color: #3f2917;
+  font-weight: 700;
+  padding: 7px 14px;
+  cursor: pointer;
+}
+
+.library-tab.is-active,
+.library-filter.is-active {
+  border-color: #f7d98b;
+  box-shadow:
+    0 0 0 2px rgba(247, 217, 139, 0.2) inset,
+    0 3px 10px rgba(0, 0, 0, 0.28);
+}
+
+.library-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  max-height: 58vh;
+  overflow: auto;
+  padding: 4px 2px 8px;
+}
+
+.library-item {
+  background: rgba(243, 226, 192, 0.94);
+  color: #2e1f14;
+  border: 3px solid var(--rarity-border-color, var(--rarity-common));
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.3);
+  position: relative;
+}
+
+.library-item-title {
+  margin: 0 0 6px;
+  font-size: 1.02rem;
+}
+
+.library-item-rarity {
+  margin: 0 0 8px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #6f5a43;
+}
+
+.library-item-desc {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.library-item-cost {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: #f4c26a;
+  color: #3f2b19;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 3px 9px;
+}
+
+.library-back-btn {
+  display: block;
+  margin: 16px auto 0;
 }
 
 .event-title {
@@ -985,7 +1132,7 @@ h1 {
 
 .shop-item {
   background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 3px solid var(--rarity-border-color, var(--rarity-common));
   border-radius: 10px;
   padding: 10px;
   display: flex;
@@ -1046,7 +1193,7 @@ h1 {
 .reward-card {
   background: #f4e8d2;
   color: #2c1e16;
-  border: 3px solid #9f7838;
+  border: 3px solid var(--rarity-border-color, var(--rarity-common));
   border-radius: 12px;
   padding: 12px;
   min-height: 220px;
@@ -1065,9 +1212,31 @@ h1 {
 }
 
 .reward-card:hover {
-  border-color: #ffd45e;
+  border-color: var(--rarity-border-color, var(--rarity-common));
   box-shadow: 0 16px 30px rgba(0, 0, 0, 0.45);
   animation: reward-float 1.8s ease-in-out infinite;
+}
+
+.rarity-common {
+  --rarity-border-color: var(--rarity-common);
+}
+
+.rarity-uncommon {
+  --rarity-border-color: var(--rarity-uncommon);
+}
+
+.rarity-rare {
+  --rarity-border-color: var(--rarity-rare);
+}
+
+.reward-card.rarity-rare,
+.shop-item.rarity-rare,
+.relic-glow-wrap.rarity-rare,
+.relic-chip.rarity-rare,
+.library-item.rarity-rare {
+  box-shadow:
+    0 0 0 1px rgba(30, 144, 255, 0.35) inset,
+    0 0 14px rgba(30, 144, 255, 0.36);
 }
 
 .reward-cost {

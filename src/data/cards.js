@@ -1,7 +1,8 @@
 /**
  * @typedef {{ strength: number, weak: number, fragile: number, next_double: boolean, energy_next_turn: number }} StatusDef
  * @typedef {{ playerAnim?: string, enemyAnim?: string, damage?: { raw: number, blocked: number, dealt: number } }} CardEffectResult
- * @typedef {{ id: string, name: string, type: 'attack' | 'skill', cost: number, price: number, emoji: string, desc: string, isStarter?: boolean, exhaust?: boolean, effect: (state: import('../state/GameState.js').GameState) => CardEffectResult }} CardDef
+ * @typedef {'common' | 'uncommon' | 'rare'} RarityDef
+ * @typedef {{ id: string, name: string, type: 'attack' | 'skill', cost: number, price: number, rarity: RarityDef, emoji: string, desc: string, isStarter?: boolean, exhaust?: boolean, effect: (state: import('../state/GameState.js').GameState) => CardEffectResult }} CardDef
  */
 
 /** @type {Record<string, CardDef>} */
@@ -10,6 +11,7 @@ export const cardLibrary = {
     id: 'ciupaga',
     name: 'Cios ciupagą',
     type: 'attack',
+    rarity: 'common',
     cost: 1,
     price: 40,
     isStarter: true,
@@ -29,6 +31,7 @@ export const cardLibrary = {
     id: 'gasior',
     name: 'Łyk z Gąsiora',
     type: 'skill',
+    rarity: 'common',
     cost: 1,
     price: 35,
     isStarter: true,
@@ -43,6 +46,7 @@ export const cardLibrary = {
     id: 'kierpce',
     name: 'Rzut kierpcem',
     type: 'attack',
+    rarity: 'common',
     cost: 2,
     price: 70,
     emoji: '👞',
@@ -61,6 +65,7 @@ export const cardLibrary = {
     id: 'hej',
     name: 'Góralskie Hej!',
     type: 'skill',
+    rarity: 'uncommon',
     cost: 0,
     price: 60,
     isStarter: true,
@@ -79,6 +84,7 @@ export const cardLibrary = {
     id: 'sernik',
     name: 'Sernik',
     type: 'skill',
+    rarity: 'common',
     cost: 0,
     price: 50,
     emoji: '🍰',
@@ -93,6 +99,7 @@ export const cardLibrary = {
     id: 'redyk',
     name: 'Redyk',
     type: 'attack',
+    rarity: 'uncommon',
     cost: 1,
     price: 80,
     emoji: '🐑',
@@ -119,6 +126,7 @@ export const cardLibrary = {
     id: 'halny',
     name: 'Halny',
     type: 'skill',
+    rarity: 'uncommon',
     cost: 2,
     price: 90,
     emoji: '🌬️',
@@ -134,6 +142,7 @@ export const cardLibrary = {
     id: 'parzenica',
     name: 'Parzenica',
     type: 'skill',
+    rarity: 'uncommon',
     cost: 1,
     price: 85,
     emoji: '🧶',
@@ -148,6 +157,7 @@ export const cardLibrary = {
     id: 'zadyma',
     name: 'Zadyma',
     type: 'attack',
+    rarity: 'common',
     cost: 1,
     price: 75,
     emoji: '💥',
@@ -168,6 +178,7 @@ export const cardLibrary = {
     id: 'zyntyca',
     name: 'Żyntyca',
     type: 'skill',
+    rarity: 'common',
     cost: 1,
     price: 65,
     emoji: '🥛',
@@ -182,6 +193,7 @@ export const cardLibrary = {
     id: 'janosik',
     name: 'Janosikowe',
     type: 'attack',
+    rarity: 'rare',
     cost: 1,
     price: 95,
     emoji: '🗡️',
@@ -202,6 +214,7 @@ export const cardLibrary = {
     id: 'echo',
     name: 'Echo w Tatrach',
     type: 'skill',
+    rarity: 'uncommon',
     cost: 2,
     price: 100,
     emoji: '🔊',
@@ -217,6 +230,7 @@ export const cardLibrary = {
     id: 'sandaly',
     name: 'Sandały',
     type: 'attack',
+    rarity: 'uncommon',
     cost: 1,
     price: 70,
     emoji: '👡',
@@ -236,6 +250,7 @@ export const cardLibrary = {
     id: 'giewont',
     name: 'Gniew Giewontu',
     type: 'attack',
+    rarity: 'rare',
     cost: 3,
     price: 120,
     emoji: '⛰️',
@@ -266,3 +281,13 @@ export const startingDeck = [
   'kierpce',
   'hej',
 ];
+
+/**
+ * Adds or updates a card in the runtime card library.
+ * @param {CardDef} card
+ * @returns {CardDef}
+ */
+export function addCardToLibrary(card) {
+  cardLibrary[card.id] = card;
+  return cardLibrary[card.id];
+}

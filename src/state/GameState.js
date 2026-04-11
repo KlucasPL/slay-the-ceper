@@ -2,6 +2,12 @@ import { cardLibrary } from '../data/cards.js';
 import { enemyLibrary } from '../data/enemies.js';
 import { relicLibrary } from '../data/relics.js';
 
+const RARITY_WEIGHTS = {
+  common: 0.7,
+  uncommon: 0.25,
+  rare: 0.05,
+};
+
 /**
  * @typedef {import('../data/cards.js').StatusDef} StatusDef
  * @typedef {{ name: string, hp: number, maxHp: number, block: number, energy: number, maxEnergy: number, status: StatusDef }} PlayerState
@@ -521,7 +527,7 @@ export class GameState {
   grantTreasureRelic() {
     const pool = this._buildAvailableRelicPool();
     if (pool.length === 0) return null;
-    const relicId = this._pickRelicFromPool(pool);
+    const relicId = this.getRandomItem(pool, relicLibrary);
     if (!relicId) return null;
     this._markRelicAsSeen(relicId);
     this.addRelic(relicId);
@@ -538,10 +544,19 @@ export class GameState {
 
     const pool = this._buildAvailableRelicPool();
     if (pool.length === 0) return null;
-    const relicId = this._pickRelicFromPool(pool);
+    const relicId = this.getRandomItem(pool, relicLibrary);
     if (!relicId) return null;
     this._markRelicAsSeen(relicId);
     return relicId;
+  }
+
+  /**
+   * @param {number} count
+   * @returns {string[]}
+   */
+  generateCardRewardChoices(count) {
+    const pool = Object.keys(cardLibrary).filter((id) => !cardLibrary[id]?.isStarter);
+    return this._pickUniqueItems(pool, cardLibrary, count);
   }
 
   /**
@@ -564,27 +579,63 @@ export class GameState {
 
   /**
    * @param {string[]} pool
+   * @param {Record<string, { rarity?: 'common' | 'uncommon' | 'rare' }>} library
    * @returns {string | null}
    */
-  _pickRelicFromPool(pool) {
+  getRandomItem(pool, library) {
     if (!pool || pool.length === 0) return null;
-    const shuffled = [...pool];
-    this._shuffle(shuffled);
 
-    const picked = shuffled[0];
-    if (picked !== 'papryczka_marka' || this.difficulty !== 'normal') {
-      return picked;
+    const byRarity = {
+      common: [],
+      uncommon: [],
+      rare: [],
+    };
+
+    pool.forEach((id) => {
+      const rarity = library[id]?.rarity ?? 'common';
+      byRarity[rarity].push(id);
+    });
+
+    const rarityPool = /** @type {Array<'common' | 'uncommon' | 'rare'>} */ (
+      Object.keys(byRarity).filter((rarity) => byRarity[rarity].length > 0)
+    );
+    if (rarityPool.length === 0) return null;
+
+    const weightSum = rarityPool.reduce((sum, rarity) => sum + RARITY_WEIGHTS[rarity], 0);
+    let roll = Math.random() * weightSum;
+
+    let selectedRarity = rarityPool[rarityPool.length - 1];
+    for (const rarity of rarityPool) {
+      roll -= RARITY_WEIGHTS[rarity];
+      if (roll < 0) {
+        selectedRarity = rarity;
+        break;
+      }
     }
 
-    if (Math.random() <= 0.05) {
-      return picked;
+    const rarityItems = byRarity[selectedRarity];
+    return rarityItems[Math.floor(Math.random() * rarityItems.length)] ?? null;
+  }
+
+  /**
+   * @param {string[]} pool
+   * @param {Record<string, { rarity?: 'common' | 'uncommon' | 'rare' }>} library
+   * @param {number} count
+   * @returns {string[]}
+   */
+  _pickUniqueItems(pool, library, count) {
+    const remaining = [...pool];
+    const picks = [];
+
+    while (remaining.length > 0 && picks.length < count) {
+      const id = this.getRandomItem(remaining, library);
+      if (!id) break;
+      picks.push(id);
+      const idx = remaining.indexOf(id);
+      if (idx >= 0) remaining.splice(idx, 1);
     }
 
-    const withoutPapryczka = shuffled.filter((id) => id !== 'papryczka_marka');
-    if (withoutPapryczka.length === 0) {
-      return null;
-    }
-    return withoutPapryczka[0];
+    return picks;
   }
 
   /**
@@ -610,10 +661,6 @@ export class GameState {
    */
   generateShopStock() {
     const cardPool = Object.keys(cardLibrary).filter((id) => !cardLibrary[id]?.isStarter);
-    for (let i = cardPool.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [cardPool[i], cardPool[j]] = [cardPool[j], cardPool[i]];
-    }
 
     const relicPool = this._buildAvailableRelicPool();
     let relicId = null;
@@ -627,7 +674,7 @@ export class GameState {
     }
 
     if (!relicId) {
-      relicId = this._pickRelicFromPool(relicPool);
+      relicId = this.getRandomItem(relicPool, relicLibrary);
     }
 
     if (relicId) {
@@ -635,7 +682,7 @@ export class GameState {
     }
 
     this.shopStock = {
-      cards: cardPool.slice(0, 3),
+      cards: this._pickUniqueItems(cardPool, cardLibrary, 3),
       relic: relicId,
     };
     this.lastShopMessage = '';
