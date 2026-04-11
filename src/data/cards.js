@@ -148,6 +148,7 @@ export const cardLibrary = {
     price: 55,
     emoji: '🧾',
     desc: 'Dodaj 10 do Rachunku wroga.',
+    exhaust: true,
     effect(state) {
       state.addEnemyRachunek(10);
       return { playerAnim: 'anim-block' };

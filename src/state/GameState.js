@@ -10,6 +10,12 @@ const RARITY_WEIGHTS = {
   rare: 0.05,
 };
 
+const CARD_REWARD_RARITY_WEIGHTS = {
+  common: 0.6,
+  uncommon: 0.25,
+  rare: 0.15,
+};
+
 /**
  * @typedef {import('../data/cards.js').StatusDef} StatusDef
  * @typedef {{ name: string, hp: number, maxHp: number, block: number, energy: number, maxEnergy: number, status: StatusDef, hasLans: boolean, stunned: boolean, cardsPlayedThisTurn: number }} PlayerState
@@ -747,7 +753,7 @@ export class GameState {
    */
   generateCardRewardChoices(count) {
     const pool = Object.keys(cardLibrary).filter((id) => !cardLibrary[id]?.isStarter);
-    return this._pickUniqueItems(pool, cardLibrary, count);
+    return this._pickUniqueItems(pool, cardLibrary, count, CARD_REWARD_RARITY_WEIGHTS);
   }
 
   /**
@@ -771,9 +777,10 @@ export class GameState {
   /**
    * @param {string[]} pool
    * @param {Record<string, { rarity?: 'common' | 'uncommon' | 'rare' }>} library
+   * @param {{ common: number, uncommon: number, rare: number }} [rarityWeights]
    * @returns {string | null}
    */
-  getRandomItem(pool, library) {
+  getRandomItem(pool, library, rarityWeights = RARITY_WEIGHTS) {
     if (!pool || pool.length === 0) return null;
 
     const byRarity = {
@@ -792,12 +799,12 @@ export class GameState {
     );
     if (rarityPool.length === 0) return null;
 
-    const weightSum = rarityPool.reduce((sum, rarity) => sum + RARITY_WEIGHTS[rarity], 0);
+    const weightSum = rarityPool.reduce((sum, rarity) => sum + rarityWeights[rarity], 0);
     let roll = Math.random() * weightSum;
 
     let selectedRarity = rarityPool[rarityPool.length - 1];
     for (const rarity of rarityPool) {
-      roll -= RARITY_WEIGHTS[rarity];
+      roll -= rarityWeights[rarity];
       if (roll < 0) {
         selectedRarity = rarity;
         break;
@@ -812,14 +819,15 @@ export class GameState {
    * @param {string[]} pool
    * @param {Record<string, { rarity?: 'common' | 'uncommon' | 'rare' }>} library
    * @param {number} count
+   * @param {{ common: number, uncommon: number, rare: number }} [rarityWeights]
    * @returns {string[]}
    */
-  _pickUniqueItems(pool, library, count) {
+  _pickUniqueItems(pool, library, count, rarityWeights = RARITY_WEIGHTS) {
     const remaining = [...pool];
     const picks = [];
 
     while (remaining.length > 0 && picks.length < count) {
-      const id = this.getRandomItem(remaining, library);
+      const id = this.getRandomItem(remaining, library, rarityWeights);
       if (!id) break;
       picks.push(id);
       const idx = remaining.indexOf(id);
@@ -1089,7 +1097,7 @@ export class GameState {
           return { ...move, damage: Math.round(move.damage * scale) };
         })
       : [];
-    const bossBaseHp = this.difficulty === 'hard' ? 350 : 250;
+    const bossBaseHp = this.difficulty === 'hard' ? 330 : 230;
     const baseMaxHp = isMainBoss ? bossBaseHp : enemyDef.maxHp;
     const dzwonekMod = this.hasRelic('dzwonek_owcy') ? 0.8 : 1.0;
     const maxHp = Math.round(baseMaxHp * scale * dzwonekMod);
@@ -1112,7 +1120,7 @@ export class GameState {
       patternIndex: 0,
       currentIntent: { type: 'attack', name: 'Atak', damage: 0, hits: 1 },
       tookHpDamageThisTurn: false,
-      bossArtifact: isMainBoss ? 3 : 0,
+      bossArtifact: isMainBoss ? 2 : 0,
       passive: enemyDef.passive ?? null,
     };
     enemyState.currentIntent = this._buildEnemyIntent(enemyState);
@@ -1607,7 +1615,7 @@ export class GameState {
 
     // Fiakier: add 2 Rachunek to itself at the start of each player turn
     if (this.enemy.passive === 'rachunek_za_kurs') {
-      this.addEnemyRachunek(2);
+      this.addEnemyRachunek(1);
     }
 
     this._applyHalnyBlockDrain(this.player);

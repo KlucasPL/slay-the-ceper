@@ -368,6 +368,13 @@ describe('GameState', () => {
       s.playCard(0);
       expect(s.enemy.rachunek).toBe(10);
     });
+    it('exhausts after use', () => {
+      const s = freshState();
+      s.hand = ['paragon_za_gofra'];
+      s.playCard(0);
+      expect(s.exhaust).toContain('paragon_za_gofra');
+      expect(s.discard).not.toContain('paragon_za_gofra');
+    });
 
     it('can bankrupt enemy when rachunek reaches current hp', () => {
       const s = freshState();
@@ -1153,6 +1160,15 @@ describe('GameState', () => {
       expect(pickedCommon).toBe('ciupaga');
     });
 
+    it('generateCardRewardChoices boosts rare card odds in post-battle rewards', () => {
+      const s = freshState();
+
+      vi.spyOn(Math, 'random').mockReturnValueOnce(0.88).mockReturnValueOnce(0);
+
+      const [pickedCardId] = s.generateCardRewardChoices(1);
+      expect(cardLibrary[pickedCardId]?.rarity).toBe('rare');
+    });
+
     it('removeCardFromDeck permanently removes selected card copy', () => {
       const s = freshState();
       s.deck = ['ciupaga', 'gasior'];
@@ -1552,8 +1568,8 @@ describe('GameState', () => {
       s.resetBattle();
       expect(s.enemy.id).toBe('boss');
       expect(s.enemy.name).toBe('Król Krupówek - Biały Misiek (Zdzisiek)');
-      expect(s.enemy.maxHp).toBe(250);
-      expect(s.enemy.bossArtifact).toBe(3);
+      expect(s.enemy.maxHp).toBe(230);
+      expect(s.enemy.bossArtifact).toBe(2);
     });
 
     it('spawns Fiakier on boss node when fiakier variant is rolled', () => {
@@ -1569,7 +1585,7 @@ describe('GameState', () => {
       s.resetBattle();
       expect(s.enemy.id).toBe('fiakier');
       expect(s.enemy.name).toBe('Fiakier spod Krupówek');
-      expect(s.enemy.maxHp).toBe(280);
+      expect(s.enemy.maxHp).toBe(250);
       expect(s.enemy.bossArtifact).toBe(0);
     });
 
@@ -1613,7 +1629,7 @@ describe('GameState', () => {
       expect(s.enemy.baseAttack).toBe(Math.round(enemyLibrary.cepr.baseAttack * 1.21));
     });
 
-    it('boss has 350 HP on hard mode when boss variant is rolled', () => {
+    it('boss has 330 HP on hard mode when boss variant is rolled', () => {
       const s = freshState();
       s.difficulty = 'hard';
       s.map = [
@@ -1626,7 +1642,7 @@ describe('GameState', () => {
       vi.spyOn(Math, 'random').mockReturnValue(0);
       s.resetBattle();
       expect(s.enemy.id).toBe('boss');
-      expect(s.enemy.maxHp).toBe(350);
+      expect(s.enemy.maxHp).toBe(330);
     });
   });
 
@@ -1641,15 +1657,23 @@ describe('GameState', () => {
       return s;
     }
 
-    it('blocks first three debuffs with artifact', () => {
+    it('blocks first two debuffs with artifact', () => {
       const s = freshBossState();
-      s.applyEnemyDebuff('weak', 2);
       s.applyEnemyDebuff('weak', 2);
       s.applyEnemyDebuff('weak', 2);
       expect(s.enemy.status.weak).toBe(0);
       expect(s.enemy.bossArtifact).toBe(0);
       s.applyEnemyDebuff('weak', 2);
       expect(s.enemy.status.weak).toBe(2);
+    });
+
+    it('Agresywne pozowanie now deals 4x3', () => {
+      const s = freshBossState();
+      s.endTurn();
+      expect(s.enemy.currentIntent.type).toBe('attack');
+      expect(s.enemy.currentIntent.name).toBe('Agresywne pozowanie');
+      expect(s.enemy.currentIntent.damage).toBe(4);
+      expect(s.enemy.currentIntent.hits).toBe(3);
     });
 
     it('first intent is Górski Ryk (buff)', () => {
