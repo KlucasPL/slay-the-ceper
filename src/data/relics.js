@@ -36,7 +36,7 @@ export const relicLibrary = {
     id: 'krokus',
     name: 'Krokus pod Ochroną',
     emoji: '🌸',
-    desc: 'Na koniec tury: jeśli masz ≥5 Gardy – ulecz 2 HP.',
+    desc: 'Na koniec tury: jeśli masz >10 Gardy – ulecz 2 HP.',
     price: 150,
   },
   zepsuty_termometr: {

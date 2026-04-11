@@ -556,22 +556,22 @@ describe('GameState', () => {
       expect(s.hand.length).toBe(1);
     });
 
-    it('krokus heals 2 HP at end of turn when block >= 5', () => {
+    it('krokus heals 2 HP at end of turn when block > 10', () => {
       const s = freshState();
       s.addRelic('krokus');
       s.player.hp = 30;
-      s.player.block = 6;
+      s.player.block = 11;
       setEnemyIntent(s, { type: 'block', name: 'Obserwuje', block: 0 });
       const { playerPassiveHeal } = s.endTurn();
       expect(s.player.hp).toBe(32);
       expect(playerPassiveHeal).not.toBeNull();
     });
 
-    it('krokus does not heal when block < 5', () => {
+    it('krokus does not heal when block <= 10', () => {
       const s = freshState();
       s.addRelic('krokus');
       s.player.hp = 30;
-      s.player.block = 4;
+      s.player.block = 10;
       setEnemyIntent(s, { type: 'block', name: 'Obserwuje', block: 0 });
       const { playerPassiveHeal } = s.endTurn();
       expect(s.player.hp).toBe(30);

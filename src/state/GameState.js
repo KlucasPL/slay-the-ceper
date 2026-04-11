@@ -8,7 +8,7 @@ import { relicLibrary } from '../data/relics.js';
  * @typedef {import('../data/enemies.js').EnemyMoveDef} EnemyMoveDef
  * @typedef {'fight' | 'shop' | 'treasure' | 'campfire' | 'boss'} MapNodeType
  * @typedef {{ x: number, y: number, type: MapNodeType, label: string, emoji: string, connections: number[] }} MapNode
- * @typedef {{ id: string, name: string, emoji: string, hp: number, maxHp: number, block: number, nextAttack: number, baseAttack: number, status: StatusDef, spriteSvg: string, patternType: 'random'|'loop', pattern: EnemyMoveDef[], patternIndex: number, currentIntent: EnemyMoveDef, tookHpDamageThisTurn: boolean }} EnemyState
+ * @typedef {{ id: string, name: string, emoji: string, hp: number, maxHp: number, block: number, nextAttack: number, baseAttack: number, status: StatusDef, spriteSvg: string, patternType: 'random'|'loop', pattern: EnemyMoveDef[], patternIndex: number, currentIntent: EnemyMoveDef, tookHpDamageThisTurn: boolean, bossArtifact?: number }} EnemyState
  * @typedef {{ success: false } | { success: true, effect: import('../data/cards.js').CardEffectResult }} PlayCardResult
  * @typedef {{ enemyAttack: { raw: number, blocked: number, dealt: number }, enemyPassiveHeal: { amount: number, text: string } | null, playerPassiveHeal: { amount: number, text: string } | null }} EndTurnResult
  * @typedef {{ cards: string[], relic: string | null }} ShopStock
@@ -86,7 +86,8 @@ export class GameState {
     const generated = Array.from({ length: 10 }, () => Array(3).fill(null));
     generated[0][1] = this._createMapNode('fight', 1, 0);
 
-    for (let y = 1; y <= 7; y++) {
+    const lastMidLevel = generated.length - 3;
+    for (let y = 1; y <= lastMidLevel; y++) {
       for (let x = 0; x < 3; x++) {
         if (Math.random() < 0.7) {
           generated[y][x] = this._createMapNode(this._rollMidNodeType(), x, y);
@@ -98,8 +99,8 @@ export class GameState {
       }
     }
 
-    generated[8][1] = this._createMapNode('campfire', 1, 8);
-    generated[9][1] = this._createMapNode('boss', 1, 9);
+    generated[generated.length - 2][1] = this._createMapNode('campfire', 1, generated.length - 2);
+    generated[generated.length - 1][1] = this._createMapNode('boss', 1, generated.length - 1);
 
     this._seedRequiredPaths(generated);
     this._connectOptionalGridNodes(generated);
@@ -126,7 +127,7 @@ export class GameState {
       shop: { label: 'Kram', emoji: '🛖' },
       treasure: { label: 'Skarb', emoji: '🎁' },
       campfire: { label: 'Watra', emoji: '🔥' },
-      boss: { label: 'Harny', emoji: '💀' },
+      boss: { label: 'Boss', emoji: '👑' },
     };
     return { ...meta[type], x, y, type, connections: [] };
   }
@@ -394,7 +395,7 @@ export class GameState {
       shop: { label: 'Kram', emoji: '🛖' },
       treasure: { label: 'Skarb', emoji: '🎁' },
       campfire: { label: 'Watra', emoji: '🔥' },
-      boss: { label: 'Harny', emoji: '💀' },
+      boss: { label: 'Boss', emoji: '👑' },
     };
     node.type = type;
     node.label = meta[type].label;
@@ -638,6 +639,20 @@ export class GameState {
   }
 
   /**
+   * Applies negative status to enemy, consuming boss artifact charges first.
+   * @param {'weak' | 'fragile'} key
+   * @param {number} amount
+   */
+  applyEnemyDebuff(key, amount) {
+    if (amount <= 0) return;
+    if (this.enemy.id === 'boss' && (this.enemy.bossArtifact ?? 0) > 0) {
+      this.enemy.bossArtifact -= 1;
+      return;
+    }
+    this.enemy.status[key] += amount;
+  }
+
+  /**
    * @param {string} cardId
    * @param {number} amount
    */
@@ -733,28 +748,29 @@ export class GameState {
    * @param {import('../data/enemies.js').EnemyDef} enemyDef
    * @returns {EnemyState}
    */
-  _createEnemyState(enemyDef, isBoss = false) {
-    const scale = this.enemyScaleFactor;
+  _createEnemyState(enemyDef) {
+    const isFinalBoss = enemyDef.id === 'boss';
+    const scale = isFinalBoss ? 1 : this.enemyScaleFactor;
     const pattern = enemyDef.pattern
       ? enemyDef.pattern.map((move) => {
           if (move.type !== 'attack') return { ...move };
-          const bossBonus = isBoss ? 5 : 0;
-          return { ...move, damage: Math.round(move.damage * scale) + bossBonus };
+          return { ...move, damage: Math.round(move.damage * scale) };
         })
       : [];
-    const baseMaxHp = isBoss ? enemyDef.maxHp * 2 : enemyDef.maxHp;
+    const bossBaseHp = this.difficulty === 'hard' ? 350 : 250;
+    const baseMaxHp = isFinalBoss ? bossBaseHp : enemyDef.maxHp;
     const dzwonekMod = this.hasRelic('dzwonek_owcy') ? 0.8 : 1.0;
     const maxHp = Math.round(baseMaxHp * scale * dzwonekMod);
     /** @type {EnemyState} */
     const enemyState = {
       id: enemyDef.id,
-      name: isBoss ? `HARNY ${enemyDef.name}` : enemyDef.name,
+      name: enemyDef.name,
       emoji: enemyDef.emoji,
       hp: maxHp,
       maxHp,
       block: enemyDef.block,
       nextAttack: 0,
-      baseAttack: Math.round((enemyDef.baseAttack ?? 0) * scale) + (isBoss ? 5 : 0),
+      baseAttack: Math.round((enemyDef.baseAttack ?? 0) * scale),
       status: defaultStatus(),
       spriteSvg: enemyDef.spriteSvg,
       patternType: enemyDef.patternType,
@@ -762,6 +778,7 @@ export class GameState {
       patternIndex: 0,
       currentIntent: { type: 'attack', name: 'Atak', damage: 0, hits: 1 },
       tookHpDamageThisTurn: false,
+      bossArtifact: isFinalBoss ? 3 : 0,
     };
     enemyState.currentIntent = this._buildEnemyIntent(enemyState);
     enemyState.nextAttack =
@@ -771,7 +788,7 @@ export class GameState {
 
   /** @returns {import('../data/enemies.js').EnemyDef} */
   _pickRandomEnemyDef() {
-    const enemyIds = Object.keys(enemyLibrary);
+    const enemyIds = Object.keys(enemyLibrary).filter((id) => id !== 'boss');
     const enemyId = enemyIds[Math.floor(Math.random() * enemyIds.length)];
     return enemyLibrary[enemyId];
   }
@@ -832,6 +849,23 @@ export class GameState {
    * @returns {EnemyMoveDef}
    */
   _buildEnemyIntent(enemyState) {
+    if (enemyState.id === 'boss') {
+      const phase = this._getBossPhase(enemyState.hp);
+      if (phase === 1) {
+        return { type: 'attack', name: 'Podatek od zdjęcia', damage: 12, hits: 1 };
+      }
+      if (phase === 2) {
+        return {
+          type: 'attack',
+          name: 'Agresywny Marketing',
+          damage: 15,
+          hits: 1,
+          applyFragile: 2,
+        };
+      }
+      return { type: 'attack', name: 'Furia Zdziśka', damage: 10, hits: 2 };
+    }
+
     if (enemyState.patternType === 'loop') {
       const move = enemyState.pattern[enemyState.patternIndex % enemyState.pattern.length];
       return { ...move };
@@ -843,6 +877,23 @@ export class GameState {
       damage: this._rollEnemyAttack(enemyState),
       hits: 1,
     };
+  }
+
+  /**
+   * @param {number} currentHp
+   * @returns {1 | 2 | 3}
+   */
+  _getBossPhase(currentHp) {
+    if (currentHp > 150) return 1;
+    if (currentHp >= 80) return 2;
+    return 3;
+  }
+
+  /**
+   * @returns {number}
+   */
+  _bossFinancialMultiplier() {
+    return this.dutki > 200 ? 1.5 : 1;
   }
 
   /**
@@ -937,6 +988,10 @@ export class GameState {
    * @returns {{ raw: number, blocked: number, dealt: number }}
    */
   _applyEnemyIntent() {
+    if (this.enemy.id === 'boss') {
+      return this.executeBossTurn();
+    }
+
     const intent = this.enemy.currentIntent;
 
     if (intent.type === 'block') {
@@ -965,6 +1020,48 @@ export class GameState {
   }
 
   /**
+   * Executes Król Krupówek turn with phase-based logic.
+   * @returns {{ raw: number, blocked: number, dealt: number }}
+   */
+  executeBossTurn() {
+    const phase = this._getBossPhase(this.enemy.hp);
+    const intent = this._buildEnemyIntent(this.enemy);
+
+    let raw = 0;
+    let blocked = 0;
+    let dealt = 0;
+    const hits = intent.hits ?? 1;
+    const multiplier = this._bossFinancialMultiplier();
+
+    if (phase === 2 && intent.applyFragile) {
+      this.player.status.fragile += intent.applyFragile;
+    }
+
+    for (let hitIndex = 0; hitIndex < hits; hitIndex++) {
+      const baseHit = this.calculateDamage(intent.damage, this.enemy, this.player);
+      const hitDamage = Math.floor(baseHit * multiplier);
+      const result = this._applyDamageToPlayer(hitDamage);
+      raw += result.raw;
+      blocked += result.blocked;
+      dealt += result.dealt;
+
+      if (phase === 1) {
+        if (this.dutki > 0) {
+          this.dutki = Math.max(0, this.dutki - 15);
+        } else {
+          this.enemy.block += 5;
+        }
+      }
+    }
+
+    if (phase === 2) {
+      this.enemy.status.strength += 1;
+    }
+
+    return { raw, blocked, dealt };
+  }
+
+  /**
    * @returns {number}
    */
   getEnemyIntentDamage() {
@@ -972,7 +1069,10 @@ export class GameState {
     if (intent.type === 'block') return 0;
 
     const hits = intent.hits ?? 1;
-    const perHit = this.calculateDamage(intent.damage, this.enemy, this.player);
+    let perHit = this.calculateDamage(intent.damage, this.enemy, this.player);
+    if (this.enemy.id === 'boss') {
+      perHit = Math.floor(perHit * this._bossFinancialMultiplier());
+    }
     return Math.max(0, perHit * hits - this.player.block);
   }
 
@@ -998,15 +1098,30 @@ export class GameState {
    * @returns {Array<{ text: string, tooltip: string }>}
    */
   getEnemySpecialStatuses() {
-    if (this.enemy.id !== 'baba') return [];
+    if (this.enemy.id === 'baba') {
+      return [
+        {
+          text: '🧀 Świeży oscypek',
+          tooltip:
+            'Na końcu tury gracza Gaździna leczy 5 Krzepy, jeśli nie dostała obrażeń w tej turze.',
+        },
+      ];
+    }
 
-    return [
-      {
-        text: '🧀 Świeży oscypek',
-        tooltip:
-          'Na końcu tury gracza Gaździna leczy 5 Krzepy, jeśli nie dostała obrażeń w tej turze.',
-      },
-    ];
+    if (this.enemy.id === 'boss') {
+      return [
+        {
+          text: `🛡️ Artefakt: ${this.enemy.bossArtifact ?? 0}`,
+          tooltip: 'Blokuje pierwsze 3 negatywne statusy nałożone przez gracza.',
+        },
+        {
+          text: '💰 Motywacja Finansowa',
+          tooltip: 'Gdy masz ponad 200 dutków, ataki bossa zadają o 50% więcej obrażeń.',
+        },
+      ];
+    }
+
+    return [];
   }
 
   /**
@@ -1132,10 +1247,10 @@ export class GameState {
     // End of player turn.
     this._tickStatus(this.player.status);
 
-    // Krokus pod Ochroną: heal 2 HP if block >= 5 (before enemy attacks clear block)
+    // Krokus pod Ochroną: heal 2 HP if block > 10 (before enemy attacks clear block)
     /** @type {{ amount: number, text: string } | null} */
     let playerPassiveHeal = null;
-    if (this.hasRelic('krokus') && this.player.block >= 5) {
+    if (this.hasRelic('krokus') && this.player.block > 10) {
       const hpBefore = this.player.hp;
       this.healPlayer(2);
       const healed = this.player.hp - hpBefore;
@@ -1185,7 +1300,7 @@ export class GameState {
   /**
    * Resets combat after victory with fixed enemy stats from enemyLibrary.
    * - Keep player HP between battles (no auto-heal)
-   * - Boss node only: spawn HARNY enemy (HP x2, attacks +5)
+   * - Boss node: spawn final boss (Król Krupówek)
    * - Clear blocks and statuses
    * - Move hand/discard/exhaust back to deck and shuffle
    * - Start a fresh turn
@@ -1215,7 +1330,8 @@ export class GameState {
 
     const currentNode = this.getCurrentMapNode();
     const isBossNode = currentNode?.type === 'boss';
-    this.enemy = this._createEnemyState(this._pickRandomEnemyDef(), isBossNode);
+    const nextEnemy = isBossNode ? enemyLibrary.boss : this._pickRandomEnemyDef();
+    this.enemy = this._createEnemyState(nextEnemy);
     this.pendingBattleDutki = true;
 
     this.startTurn();
