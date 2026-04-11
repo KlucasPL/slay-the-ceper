@@ -207,8 +207,7 @@ export class UIManager {
     if (!endTurnBtn) return;
 
     const inBattle = this.state.currentScreen === 'battle';
-    const battleActive = this.state.player.hp > 0 && this.state.enemy.hp > 0;
-    endTurnBtn.disabled = this.isAnimating || !inBattle || !battleActive;
+    endTurnBtn.disabled = this.isAnimating || !inBattle;
   }
 
   /**
@@ -275,61 +274,68 @@ export class UIManager {
     if (!el) return;
     el.innerHTML = '';
 
-    const tooltipMap = {
-      strength: 'Każdy punkt Siły dodaje +1 do obrażeń ataków.',
-      weak: 'Słabość zmniejsza zadawane obrażenia o 25% i spada o 1 co turę.',
-      fragile: 'Kruchość to status czasowy: schodzi co turę i czeka na kolejne mechaniki.',
-      next_double: 'Następny cios zada podwójne obrażenia, a potem efekt zniknie.',
-      energy_next_turn: 'Na początku następnej tury dostaniesz dodatkowy Oscypek.',
+    /** @type {Record<string,{icon:string,label:string,tooltip:string}>} */
+    const defs = {
+      strength: { icon: '💢', label: 'Siła', tooltip: 'Każdy punkt Siły dodaje +1 do obrażeń ataków.' },
+      weak: { icon: '🤢', label: 'Słabość', tooltip: 'Zmniejsza zadawane obrażenia o 25% i spada o 1 co turę.' },
+      fragile: { icon: '🫧', label: 'Kruchość', tooltip: 'Status czasowy: schodzi o 1 co turę.' },
+      next_double: { icon: '✨', label: 'Podwójny cios', tooltip: 'Następny cios zada podwójne obrażenia, a potem efekt zniknie.' },
+      energy_next_turn: { icon: '⚡', label: 'Bonus Oscypek', tooltip: 'Na początku następnej tury dostaniesz dodatkowy Oscypek.' },
+      lans: { icon: '🕶️', label: 'Lans', tooltip: 'Gdy zabraknie Gardy, obrażenia są opłacane dudkami (1 dmg = 2 dutki), aż do rozbicia lansu.' },
+      stunned: { icon: '😵', label: 'Ogłuszony', tooltip: 'Nie możesz zagrywać kart w tej turze po rozbiciu lansu.' },
     };
 
-    /** @param {number} turns */
-    const turnLabel = (turns) => (turns === 1 ? 'tura' : 'tury');
-
     /**
-     * @param {string} text
-     * @param {string} [tooltip]
+     * @param {string} icon
+     * @param {string} label
+     * @param {string|number|null} value
+     * @param {string} tooltip
      */
-    const tag = (text, tooltip) => {
-      const element = tooltip ? document.createElement('button') : document.createElement('span');
-      element.className = 'status-tag';
-      element.textContent = text;
-      if (tooltip) {
-        element.classList.add('status-tag-hint');
-        element.type = 'button';
-        element.setAttribute('aria-label', `${text}: ${tooltip}`);
-        element.setAttribute('aria-expanded', 'false');
+    const tag = (icon, label, value, tooltip) => {
+      const chipText = value != null ? `${icon}\u2009${value}` : icon;
+      const ariaLabel = value != null ? `${label}: ${value}` : label;
+      const element = document.createElement('button');
+      element.className = 'status-tag status-tag-hint';
+      element.type = 'button';
+      element.textContent = chipText;
+      element.setAttribute('aria-label', `${ariaLabel}: ${tooltip}`);
+      element.setAttribute('aria-expanded', 'false');
 
-        const tip = document.createElement('span');
-        tip.className = 'status-tooltip';
-        tip.textContent = tooltip;
-        element.appendChild(tip);
+      const tip = document.createElement('span');
+      tip.className = 'status-tooltip';
+      tip.textContent = `${label}${value != null ? ` (${value})` : ''}: ${tooltip}`;
+      element.appendChild(tip);
 
-        element.addEventListener('click', (event) => {
-          event.stopPropagation();
-          const isOpen = element.classList.contains('is-open');
-          this._closeStatusTooltips();
-          if (!isOpen) {
-            element.classList.add('is-open');
-            element.setAttribute('aria-expanded', 'true');
-          }
-        });
-      }
+      element.addEventListener('click', (event) => {
+        event.stopPropagation();
+        const isOpen = element.classList.contains('is-open');
+        this._closeStatusTooltips();
+        if (!isOpen) {
+          element.classList.add('is-open');
+          element.setAttribute('aria-expanded', 'true');
+        }
+      });
+
       el.appendChild(element);
     };
 
-    if (status.strength > 0) tag(`💢 Siła: ${status.strength}`, tooltipMap.strength);
-    if (status.weak > 0)
-      tag(`🤢 Słabość: ${status.weak} ${turnLabel(status.weak)}`, tooltipMap.weak);
-    if (status.fragile > 0)
-      tag(`🫧 Kruchość: ${status.fragile} ${turnLabel(status.fragile)}`, tooltipMap.fragile);
-    if (status.next_double) tag('✨ Następny cios: x2', tooltipMap.next_double);
+    if (status.strength > 0) tag(defs.strength.icon, defs.strength.label, status.strength, defs.strength.tooltip);
+    if (status.weak > 0) tag(defs.weak.icon, defs.weak.label, status.weak, defs.weak.tooltip);
+    if (status.fragile > 0) tag(defs.fragile.icon, defs.fragile.label, status.fragile, defs.fragile.tooltip);
+    if (status.next_double) tag(defs.next_double.icon, defs.next_double.label, null, defs.next_double.tooltip);
     if (status.energy_next_turn > 0)
-      tag(`⚡ Nast. tura: +${status.energy_next_turn} Oscypek`, tooltipMap.energy_next_turn);
+      tag(defs.energy_next_turn.icon, defs.energy_next_turn.label, `+${status.energy_next_turn}`, defs.energy_next_turn.tooltip);
+
+    if (containerId === 'p-statuses') {
+      if (this.state.player.hasLans)
+        tag(defs.lans.icon, defs.lans.label, null, defs.lans.tooltip);
+      if (this.state.player.stunned)
+        tag(defs.stunned.icon, defs.stunned.label, null, defs.stunned.tooltip);
+    }
 
     if (containerId === 'e-statuses') {
       this.state.getEnemySpecialStatuses().forEach((special) => {
-        tag(special.text, special.tooltip);
+        tag(special.icon, special.label, special.value, special.tooltip);
       });
     }
   }
@@ -426,13 +432,19 @@ export class UIManager {
         setTimeout(() => {
           this.isAnimating = false;
           const win = this.state.checkWinCondition();
-          if (win) this._showEndGame(win);
+          if (win) {
+            this._showEndGame(win);
+          } else {
+            this.updateUI();
+          }
         }, 400);
       }, 150);
     } else {
       // Skill / utility card: instant feedback on player
       if (effect.playerAnim) this._triggerAnim('sprite-player', effect.playerAnim);
       this.updateUI();
+      const win = this.state.checkWinCondition();
+      if (win) this._showEndGame(win);
     }
   }
   /**
@@ -458,6 +470,10 @@ export class UIManager {
     }
     if (result.playerPassiveHeal) {
       this._showFloatingText('sprite-player', result.playerPassiveHeal.text, 'floating-heal');
+    }
+    const lansBreakText = this.state.consumeLansBreakEvent();
+    if (lansBreakText) {
+      this._showFloatingText('sprite-player', lansBreakText, 'floating-shame');
     }
 
     setTimeout(() => {
@@ -607,7 +623,14 @@ export class UIManager {
     const rewardCards = document.getElementById('reward-cards');
     const skipBtn = document.getElementById('reward-skip-btn');
 
-    rewardDutki.textContent = droppedDutki > 0 ? `Łup z bitki: +${droppedDutki} dutków` : '';
+    const lines = [];
+    if (this.state.lastVictoryMessage) {
+      lines.push(this.state.lastVictoryMessage);
+    }
+    if (droppedDutki > 0) {
+      lines.push(`Łup z bitki: +${droppedDutki} dutków`);
+    }
+    rewardDutki.textContent = lines.join(' | ');
     rewardCards.innerHTML = '';
 
     choices.forEach((cardId) => {

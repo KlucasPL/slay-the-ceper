@@ -359,6 +359,99 @@ describe('GameState', () => {
     });
   });
 
+  describe('paragon_za_gofra', () => {
+    it('adds 15 rachunek to enemy', () => {
+      const s = freshState();
+      s.hand = ['paragon_za_gofra'];
+      s.enemy.rachunek = 0;
+      s.playCard(0);
+      expect(s.enemy.rachunek).toBe(15);
+    });
+
+    it('can bankrupt enemy when rachunek reaches current hp', () => {
+      const s = freshState();
+      s.hand = ['paragon_za_gofra'];
+      s.enemy.hp = 10;
+      s.dutki = 50;
+      s.playCard(0);
+      expect(s.checkWinCondition()).toBe('player_win');
+      expect(s.enemy.hp).toBe(0);
+      expect(s.dutki).toBe(57);
+      expect(s.lastVictoryMessage).toContain('Wróg zbankrutował');
+    });
+  });
+
+  describe('podatek_klimatyczny', () => {
+    it('doubles current rachunek and exhausts', () => {
+      const s = freshState(3);
+      s.hand = ['podatek_klimatyczny'];
+      s.enemy.rachunek = 12;
+      s.playCard(0);
+      expect(s.enemy.rachunek).toBe(24);
+      expect(s.exhaust).toContain('podatek_klimatyczny');
+    });
+  });
+
+  describe('wypozyczone_gogle', () => {
+    it('enables lans and exhausts', () => {
+      const s = freshState();
+      s.hand = ['wypozyczone_gogle'];
+      s.player.hasLans = false;
+      s.playCard(0);
+      expect(s.player.hasLans).toBe(true);
+      expect(s.exhaust).toContain('wypozyczone_gogle');
+    });
+  });
+
+  describe('zdjecie_z_misiem', () => {
+    it('gives +20 dutki when lans is active', () => {
+      const s = freshState();
+      s.hand = ['zdjecie_z_misiem'];
+      s.player.hasLans = true;
+      s.dutki = 10;
+      s.playCard(0);
+      expect(s.dutki).toBe(30);
+    });
+
+    it('does nothing without lans', () => {
+      const s = freshState();
+      s.hand = ['zdjecie_z_misiem'];
+      s.player.hasLans = false;
+      s.dutki = 10;
+      s.playCard(0);
+      expect(s.dutki).toBe(10);
+    });
+  });
+
+  describe('lans status', () => {
+    it('converts HP damage to dutki when funds are enough', () => {
+      const s = freshState();
+      s.player.hasLans = true;
+      s.player.block = 0;
+      s.player.hp = 40;
+      s.dutki = 20;
+      const result = s.takeDamage(6);
+      expect(result.dealt).toBe(0);
+      expect(s.player.hp).toBe(40);
+      expect(s.dutki).toBe(8);
+    });
+
+    it('breaks lans, stuns player and applies remaining HP damage when funds are low', () => {
+      const s = freshState();
+      s.player.hasLans = true;
+      s.player.block = 0;
+      s.player.hp = 30;
+      s.dutki = 5;
+      const result = s.takeDamage(6);
+      expect(result.dealt).toBe(4);
+      expect(s.player.hp).toBe(26);
+      expect(s.dutki).toBe(0);
+      expect(s.player.hasLans).toBe(false);
+      expect(s.player.stunned).toBe(true);
+      expect(s.consumeLansBreakEvent()).toBe('BANKRUT!');
+    });
+  });
+
   describe('parzenica', () => {
     it('grants 7 Garda', () => {
       const s = freshState();
@@ -1039,9 +1132,9 @@ describe('GameState', () => {
     it('exposes special healing status description for UI', () => {
       const s = freshBabaState();
       const statuses = s.getEnemySpecialStatuses();
-      expect(statuses).toHaveLength(1);
-      expect(statuses[0]?.text).toBe('🧀 Świeży oscypek');
-      expect(statuses[0]?.tooltip).toContain('leczy 5 Krzepy');
+      const babaStatus = statuses.find((item) => item.label === 'Świeży oscypek');
+      expect(babaStatus).toBeTruthy();
+      expect(babaStatus?.tooltip).toContain('leczy 5 Krzepy');
     });
   });
 

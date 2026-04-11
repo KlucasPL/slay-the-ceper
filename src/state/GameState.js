@@ -11,12 +11,12 @@ const RARITY_WEIGHTS = {
 
 /**
  * @typedef {import('../data/cards.js').StatusDef} StatusDef
- * @typedef {{ name: string, hp: number, maxHp: number, block: number, energy: number, maxEnergy: number, status: StatusDef }} PlayerState
+ * @typedef {{ name: string, hp: number, maxHp: number, block: number, energy: number, maxEnergy: number, status: StatusDef, hasLans: boolean, stunned: boolean }} PlayerState
  * @typedef {import('../data/enemies.js').EnemyMoveDef} EnemyMoveDef
  * @typedef {import('../data/weather.js').WeatherId} WeatherId
  * @typedef {'fight' | 'elite' | 'shop' | 'treasure' | 'campfire' | 'boss'} MapNodeType
  * @typedef {{ x: number, y: number, type: MapNodeType, label: string, emoji: string, weather: WeatherId, connections: number[] }} MapNode
- * @typedef {{ id: string, name: string, emoji: string, hp: number, maxHp: number, block: number, nextAttack: number, baseAttack: number, status: StatusDef, spriteSvg: string, patternType: 'random'|'loop', pattern: EnemyMoveDef[], patternIndex: number, currentIntent: EnemyMoveDef, tookHpDamageThisTurn: boolean, bossArtifact?: number }} EnemyState
+ * @typedef {{ id: string, name: string, emoji: string, hp: number, maxHp: number, block: number, nextAttack: number, baseAttack: number, status: StatusDef, rachunek: number, spriteSvg: string, patternType: 'random'|'loop', pattern: EnemyMoveDef[], patternIndex: number, currentIntent: EnemyMoveDef, tookHpDamageThisTurn: boolean, bossArtifact?: number }} EnemyState
  * @typedef {{ success: false } | { success: true, effect: import('../data/cards.js').CardEffectResult }} PlayCardResult
  * @typedef {{ enemyAttack: { raw: number, blocked: number, dealt: number }, enemyPassiveHeal: { amount: number, text: string } | null, playerPassiveHeal: { amount: number, text: string } | null }} EndTurnResult
  * @typedef {{ cards: string[], relic: string | null }} ShopStock
@@ -34,7 +34,7 @@ export class GameState {
    */
   constructor(character, enemy) {
     /** @type {PlayerState} */
-    this.player = { ...character, status: defaultStatus() };
+    this.player = { ...character, status: defaultStatus(), hasLans: false, stunned: false };
     /** @type {number} */
     this.dutki = 50;
     /** @type {number} Number of won battles used for scaling */
@@ -83,6 +83,8 @@ export class GameState {
     this.shopStock = { cards: [], relic: null };
     /** @type {string} */
     this.lastShopMessage = '';
+    /** @type {string} */
+    this.lastVictoryMessage = '';
     /** @type {'title' | 'map' | 'battle'} */
     this.currentScreen = 'title';
     /** @type {WeatherId} */
@@ -96,6 +98,12 @@ export class GameState {
       playerAttackMissed: false,
       missEventTarget: null,
     };
+    /** @type {boolean} */
+    this.enemyBankruptFlag = false;
+    /** @type {number} */
+    this.enemyBankruptcyBonus = 0;
+    /** @type {boolean} */
+    this.lansBreakEvent = false;
     /** @type {boolean} Global audio mute flag */
     this.isMuted = false;
     /** @type {boolean} */
@@ -581,6 +589,42 @@ export class GameState {
     return { target, text: 'PUDŁO!' };
   }
 
+  /** @returns {string | null} */
+  consumeLansBreakEvent() {
+    if (!this.lansBreakEvent) return null;
+    this.lansBreakEvent = false;
+    return 'BANKRUT!';
+  }
+
+  _checkEnemyBankruptcy() {
+    if (this.enemyBankruptFlag) return;
+    if (this.enemy.rachunek < this.enemy.hp) return;
+    this.enemyBankrupt();
+  }
+
+  enemyBankrupt() {
+    if (this.enemyBankruptFlag) return;
+    this.enemyBankruptFlag = true;
+    this.enemy.hp = 0;
+    const bonus = Math.floor(this.enemy.rachunek / 2);
+    this.enemyBankruptcyBonus = bonus;
+    if (bonus > 0) {
+      this.dutki += bonus;
+      this.lastVictoryMessage = `Wróg zbankrutował! +${bonus} dutków`;
+    } else {
+      this.lastVictoryMessage = 'Wróg zbankrutował!';
+    }
+  }
+
+  /**
+   * @param {number} amount
+   */
+  addEnemyRachunek(amount) {
+    if (amount <= 0) return;
+    this.enemy.rachunek += amount;
+    this._checkEnemyBankruptcy();
+  }
+
   /**
    * @param {PlayerState | EnemyState} entity
    */
@@ -844,6 +888,7 @@ export class GameState {
       return;
     }
     this.enemy.status[key] += amount;
+    this._checkEnemyBankruptcy();
   }
 
   /**
@@ -966,6 +1011,7 @@ export class GameState {
       nextAttack: 0,
       baseAttack: Math.round((enemyDef.baseAttack ?? 0) * scale),
       status: defaultStatus(),
+      rachunek: 0,
       spriteSvg: enemyDef.spriteSvg,
       patternType: enemyDef.patternType,
       pattern,
@@ -1178,6 +1224,7 @@ export class GameState {
     if (this.enemy.hp < hpBefore) {
       this.enemy.tookHpDamageThisTurn = true;
     }
+    this._checkEnemyBankruptcy();
     return { raw: dmg, blocked, dealt };
   }
 
@@ -1187,14 +1234,38 @@ export class GameState {
    * @returns {{ raw: number, blocked: number, dealt: number }}
    */
   _applyDamageToPlayer(dmg) {
-    const blocked = Math.min(this.player.block, dmg);
-    const dealt = dmg - blocked;
+    return this.takeDamage(dmg);
+  }
+
+  /**
+   * @param {number} amount
+   * @returns {{ raw: number, blocked: number, dealt: number }}
+   */
+  takeDamage(amount) {
+    const blocked = Math.min(this.player.block, amount);
+    let dealt = amount - blocked;
     this.player.block -= blocked;
+
+    if (dealt > 0 && this.player.hasLans) {
+      const requiredDutki = dealt * 2;
+      if (this.dutki >= requiredDutki) {
+        this.dutki -= requiredDutki;
+        dealt = 0;
+      } else {
+        const prevented = Math.floor(this.dutki / 2);
+        dealt = Math.max(0, dealt - prevented);
+        this.dutki = 0;
+        this.player.hasLans = false;
+        this.player.stunned = true;
+        this.lansBreakEvent = true;
+      }
+    }
+
     this.player.hp -= dealt;
     if (dealt > 0 && this.hasRelic('kierpce_wyprzedazy')) {
       this._drawCards(1);
     }
-    return { raw: dmg, blocked, dealt };
+    return { raw: amount, blocked, dealt };
   }
 
   /**
@@ -1327,30 +1398,45 @@ export class GameState {
    * @returns {Array<{ text: string, tooltip: string }>}
    */
   getEnemySpecialStatuses() {
+    /** @type {Array<{ icon: string, label: string, value: string|number|null, tooltip: string }>} */
+    const specials = [
+      {
+        icon: '🧾',
+        label: 'Rachunek',
+        value: this.enemy.rachunek,
+        tooltip:
+          'Gdy rachunek osiągnie lub przebije aktualną Krzepę wroga, przeciwnik bankrutuje i przegrywa walkę.',
+      },
+    ];
+
     if (this.enemy.id === 'baba') {
-      return [
-        {
-          text: '🧀 Świeży oscypek',
-          tooltip:
-            'Na końcu tury gracza Gaździna leczy 5 Krzepy, jeśli nie dostała obrażeń w tej turze.',
-        },
-      ];
+      specials.push({
+        icon: '🧀',
+        label: 'Świeży oscypek',
+        value: null,
+        tooltip:
+          'Na końcu tury gracza Gaździna leczy 5 Krzepy, jeśli nie dostała obrażeń w tej turze.',
+      });
     }
 
     if (this.enemy.id === 'boss') {
-      return [
+      specials.push(
         {
-          text: `🛡️ Artefakt: ${this.enemy.bossArtifact ?? 0}`,
+          icon: '🛡️',
+          label: 'Artefakt',
+          value: this.enemy.bossArtifact ?? 0,
           tooltip: 'Blokuje pierwsze 3 negatywne statusy nałożone przez gracza.',
         },
         {
-          text: '💰 Motywacja Finansowa',
+          icon: '💰',
+          label: 'Motywacja Finansowa',
+          value: null,
           tooltip: 'Gdy masz ponad 200 dutków, ataki bossa zadają o 50% więcej obrażeń.',
-        },
-      ];
+        }
+      );
     }
 
-    return [];
+    return specials;
   }
 
   /**
@@ -1411,6 +1497,10 @@ export class GameState {
     if (this.hasRelic('papryczka_marka')) {
       this.player.hp = Math.max(1, this.player.hp - 2);
     }
+
+    if (this.player.stunned) {
+      this.player.energy = 0;
+    }
   }
 
   /**
@@ -1420,6 +1510,8 @@ export class GameState {
    * @returns {PlayCardResult}
    */
   playCard(handIndex) {
+    if (this.player.stunned) return { success: false };
+
     const cardId = this.hand[handIndex];
     const card = cardLibrary[cardId];
     const actualCost = this.getCardCostInHand(cardId);
@@ -1495,6 +1587,10 @@ export class GameState {
     this.discard.push(...this.hand);
     this.hand = [];
 
+    if (this.player.stunned) {
+      this.player.stunned = false;
+    }
+
     // End of player turn.
     this._tickStatus(this.player.status);
 
@@ -1522,6 +1618,7 @@ export class GameState {
           text: `+${healedAmount} Krzepy (Świeży oscypek)`,
         };
       }
+      this._checkEnemyBankruptcy();
     }
 
     // Enemy loses old block at the start of its own turn, before taking a new action.
@@ -1534,6 +1631,7 @@ export class GameState {
     // Zepsuty Termometr: enemy status ticks every other turn
     if (!this.hasRelic('zepsuty_termometr') || this.termometerTurnParity === 0) {
       this._tickStatus(this.enemy.status);
+      this._checkEnemyBankruptcy();
     }
     if (this.hasRelic('zepsuty_termometr')) {
       this.termometerTurnParity = 1 - this.termometerTurnParity;
@@ -1541,6 +1639,7 @@ export class GameState {
 
     if (this.enemy.id === 'busiarz') {
       this.enemy.status.strength += 1;
+      this._checkEnemyBankruptcy();
     }
 
     if (this.enemy.patternType === 'loop') {
@@ -1573,8 +1672,14 @@ export class GameState {
     this.smyczKeptCardId = null;
     this.flaszkaCostSeed = {};
     this.termometerTurnParity = 0;
+    this.enemyBankruptFlag = false;
+    this.enemyBankruptcyBonus = 0;
+    this.lansBreakEvent = false;
+    this.lastVictoryMessage = '';
 
     this.player.status = defaultStatus();
+    this.player.hasLans = false;
+    this.player.stunned = false;
 
     this.deck.push(...this.hand, ...this.discard, ...this.exhaust);
     this.hand = [];
@@ -1597,7 +1702,7 @@ export class GameState {
    * @returns {'player_win' | 'enemy_win' | null}
    */
   checkWinCondition() {
-    if (this.enemy.hp <= 0) return 'player_win';
+    if (this.enemyBankruptFlag || this.enemy.hp <= 0) return 'player_win';
     if (this.player.hp <= 0) return 'enemy_win';
     return null;
   }

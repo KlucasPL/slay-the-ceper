@@ -108,3 +108,28 @@
   color: #a7f36f;
   animation: anim-float-heal 1.05s ease-out forwards;
 }
+
+@keyframes anim-float-shame {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(14px) scale(0.8);
+  }
+  20% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1.14);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-30px) scale(1);
+  }
+}
+
+.floating-shame {
+  color: #ff4747;
+  font-size: 1.36rem;
+  font-weight: 900;
+  text-shadow:
+    0 2px 0 #2f0505,
+    0 0 18px rgba(255, 40, 40, 0.55);
+  animation: anim-float-shame 1.2s ease-out forwards;
+}

@@ -49,6 +49,7 @@ export const cardLibrary = {
     rarity: 'common',
     cost: 2,
     price: 70,
+    isStarter: true,
     emoji: '👞',
     desc: 'Zadaje 12 obrażeń. Śmierdzi jak diabli.',
     effect(state) {
@@ -135,6 +136,67 @@ export const cardLibrary = {
       state.discard.push(...state.hand);
       state.hand = [];
       state._drawCards(3);
+      return { playerAnim: 'anim-block' };
+    },
+  },
+  paragon_za_gofra: {
+    id: 'paragon_za_gofra',
+    name: 'Paragon za Gofra',
+    type: 'skill',
+    rarity: 'common',
+    cost: 1,
+    price: 55,
+    emoji: '🧾',
+    desc: 'Dodaj 15 do Rachunku wroga.',
+    effect(state) {
+      state.addEnemyRachunek(15);
+      return { playerAnim: 'anim-block' };
+    },
+  },
+  podatek_klimatyczny: {
+    id: 'podatek_klimatyczny',
+    name: 'Podatek Klimatyczny',
+    type: 'skill',
+    rarity: 'rare',
+    cost: 2,
+    price: 115,
+    emoji: '🌍',
+    desc: 'Podwój obecny Rachunek wroga. PRZEPADO.',
+    exhaust: true,
+    effect(state) {
+      state.enemy.rachunek *= 2;
+      state._checkEnemyBankruptcy();
+      return { playerAnim: 'anim-block' };
+    },
+  },
+  wypozyczone_gogle: {
+    id: 'wypozyczone_gogle',
+    name: 'Wypożyczone Gogle',
+    type: 'skill',
+    rarity: 'uncommon',
+    cost: 1,
+    price: 85,
+    emoji: '🥽',
+    desc: 'Zyskaj status Lans. Otrzymujesz obrażenia w Dudkach zamiast HP.',
+    exhaust: true,
+    effect(state) {
+      state.player.hasLans = true;
+      return { playerAnim: 'anim-block' };
+    },
+  },
+  zdjecie_z_misiem: {
+    id: 'zdjecie_z_misiem',
+    name: 'Zdjęcie z Misiem',
+    type: 'skill',
+    rarity: 'uncommon',
+    cost: 1,
+    price: 80,
+    emoji: '📸',
+    desc: 'Jeśli masz aktywny Lans, zyskaj 20 Dudków. Inaczej nic się nie dzieje.',
+    effect(state) {
+      if (state.player.hasLans) {
+        state.dutki += 20;
+      }
       return { playerAnim: 'anim-block' };
     },
   },
