@@ -1,5 +1,5 @@
 /**
- * @typedef {{ type: 'attack', name: string, damage: number, hits?: number, applyWeak?: number, applyFrail?: number } | { type: 'block', name: string, block: number, heal?: number } | { type: 'buff', name: string, strengthGain?: number, block?: number } | { type: 'status', name: string, addStatusCard: string, amount?: number }} EnemyMoveDef
+ * @typedef {{ type: 'attack', name: string, damage: number, hits?: number, applyWeak?: number, applyFrail?: number, applyVulnerable?: number, damagePerCardInHand?: boolean } | { type: 'block', name: string, block: number, heal?: number } | { type: 'buff', name: string, strengthGain?: number, block?: number } | { type: 'status', name: string, addStatusCard?: string, amount?: number, applyStun?: number }} EnemyMoveDef
  * @typedef {{ id: string, name: string, emoji: string, hp: number, maxHp: number, block: number, baseAttack?: number, passive?: string, spriteSvg: string, patternType: 'random'|'loop', pattern?: EnemyMoveDef[] }} EnemyDef
  */
 
@@ -127,6 +127,69 @@ const bossSprite = `
   <line x1="69" y1="72" x2="82" y2="84" stroke="#f7fbff" stroke-width="6" stroke-linecap="round"/>
 </svg>`;
 
+const influencerkaSprite = `
+<svg viewBox="0 0 100 100" width="120" height="120">
+  <line x1="44" y1="82" x2="40" y2="97" stroke="#9900cc" stroke-width="7"/>
+  <line x1="56" y1="82" x2="60" y2="97" stroke="#9900cc" stroke-width="7"/>
+  <rect x="33" y="92" width="15" height="6" rx="3" fill="#220044"/>
+  <rect x="52" y="92" width="15" height="6" rx="3" fill="#220044"/>
+  <rect x="36" y="52" width="28" height="30" rx="8" fill="#ff00cc"/>
+  <line x1="36" y1="62" x2="64" y2="62" stroke="#ffff00" stroke-width="2"/>
+  <line x1="36" y1="70" x2="64" y2="70" stroke="#ffff00" stroke-width="2"/>
+  <line x1="36" y1="58" x2="18" y2="48" stroke="#f5c6a0" stroke-width="6" stroke-linecap="round"/>
+  <line x1="17" y1="47" x2="9" y2="20" stroke="#555" stroke-width="2"/>
+  <rect x="3" y="12" width="12" height="16" rx="2" fill="#1a1a30"/>
+  <rect x="4" y="13" width="10" height="12" rx="1" fill="#88ddff"/>
+  <circle cx="9" cy="27" r="1.5" fill="#555"/>
+  <line x1="64" y1="58" x2="80" y2="64" stroke="#f5c6a0" stroke-width="6" stroke-linecap="round"/>
+  <ellipse cx="85" cy="67" rx="8" ry="5" fill="#c8882e" transform="rotate(-15 85 67)"/>
+  <path d="M 78,63 C 86,59 92,64 90,70 C 88,74 80,71 78,65 Z" fill="#a06020" opacity="0.6"/>
+  <ellipse cx="50" cy="31" rx="18" ry="16" fill="#f5ecd8"/>
+  <circle cx="50" cy="31" r="12" fill="#f5c6a0"/>
+  <rect x="37" y="26" width="10" height="7" rx="3" fill="#111"/>
+  <rect x="51" y="26" width="10" height="7" rx="3" fill="#111"/>
+  <line x1="47" y1="29" x2="51" y2="29" stroke="#777" stroke-width="1.5"/>
+  <path d="M 44,38 Q 50,43 56,38 Q 53,41 47,41 Z" fill="#e84393"/>
+  <path d="M 32,26 Q 40,16 50,14 Q 60,16 68,26" fill="none" stroke="#e8d8b0" stroke-width="4" stroke-linecap="round"/>
+</svg>`;
+
+const parkingowySprite = `
+<svg viewBox="0 0 100 100" width="120" height="120">
+  <polygon points="84,98 90,98 89,80 85,80" fill="#ff6600"/>
+  <line x1="83" y1="88" x2="91" y2="88" stroke="white" stroke-width="2"/>
+  <rect x="82" y="95" width="10" height="4" rx="1" fill="#dd4400"/>
+  <line x1="44" y1="80" x2="40" y2="97" stroke="#3a3020" stroke-width="7"/>
+  <line x1="56" y1="80" x2="60" y2="97" stroke="#3a3020" stroke-width="7"/>
+  <rect x="33" y="93" width="14" height="5" rx="2" fill="#1a1a1a"/>
+  <rect x="53" y="93" width="14" height="5" rx="2" fill="#1a1a1a"/>
+  <rect x="36" y="50" width="28" height="30" rx="5" fill="#6a5540"/>
+  <path d="M 36,58 Q 50,55 64,58" fill="none" stroke="#4a3520" stroke-width="1.2"/>
+  <path d="M 36,64 Q 50,61 64,64" fill="none" stroke="#4a3520" stroke-width="1.2"/>
+  <path d="M 36,70 Q 50,67 64,70" fill="none" stroke="#4a3520" stroke-width="1.2"/>
+  <polygon points="36,50 36,80 44,80 44,62 56,62 56,80 64,80 64,50" fill="#ff8800" opacity="0.88" stroke="#cc5500" stroke-width="1.5"/>
+  <line x1="37" y1="67" x2="43" y2="67" stroke="#ffff00" stroke-width="3"/>
+  <line x1="57" y1="67" x2="63" y2="67" stroke="#ffff00" stroke-width="3"/>
+  <line x1="36" y1="55" x2="22" y2="68" stroke="#c49a6c" stroke-width="6" stroke-linecap="round"/>
+  <rect x="8" y="63" width="18" height="22" rx="2" fill="#d4b896"/>
+  <rect x="12" y="59" width="10" height="6" rx="2" fill="#888"/>
+  <line x1="11" y1="71" x2="23" y2="71" stroke="#555" stroke-width="1.2"/>
+  <line x1="11" y1="75" x2="23" y2="75" stroke="#555" stroke-width="1.2"/>
+  <line x1="11" y1="79" x2="18" y2="79" stroke="#555" stroke-width="1.2"/>
+  <line x1="64" y1="55" x2="78" y2="44" stroke="#c49a6c" stroke-width="6" stroke-linecap="round"/>
+  <rect x="74" y="32" width="13" height="16" rx="5" fill="#c49a6c"/>
+  <line x1="77" y1="32" x2="76" y2="25" stroke="#c49a6c" stroke-width="4" stroke-linecap="round"/>
+  <line x1="81" y1="32" x2="81" y2="23" stroke="#c49a6c" stroke-width="4" stroke-linecap="round"/>
+  <line x1="85" y1="32" x2="85" y2="25" stroke="#c49a6c" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="50" cy="30" r="14" fill="#c49a6c"/>
+  <path d="M 36,28 Q 50,17 64,28 L 64,34 L 36,34 Z" fill="#2a3a70"/>
+  <rect x="30" y="34" width="40" height="5" rx="2" fill="#3a4a80"/>
+  <path d="M 42,32 L 48,30" stroke="#111" stroke-width="2.5" stroke-linecap="round"/>
+  <circle cx="45" cy="35" r="2.5" fill="#111"/>
+  <path d="M 58,32 L 52,30" stroke="#111" stroke-width="2.5" stroke-linecap="round"/>
+  <circle cx="55" cy="35" r="2.5" fill="#111"/>
+  <path d="M 42,42 Q 46,46 50,43 Q 54,46 58,42 Q 54,40 50,42 Q 46,40 42,42 Z" fill="#4a2a10"/>
+</svg>`;
+
 /** @type {Record<string, EnemyDef>} */
 export const enemyLibrary = {
   cepr: {
@@ -177,6 +240,40 @@ export const enemyLibrary = {
       { type: 'block', name: 'Darmowa degustacja', block: 15 },
       { type: 'attack', name: 'Cena z kosmosu', damage: 8, hits: 1, applyWeak: 2 },
       { type: 'attack', name: 'Rzut redykołką', damage: 14, hits: 1 },
+    ],
+  },
+  influencerka: {
+    id: 'influencerka',
+    name: 'Influencerka "Lajki & Oscypki"',
+    emoji: '🤳',
+    hp: 60,
+    maxHp: 60,
+    block: 0,
+    baseAttack: 0,
+    spriteSvg: influencerkaSprite,
+    patternType: 'loop',
+    passive: 'parcie_na_szklo',
+    pattern: [
+      { type: 'attack', name: 'Selfie z zaskoczenia', damage: 5, hits: 1, applyVulnerable: 1 },
+      { type: 'status', name: 'Oznaczenie w relacji', addStatusCard: 'spam_tagami', amount: 1 },
+      { type: 'block', name: 'Filtr upiększający', block: 12, heal: 4 },
+    ],
+  },
+  parkingowy: {
+    id: 'parkingowy',
+    name: 'Parkingowy z Palenicy',
+    emoji: '🚧',
+    hp: 120,
+    maxHp: 120,
+    block: 0,
+    baseAttack: 0,
+    spriteSvg: parkingowySprite,
+    patternType: 'loop',
+    passive: 'brak_wolnych_miejsc',
+    pattern: [
+      { type: 'attack', name: 'Bilet za wycieraczką', damage: 5, hits: 1, damagePerCardInHand: true },
+      { type: 'attack', name: 'Kłótnia o rezerwację', damage: 0, hits: 0, applyFrail: 2 },
+      { type: 'status', name: 'Blokada na koło', applyStun: 1 },
     ],
   },
   boss: {

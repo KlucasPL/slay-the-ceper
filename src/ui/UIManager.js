@@ -283,7 +283,8 @@ export class UIManager {
     const defs = {
       strength: { icon: '💢', label: 'Siła', tooltip: 'Każdy punkt Siły dodaje +1 do obrażeń ataków.' },
       weak: { icon: '🤢', label: 'Słabość', tooltip: 'Zmniejsza zadawane obrażenia o 25% i spada o 1 co turę.' },
-      fragile: { icon: '🫧', label: 'Kruchość', tooltip: 'Status czasowy: schodzi o 1 co turę.' },
+      fragile: { icon: '🫧', label: 'Kruchość', tooltip: 'Zmniejsza zyskiwaną Gardę o 25%. Spada o 1 co turę.' },
+      vulnerable: { icon: '💥', label: 'Podatność', tooltip: 'Otrzymujesz 50% więcej obrażeń. Spada o 1 co turę.' },
       next_double: { icon: '✨', label: 'Podwójny cios', tooltip: 'Następny cios zada podwójne obrażenia, a potem efekt zniknie.' },
       energy_next_turn: { icon: '⚡', label: 'Bonus Oscypek', tooltip: 'Na początku następnej tury dostaniesz dodatkowy Oscypek.' },
       lans: { icon: '🕶️', label: 'Lans', tooltip: 'Gdy zabraknie Gardy, obrażenia są opłacane dudkami (1 dmg = 2 dutki), aż do rozbicia lansu.' },
@@ -327,6 +328,7 @@ export class UIManager {
     if (status.strength > 0) tag(defs.strength.icon, defs.strength.label, status.strength, defs.strength.tooltip);
     if (status.weak > 0) tag(defs.weak.icon, defs.weak.label, status.weak, defs.weak.tooltip);
     if (status.fragile > 0) tag(defs.fragile.icon, defs.fragile.label, status.fragile, defs.fragile.tooltip);
+    if (status.vulnerable > 0) tag(defs.vulnerable.icon, defs.vulnerable.label, status.vulnerable, defs.vulnerable.tooltip);
     if (status.next_double) tag(defs.next_double.icon, defs.next_double.label, null, defs.next_double.tooltip);
     if (status.energy_next_turn > 0)
       tag(defs.energy_next_turn.icon, defs.energy_next_turn.label, `+${status.energy_next_turn}`, defs.energy_next_turn.tooltip);

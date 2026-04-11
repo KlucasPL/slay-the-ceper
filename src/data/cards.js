@@ -1,5 +1,5 @@
 /**
- * @typedef {{ strength: number, weak: number, fragile: number, next_double: boolean, energy_next_turn: number }} StatusDef
+ * @typedef {{ strength: number, weak: number, fragile: number, vulnerable: number, next_double: boolean, energy_next_turn: number }} StatusDef
  * @typedef {{ playerAnim?: string, enemyAnim?: string, damage?: { raw: number, blocked: number, dealt: number } }} CardEffectResult
  * @typedef {'common' | 'uncommon' | 'rare'} RarityDef
  * @typedef {{ id: string, name: string, type: 'attack' | 'skill' | 'status', cost: number, price: number, rarity: RarityDef, emoji: string, desc: string, isStarter?: boolean, exhaust?: boolean, unplayable?: boolean, effect: (state: import('../state/GameState.js').GameState) => CardEffectResult }} CardDef
@@ -344,6 +344,24 @@ export const cardLibrary = {
     effect(state) {
       void state;
       return { playerAnim: 'anim-block' };
+    },
+  },
+
+  spam_tagami: {
+    id: 'spam_tagami',
+    name: 'Spam Tagami',
+    type: 'status',
+    rarity: 'common',
+    cost: 1,
+    price: 1,
+    isStarter: true,
+    exhaust: true,
+    unplayable: true,
+    emoji: '🏷️',
+    desc: 'Niegrywalna. Póki na ręce, tracisz 2 Dutki co turę.',
+    effect(state) {
+      void state;
+      return {};
     },
   },
 };

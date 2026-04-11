@@ -24,7 +24,7 @@ const RARITY_WEIGHTS = {
 
 /** @returns {StatusDef} */
 function defaultStatus() {
-  return { strength: 0, weak: 0, fragile: 0, next_double: false, energy_next_turn: 0 };
+  return { strength: 0, weak: 0, fragile: 0, vulnerable: 0, next_double: false, energy_next_turn: 0 };
 }
 
 export class GameState {
@@ -983,7 +983,8 @@ export class GameState {
    * @param {number} amount
    */
   gainPlayerBlockFromCard(amount) {
-    this.player.block += amount;
+    const effective = this.player.status.fragile > 0 ? Math.floor(amount * 0.75) : amount;
+    this.player.block += effective;
   }
 
   /**
@@ -1069,7 +1070,11 @@ export class GameState {
    * @param {number} amount
    */
   _drawCards(amount) {
-    for (let i = 0; i < amount; i++) {
+    let effectiveAmount = amount;
+    if (this.enemy.passive === 'brak_wolnych_miejsc') {
+      effectiveAmount = Math.min(effectiveAmount, Math.max(0, 3 - this.hand.length));
+    }
+    for (let i = 0; i < effectiveAmount; i++) {
       if (this.deck.length === 0) {
         if (this.discard.length === 0) break;
         this.deck = [...this.discard];
@@ -1146,6 +1151,10 @@ export class GameState {
     ) {
       dmg *= 2;
       sourceEntity.status.next_double = false;
+    }
+
+    if (targetEntity.status.vulnerable > 0) {
+      dmg = Math.ceil(dmg * 1.5);
     }
 
     return Math.max(0, dmg);
@@ -1269,9 +1278,14 @@ export class GameState {
     }
 
     if (intent.type === 'status') {
-      const amount = intent.amount ?? 1;
-      for (let i = 0; i < amount; i++) {
-        this.discard.push(intent.addStatusCard);
+      if (intent.addStatusCard) {
+        const amount = intent.amount ?? 1;
+        for (let i = 0; i < amount; i++) {
+          this.discard.push(intent.addStatusCard);
+        }
+      }
+      if (intent.applyStun) {
+        this.player.stunned = true;
       }
       return { raw: 0, blocked: 0, dealt: 0 };
     }
@@ -1305,6 +1319,10 @@ export class GameState {
       this.player.status.fragile += intent.applyFrail;
     }
 
+    if (intent.applyVulnerable && intent.applyVulnerable > 0) {
+      this.player.status.vulnerable += intent.applyVulnerable;
+    }
+
     return { raw, blocked, dealt };
   }
 
@@ -1315,8 +1333,11 @@ export class GameState {
     const intent = this.enemy.currentIntent;
     if (intent.type !== 'attack') return 0;
 
+    const baseDmg = intent.damagePerCardInHand
+      ? intent.damage + this.hand.length
+      : intent.damage;
     const hits = intent.hits ?? 1;
-    const perHit = this.calculateDamage(intent.damage, this.enemy, this.player);
+    const perHit = this.calculateDamage(baseDmg, this.enemy, this.player);
     return Math.max(0, perHit * hits - this.player.block);
   }
 
@@ -1334,10 +1355,22 @@ export class GameState {
     }
 
     if (intent.type === 'status') {
+      if (intent.applyStun) {
+        return `Zamiar: ${intent.name} (😵)`;
+      }
       return `Zamiar: ${intent.name} (📄 ×${intent.amount ?? 1})`;
     }
 
     const hits = intent.hits ?? 1;
+
+    if (hits === 0) {
+      const parts = [];
+      if (intent.applyFrail) parts.push(`🫧 ×${intent.applyFrail}`);
+      if (intent.applyWeak) parts.push(`🤢 ×${intent.applyWeak}`);
+      if (intent.applyVulnerable) parts.push(`💥 ×${intent.applyVulnerable}`);
+      return `Zamiar: ${intent.name} (${parts.join(', ') || 'efekt'})`;
+    }
+
     const totalDamage = this.getEnemyIntentDamage();
     if (hits > 1) {
       return `Zamiar: ${intent.name} (⚔️ ${totalDamage}, ${hits}x)`;
@@ -1409,6 +1442,24 @@ export class GameState {
       });
     }
 
+    if (this.enemy.passive === 'parcie_na_szklo') {
+      specials.push({
+        icon: '🤳',
+        label: 'Parcie na Szkło',
+        value: null,
+        tooltip: 'Gdy gracz ma Lans, na początku tury wroga zyskuje +2 Siły.',
+      });
+    }
+
+    if (this.enemy.passive === 'brak_wolnych_miejsc') {
+      specials.push({
+        icon: '🚧',
+        label: 'Brak Wolnych Miejsc',
+        value: null,
+        tooltip: 'Gracz może mieć maksymalnie 3 karty na ręce.',
+      });
+    }
+
     return specials;
   }
 
@@ -1419,6 +1470,7 @@ export class GameState {
   _tickStatus(status) {
     if (status.weak > 0) status.weak--;
     if (status.fragile > 0) status.fragile--;
+    if (status.vulnerable > 0) status.vulnerable--;
   }
 
   /**
@@ -1558,6 +1610,22 @@ export class GameState {
       }
     }
 
+    // spam_tagami: drain 2 dutki per turn while in hand
+    if (this.hand.includes('spam_tagami')) {
+      this.dutki = Math.max(0, this.dutki - 2);
+    }
+
+    // Parkingowy: compute damagePerCardInHand before hand is discarded
+    if (
+      this.enemy.currentIntent.type === 'attack' &&
+      this.enemy.currentIntent.damagePerCardInHand
+    ) {
+      this.enemy.currentIntent = {
+        ...this.enemy.currentIntent,
+        damage: this.enemy.currentIntent.damage + this.hand.length,
+      };
+    }
+
     this.discard.push(...this.hand);
     this.hand = [];
 
@@ -1600,6 +1668,12 @@ export class GameState {
     this.combat.firstAttackUsed = false;
     this._applyHalnyBlockDrain(this.enemy);
     this.enemy.block = 0;
+
+    // parcie_na_szklo: influencerka gains strength when player has Lans
+    if (this.enemy.passive === 'parcie_na_szklo' && this.player.hasLans) {
+      this.enemy.status.strength += 2;
+    }
+
     const enemyAttack = this._applyEnemyIntent();
 
     // Zepsuty Termometr: enemy status ticks every other turn

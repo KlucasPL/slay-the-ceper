@@ -1347,6 +1347,7 @@ describe('GameState', () => {
         strength: 0,
         weak: 0,
         fragile: 0,
+        vulnerable: 0,
         next_double: false,
         energy_next_turn: 0,
       });
@@ -1354,6 +1355,7 @@ describe('GameState', () => {
         strength: 0,
         weak: 0,
         fragile: 0,
+        vulnerable: 0,
         next_double: false,
         energy_next_turn: 0,
       });
@@ -1389,7 +1391,7 @@ describe('GameState', () => {
 
     it('can load Busiarz from the enemy library after victory', () => {
       const s = freshState();
-      vi.spyOn(Math, 'random').mockReturnValue(0.5);
+      vi.spyOn(Math, 'random').mockReturnValue(0.2);
       s.resetBattle();
       expect(s.enemy.id).toBe('busiarz');
       expect(s.enemy.name).toBe('Wąsaty Busiarz');
@@ -1398,7 +1400,7 @@ describe('GameState', () => {
 
     it('can load Babę from the enemy library after victory', () => {
       const s = freshState();
-      vi.spyOn(Math, 'random').mockReturnValue(0.99);
+      vi.spyOn(Math, 'random').mockReturnValue(0.5);
       s.resetBattle();
       expect(s.enemy.id).toBe('baba');
       expect(s.enemy.name).toBe('Gaździna Maryna');
@@ -1423,7 +1425,7 @@ describe('GameState', () => {
 
     it('enemy library includes final boss definition', () => {
       const ids = Object.keys(enemyLibrary).sort();
-      expect(ids).toEqual(['baba', 'boss', 'busiarz', 'cepr']);
+      expect(ids).toEqual(['baba', 'boss', 'busiarz', 'cepr', 'influencerka', 'parkingowy']);
     });
 
     it('does not scale enemies in normal mode', () => {
