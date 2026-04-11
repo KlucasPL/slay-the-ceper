@@ -399,12 +399,12 @@ describe('GameState', () => {
   });
 
   describe('zyntyca', () => {
-    it('heals 7 Krzepa and exhausts', () => {
+    it('heals 4 Krzepa and exhausts', () => {
       const s = freshState();
       s.hand = ['zyntyca'];
       s.player.hp = 30;
       s.playCard(0);
-      expect(s.player.hp).toBe(37);
+      expect(s.player.hp).toBe(34);
       expect(s.exhaust).toContain('zyntyca');
     });
     it('does not exceed maxHp', () => {

@@ -168,10 +168,10 @@ export const cardLibrary = {
     cost: 1,
     price: 65,
     emoji: '🥛',
-    desc: 'Leczysz 7 Krzepy.',
+    desc: 'Leczysz 4 Krzepy.',
     exhaust: true,
     effect(state) {
-      state.healPlayer(7);
+      state.healPlayer(4);
       return { playerAnim: 'anim-block' };
     },
   },
