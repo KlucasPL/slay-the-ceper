@@ -1728,7 +1728,7 @@ export class GameState {
         icon: '💸',
         label: 'Brak Reszty',
         value: null,
-        tooltip: 'Gdy zadaje obrażenia HP, kradnie 3 dutki.',
+        tooltip: 'Gdy zadaje obrażenia Krzepie, kradnie 3 dutki.',
       });
     }
 
@@ -1993,7 +1993,7 @@ export class GameState {
       this.healPlayer(2);
       const healed = this.player.hp - hpBefore;
       if (healed > 0) {
-        playerPassiveHeal = { amount: healed, text: `+${healed} HP (Krokus)` };
+        playerPassiveHeal = { amount: healed, text: `+${healed} Krzepy (Krokus)` };
       }
     }
 
@@ -2002,7 +2002,7 @@ export class GameState {
       this.healPlayer(2);
       const healed = this.player.hp - hpBefore;
       if (healed > 0 && !playerPassiveHeal) {
-        playerPassiveHeal = { amount: healed, text: `+${healed} HP (Papucie)` };
+        playerPassiveHeal = { amount: healed, text: `+${healed} Krzepy (Papucie)` };
       }
     }
 

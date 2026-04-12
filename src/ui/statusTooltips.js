@@ -42,7 +42,7 @@ export const statusTooltipRegistry = {
   lans: {
     icon: '🕶️',
     label: 'Lans',
-    tooltip: 'LANS: Otrzymujesz obrażenia w Dutkach zamiast HP. Szpan kosztuje!',
+    tooltip: 'LANS: Otrzymujesz obrażenia w Dutkach zamiast Krzepy. Szpan kosztuje!',
     showNumericValue: false,
   },
   stunned: {

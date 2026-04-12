@@ -42,7 +42,7 @@ export const relicLibrary = {
     name: 'Krokus pod Ochroną',
     rarity: 'uncommon',
     emoji: '🌸',
-    desc: 'Na koniec tury: jeśli masz >10 Gardy – ulecz 2 HP.',
+    desc: 'Na koniec tury: jeśli masz >10 Gardy – ulecz 2 Krzepy.',
     price: 155,
   },
   zepsuty_termometr: {
@@ -66,7 +66,7 @@ export const relicLibrary = {
     name: 'Kierpce z Wyprzedaży',
     rarity: 'common',
     emoji: '👞',
-    desc: 'Za każdym razem, gdy tracisz HP w walce, dobierz 1 kartę.',
+    desc: 'Za każdym razem, gdy tracisz Krzepę w walce, dobierz 1 kartę.',
     price: 120,
   },
   smycz_zakopane: {
@@ -82,7 +82,7 @@ export const relicLibrary = {
     name: 'Dzwonek Owcy – Przeklęty',
     rarity: 'rare',
     emoji: '🔔',
-    desc: 'Wrogowie mają –20% Max HP. Nie możesz się leczyć.',
+    desc: 'Wrogowie mają –20% maks. Krzepy. Nie możesz się leczyć.',
     price: 280,
   },
   papryczka_marka: {
@@ -90,7 +90,7 @@ export const relicLibrary = {
     name: 'Piekielna Papryczka Marka',
     rarity: 'rare',
     emoji: '🌶️',
-    desc: 'Na start walki: +3 Siły. Na początku każdej tury: –2 HP.',
+    desc: 'Na start walki: +3 Siły. Na początku każdej tury: –2 Krzepy.',
     price: 350,
   },
   papucie_po_babci: {
@@ -98,7 +98,7 @@ export const relicLibrary = {
     name: 'Papucie po Babci',
     rarity: 'common',
     emoji: '🥿',
-    desc: 'Na koniec tury: jeśli masz aktywny Lans, ulecz 2 HP.',
+    desc: 'Na koniec tury: jeśli masz aktywny Lans, ulecz 2 Krzepy.',
     price: 90,
   },
   magnes_na_lodowke: {
@@ -114,7 +114,7 @@ export const relicLibrary = {
     name: 'Pęknięte Liczydło',
     rarity: 'uncommon',
     emoji: '🧮',
-    desc: 'Leczy 2 HP przy każdym nałożeniu Rachunku.',
+    desc: 'Leczy 2 Krzepy przy każdym nałożeniu Rachunku.',
     price: 175,
   },
   blacha_przewodnika: {
@@ -162,7 +162,7 @@ export const relicLibrary = {
     name: 'Termos z Herbatką',
     rarity: 'uncommon',
     emoji: '🫖',
-    desc: 'Koniec walki w 2 turach lub mniej: ulecz +4 HP. W przeciwnym razie: +15 dutków.',
+    desc: 'Koniec walki w 2 turach lub mniej: ulecz +4 Krzepy. W przeciwnym razie: +15 dutków.',
     price: 165,
   },
   mapa_zakopanego: {
