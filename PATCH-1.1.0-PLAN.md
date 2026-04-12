@@ -7,10 +7,10 @@ Patch `1.1.0` powinien uporządkować balans całej gry, a nie tylko punktowo os
 Główne cele:
 
 - wyrównać siłę dwóch ścieżek wygrywania: obrażenia HP i `Rachunek`
-- zmniejszyć wariancję runów opartych o pojedyncze relikty lub pojedyncze rare payoffy
+- zmniejszyć wariancję runów opartych o pojedyncze pamiątki lub pojedyncze rare payoffy
 - wygładzić krzywą trudności między early game, midgame i finałem
 - poprawić sens decyzji na mapie, w sklepie i po rewardach
-- przygotować grunt pod dalszy rozwój puli kart, reliktów i wydarzeń
+- przygotować grunt pod dalszy rozwój puli kart, pamiątek i wydarzeń
 
 ## Aktualne problemy do rozwiązania
 
@@ -20,7 +20,7 @@ Obecnie build rachunkowy:
 
 - może kończyć walki bez klasycznego DPS checka
 - dostaje dodatkowe Dutki za bankructwo
-- skaluje się przez relikty i ekonomię
+- skaluje się przez pamiątki i ekonomię
 - omija część presji defensywnej, którą muszą znosić buildy atakujące HP
 
 Efekt: ścieżka `Rachunku` bywa jednocześnie bezpieczniejsza i bardziej opłacalna niż zwykłe bicie w HP.
@@ -41,9 +41,9 @@ Pula niestarterowych kart jest mała i mocno przechylona w stronę skilli. Braku
 
 Wczesne walki są relatywnie łagodne, ale `Parkingowy` jest wyraźnym skokiem trudności przez limit 3 kart na turę, wysokie HP i presję na plan tury. Finał jest już po tym kolejnym progiem.
 
-### 5. Relikty zbyt często przejmują cały run
+### 5. Pamiątki zbyt często przejmują cały run
 
-Kilka reliktów bardzo mocno steruje wynikiem gry:
+Kilka pamiątek bardzo mocno steruje wynikiem gry:
 
 - `flaszka_sliwowicy`
 - `pocztowka_giewont`
@@ -63,7 +63,7 @@ Mapa ma dużo nodów niebojowych i wysoki udział eventów, a w grze jest na raz
 
 - build HP i build `Rachunku` mają być porównywalnie skuteczne
 - build `Rachunku` nie powinien być bardziej opłacalny ekonomicznie od builda obrażeniowego
-- build defensywny powinien móc dojść do finału bez idealnej kombinacji reliktów
+- build defensywny powinien móc dojść do finału bez idealnej kombinacji pamiątek
 
 ### Rewardy i sklepy
 
@@ -261,17 +261,17 @@ Wdrożone w kodzie:
 - `GameState.getCombatSpecialStatuses()`: doprecyzowano tooltip Artefaktu Miska (blokuje **2** negatywne statusy, zgodnie z implementacją)
 - Testy: dodano nowy test potwierdzający 4. intent Miska i zredukowane obrażenia `Uścisku Krupówek` (201 testów ✓, build ✓)
 
-## Pakiet D - Relikty
+## Pakiet D - Pamiątki
 
-### D0. Diagnoza puli reliktów (odkrycie) — **DONE**
+### D0. Diagnoza puli pamiątek (odkrycie) — **DONE**
 
-Aktualna pula: **16 reliktów** — 5 common, 7 uncommon, **4 rare**.
+Aktualna pula: **16 pamiątek** — 5 common, 7 uncommon, **4 rare**.
 
 Problemy:
 
-- **Rare pool = 4** — sklep oferuje 1 relikt na wizytę; w typowym runie gracz widzi wszystkie rare po 2 przejściach. Zero ciekawości.
-- **Za dużo szufladkowania** — prawie każdy relikt wymusza konkretny build (Lans: 3, Rachunek: 2, attack: 2). Brak reliktów neutralnych pasujących do każdej talii.
-- **Brak reliktów mapowych** — żaden nie wpływa na to, jak grasz mapę (campfire, sklep, skrzynia).
+- **Rare pool = 4** — sklep oferuje 1 pamiątka na wizytę; w typowym runie gracz widzi wszystkie rare po 2 przejściach. Zero ciekawości.
+- **Za dużo szufladkowania** — prawie każdy pamiątka wymusza konkretny build (Lans: 3, Rachunek: 2, attack: 2). Brak pamiątek neutralnych pasujących do każdej talii.
+- **Brak pamiątek mapowych** — żaden nie wpływa na to, jak grasz mapę (campfire, sklep, skrzynia).
 - **`wiatr_halny` marnuje slot common** — 50% szansa na własny discard to de facto kamień.
 
 Wniosek:
@@ -280,9 +280,9 @@ Wniosek:
 - priorytet: **+2–3 nowe rare** z różnymi rolami (neutralne, mapowe, anty-snowball)
 - następnie ewentualne zastąpienie `wiatr_halny` albo przeprojektowanie na coś deterministycznego
 
-### D3. Dodać nowe relikty poszerzające pulę — **DONE**
+### D3. Dodać nowe pamiątki poszerzające pulę — **DONE**
 
-Dodano 5 nowych reliktów (łącznie **21 reliktów** — 5 common, 10 uncommon, **6 rare**):
+Dodano 5 nowych pamiątek (łącznie **21 pamiątek** — 5 common, 10 uncommon, **6 rare**):
 
 - **Złota Karta Zakopiańczyka** (Rare): usunięcie kart kosztuje zawsze 25 Dutków; wszystkie karty w sklepie o 15% tańsze.
 - **Szczęśliwa Podkowa** (Uncommon): wygranie walki z ≤40% Krzepy daje +25 Dutków.
@@ -292,7 +292,7 @@ Dodano 5 nowych reliktów (łącznie **21 reliktów** — 5 common, 10 uncommon,
 
 Wdrożone w kodzie:
 
-- `src/data/relics.js`: 5 nowych definicji reliktów
+- `src/data/relics.js`: 5 nowych definicji pamiątek
 - `GameState`: `battleTurnsElapsed`, `zegarekFreeSkillAvailable`, aktualizacje `startTurn()`, `getCardCostInHand()`, `playCard()`, `grantBattleDutki()`
 - `GameState.getCardShopPrice()`, `GameState.getShopRemovalPrice()`: nowe metody dla rabatów sklepu
 - `GameState._createMapNode()`: nody `event` dostają pole `eventOutcome` pre-rolowane przy generowaniu mapy
@@ -301,11 +301,11 @@ Wdrożone w kodzie:
 - `UIManager._handleMapNodeSelect()`: używa `node.eventOutcome` zamiast ponownego losowania
 - Testy: 17 nowych przypadków dla pakietu D3 (190 testów ✓, build ✓). Po późniejszych poprawkach D1/D4/A3/C2/C3 i fallbacku eventu Fiakiera: 201 testów ✓.
 
-### D1. Uporządkować najmocniejsze relikty
+### D1. Uporządkować najmocniejsze pamiątki
 
 **Rewizja po poszerzeniu puli (D3):** rare pool rósł z 4 → 6, więc każdy konkretny rare pojawia się rzadziej w sklepie per run. Pilność nerfów jest niższa, ale absolutny pułap mocy jest niezmieniony — run, który trafi `flaszkę` lub `papryczkę`, jest nadal przez nie zdominowany.
 
-Relikty do przeglądu:
+Pamiątki do przeglądu:
 
 - `flaszka_sliwowicy` — **DONE**: osłabiono z +5 do +4 Siły
 - `pocztowka_giewont` — **DONE**: reklasyfikacja uncommon → rare, cena 195 → 260
@@ -320,25 +320,25 @@ Wdrożone w kodzie:
 - `pocztowka_giewont`: `rarity: 'uncommon'` → `'rare'`, `price: 195` → `260`
 - Testy: zaktualizowano test flaszki (201 testów ✓)
 
-### D2. Mniej reliktów "wygrywających run samodzielnie"
+### D2. Mniej pamiątek "wygrywających run samodzielnie"
 
-Docelowo relikt powinien:
+Docelowo pamiątka powinien:
 
 - wzmacniać plan gracza
 - otwierać nową linię decyzji
 - nie zastępować sensownego deckbuildingu
 
-**Rewizja po D3:** pięć nowych reliktów (`szczegliwa_podkowa`, `goralski_zegarek`, `termos_z_herbatka`, `zlota_karta_zakopianczyka`, `mapa_zakopanego`) poprawnie wypełnia tę rolę — wzmacniają ekonomię i tempo warunkowe, nie zastępują deckbuildingu. Problem pozostaje w legacy secie (D1).
+**Rewizja po D3:** pięć nowych pamiątek (`szczegliwa_podkowa`, `goralski_zegarek`, `termos_z_herbatka`, `zlota_karta_zakopianczyka`, `mapa_zakopanego`) poprawnie wypełnia tę rolę — wzmacniają ekonomię i tempo warunkowe, nie zastępują deckbuildingu. Problem pozostaje w legacy secie (D1).
 
 Uwaga: `termos_z_herbatka` — pocieszny bonus (+15 Dutków jeśli walka trwa >2 tury) lekko premiuje buildy Rachunku potrzebujące czasu na setup. Drobne, ale kierunkowo odwrotne do celów A2/A3.
 
-To oznacza, że w `1.1.0` warto bardziej tonować skrajne piki mocy niż buffować słabsze relikty.
+To oznacza, że w `1.1.0` warto bardziej tonować skrajne piki mocy niż buffować słabsze pamiątki.
 
 ### D4. Błędy i ryzyka odkryte przy rewizji D3
 
 #### D4a. Kolizja emoji — `szczegliwa_podkowa` i `magnes_na_lodowke` (oba `🧲`) — **DONE**
 
-Dwa relikty różnych rzadkości używają tej samej ikony. Wprowadza zamieszanie w sklepie i bibliotece.
+Dwa pamiątki różnych rzadkości używają tej samej ikony. Wprowadza zamieszanie w sklepie i bibliotece.
 
 Wdrożone: `szczegliwa_podkowa` emoji zmienione na `🍀`.
 
@@ -428,7 +428,7 @@ Cel:
 ## Zakres rekomendowany
 
 - wszystko z zakresu minimalnego
-- pełny przegląd 4-5 najmocniejszych reliktów
+- pełny przegląd 4-5 najmocniejszych pamiątek
 - 5-6 nowych kart w różnych rzadkościach
 - lepsze rozróżnienie ról rare payoffów
 - testowy pass po obu bossach pod różne archetypy
@@ -446,7 +446,7 @@ Cel:
 2. Rewardy i pula kart
 3. Midgame i `Parkingowy`
 4. Mapa i częstotliwość eventów
-5. Relikty high-impact
+5. Pamiątki high-impact
 6. Finałowe strojenie bossów po całej reszcie
 
 ## Plan testów
@@ -459,7 +459,7 @@ Cel:
 - `Parkingowy` dalej ogranicza tempo, ale nie hard-lockuje łatwo tury - DONE
 - C3 (iteracja 1): Misiek ma obniżony pojedynczy spike (`Uścisk Krupówek 25 -> 23`) - DONE
 - mapa generuje nowy docelowy rozkład eventów
-- nowe karty mają testy logiki i interakcji z reliktami/statusami - DONE
+- nowe karty mają testy logiki i interakcji z pamiątkaami/statusami - DONE
 - event node może zakończyć się klasycznym wydarzeniem, starciem (bez bossów) albo pełnym sklepem
 - wariant `shop` z noda event używa tej samej oferty/usług co zwykły nod `shop`
 - `fiakier_event` ma fallback walki przy `<10 DUTKI` i nie blokuje interakcji - DONE
