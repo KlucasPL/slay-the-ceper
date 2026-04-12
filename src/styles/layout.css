@@ -1779,7 +1779,8 @@ h1 {
     position: sticky;
     bottom: 0;
     width: min(280px, 100%);
-    background: linear-gradient(180deg, rgba(74, 47, 28, 0.9), rgba(74, 47, 28, 0.98));
+    margin-top: 12px;
+    z-index: 1;
   }
 
   .title-panel {
