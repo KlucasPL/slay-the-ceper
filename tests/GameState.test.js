@@ -1903,7 +1903,7 @@ describe('GameState', () => {
       expect(s.enemy.currentIntent).toEqual({
         type: 'attack',
         name: 'Selfie z zaskoczenia',
-        damage: 5,
+        damage: 12,
         hits: 1,
         applyVulnerable: 2,
       });
@@ -2555,14 +2555,14 @@ describe('GameState', () => {
       expect(s.enemy.currentIntent.hits).toBe(3);
     });
 
-    it('fourth intent is Uścisk Krupówek with reduced spike damage (23)', () => {
+    it('fourth intent is Uścisk Krupówek with reduced spike damage (20)', () => {
       const s = freshBossState();
       s.endTurn(); // execute Górski Ryk -> intent 2
       s.endTurn(); // execute Agresywne pozowanie -> intent 3
       s.endTurn(); // execute Podatek od zdjęcia -> intent 4
       expect(s.enemy.currentIntent.type).toBe('attack');
       expect(s.enemy.currentIntent.name).toBe('Uścisk Krupówek');
-      expect(s.enemy.currentIntent.damage).toBe(23);
+      expect(s.enemy.currentIntent.damage).toBe(20);
       expect(s.enemy.currentIntent.hits).toBe(1);
     });
 
