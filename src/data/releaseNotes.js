@@ -4,6 +4,15 @@
 
 /** @type {ReleaseNoteEntry[]} */
 export const releaseNotesData = [
+    {
+      version: 'v1.1.2 - Nowe ekrany i muzyka',
+      date: 'Kwiecień 2026',
+      changes: [
+        '🆕 NOWE EKRANY: Dodano ekran opcji (muzyka, dźwięki, przełączanie muzyki menu/walki) oraz ekran podsumowania runa z talią, pamiątkami i statystykami.',
+        '🎵 MUZYKA: Dodano kilka nowych utworów muzycznych oraz płynne przejścia między muzyką menu, walki, zwycięstwa i porażki.',
+        '⚙️ PRZYCISK OPCJI: Przycisk opcji dostępny w prawym górnym rogu podczas gry (zamiast mute).',
+      ],
+    },
   {
     version: 'v1.1.1 - Re-tiering Pamiątek',
     date: 'Kwiecień 2026',

@@ -197,7 +197,7 @@ export const cardLibrary = {
     desc: 'Jeśli masz aktywny Lans, zyskaj 20 dutków. Inaczej nic się nie dzieje.',
     effect(state) {
       if (state.player.status.lans > 0) {
-        state.dutki += 20;
+        state.addDutki(20);
       }
       return { playerAnim: 'anim-block' };
     },
@@ -266,7 +266,7 @@ export const cardLibrary = {
     effect(state) {
       const dmg = state._calcAttackDamage(state.player, 9 + state.getCardDamageBonus('janosik'));
       const damage = state._applyDamageToEnemy(dmg);
-      if (state.enemy.hp <= 0) state.dutki += 30;
+      if (state.enemy.hp <= 0) state.addDutki(30);
       return {
         playerAnim: 'anim-attack-p',
         enemyAnim: damage.dealt > 0 ? 'anim-damage' : 'anim-block',

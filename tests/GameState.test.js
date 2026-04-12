@@ -2380,15 +2380,17 @@ describe('GameState', () => {
       expect(s.player.hp).toBe(49);
     });
 
-    it('ochrona_wizerunku also triggers when damage is fully blocked', () => {
+    it('ochrona_wizerunku does not trigger when attack is fully blocked by boss', () => {
       const s = freshBossState();
       s.player.hp = 50;
+      s.player.block = 5;
       s.enemy.hp = 300;
       s.enemy.block = 999;
       s.hand = ['ciupaga'];
       s.player.energy = 3;
       s.playCard(0);
-      expect(s.player.hp).toBe(49);
+      expect(s.player.block).toBe(5);
+      expect(s.player.hp).toBe(50);
     });
 
     it('ochrona_wizerunku takes garda first if player has block', () => {
@@ -2417,4 +2419,5 @@ describe('GameState', () => {
       expect(s.player.hp).toBe(49);
     });
   });
+
 });

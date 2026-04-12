@@ -50,10 +50,14 @@ export class GameState {
    * @param {import('../data/enemies.js').EnemyDef} enemy
    */
   constructor(character, enemy) {
+    /** @type {import('../data/characters.js').CharacterDef} */
+    this.baseCharacter = { ...character };
     /** @type {PlayerState} */
     this.player = { ...character, status: defaultStatus(), stunned: false, cardsPlayedThisTurn: 0 };
     /** @type {number} */
     this.dutki = 50;
+    /** @type {number} Total DUTKI gained during the current run (excludes starting 50). */
+    this.totalDutkiEarned = 0;
     /** @type {number} Number of won battles used for scaling */
     this.battleWins = 0;
     /** @type {string[]} */
@@ -80,6 +84,8 @@ export class GameState {
     this.currentLevel = 0;
     /** @type {number} */
     this.currentNodeIndex = 0;
+    /** @type {number} Highest floor reached in this run (1-indexed). */
+    this.maxFloorReached = 1;
     /** @type {{ x: number, y: number }} */
     this.currentNode = { x: 0, y: 0 };
     /** @type {boolean} */
@@ -102,6 +108,8 @@ export class GameState {
     this.termometerTurnParity = 0;
     /** @type {number} Turns elapsed in current battle (incremented at start of each player turn) */
     this.battleTurnsElapsed = 0;
+    /** @type {number} Total player turns played in this run */
+    this.totalTurnsPlayed = 0;
     /** @type {boolean} Góralski Zegarek: free skill available this turn */
     this.zegarekFreeSkillAvailable = false;
     /** @type {ShopStock} */
@@ -148,6 +156,8 @@ export class GameState {
     this.hasStartedFirstBattle = false;
     /** @type {boolean} Rare power: reflect damage when enough block is lost */
     this.dumaPodhalaActive = false;
+    /** @type {{ outcome: 'player_win' | 'enemy_win', finalDeck: import('../data/cards.js').CardDef[], finalRelics: import('../data/relics.js').RelicDef[], killerName: string | null, runStats: { totalDutkiEarned: number, floorReached: number, totalTurnsPlayed: number } } | null} */
+    this.runSummary = null;
     /** @type {EnemyState} */
     this.enemy = this._createEnemyState(enemy);
     this.generateMap();
@@ -601,6 +611,7 @@ export class GameState {
     this.currentLevel = level;
     this.currentNodeIndex = nodeIndex;
     this.currentNode = { x: nodeIndex, y: level };
+    this.maxFloorReached = Math.max(this.maxFloorReached, level + 1);
     return this.getCurrentMapNode();
   }
 
@@ -677,6 +688,7 @@ export class GameState {
     this.currentLevel = campfireLevel;
     this.currentNodeIndex = 1;
     this.currentNode = { x: 1, y: campfireLevel };
+    this.maxFloorReached = Math.max(this.maxFloorReached, campfireLevel + 1);
     this.jumpToBoss = false;
     this.hasStartedFirstBattle = true;
     this._setCurrentWeatherFromNode();
@@ -753,11 +765,20 @@ export class GameState {
     const bonus = Math.min(25, Math.floor(this.enemy.rachunek / 3));
     this.enemyBankruptcyBonus = bonus;
     if (bonus > 0) {
-      this.dutki += bonus;
+      this.addDutki(bonus);
       this.lastVictoryMessage = `Wróg zbankrutował! +${bonus} ${this.getDutkiLabel(bonus)}`;
     } else {
       this.lastVictoryMessage = 'Wróg zbankrutował!';
     }
+  }
+
+  /**
+   * @param {number} amount
+   */
+  addDutki(amount) {
+    if (amount <= 0) return;
+    this.dutki += amount;
+    this.totalDutkiEarned += amount;
   }
 
   /**
@@ -1164,7 +1185,7 @@ export class GameState {
       drop += 25;
     }
 
-    this.dutki += drop;
+    this.addDutki(drop);
     this.pendingBattleDutki = false;
 
     // Termos z Herbatką: ≤2 turns → +4 HP, otherwise → +15 Dutki
@@ -1172,7 +1193,7 @@ export class GameState {
       if (this.battleTurnsElapsed <= 2) {
         this.healPlayer(4);
       } else {
-        this.dutki += 15;
+        this.addDutki(15);
         drop += 15;
       }
     }
@@ -1792,6 +1813,7 @@ export class GameState {
     this.player.cardsPlayedThisTurn = 0;
 
     this.battleTurnsElapsed += 1;
+    this.totalTurnsPlayed += 1;
 
     // Góralski Zegarek: first Skill costs 0 on even turns (2, 4, 6...)
     this.zegarekFreeSkillAvailable =
@@ -2148,5 +2170,111 @@ export class GameState {
     if (this.enemyBankruptFlag || this.enemy.hp <= 0) return 'player_win';
     if (this.player.hp <= 0) return 'enemy_win';
     return null;
+  }
+
+  /**
+   * @returns {string[]}
+   */
+  getRunDeckCardIds() {
+    const all = [...this.deck, ...this.hand, ...this.discard, ...this.exhaust];
+    return all.filter((id) => cardLibrary[id] && cardLibrary[id].type !== 'status');
+  }
+
+  /**
+   * Captures end-of-run data used by the post-game summary screen.
+   * @param {'player_win' | 'enemy_win'} outcome
+   * @returns {NonNullable<GameState['runSummary']>}
+   */
+  captureRunSummary(outcome) {
+    const finalDeck = this.getRunDeckCardIds().map((id) => ({ ...cardLibrary[id] }));
+    const finalRelics = this.relics
+      .map((id) => relicLibrary[id])
+      .filter(Boolean)
+      .map((relic) => ({ ...relic }));
+    const killerName =
+      outcome === 'enemy_win' ? `${this.enemy.name} ${this.enemy.emoji}` : null;
+
+    this.runSummary = {
+      outcome,
+      finalDeck,
+      finalRelics,
+      killerName,
+      runStats: {
+        totalDutkiEarned: this.totalDutkiEarned,
+        floorReached: Math.max(this.maxFloorReached, this.currentLevel + 1),
+        totalTurnsPlayed: this.totalTurnsPlayed,
+      },
+    };
+
+    return this.runSummary;
+  }
+
+  /**
+   * Resets all run-wide progress and prepares a fresh run state.
+   * @param {string[]} startingDeck
+   */
+  resetForNewRun(startingDeck) {
+    this.player = {
+      ...this.baseCharacter,
+      status: defaultStatus(),
+      stunned: false,
+      cardsPlayedThisTurn: 0,
+    };
+
+    this.dutki = 50;
+    this.totalDutkiEarned = 0;
+    this.battleWins = 0;
+    this.deck = [];
+    this.hand = [];
+    this.discard = [];
+    this.exhaust = [];
+    this.relics = [];
+    this.seenRelicOffers = [];
+    this.hardFirstShopRolled = false;
+    this.certyfikowanyOscypekShopProcs = 0;
+    this.cardDamageBonus = {};
+    this.currentLevel = 0;
+    this.currentNodeIndex = 1;
+    this.currentNode = { x: 1, y: 0 };
+    this.maxFloorReached = 1;
+    this.pendingBattleDutki = true;
+    this.enemyScaleFactor = 1.0;
+    this.attackCardsPlayedThisBattle = 0;
+    this.pocztowkaUsedThisBattle = false;
+    this.smyczKeptCardId = null;
+    this.smyczKeptHandIndex = null;
+    this.flaszkaCostSeed = {};
+    this.termometerTurnParity = 0;
+    this.battleTurnsElapsed = 0;
+    this.totalTurnsPlayed = 0;
+    this.zegarekFreeSkillAvailable = false;
+    this.shopStock = { cards: [], relic: null };
+    this.lastShopMessage = '';
+    this.lastVictoryMessage = '';
+    this.currentScreen = 'map';
+    this.lastRegularEnemyId = 'cepr';
+    this.activeEventId = null;
+    this.jumpToBoss = false;
+    this.forceMainBossNextBattle = false;
+    this.currentWeather = 'clear';
+    this.combat = {
+      firstAttackUsed: false,
+      activeSide: 'player',
+      playerAttackMissCheck: false,
+      playerAttackMissRolled: false,
+      playerAttackMissed: false,
+      missEventTarget: null,
+    };
+    this.enemyBankruptFlag = false;
+    this.enemyBankruptcyBonus = 0;
+    this.lansBreakEvent = false;
+    this.rachunekResistEvent = false;
+    this.hasStartedFirstBattle = false;
+    this.dumaPodhalaActive = false;
+    this.runSummary = null;
+
+    this.enemy = this._createEnemyState(enemyLibrary.cepr);
+    this.generateMap();
+    this.initGame(startingDeck);
   }
 }

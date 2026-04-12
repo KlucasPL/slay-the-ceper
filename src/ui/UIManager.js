@@ -1,4 +1,4 @@
-import { cardLibrary } from '../data/cards.js';
+import { cardLibrary, startingDeck } from '../data/cards.js';
 import { enemyLibrary } from '../data/enemies.js';
 import { relicLibrary } from '../data/relics.js';
 import { releaseNotesData } from '../data/releaseNotes.js';
@@ -8,7 +8,7 @@ import { statusTooltipRegistry } from './statusTooltips.js';
 export class UIManager {
   /**
    * @param {import('../state/GameState.js').GameState} state
-   * @param {import('../audio/AudioManager.js').AudioManager} audioManager
+  * @param {import('../logic/AudioManager.js').AudioManager} audioManager
    */
   constructor(state, audioManager) {
     this.state = state;
@@ -41,8 +41,8 @@ export class UIManager {
     titleScreen?.addEventListener('click', unlockMenuMusic);
     titleScreen?.addEventListener('pointerdown', unlockMenuMusic);
 
-    const muteBtn = document.getElementById('mute-btn');
-    if (muteBtn) muteBtn.addEventListener('click', () => this._toggleMute());
+    const cornerOptionsBtn = document.getElementById('corner-options-btn');
+    if (cornerOptionsBtn) cornerOptionsBtn.addEventListener('click', () => this._openOptionsModal());
 
     document
       .getElementById('title-btn-normal')
@@ -65,6 +65,9 @@ export class UIManager {
       .getElementById('btn-release-notes')
       .addEventListener('click', () => this._openReleaseNotesModal());
     document
+      .getElementById('title-btn-options')
+      .addEventListener('click', () => this._openOptionsModal());
+    document
       .querySelector('#release-notes-modal .close-btn')
       .addEventListener('click', () => this._closeReleaseNotesModal());
     document
@@ -80,6 +83,20 @@ export class UIManager {
         this._closeReleaseNotesModal();
       }
     });
+    document
+      .querySelector('#options-modal .close-btn')
+      .addEventListener('click', () => this._closeOptionsModal());
+    document.getElementById('options-modal').addEventListener('click', (event) => {
+      if (event.target === event.currentTarget) {
+        this._closeOptionsModal();
+      }
+    });
+    document
+      .getElementById('option-menu-music-btn')
+      .addEventListener('click', () => this._toggleMenuMusicOption());
+    document
+      .getElementById('option-game-music-btn')
+      .addEventListener('click', () => this._toggleGameMusicOption());
     document.getElementById('end-turn-btn').addEventListener('click', () => this._handleEndTurn());
     document
       .getElementById('map-continue-btn')
@@ -124,6 +141,12 @@ export class UIManager {
       .getElementById('library-back-btn')
       .addEventListener('click', () => this._closeLibraryOverlay());
     document
+      .getElementById('run-summary-replay-btn')
+      .addEventListener('click', () => this._handleRunSummaryReplay());
+    document
+      .getElementById('run-summary-exit-btn')
+      .addEventListener('click', () => this._handleRunSummaryExit());
+    document
       .getElementById('weather-indicator')
       .addEventListener('click', (event) => this._toggleWeatherTooltip(event.currentTarget));
     document.addEventListener('click', (event) => {
@@ -139,25 +162,20 @@ export class UIManager {
     window.addEventListener('resize', () => this._scaleGame());
     this._scaleGame();
     this._renderReleaseNotes();
+    this._renderAudioOptions();
     this.updateUI();
     this._syncScreenState();
-    this._renderMuteButton();
+    this._renderCornerOptionsButton();
   }
 
-  _toggleMute() {
-    this.audioManager.toggleMute();
-    this._renderMuteButton();
-  }
+  _renderCornerOptionsButton() {
+    const btn = document.getElementById('corner-options-btn');
+    if (!btn) return;
 
-  _renderMuteButton() {
-    const muteBtn = document.getElementById('mute-btn');
-    if (!muteBtn) return;
-    const muted = this.audioManager.isMuted;
-    muteBtn.textContent = muted ? '🔇' : '🔊';
-    muteBtn.classList.toggle('is-muted', muted);
-    muteBtn.setAttribute('aria-pressed', String(muted));
-    muteBtn.setAttribute('aria-label', muted ? 'Włącz dźwięk' : 'Wycisz dźwięk');
-    muteBtn.title = muted ? 'Dźwięk wyłączony' : 'Dźwięk włączony';
+    const showOutsideTitle = this.state.currentScreen !== 'title';
+    btn.classList.toggle('hidden', !showOutsideTitle);
+    btn.setAttribute('aria-hidden', String(!showOutsideTitle));
+    btn.disabled = !showOutsideTitle;
   }
 
   /**
@@ -178,7 +196,9 @@ export class UIManager {
     document.getElementById('e-block').textContent = enemy.block;
     document.getElementById('energy').textContent = player.energy;
     document.getElementById('dutki').textContent = this.state.dutki;
-    document.getElementById('e-intent').textContent = this.state.getEnemyIntentText();
+    const enemyIntentEl = document.getElementById('e-intent');
+    enemyIntentEl.textContent = this.state.getEnemyIntentText();
+    enemyIntentEl.title = 'Wartość zamiaru uwzględnia Twoją aktualną Gardę.';
     document.getElementById('draw-pile-count').textContent = deck.length;
     document.getElementById('discard-pile-count').textContent = discard.length;
     document.getElementById('exhaust-pile-count').textContent = exhaust.length;
@@ -187,7 +207,7 @@ export class UIManager {
     this._renderHand();
     this._syncEndTurnButtonState();
     this._syncScreenState();
-    this._renderMuteButton();
+    this._renderCornerOptionsButton();
     const gameWrapper = document.getElementById('game-wrapper');
     if (gameWrapper) {
       gameWrapper.classList.toggle('hard-mode', this.state.difficulty === 'hard');
@@ -262,6 +282,47 @@ export class UIManager {
     modal.setAttribute('aria-hidden', 'true');
   }
 
+  _openOptionsModal() {
+    const modal = document.getElementById('options-modal');
+    if (!modal) return;
+    this._renderAudioOptions();
+    modal.classList.remove('hidden');
+    modal.setAttribute('aria-hidden', 'false');
+  }
+
+  _closeOptionsModal() {
+    const modal = document.getElementById('options-modal');
+    if (!modal) return;
+    modal.classList.add('hidden');
+    modal.setAttribute('aria-hidden', 'true');
+  }
+
+  _renderAudioOptions() {
+    const menuBtn = document.getElementById('option-menu-music-btn');
+    const gameBtn = document.getElementById('option-game-music-btn');
+    if (!menuBtn || !gameBtn) return;
+
+    const menuOn = this.audioManager.isMenuMusicEnabled;
+    menuBtn.textContent = menuOn ? 'ON' : 'OFF';
+    menuBtn.classList.toggle('is-on', menuOn);
+    menuBtn.setAttribute('aria-pressed', String(menuOn));
+
+    const gameOn = this.audioManager.isGameMusicEnabled;
+    gameBtn.textContent = gameOn ? 'ON' : 'OFF';
+    gameBtn.classList.toggle('is-on', gameOn);
+    gameBtn.setAttribute('aria-pressed', String(gameOn));
+  }
+
+  _toggleMenuMusicOption() {
+    this.audioManager.toggleMenuMusic(!this.audioManager.isMenuMusicEnabled);
+    this._renderAudioOptions();
+  }
+
+  _toggleGameMusicOption() {
+    this.audioManager.toggleGameMusic(!this.audioManager.isGameMusicEnabled);
+    this._renderAudioOptions();
+  }
+
   _syncScreenState() {
     const titleScreen = document.getElementById('title-screen');
     if (!titleScreen) return;
@@ -273,6 +334,7 @@ export class UIManager {
     );
     titleScreen.setAttribute('aria-hidden', String(!isTitle));
     this.audioManager.setContext(isTitle ? 'title' : 'inGame');
+    this._renderCornerOptionsButton();
   }
 
   _syncEndTurnButtonState() {
@@ -605,6 +667,28 @@ export class UIManager {
       const isBossFight = this.state.enemy.id === 'boss' || this.state.enemy.id === 'fiakier';
       const isBankrupt = this.state.enemy.isBankrupt;
       const bankruptBonus = this.state.enemyBankruptcyBonus;
+
+      if (isBossFight) {
+        this.audioManager.playVictoryTheme();
+        this.updateUI();
+        const showSummary = () => {
+          this.state.captureRunSummary('player_win');
+          this._showRunSummaryOverlay();
+        };
+
+        if (isBankrupt && bankruptBonus > 0) {
+          this._showFloatingText(
+            'sprite-enemy',
+            `+${bankruptBonus} ${this.state.getDutkiLabel(bankruptBonus)}!`,
+            'floating-dutki'
+          );
+          setTimeout(showSummary, 2500);
+        } else {
+          setTimeout(showSummary, 700);
+        }
+        return;
+      }
+
       if (isBankrupt) {
         this.updateUI();
         if (bankruptBonus > 0) {
@@ -622,8 +706,9 @@ export class UIManager {
       this._showVictoryOverlay(droppedDutki, isBossFight);
       return;
     }
-    const msg = 'Koniec gry! Tłum ceprów poprosił Cię o wspólną fotkę.';
-    setTimeout(() => alert(msg), 100);
+    this.audioManager.playDefeatTheme();
+    this.state.captureRunSummary('enemy_win');
+    setTimeout(() => this._showRunSummaryOverlay(), 700);
   }
 
   /**
@@ -786,12 +871,129 @@ export class UIManager {
     cardScreen.setAttribute('aria-hidden', 'true');
 
     if (isBossFight) {
-      this.showVictoryScreen();
+      this.state.captureRunSummary('player_win');
+      this._showRunSummaryOverlay();
       return;
     }
 
     this._openMapOverlay();
     this.updateUI();
+  }
+
+  _showRunSummaryOverlay() {
+    const overlay = document.getElementById('run-summary-overlay');
+    const title = document.getElementById('run-summary-title');
+    const killer = document.getElementById('run-summary-killer');
+    const killerLine = document.getElementById('run-summary-killer-line');
+    const floor = document.getElementById('run-summary-floor');
+    const dutki = document.getElementById('run-summary-dutki');
+    const turns = document.getElementById('run-summary-turns');
+    const relics = document.getElementById('run-summary-relics');
+    const deck = document.getElementById('run-summary-deck');
+    if (
+      !overlay ||
+      !title ||
+      !killer ||
+      !killerLine ||
+      !floor ||
+      !dutki ||
+      !turns ||
+      !relics ||
+      !deck
+    ) {
+      return;
+    }
+
+    const summary = this.state.runSummary;
+    if (!summary) return;
+
+    const isVictory = summary.outcome === 'player_win';
+    title.textContent = isVictory ? '🏔️ ZWYCIĘSTWO!' : '💀 KONIEC PRZYGODY';
+
+    if (summary.killerName) {
+      killer.classList.remove('hidden');
+      killerLine.textContent = `Zgładzony przez: ${summary.killerName}`;
+    } else {
+      killer.classList.add('hidden');
+      killerLine.textContent = '';
+    }
+
+    floor.textContent = String(summary.runStats.floorReached);
+    dutki.textContent = String(summary.runStats.totalDutkiEarned);
+    turns.textContent = String(summary.runStats.totalTurnsPlayed);
+
+    relics.innerHTML = '';
+    summary.finalRelics.forEach((relic, index) => {
+      const chip = document.createElement('button');
+      chip.type = 'button';
+      chip.className = `relic-chip run-summary-relic ${this._rarityClass(relic.rarity)}`;
+      chip.textContent = relic.emoji;
+      chip.title = `${relic.name}: ${relic.desc}`;
+      chip.style.animationDelay = `${index * 60}ms`;
+      const tip = document.createElement('span');
+      tip.className = 'relic-tooltip';
+      tip.textContent = `${relic.name}: ${relic.desc}`;
+      chip.appendChild(tip);
+      relics.appendChild(chip);
+    });
+
+    deck.innerHTML = '';
+    /** @type {Map<string, { card: import('../data/cards.js').CardDef, count: number }>} */
+    const grouped = new Map();
+    summary.finalDeck.forEach((card) => {
+      const existing = grouped.get(card.id);
+      if (existing) {
+        existing.count += 1;
+      } else {
+        grouped.set(card.id, { card, count: 1 });
+      }
+    });
+
+    [...grouped.values()].forEach(({ card, count }, index) => {
+      const cardEl = document.createElement('div');
+      cardEl.className = `run-summary-card ${this._rarityClass(card.rarity)}`;
+      cardEl.style.animationDelay = `${index * 40}ms`;
+      cardEl.innerHTML = `
+        <div class="run-summary-card-head">
+          <span class="run-summary-card-emoji">${card.emoji}</span>
+          <span class="run-summary-card-name">${card.name}</span>
+          <span class="run-summary-card-count">x${count}</span>
+        </div>
+        <div class="run-summary-card-desc">${card.desc}</div>
+      `;
+      deck.appendChild(cardEl);
+    });
+
+    this._hideOverlay('relic-reward-screen');
+    this._hideOverlay('card-reward-screen');
+    this._hideOverlay('map-overlay');
+    this._hideOverlay('shop-overlay');
+    this._hideOverlay('campfire-overlay');
+    this._hideOverlay('random-event-overlay');
+
+    overlay.classList.remove('hidden');
+    overlay.setAttribute('aria-hidden', 'false');
+    this.state.currentScreen = 'event';
+    this.updateUI();
+  }
+
+  _handleRunSummaryReplay() {
+    this._hideOverlay('run-summary-overlay');
+    this.state.resetForNewRun(startingDeck);
+    this.state.currentScreen = 'map';
+    this.mapMessage = '';
+    this._openMapOverlay();
+    this.updateUI();
+  }
+
+  _handleRunSummaryExit() {
+    this._hideOverlay('run-summary-overlay');
+    this._hideOverlay('map-overlay');
+    this.state.resetForNewRun(startingDeck);
+    this.state.currentScreen = 'title';
+    this.mapMessage = '';
+    this.updateUI();
+    this._syncScreenState();
   }
 
   /**

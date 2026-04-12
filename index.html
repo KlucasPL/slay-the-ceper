@@ -7,8 +7,8 @@
     <script type="module" src="/src/main.js"></script>
   </head>
   <body>
-    <button id="mute-btn" class="mute-btn" type="button" aria-pressed="false" aria-label="Wycisz dźwięk">
-      🔊
+    <button id="corner-options-btn" class="corner-options-btn hidden" type="button" aria-label="Opcje" aria-hidden="true" disabled>
+      ⚙️
     </button>
 
     <div id="title-screen" class="title-screen" aria-hidden="false">
@@ -50,6 +50,7 @@
           <button id="title-btn-hard" class="title-start-btn title-start-btn--hard">
             Tryb Dla Marka 🌶️
           </button>
+          <button id="title-btn-options" class="title-start-btn title-start-btn--library">OPCJE</button>
           <button id="title-btn-library" class="title-start-btn title-start-btn--library">
             Biblioteka
           </button>
@@ -72,6 +73,21 @@
         <span class="close-btn" role="button" tabindex="0" aria-label="Zamknij">&times;</span>
         <h2>Dziennik Zmian</h2>
         <div id="release-notes-container"></div>
+      </div>
+    </div>
+
+    <div id="options-modal" class="modal hidden" aria-hidden="true">
+      <div class="modal-content options-content">
+        <span class="close-btn" role="button" tabindex="0" aria-label="Zamknij">&times;</span>
+        <h2>Opcje</h2>
+        <div class="options-row">
+          <span>Muzyka w Menu</span>
+          <button id="option-menu-music-btn" class="option-toggle" type="button" aria-pressed="true">ON</button>
+        </div>
+        <div class="options-row">
+          <span>Muzyka w Grze</span>
+          <button id="option-game-music-btn" class="option-toggle" type="button" aria-pressed="true">ON</button>
+        </div>
       </div>
     </div>
 
@@ -244,6 +260,35 @@
         <p id="victory-dutki" class="victory-dutki"></p>
         <div id="reward-cards" class="reward-cards"></div>
         <button id="reward-skip-btn" class="reward-skip-btn" type="button">Pomiń Karty</button>
+      </div>
+    </div>
+
+    <div id="run-summary-overlay" class="victory-overlay hidden" aria-hidden="true">
+      <div class="victory-panel run-summary-panel">
+        <h2 id="run-summary-title" class="victory-title">💀 KONIEC PRZYGODY</h2>
+
+        <p id="run-summary-killer" class="run-summary-killer hidden">
+          <strong id="run-summary-killer-line"></strong>
+        </p>
+
+        <div class="run-summary-stats">
+          <div class="run-summary-stat">Piętro: <span id="run-summary-floor">1</span></div>
+          <div class="run-summary-stat">Zebrane Dutki: <span id="run-summary-dutki">0</span></div>
+          <div class="run-summary-stat">Tury: <span id="run-summary-turns">0</span></div>
+        </div>
+
+        <h3 class="run-summary-section-title">Pamiątki</h3>
+        <div id="run-summary-relics" class="run-summary-relics"></div>
+
+        <h3 class="run-summary-section-title">Końcowa Talia</h3>
+        <div id="run-summary-deck" class="run-summary-deck"></div>
+
+        <div class="run-summary-actions">
+          <button id="run-summary-replay-btn" class="reward-relic-btn" type="button">
+            Zagraj ponownie
+          </button>
+          <button id="run-summary-exit-btn" class="reward-skip-btn" type="button">Menu Główne</button>
+        </div>
       </div>
     </div>
 
