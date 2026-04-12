@@ -531,7 +531,7 @@ export const enemyLibrary = {
     patternType: 'loop',
     passive: 'parcie_na_szklo',
     pattern: [
-      { type: 'attack', name: 'Selfie z zaskoczenia', damage: 5, hits: 1, applyVulnerable: 2 },
+      { type: 'attack', name: 'Selfie z zaskoczenia', damage: 12, hits: 1, applyVulnerable: 2 },
       { type: 'status', name: 'Oznaczenie w relacji', addStatusCard: 'spam_tagami', amount: 2 },
       { type: 'block', name: 'Filtr upiększający', block: 12, heal: 4 },
     ],
@@ -704,7 +704,7 @@ export const enemyLibrary = {
       { type: 'buff', name: 'Górski Ryk', strengthGain: 2, block: 10 },
       { type: 'attack', name: 'Agresywne pozowanie', damage: 4, hits: 3 },
       { type: 'attack', name: 'Podatek od zdjęcia', damage: 15, hits: 1, applyFrail: 2 },
-      { type: 'attack', name: 'Uścisk Krupówek', damage: 23, hits: 1 },
+      { type: 'attack', name: 'Uścisk Krupówek', damage: 20, hits: 1 },
     ],
   },
 };

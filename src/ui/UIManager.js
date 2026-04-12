@@ -1750,6 +1750,11 @@ export class UIManager {
     overlay.setAttribute('aria-hidden', 'false');
     this.audioManager.playCampfireMusic();
 
+    const campHpCurrent = document.getElementById('camp-hp-current');
+    const campHpMax = document.getElementById('camp-hp-max');
+    if (campHpCurrent) campHpCurrent.textContent = String(this.state.player.hp);
+    if (campHpMax) campHpMax.textContent = String(this.state.player.maxHp);
+
     const select = document.getElementById('camp-card-select');
     select.innerHTML = '';
     const options = this.state.getUpgradeableAttackCards();

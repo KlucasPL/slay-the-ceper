@@ -1646,7 +1646,6 @@ export class GameState {
     }
 
     this._checkEnemyBankruptcy();
-
     if (
       dmg > 0 &&
       this.enemy.passive === 'ochrona_wizerunku' &&
