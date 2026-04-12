@@ -255,6 +255,7 @@ body {
 .note-changes li {
   margin-bottom: 5px;
   font-size: 0.95rem;
+}
 
 .options-content {
   max-width: 420px;
@@ -298,7 +299,6 @@ body {
   border-color: #2f7a43;
   background: #3c9d55;
   color: #f4fff6;
-}
 }
 
 .title-btn-row {
@@ -857,6 +857,8 @@ h1 {
   justify-content: center;
   z-index: 999;
   padding: 20px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .victory-overlay.hidden {
@@ -865,6 +867,8 @@ h1 {
 
 .victory-panel {
   width: min(960px, 95vw);
+  max-height: calc(100dvh - 40px);
+  overflow: auto;
   background: linear-gradient(180deg, #6a4222 0%, #4b2d17 100%);
   border: 10px solid #7c4a1f;
   box-shadow:
@@ -990,7 +994,9 @@ h1 {
 .run-summary-panel {
   width: min(1080px, 96vw);
   max-height: 92vh;
-  overflow: hidden;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
   background:
     linear-gradient(rgba(0, 0, 0, 0.22), rgba(0, 0, 0, 0.22)),
     repeating-linear-gradient(
@@ -1144,6 +1150,8 @@ h1 {
 .library-panel {
   width: min(1080px, 96vw);
   max-height: 95vh;
+  display: flex;
+  flex-direction: column;
   background:
     radial-gradient(circle at 78% 16%, rgba(255, 235, 178, 0.14), transparent 34%),
     radial-gradient(circle at 16% 82%, rgba(101, 68, 40, 0.25), transparent 38%),
@@ -1273,7 +1281,9 @@ h1 {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 12px;
-  max-height: 58vh;
+  max-height: none;
+  flex: 1 1 auto;
+  min-height: 0;
   overflow: auto;
   padding: 4px 2px 8px;
 }
@@ -1335,6 +1345,7 @@ h1 {
 .library-back-btn {
   display: block;
   margin: 16px auto 0;
+  flex-shrink: 0;
 }
 
 .event-title {
@@ -1726,6 +1737,51 @@ h1 {
 
 /* --- Portrait mobile (narrow screens) --- */
 @media (max-width: 600px) {
+  .victory-overlay,
+  .event-overlay {
+    align-items: flex-start;
+    padding: 10px;
+  }
+
+  .victory-panel,
+  .event-panel,
+  .run-summary-panel,
+  .library-panel {
+    width: 100%;
+    max-height: 96dvh;
+    margin: 0;
+  }
+
+  .run-summary-deck {
+    max-height: 30dvh;
+    grid-template-columns: 1fr;
+  }
+
+  .run-summary-actions {
+    position: sticky;
+    bottom: 0;
+    padding-top: 10px;
+    padding-bottom: 4px;
+    background: linear-gradient(180deg, rgba(69, 40, 22, 0), rgba(69, 40, 22, 0.96) 36%);
+  }
+
+  .library-grid {
+    grid-template-columns: repeat(auto-fit, minmax(152px, 1fr));
+  }
+
+  .library-grid .library-item.card {
+    width: 140px;
+    min-height: 205px;
+    padding: 14px;
+  }
+
+  .library-back-btn {
+    position: sticky;
+    bottom: 0;
+    width: min(280px, 100%);
+    background: linear-gradient(180deg, rgba(74, 47, 28, 0.9), rgba(74, 47, 28, 0.98));
+  }
+
   .title-panel {
     padding: 20px 10px;
   }

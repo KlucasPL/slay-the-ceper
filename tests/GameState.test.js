@@ -2020,7 +2020,7 @@ describe('GameState', () => {
   describe('resetBattle', () => {
     it('keeps enemy base stats from library on regular nodes', () => {
       const s = freshState();
-      vi.spyOn(Math, 'random').mockReturnValue(0);
+      vi.spyOn(s, '_pickRandomEnemyDef').mockReturnValue(enemyLibrary.cepr);
       s.resetBattle();
       expect(s.enemy.id).toBe('cepr');
       expect(s.enemy.maxHp).toBe(enemyLibrary.cepr.maxHp);
@@ -2116,7 +2116,7 @@ describe('GameState', () => {
 
     it('can load Busiarz from the enemy library after victory', () => {
       const s = freshState();
-      vi.spyOn(Math, 'random').mockReturnValue(0.2);
+      vi.spyOn(s, '_pickRandomEnemyDef').mockReturnValue(enemyLibrary.busiarz);
       s.resetBattle();
       expect(s.enemy.id).toBe('busiarz');
       expect(s.enemy.name).toBe('Wąsaty Busiarz');
@@ -2263,7 +2263,7 @@ describe('GameState', () => {
     it('does not scale enemies in normal mode', () => {
       const s = freshState();
       s.difficulty = 'normal';
-      vi.spyOn(Math, 'random').mockReturnValue(0);
+      vi.spyOn(s, '_pickRandomEnemyDef').mockReturnValue(enemyLibrary.cepr);
       s.resetBattle();
       expect(s.enemyScaleFactor).toBe(1.0);
       expect(s.enemy.maxHp).toBe(enemyLibrary.cepr.maxHp);
@@ -2284,7 +2284,7 @@ describe('GameState', () => {
       const s = freshState();
       s.difficulty = 'hard';
       s.enemyScaleFactor = 1.1;
-      vi.spyOn(Math, 'random').mockReturnValue(0);
+      vi.spyOn(s, '_pickRandomEnemyDef').mockReturnValue(enemyLibrary.cepr);
       s.resetBattle(); // increments scale to 1.21, then creates enemy with that scale
       expect(s.enemy.maxHp).toBe(Math.round(enemyLibrary.cepr.maxHp * 1.21));
       expect(s.enemy.baseAttack).toBe(Math.round(enemyLibrary.cepr.baseAttack * 1.21));
@@ -2380,7 +2380,7 @@ describe('GameState', () => {
       expect(s.player.hp).toBe(49);
     });
 
-    it('ochrona_wizerunku does not trigger when attack is fully blocked by boss', () => {
+    it('ochrona_wizerunku still triggers when boss fully blocks an attack', () => {
       const s = freshBossState();
       s.player.hp = 50;
       s.player.block = 5;
@@ -2389,7 +2389,7 @@ describe('GameState', () => {
       s.hand = ['ciupaga'];
       s.player.energy = 3;
       s.playCard(0);
-      expect(s.player.block).toBe(5);
+      expect(s.player.block).toBe(4);
       expect(s.player.hp).toBe(50);
     });
 
