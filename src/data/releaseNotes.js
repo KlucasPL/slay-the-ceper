@@ -5,6 +5,15 @@
 /** @type {ReleaseNoteEntry[]} */
 export const releaseNotesData = [
   {
+    version: 'v1.2.0 - Struktura Runa i Prawdziwe Elity',
+    date: 'Kwiecień 2026',
+    changes: [
+      '🗺️ STRUKTURA RUNA: Wyprawa ma teraz 15 poziomów, gwarantowaną Watrę w połowie trasy oraz końcową Watrę przed bossem, co stabilizuje tempo przygotowania do finału.',
+      '🎁 SKARB I ŚCIEŻKI: Każdy run zawiera dokładnie jeden gwarantowany węzeł skarbu we wczesnym-midgame, a połączenia na mapie są czytelniejsze i nie przecinają się lokalnie.',
+      '👹 PRAWDZIWE ELITY: Węzły elitarne korzystają z osobnej puli przeciwników, pojawiają się najwcześniej od y=4 i dają dedykowaną nagrodę 1 z 3 pamiątek (z fallbackiem do kart rare).',
+    ],
+  },
+  {
     version: 'v1.1.3 - Nowa muzyka i poprawki',
     date: 'Kwiecień 2026',
     changes: [

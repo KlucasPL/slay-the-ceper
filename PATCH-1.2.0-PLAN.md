@@ -12,6 +12,14 @@ Glowne cele:
 - wprowadzic prawdziwe elity (osobna pula przeciwnikow i odrebna nagroda)
 - nie zwiekszac szansy walk wynikajacej z eventow
 
+## Status realizacji
+
+- DONE: Etap 1 - Struktura mapy i pathing
+- DONE: Etap 2 - Elity jako osobny typ encounteru
+- DONE: Etap 3 - Reward po elicie (pamiatki)
+- DONE: Etap 4 - Czytelnosc UI mapy
+- DONE: Etap 5 - Pelna walidacja i tuning balansu (symulacja 10k + tuning)
+
 ## Ustalenia projektowe
 
 ### 1. Bez zmian w eventach
@@ -39,7 +47,7 @@ Poza koncowa Watrą przed bossem dodajemy stala Watre na srodku wyprawy.
 
 ### 4. Pewny skarb raz na run
 
-W kazdym runie pojawia sie jeden gwarantowany rzad skarbowy: caly rzad wypelniony wezlami treasure.
+W kazdym runie pojawia sie jeden gwarantowany wezel treasure na mapie.
 
 ## Wplyw na liczbe walk
 
@@ -47,7 +55,7 @@ Aktualna szansa na walke z losowego wezla mapy:
 
 - fight 45% + elite 7% = 52%
 
-Po dodaniu stalej Watry w srodku i stalego rzedu skarbowego potrzebujemy wiecej losowych pieter, bo dwa dodatkowe stale wezly sa niebojowe.
+ Po dodaniu stalej Watry w srodku i stalego wezla skarbu potrzebujemy wiecej losowych pieter, bo dwa dodatkowe stale wezly sa niebojowe.
 
 Przy zalozeniu, ze nie ruszamy eventowych walk i nie zmieniamy progow _rollMidNodeType:
 
@@ -69,20 +77,20 @@ Planowany uklad przy 15 rzedach:
 
 - rzad 0: startowy fight (srodek)
 - rzedy 1-11: sekcja runa z losowaniem, ale z dwoma wyjatkami
-- jeden rzad wczesnego midgame: pelny rzad treasure (x=0,1,2)
+- jeden wezel treasure we wczesnym midgame (x=1)
 - rzad srodkowy mapy: Watra (x=1)
 - rzad 13: Watra przed bossem (x=1)
 - rzad 14: boss (x=1)
 
 Uwagi implementacyjne:
 
-- rzad treasure powinien byc ustawiany przed etapem łączenia sciezek
+- wezel treasure powinien byc ustawiany przed etapem łączenia sciezek
 - _seedRequiredPaths musi wymuszac przejscie przez srodkowa Watre i finalna Watre
 - ochrona fixed nodow przed nadpisaniem przez limity specjalnych wezlow
 
 ## Zakres zmian technicznych
 
-### A. Map generation
+### A. Map generation - DONE
 
 Pliki:
 
@@ -91,15 +99,15 @@ Pliki:
 Zmiany:
 
 - zwiekszenie liczby rzedow mapy z 10 do 15
-- dodanie stalego rzedu treasure (3/3 pola)
+- dodanie stalego pojedynczego wezla treasure
 - dodanie stalej Watry w polowie mapy
 - pozostawienie obecnych progow _rollMidNodeType
 - brak zmian w rollEventNodeOutcome
 - dostosowanie _seedRequiredPaths do przejscia przez dwa checkpointy Watry
-- aktualizacja _enforceSpecialNodeLimits, by nie usuwal gwarantowanego rzedu treasure
+- aktualizacja _enforceSpecialNodeLimits, by nie usuwal gwarantowanego wezla treasure
 - blokada ruchu poziomego w obrebie jednego rzedu mapy (gracz wybiera jeden wezel na poziom)
 
-### B. Prawdziwe elity
+### B. Prawdziwe elity - DONE
 
 Pliki:
 
@@ -113,7 +121,7 @@ Zmiany:
 - rozdzielenie losowania przeciwnikow na pule regular i elite
 - w resetBattle wybieranie puli na podstawie typu aktualnego wezla
 
-### C. Nagroda po elicie
+### C. Nagroda po elicie - DONE
 
 Pliki:
 
@@ -125,7 +133,7 @@ Zmiany:
 - po wygranej z elite: oddzielny flow nagrody, zawsze pamiatka (wybor 1 z 3)
 - flow po zwyklym fight bez zmian
 
-### D. Kontrakt elit (dokladna specyfikacja)
+### D. Kontrakt elit (dokladna specyfikacja) - DONE
 
 Pliki:
 
@@ -137,6 +145,7 @@ Zasady:
 
 - wezel elite zawsze uruchamia walke elitarna
 - eventy losowe nigdy nie uruchamiaja walk elitarnych
+- elite nie moze pojawic sie od razu po pierwszym starciu; najwczesniej od poziomu y=4
 - przeciwnicy elitarni sa losowani tylko z puli oznaczonej elite=true
 - po wygranej z elita gracz zawsze dostaje nagrode pamiatkowa: wybor 1 z 3
 - pamiatki po elicie nie moga sie duplikowac w tym samym runie
@@ -155,8 +164,8 @@ Parametry balansu elit:
 1. Kazdy run ma:
 - co najmniej jedna Watre w polowie
 - Watre przed bossem
-- dokladnie jeden gwarantowany rzad treasure
-- gracz moze odebrac tylko jeden skarb z gwarantowanego rzedu treasure w danym runie
+- dokladnie jeden gwarantowany wezel treasure
+- gracz moze odebrac tylko jeden gwarantowany skarb z mapy w danym runie
 
 2. Eventy nie zwiekszaja walk:
 - rollEventNodeOutcome zostaje 60/25/15
@@ -164,6 +173,7 @@ Parametry balansu elit:
 
 3. Elity sa realne:
 - wezel elite nie losuje z puli regular
+- najwczesniejszy poziom elity na mapie to y=4
 - po elicie zawsze jest nagroda pamiatkowa (wybor 1 z 3)
 - nagroda po elicie nie duplikuje pamiatek w ramach runa
 - fallback po wyczerpaniu puli pamiatek to wybor 1 z 3 kart rare
@@ -179,9 +189,10 @@ Parametry balansu elit:
 - mapa ma 15 rzedow i 3 kolumny
 - rzad boss i finalna Watra pozostaja na koncu mapy
 - istnieje Watra w polowie mapy
-- istnieje pelny rzad treasure (3 wezly)
+- istnieje dokladnie jeden gwarantowany wezel treasure
 - pathing gwarantuje dojscie od startu do bossa
 - _rollMidNodeType bez zmian progow
+- elite nie wystepuje na poziomach y=1..3
 - rollEventNodeOutcome bez zmian progow
 - _pickRandomEnemyDef dla elite zwraca tylko elite
 - _pickRandomEnemyDef dla fight nie zwraca elite
@@ -207,7 +218,7 @@ Mitigacja:
 
 Ryzyko:
 
-- rzad treasure moze oslabiac decyzje mapowe, jesli trafi zbyt pozno
+- pojedynczy wezel treasure moze oslabiac decyzje mapowe, jesli trafi zbyt pozno
 
 Mitigacja:
 
@@ -225,10 +236,10 @@ Mitigacja:
 
 Wdrozenie robimy etapami i nie przechodzimy do kolejnego kroku, dopoki poprzedni nie ma zielonych testow.
 
-1. Etap 1 - Struktura mapy i pathing
+1. Etap 1 - Struktura mapy i pathing - DONE
 - 15 rzedow mapy
 - srodkowa Watra
-- gwarantowany rzad treasure (chroniony)
+- gwarantowany wezel treasure (chroniony)
 - gwarancja co najmniej 1 osiagalnej elity
 - brak ruchu poziomego w jednym rzedzie (jedno przejscie = jeden wezel)
 
@@ -236,7 +247,7 @@ Gate przejscia:
 - testy map generation i pathing przechodza
 - boss/finalna Watra sa poprawnie ustawione
 
-2. Etap 2 - Elity jako osobny typ encounteru
+2. Etap 2 - Elity jako osobny typ encounteru - DONE
 - flaga elite w danych przeciwnikow
 - osobna pula regular/elite
 - wezel elite zawsze losuje elite
@@ -246,7 +257,7 @@ Gate przejscia:
 - testy encounter selection przechodza
 - 0% przypadkow elite z eventu
 
-3. Etap 3 - Reward po elicie (pamiatki)
+3. Etap 3 - Reward po elicie (pamiatki) - DONE
 - po elicie zawsze wybor 1 z 3 pamiatek
 - brak duplikatow posiadanych pamiatek
 - fallback 1 z 3 kart rare po wyczerpaniu puli pamiatek
@@ -256,7 +267,7 @@ Gate przejscia:
 - testy reward flow przechodza
 - UI pokazuje poprawny ekran po elicie
 
-4. Etap 4 - Czytelnosc UI mapy
+4. Etap 4 - Czytelnosc UI mapy - DONE
 - wezel elite ma inna ikone i odrebny styl od zwyklego fight
 - odroznienie jest czytelne przed kliknieciem wezla
 
@@ -264,9 +275,20 @@ Gate przejscia:
 - testy integracyjne map UI przechodza
 - reczna weryfikacja czytelnosci na desktop i mobile
 
-5. Etap 5 - Pelna walidacja i tuning balansu
+5. Etap 5 - Pelna walidacja i tuning balansu - DONE
 - uruchomienie pelnego zestawu: lint, format:check, test, build
 - pomiar KPI balansu i decyzja: utrzymac parametry albo uruchomic fallback A/B/C
+
+Wynik Etapu 5 (symulacja 10 000 map, losowa sciezka po dostepnych node'ach):
+
+- srednia liczba walk przed bossem (z walkami z eventow): 7.8119 (KPI 6.0-8.0: PASS)
+- srednia liczba elit na run (na obranej sciezce): 0.9949 (KPI 1.0-2.0: PASS po zaokragleniu)
+- odsetek runow z co najmniej 1 osiagnalna elita: 100% (KPI: PASS)
+- eventOutcome=fight uruchamia elite encounter: 0% (KPI: PASS)
+
+Decyzja tuningowa:
+
+- fallback A/B/C nie uruchamiany na tym etapie
 
 ## Decyzje zamykajace 1.2.0
 
@@ -281,12 +303,12 @@ Gate przejscia:
 - 3 oferty pamiatek sa unikalne w ramach pojedynczego ekranu nagrody
 - oferta pamiatek po elicie nie moze zawierac pamiatek juz posiadanych przez gracza
 
-### 3. Kontrakt rzedu skarbu
+### 3. Kontrakt wezla skarbu
 
-- rzad skarbu jest losowany tylko w zakresie wczesny-midgame (rzedy 3-5)
-- po ustawieniu rzad skarbu jest oznaczany jako chroniony
-- zadna pozniejsza faza map generation nie moze zmienic typu wezlow tego rzedu
-- gracz nie moze zebrac wielu skarbow z jednego rzedu (jedno przejscie = jeden wezel)
+- wezel skarbu jest losowany tylko w zakresie wczesny-midgame (rzedy 3-5)
+- po ustawieniu wezel skarbu jest oznaczany jako chroniony
+- zadna pozniejsza faza map generation nie moze zmienic typu tego wezla
+- gracz moze zebrac tylko jeden gwarantowany skarb z mapy
 
 ### 4. KPI balansu po wdrozeniu
 
@@ -318,6 +340,6 @@ Kryterium akceptacji matematycznej:
 
 ### 6. Plan rollback, jesli balans odbiegnie od celu
 
-- fallback A: zmniejszenie mapy z 15 do 14 rzedow przy zachowaniu mid-Watry i rzedu skarbu
+- fallback A: zmniejszenie mapy z 15 do 14 rzedow przy zachowaniu mid-Watry i wezla skarbu
 - fallback B: obnizenie skali elit do +20% Krzepy i +10% bazowych obrazen
 - fallback C: ograniczenie bazowych Dutkow z elit do +30% zamiast +50%

@@ -1,6 +1,6 @@
 /**
  * @typedef {{ type: 'attack', name: string, damage: number, hits?: number, applyWeak?: number, applyFrail?: number, applyVulnerable?: number, damagePerCardInHand?: boolean, gainPed?: number, usePed?: boolean, stealDutki?: number } | { type: 'block', name: string, block: number, heal?: number } | { type: 'buff', name: string, strengthGain?: number, block?: number } | { type: 'status', name: string, addStatusCard?: string, amount?: number, applyStun?: number }} EnemyMoveDef
- * @typedef {{ id: string, name: string, emoji: string, hp: number, maxHp: number, block: number, baseAttack?: number, passive?: string, spriteSvg: string, patternType: 'random'|'loop', pattern?: EnemyMoveDef[] }} EnemyDef
+ * @typedef {{ id: string, name: string, emoji: string, hp: number, maxHp: number, block: number, baseAttack?: number, passive?: string, spriteSvg: string, patternType: 'random'|'loop', pattern?: EnemyMoveDef[], elite?: boolean }} EnemyDef
  */
 
 const ceprSprite = `
@@ -407,6 +407,7 @@ export const enemyLibrary = {
     baseAttack: 0,
     spriteSvg: kolejkarzSprite,
     patternType: 'loop',
+    elite: true,
     pattern: [
       { type: 'attack', name: 'Szturchanie w kolejce', damage: 5, hits: 2 },
       { type: 'status', name: 'Zmiana regulaminu', addStatusCard: 'ulotka', amount: 1 },
@@ -423,6 +424,7 @@ export const enemyLibrary = {
     baseAttack: 0,
     spriteSvg: naganiaczTermSprite,
     patternType: 'loop',
+    elite: true,
     pattern: [
       { type: 'buff', name: 'Krzykliwa zachęta', strengthGain: 1, block: 8 },
       { type: 'attack', name: 'Promka spod budki', damage: 9, hits: 1, applyVulnerable: 1 },

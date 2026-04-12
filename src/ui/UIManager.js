@@ -679,7 +679,9 @@ export class UIManager {
   _showEndGame(outcome) {
     if (outcome === 'player_win') {
       const droppedDutki = this.state.grantBattleDutki();
+      const currentNode = this.state.getCurrentMapNode();
       const isBossFight = this.state.enemy.id === 'boss' || this.state.enemy.id === 'fiakier';
+      const isEliteFight = currentNode?.type === 'elite';
       const isBankrupt = this.state.enemy.isBankrupt;
       const bankruptBonus = this.state.enemyBankruptcyBonus;
 
@@ -714,10 +716,20 @@ export class UIManager {
           );
         }
         setTimeout(() => {
-          this._showVictoryOverlay(droppedDutki, isBossFight);
+          if (isEliteFight) {
+            this._showEliteRewardOverlay(droppedDutki);
+          } else {
+            this._showVictoryOverlay(droppedDutki, isBossFight);
+          }
         }, 2500);
         return;
       }
+
+      if (isEliteFight) {
+        this._showEliteRewardOverlay(droppedDutki);
+        return;
+      }
+
       this._showVictoryOverlay(droppedDutki, isBossFight);
       return;
     }
@@ -831,11 +843,16 @@ export class UIManager {
     relicScreen.setAttribute('aria-hidden', 'false');
   }
 
-  _showCardRewardScreen(droppedDutki, choices, isBossFight = false) {
+  _showCardRewardScreen(droppedDutki, choices, isBossFight = false, options = {}) {
+    const { title = 'Cepr usieczony! Wybierz łup:', allowSkip = true } = options;
     const cardScreen = document.getElementById('card-reward-screen');
+    const titleEl = cardScreen?.querySelector('.victory-title');
     const rewardDutki = document.getElementById('victory-dutki');
     const rewardCards = document.getElementById('reward-cards');
     const skipBtn = document.getElementById('reward-skip-btn');
+    if (titleEl) {
+      titleEl.textContent = title;
+    }
 
     const lines = [];
     if (this.state.lastVictoryMessage) {
@@ -870,7 +887,13 @@ export class UIManager {
       rewardCards.appendChild(cardEl);
     });
 
-    skipBtn.onclick = () => this._closeRewardScreens(isBossFight);
+    if (allowSkip) {
+      skipBtn.classList.remove('hidden');
+      skipBtn.onclick = () => this._closeRewardScreens(isBossFight);
+    } else {
+      skipBtn.classList.add('hidden');
+      skipBtn.onclick = null;
+    }
 
     cardScreen.classList.remove('hidden');
     cardScreen.setAttribute('aria-hidden', 'false');
@@ -879,11 +902,19 @@ export class UIManager {
   _closeRewardScreens(isBossFight = false) {
     const relicScreen = document.getElementById('relic-reward-screen');
     const cardScreen = document.getElementById('card-reward-screen');
+    const skipBtn = document.getElementById('reward-skip-btn');
 
     relicScreen.classList.add('hidden');
     relicScreen.setAttribute('aria-hidden', 'true');
     cardScreen.classList.add('hidden');
     cardScreen.setAttribute('aria-hidden', 'true');
+    const cardTitle = cardScreen.querySelector('.victory-title');
+    if (cardTitle) {
+      cardTitle.textContent = 'Cepr usieczony! Wybierz łup:';
+    }
+    if (skipBtn) {
+      skipBtn.classList.remove('hidden');
+    }
 
     if (isBossFight) {
       this.state.captureRunSummary('player_win');
@@ -1028,6 +1059,86 @@ export class UIManager {
     return this.state.generateRelicReward(forceDrop);
   }
 
+  /**
+   * @param {number} count
+   * @returns {string[]}
+   */
+  _pickEliteRewardRelics(count) {
+    const pool = Object.keys(relicLibrary).filter((id) => !this.state.relics.includes(id));
+    if (pool.length < count) return [];
+    return this.state._pickUniqueItems(pool, relicLibrary, count);
+  }
+
+  /**
+   * @param {number} count
+   * @returns {string[]}
+   */
+  _pickRareRewardCards(count) {
+    const pool = Object.keys(cardLibrary).filter(
+      (id) => !cardLibrary[id]?.isStarter && cardLibrary[id]?.rarity === 'rare'
+    );
+    return this.state._pickUniqueItems(pool, cardLibrary, count);
+  }
+
+  /**
+   * @param {number} droppedDutki
+   */
+  _showEliteRewardOverlay(droppedDutki) {
+    const relicChoices = this._pickEliteRewardRelics(3);
+    if (relicChoices.length < 3) {
+      const fallbackChoices = this._pickRareRewardCards(3);
+      this._showCardRewardScreen(droppedDutki, fallbackChoices, false, {
+        title: 'Elita pokonana! Wybierz kartę rare:',
+        allowSkip: false,
+      });
+      document.getElementById('end-turn-btn').disabled = true;
+      return;
+    }
+
+    const cardScreen = document.getElementById('card-reward-screen');
+    const rewardDutki = document.getElementById('victory-dutki');
+    const rewardCards = document.getElementById('reward-cards');
+    const skipBtn = document.getElementById('reward-skip-btn');
+    const titleEl = cardScreen?.querySelector('.victory-title');
+    if (!cardScreen || !rewardDutki || !rewardCards || !skipBtn || !titleEl) return;
+
+    const lines = [];
+    if (this.state.lastVictoryMessage) {
+      lines.push(this.state.lastVictoryMessage);
+    }
+    if (droppedDutki > 0) {
+      lines.push(`Łup z bitki: +${droppedDutki} ${this.state.getDutkiLabel(droppedDutki)}`);
+    }
+    rewardDutki.textContent = lines.join(' | ');
+    titleEl.textContent = 'Elita pokonana! Wybierz pamiątkę:';
+    rewardCards.innerHTML = '';
+
+    relicChoices.forEach((relicId) => {
+      const relic = relicLibrary[relicId];
+      if (!relic) return;
+      const relicEl = document.createElement('button');
+      relicEl.type = 'button';
+      relicEl.className = `reward-card reward-relic-choice ${this._rarityClass(relic.rarity)}`;
+      relicEl.innerHTML = `
+        <div class="reward-emoji">${relic.emoji}</div>
+        <div class="reward-name">${relic.name}</div>
+        <div class="reward-rarity">${this._rarityLabel(relic.rarity, 'relic')}</div>
+        <div class="reward-desc">${relic.desc}</div>
+      `;
+      relicEl.addEventListener('click', () => {
+        this.state.addRelic(relicId);
+        this._closeRewardScreens(false);
+      });
+      rewardCards.appendChild(relicEl);
+    });
+
+    skipBtn.classList.add('hidden');
+    skipBtn.onclick = null;
+    cardScreen.classList.remove('hidden');
+    cardScreen.setAttribute('aria-hidden', 'false');
+    document.getElementById('end-turn-btn').disabled = true;
+  }
+
   _openMapOverlay() {
     this._renderMapTrack();
     const overlay = document.getElementById('map-overlay');
@@ -1077,6 +1188,7 @@ export class UIManager {
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'map-node-btn';
+        btn.classList.add(`map-node-type-${node.type}`);
 
         const isCurrent =
           levelIndex === this.state.currentLevel && nodeIndex === this.state.currentNodeIndex;
@@ -1159,6 +1271,8 @@ export class UIManager {
     svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
     svg.innerHTML = '';
 
+    const reachableTargets = this.state.getReachableNodes();
+
     const treeRect = tree.getBoundingClientRect();
     for (let level = 0; level < this.state.map.length - 1; level++) {
       this.state.map[level].forEach((node, nodeIndex) => {
@@ -1176,8 +1290,8 @@ export class UIManager {
           const y2 = toRect.top - treeRect.top + toRect.height / 2;
 
           const curve = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-          const controlY = (y1 + y2) / 2;
-          curve.setAttribute('d', `M ${x1} ${y1} Q ${x1} ${controlY} ${x2} ${y2}`);
+          const dy = Math.max(14, Math.abs(y2 - y1) * 0.35);
+          curve.setAttribute('d', `M ${x1} ${y1} C ${x1} ${y1 + dy} ${x2} ${y2 - dy} ${x2} ${y2}`);
           curve.classList.add('map-link');
 
           const isCurrent =
@@ -1185,7 +1299,18 @@ export class UIManager {
           const isReachable =
             this.state.hasStartedFirstBattle &&
             level + 1 === this.state.currentLevel + 1 &&
-            this.state.getReachableNodes().includes(targetIndex);
+            reachableTargets.includes(targetIndex);
+          const isDonePath = level < this.state.currentLevel;
+          const isFuturePath = level > this.state.currentLevel;
+
+          if (isDonePath) {
+            curve.classList.add('done');
+          } else if (isFuturePath) {
+            curve.classList.add('future');
+          }
+          if (isReachable) {
+            curve.classList.add('available');
+          }
           if (isCurrent && isReachable) {
             curve.classList.add('active');
           }
