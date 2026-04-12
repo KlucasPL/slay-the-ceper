@@ -365,7 +365,7 @@ export const enemyLibrary = {
   },
   influencerka: {
     id: 'influencerka',
-    name: 'Influencerka "Lajki & Oscypki"',
+    name: 'Influencerka',
     emoji: '🤳',
     hp: 60,
     maxHp: 60,

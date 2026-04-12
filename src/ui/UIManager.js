@@ -161,11 +161,22 @@ export class UIManager {
     });
     window.addEventListener('resize', () => this._scaleGame());
     this._scaleGame();
+    this._renderReleaseNotesButtonLabel();
     this._renderReleaseNotes();
     this._renderAudioOptions();
     this.updateUI();
     this._syncScreenState();
     this._renderCornerOptionsButton();
+  }
+
+  _renderReleaseNotesButtonLabel() {
+    const releaseNotesBtn = document.getElementById('btn-release-notes');
+    if (!releaseNotesBtn) return;
+
+    const latestVersion = releaseNotesData[0]?.version?.split(' - ')[0];
+    releaseNotesBtn.textContent = latestVersion
+      ? `📜 Co nowego? (${latestVersion})`
+      : '📜 Co nowego?';
   }
 
   _renderCornerOptionsButton() {
@@ -328,10 +339,14 @@ export class UIManager {
     if (!titleScreen) return;
 
     const isTitle = this.state.currentScreen === 'title';
-    titleScreen.classList.toggle(
-      'hidden',
-      !isTitle && !titleScreen.classList.contains('is-hiding')
-    );
+    if (isTitle) {
+      titleScreen.classList.remove('is-hiding', 'hidden');
+    } else {
+      titleScreen.classList.toggle(
+        'hidden',
+        !titleScreen.classList.contains('is-hiding')
+      );
+    }
     titleScreen.setAttribute('aria-hidden', String(!isTitle));
     this.audioManager.setContext(isTitle ? 'title' : 'inGame');
     this._renderCornerOptionsButton();
@@ -979,6 +994,7 @@ export class UIManager {
 
   _handleRunSummaryReplay() {
     this._hideOverlay('run-summary-overlay');
+    this.audioManager.clearDefeatThemeLock();
     this.state.resetForNewRun(startingDeck);
     this.state.currentScreen = 'map';
     this.mapMessage = '';
@@ -989,6 +1005,7 @@ export class UIManager {
   _handleRunSummaryExit() {
     this._hideOverlay('run-summary-overlay');
     this._hideOverlay('map-overlay');
+    this.audioManager.clearDefeatThemeLock();
     this.state.resetForNewRun(startingDeck);
     this.state.currentScreen = 'title';
     this.mapMessage = '';
@@ -1204,6 +1221,7 @@ export class UIManager {
       this.state.currentScreen = 'battle';
       this.state.resetBattle();
       this._hideOverlay('map-overlay');
+      this.audioManager.playBattleMusic();
       document.getElementById('end-turn-btn').disabled = false;
       this.updateUI();
       return;
@@ -1222,6 +1240,7 @@ export class UIManager {
         this.state.currentScreen = 'battle';
         this.state.resetBattle();
         this._hideOverlay('map-overlay');
+        this.audioManager.playBattleMusic();
         document.getElementById('end-turn-btn').disabled = false;
         this.updateUI();
         return;
@@ -1256,6 +1275,7 @@ export class UIManager {
     this.mapMessage = '';
     this.state.resetBattle();
     this._hideOverlay('map-overlay');
+    this.audioManager.playBattleMusic();
     document.getElementById('end-turn-btn').disabled = false;
     this.updateUI();
   }
@@ -1376,6 +1396,7 @@ export class UIManager {
           this.state.enemy = this.state._createEnemyState(emergencyEnemy);
         }
       }
+      this.audioManager.playBattleMusic();
       document.getElementById('end-turn-btn').disabled = false;
       this.updateUI();
       return;
@@ -1400,10 +1421,12 @@ export class UIManager {
     overlay.setAttribute('aria-hidden', 'false');
     this.state.generateShopStock();
     this._renderShopOffers();
+    this.audioManager.playShopMusic();
   }
 
   _closeShop() {
     this._hideOverlay('shop-overlay');
+    this.audioManager.stopShopMusic();
     this._openMapOverlay();
     this.updateUI();
   }
@@ -1588,6 +1611,7 @@ export class UIManager {
     const overlay = document.getElementById('campfire-overlay');
     overlay.classList.remove('hidden');
     overlay.setAttribute('aria-hidden', 'false');
+    this.audioManager.playCampfireMusic();
 
     const select = document.getElementById('camp-card-select');
     select.innerHTML = '';
@@ -1722,6 +1746,7 @@ export class UIManager {
 
   _closeCampfire() {
     this._hideOverlay('campfire-overlay');
+    this.audioManager.stopCampfireMusic();
     this._openMapOverlay();
     this.updateUI();
   }

@@ -208,7 +208,7 @@ export class GameState {
     const meta = {
       fight: { label: 'Bitka', emoji: '⚔️' },
       elite: { label: 'Elita', emoji: '⚔️' },
-      shop: { label: 'Kram', emoji: '🛖' },
+      shop: { label: 'Jarmark', emoji: '🛖' },
       treasure: { label: 'Skarb', emoji: '🎁' },
       event: { label: 'Wydarzenie', emoji: '❓' },
       campfire: { label: 'Watra', emoji: '🔥' },
@@ -500,7 +500,7 @@ export class GameState {
     const meta = {
       fight: { label: 'Bitka', emoji: '⚔️' },
       elite: { label: 'Elita', emoji: '⚔️' },
-      shop: { label: 'Kram', emoji: '🛖' },
+      shop: { label: 'Jarmark', emoji: '🛖' },
       treasure: { label: 'Skarb', emoji: '🎁' },
       event: { label: 'Wydarzenie', emoji: '❓' },
       campfire: { label: 'Watra', emoji: '🔥' },

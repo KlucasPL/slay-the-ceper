@@ -26,6 +26,8 @@ export class AudioManager {
     const gameUrl = new URL('../audio/summit_sprint.mp3', import.meta.url).href;
     const victoryUrl = new URL('../audio/summit_stomp.mp3', import.meta.url).href;
     const defeatUrl = new URL('../audio/echoes_mourning_valley.mp3', import.meta.url).href;
+    const shopUrl = new URL('../audio/shop.mp3', import.meta.url).href;
+    const watraUrl = new URL('../audio/watra.mp3', import.meta.url).href;
 
     /** @type {HTMLAudioElement} */
     this.menuTrack = this._createTrack(menuUrl, true, 0.7);
@@ -34,10 +36,18 @@ export class AudioManager {
     /** @type {HTMLAudioElement} */
     this.victoryTrack = this._createTrack(victoryUrl, false, 0.65);
     /** @type {HTMLAudioElement} */
-    this.defeatTrack = this._createTrack(defeatUrl, false, 0.62);
+    this.defeatTrack = this._createTrack(defeatUrl, true, 0.62);
+    /** @type {HTMLAudioElement} */
+    this.shopTrack = this._createTrack(shopUrl, true, 0.5);
+    /** @type {HTMLAudioElement} */
+    this.watraTrack = this._createTrack(watraUrl, true, 0.5);
 
     /** @type {'title' | 'inGame'} */
     this.context = 'title';
+    /** @type {'none' | 'defeat'} */
+    this.themeLock = 'none';
+    /** @type {'battle' | 'shop' | 'campfire' | 'map'} */
+    this.gameScene = 'map';
 
     /** @type {AudioContext | null} */
     this.sfxContext = null;
@@ -112,7 +122,8 @@ export class AudioManager {
   unlockAndPlayMenu() {
     this.hasUnlocked = true;
     this._ensureSfxContext();
-    if (this.context === 'title' && this.menuMusicEnabled) {
+    // Only restart menu music if we are still on the title screen and it is actually paused.
+    if (this.context === 'title' && this.menuMusicEnabled && this.menuTrack.paused) {
       this._stopGameFlowTracks();
       this._play(this.menuTrack);
     }
@@ -122,9 +133,16 @@ export class AudioManager {
    * @param {'title' | 'inGame'} context
    */
   setContext(context) {
+    if (this.context === context) {
+      return;
+    }
+
     this.context = context;
     if (context === 'title') {
-      this.stopInGameMusic();
+      this.themeLock = 'none';
+      this.gameScene = 'map';
+      this._stopInGameSceneTracks();
+      this._stopOneShotThemes();
       if (this.menuMusicEnabled) {
         this._play(this.menuTrack);
       } else {
@@ -134,23 +152,90 @@ export class AudioManager {
       return;
     }
 
+    if (this.themeLock === 'defeat') return;
+
     this.menuTrack.pause();
     this.menuTrack.currentTime = 0;
-    this.startInGameMusic();
+    this._stopOneShotThemes();
+    this.gameScene = 'battle';
+    if (this.gameMusicEnabled) {
+      this.playBattleMusic();
+    } else {
+      this._stopInGameSceneTracks();
+    }
+  }
+
+  playBattleMusic() {
+    if (this.themeLock === 'defeat') return;
+    this.gameScene = 'battle';
+    this.menuTrack.pause();
+    this._stopInGameSceneTracks();
+    if (this.gameMusicEnabled) {
+      this._play(this.gameTrack);
+    }
   }
 
   startInGameMusic() {
-    if (!this.gameMusicEnabled) return;
-    this._stopOneShotThemes();
-    this._play(this.gameTrack);
+    this.playBattleMusic();
+  }
+
+  playShopMusic() {
+    if (this.themeLock === 'defeat') return;
+    this.gameScene = 'shop';
+    this.menuTrack.pause();
+    this._stopInGameSceneTracks();
+    if (this.gameMusicEnabled) {
+      this._play(this.shopTrack);
+    }
+  }
+
+  stopShopMusic() {
+    this.shopTrack.pause();
+    this.shopTrack.currentTime = 0;
+    if (this.gameScene === 'shop') {
+      this.gameScene = 'battle';
+      if (this.context === 'inGame' && this.gameMusicEnabled && this.themeLock !== 'defeat') {
+        this.playBattleMusic();
+      }
+    }
+  }
+
+  playCampfireMusic() {
+    if (this.themeLock === 'defeat') return;
+    this.gameScene = 'campfire';
+    this.menuTrack.pause();
+    this._stopInGameSceneTracks();
+    if (this.gameMusicEnabled) {
+      this._play(this.watraTrack);
+    }
+  }
+
+  stopCampfireMusic() {
+    this.watraTrack.pause();
+    this.watraTrack.currentTime = 0;
+    if (this.gameScene === 'campfire') {
+      this.gameScene = 'battle';
+      if (this.context === 'inGame' && this.gameMusicEnabled && this.themeLock !== 'defeat') {
+        this.playBattleMusic();
+      }
+    }
   }
 
   stopInGameMusic() {
+    this._stopInGameSceneTracks();
+  }
+
+  _stopInGameSceneTracks() {
     this.gameTrack.pause();
     this.gameTrack.currentTime = 0;
+    this.shopTrack.pause();
+    this.shopTrack.currentTime = 0;
+    this.watraTrack.pause();
+    this.watraTrack.currentTime = 0;
   }
 
   playVictoryTheme() {
+    this.themeLock = 'none';
     this.stopInGameMusic();
     this._stopOneShotThemes();
     if (this.gameMusicEnabled) {
@@ -159,6 +244,7 @@ export class AudioManager {
   }
 
   playDefeatTheme() {
+    this.themeLock = 'defeat';
     this.stopInGameMusic();
     this._stopOneShotThemes();
     if (this.gameMusicEnabled) {
@@ -167,7 +253,8 @@ export class AudioManager {
   }
 
   _stopGameFlowTracks() {
-    this.stopInGameMusic();
+    this.menuTrack.pause();
+    this._stopInGameSceneTracks();
     this._stopOneShotThemes();
   }
 
@@ -202,12 +289,23 @@ export class AudioManager {
     this.gameMusicEnabled = enabled;
     this._writeBool(this.storageKeyGame, enabled);
     if (!enabled) {
-      this.stopInGameMusic();
+      this._stopInGameSceneTracks();
       this._stopOneShotThemes();
+    } else if (this.themeLock === 'defeat') {
+      this._play(this.defeatTrack);
     } else if (this.context === 'inGame') {
-      this.startInGameMusic();
+      if (this.gameScene === 'battle') this.playBattleMusic();
+      else if (this.gameScene === 'shop') this.playShopMusic();
+      else if (this.gameScene === 'campfire') this.playCampfireMusic();
     }
     return this.gameMusicEnabled;
+  }
+
+  clearDefeatThemeLock() {
+    this.themeLock = 'none';
+    this.gameScene = 'map';
+    this.defeatTrack.pause();
+    this.defeatTrack.currentTime = 0;
   }
 
   toggleMute() {

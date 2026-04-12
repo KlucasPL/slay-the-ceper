@@ -4,60 +4,58 @@
 
 /** @type {ReleaseNoteEntry[]} */
 export const releaseNotesData = [
-    {
-      version: 'v1.1.2 - Nowe ekrany i muzyka',
-      date: 'Kwiecień 2026',
-      changes: [
-        '🆕 NOWE EKRANY: Dodano ekran opcji (muzyka, dźwięki, przełączanie muzyki menu/walki) oraz ekran podsumowania runa z talią, pamiątkami i statystykami.',
-        '🎵 MUZYKA: Dodano kilka nowych utworów muzycznych oraz płynne przejścia między muzyką menu, walki, zwycięstwa i porażki.',
-        '⚙️ PRZYCISK OPCJI: Przycisk opcji dostępny w prawym górnym rogu podczas gry (zamiast mute).',
-      ],
-    },
+  {
+    version: 'v1.1.3 - Nowa muzyka i poprawki',
+    date: 'Kwiecień 2026',
+    changes: [
+      '🎵 NOWA MUZYKA: Dodano nowe utwory dla Jarmarku i Watry oraz poprawiono przełączanie muzyki między najważniejszymi scenami gry.',
+      '⚔️ WALKA: Główny motyw gry gra teraz stabilniej podczas bitwy i nie restartuje się przy zwykłych akcjach.',
+      '📝 NAZEWNICTWO: Uporządkowano część nazw i opisów widocznych w trakcie rozgrywki, żeby były bardziej spójne.',
+    ],
+  },
+  {
+    version: 'v1.1.2 - Nowe ekrany i muzyka',
+    date: 'Kwiecień 2026',
+    changes: [
+      '🆕 NOWE EKRANY: Dodano ekran opcji oraz podsumowanie runa, dzięki czemu łatwiej śledzić postępy i wrócić do kolejnej wyprawy.',
+      '🎵 MUZYKA: Gra dostała nowe utwory i bardziej filmowe przejścia między najważniejszymi momentami rozgrywki.',
+      '⚙️ WYGODA: Opcje są teraz dostępne także podczas gry, bez potrzeby wracania do menu głównego.',
+    ],
+  },
   {
     version: 'v1.1.1 - Re-tiering Pamiątek',
     date: 'Kwiecień 2026',
     changes: [
-      '⚖️ RE-TIERING: Zmieniono rzadkości wybranych pamiątek, żeby lepiej rozłożyć power level między Common/Uncommon/Rare.',
-      '⬇️ RARE -> UNCOMMON: Mapa Zakopanego, Certyfikowany Oscypek.',
-      '⬇️ UNCOMMON -> COMMON: Bilet TPN Ulgowy, Szczęśliwa Podkowa.',
-      '⬆️ COMMON -> UNCOMMON: Wiatr Halny w Butelce.',
-      '🛖 EKONOMIA SKLEPU: Skorygowano ceny tych pamiątek tak, by pozostały spójne z nowymi tierami.',
+      '🎒 PAMIĄTKI: Uporządkowano rzadkości części pamiątek, żeby nagrody i wybory w sklepie były bardziej intuicyjne.',
+      '⚖️ BALANS: Rozkład mocy między pamiątkami jest teraz równiejszy, więc łatwiej ocenić wartość łupu w trakcie runa.',
+      '🛖 JARMARK: Dostosowano ceny wybranych pamiątek, żeby lepiej pasowały do ich nowej roli w rozgrywce.',
     ],
   },
   {
     version: 'v1.1.0 - Wielki Rebalans',
     date: 'Kwiecień 2026',
     changes: [
-      '🆕 NOWOŚCI: Dodano 7 nowych kart.',
-      '👺 NOWI PRZECIWNICY: Dodano 2 nowych przeciwników.',
-      '🎒 NOWE PAMIĄTKI: Dodano 2 nowe pamiątki.',
-      '⚖️ SYSTEMOWY REBALANS: Uporządkowano ekonomię runa, tempo walk i role archetypów, żeby zmniejszyć snowball i podbić znaczenie decyzji.',
-      '🧾 RACHUNEK: Ścieżka bankructwa została ograniczona ekonomicznie.',
-      '🌅 EARLY/MIDGAME: Wczesne walki konsekwentniej wymuszają obronę, a próg wejścia w środek gry został wygładzony.',
-      '👑 FINAŁ: Bossowie są bliżej siebie poziomem trudności.',
-      '🎒 PAMIĄTKI: Łączna pula pamiątek po aktualizacji wynosi 23 i obejmuje więcej efektów ekonomicznych, mapowych oraz warunkowych.',
-      '🗺️ MAPA I EVENTY: Wydarzenia losowe generują teraz walki/sklep/wydarzenie specjalne',
-      '🛖 SKLEP: Ceny i nagrody zostały zestrojone pod większą wagę wyborów.',
+      '🆕 NOWOŚCI: Rozszerzono grę o nowe karty, nowych przeciwników i nowe pamiątki.',
+      '⚖️ REBALANS RUNA: Tempo walk, ekonomia i siła buildów zostały lepiej zestrojone, żeby decyzje w trakcie wyprawy miały większe znaczenie.',
+      '🌄 PRZEBIEG WYPRAWY: Wczesne i środkowe etapy runa płynniej prowadzą do finału, a bossowie są bliżej siebie poziomem wyzwania.',
+      '🗺️ MAPA I JARMARK: Zdarzenia, nagrody i zakupy zostały odświeżone, żeby każda ścieżka dawała ciekawsze wybory.',
     ],
   },
   {
     version: 'v1.0.2 - Uspokojenie Finału',
     date: 'Kwiecień 2026',
     changes: [
-      '👹 BALANS BOSSÓW: Obaj finałowi przeciwnicy zostali osłabieni, żeby końcówka runa mniej karała talie bez idealnego setupu.',
-      '🐻 BIAŁY MISIEK: Ma mniej Krzepy, mniej ładunków Artefaktu i słabszy atak wielouderzeniowy.',
-      '🐴 FIAKIER: Wolniej narzuca Rachunek, ma mniej Krzepy, słabsze Przyspieszenie i zabiera mniej dutków.',
-      '🧾 BALANS KART: Paragon za Gofra ma teraz PRZEPADO, żeby trudniej było nim spamować w długich walkach.',
-      '🎴 NAGRODY PO BITCE: Rzadkie karty wpadają teraz częściej w rewardach, więc łatwiej złożyć build z mocniejszym payoffem.',
-      '❓ MAPA: Szansa na wydarzenie losowe na środkowych polach została zmniejszona z 30% do 20%, żeby run częściej prowadził przez walki i sklepy.',
+      '👹 FINAŁ RUNA: Osłabiono końcowych bossów, żeby finał wyprawy był wymagający, ale mniej frustrujący dla szerszej gamy buildów.',
+      '🎴 NAGRODY: Łatwiej trafić na mocniejsze karty po walce, więc składanie talii pod konkretny plan stało się przyjemniejsze.',
+      '🗺️ ŚCIEŻKA WYPRAWY: Środkowa część mapy częściej prowadzi przez walki i sklepy, a rzadziej przez przypadkowe odskoki od głównego tempa runa.',
     ],
   },
   {
     version: 'v1.0.1 - Balans Krupówek',
     date: 'Kwiecień 2026',
     changes: [
-      '⚖️ BALANS WROGÓW: Gaździna Maryna została osłabiona (Krzepa 95 → 88, Garda 15 → 12, słabość 2 → 1, pasywne leczenie 5 → 3).',
-      '❓ WYDARZENIA LOSOWE: Na mapie mogą trafić się specjalne wydarzenia z wyborami, kosztami i unikalnymi efektami dla przebiegu runa.',
+      '⚖️ BALANS WROGÓW: Uspokojono trudność niektórych starć, żeby początek i środek runa były bardziej fair.',
+      '❓ WYDARZENIA LOSOWE: Na mapie pojawiły się specjalne wydarzenia z własnymi wyborami i skutkami dla dalszej wyprawy.',
     ],
   },
   {
@@ -66,10 +64,10 @@ export const releaseNotesData = [
     changes: [
       '🏔️ GRA KARCIANA ROGUELIKE: Budujesz talię, zarządzasz Oscypkami i planujesz tury na mapie z wydarzeniami.',
       "⚔️ DWIE ŚCIEŻKI ZWYCIĘSTWA: Możesz wygrać klasycznie przez obrażenia albo przez mechanikę 'Rachunku' i bankructwo przeciwnika.",
-      '✨ LANS I STATUSY: Lans daje mocne synergie kart i pamiątek, a walka opiera się o statusy (m.in. weak, fragile, vulnerable, next_double).',
+      '✨ LANS I STATUSY: Walka opiera się na statusach, synergii kart i efektach, które pozwalają budować bardzo różne style gry.',
       '🎒 SYSTEM PAMIĄTEK: Rozwijasz build przez pamiątki różnej rzadkości, które zmieniają ekonomię, obronę i tempo walki.',
-      '🗺️ PERĆ I WYDARZENIA: Mapa prowadzi przez bitki, sklep, campfire, skarby i finalne starcie bossa.',
-      '⚖️ BALANS WROGÓW: Gaździna Maryna została osłabiona (niższa Krzepa, słabsza Garda, mniej Weak i mniejsze leczenie pasywne).',
+      '🗺️ PERĆ I WYDARZENIA: Mapa prowadzi przez bitki, Jarmark, Watrę, skarby i finałowe starcie z bossem.',
+      '⚖️ WROGOWIE: Każdy przeciwnik ma własny styl walki i wymusza inne podejście do rozgrywki.',
       '👺 GALERIA PRZECIWNIKÓW: Wrogowie mają unikalne pasywki i wzorce ruchów, które zmuszają do zmiany taktyki między walkami.',
       '👹 FINAŁ WYPRAWY: Na końcu perci czeka losowy boss i wymagające starcie domykające run.',
     ],
