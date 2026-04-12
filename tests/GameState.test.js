@@ -1267,16 +1267,37 @@ describe('GameState', () => {
       s.addRelic('smycz_zakopane');
       s.deck = [...startingDeck, ...startingDeck, ...startingDeck];
       s.hand = ['ciupaga', 'gasior'];
-      s.setSmyczKeptCard('ciupaga');
-      expect(s.smyczKeptCardId).toBe('ciupaga');
+      s.setSmyczKeptCard(0);
+      expect(s.smyczKeptHandIndex).toBe(0);
       setEnemyIntent(s, { type: 'block', name: 'Obserwuje', block: 0 });
       s.endTurn();
-      // smyczKeptCardId should still be 'ciupaga' (not null) after endTurn
+      // smyczKeptCardId should store queued card after endTurn
       expect(s.smyczKeptCardId).toBe('ciupaga');
       // After startTurn, 'ciupaga' should be in hand
       s.startTurn();
       expect(s.hand).toContain('ciupaga');
       expect(s.smyczKeptCardId).toBeNull();
+    });
+
+    it('smycz_zakopane keeps exact selected duplicate card slot', () => {
+      const s = freshState();
+      s.addRelic('smycz_zakopane');
+      s.deck = [...startingDeck, ...startingDeck, ...startingDeck];
+      s.hand = ['ciupaga', 'ciupaga', 'gasior'];
+
+      // Keep second ciupaga specifically.
+      s.setSmyczKeptCard(1);
+      expect(s.smyczKeptHandIndex).toBe(1);
+
+      // Play card before kept slot; pointer should shift to keep same instance.
+      s.playCard(0);
+      expect(s.smyczKeptHandIndex).toBe(0);
+
+      setEnemyIntent(s, { type: 'block', name: 'Obserwuje', block: 0 });
+      s.endTurn();
+
+      expect(s.smyczKeptCardId).toBe('ciupaga');
+      expect(s.smyczKeptHandIndex).toBeNull();
     });
 
     it('zepsuty_termometr skips enemy status tick on every other turn', () => {
@@ -2118,6 +2139,16 @@ describe('GameState', () => {
       expect(s.enemy.id).toBe('parkingowy');
       expect(s.enemy.name).toBe('Parkingowy z Palenicy');
       expect(s.enemy.maxHp).toBe(95);
+    });
+
+    it('does not repeat the same regular enemy twice in a row when alternatives exist', () => {
+      const s = freshState();
+      s.lastRegularEnemyId = 'cepr';
+      vi.spyOn(Math, 'random').mockReturnValue(0);
+
+      const next = s._pickRandomEnemyDef();
+
+      expect(next.id).not.toBe('cepr');
     });
 
     it('can start scripted battle against pomocnik_fiakra', () => {

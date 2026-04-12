@@ -92,8 +92,10 @@ export class GameState {
     this.attackCardsPlayedThisBattle = 0;
     /** @type {boolean} Whether pocztowka_giewont effect has fired this battle */
     this.pocztowkaUsedThisBattle = false;
-    /** @type {string | null} Card ID being kept by smycz_zakopane for next turn */
+    /** @type {string | null} Card ID queued by smycz_zakopane for next turn */
     this.smyczKeptCardId = null;
+    /** @type {number | null} Exact hand slot selected for smycz_zakopane */
+    this.smyczKeptHandIndex = null;
     /** @type {Record<string, number>} Random cost overrides for cards in hand (flaszka_sliwowicy) */
     this.flaszkaCostSeed = {};
     /** @type {number} Parity for zepsuty_termometr: 0=tick enemy status, 1=skip */
@@ -110,6 +112,11 @@ export class GameState {
     this.lastVictoryMessage = '';
     /** @type {'title' | 'map' | 'battle' | 'event'} */
     this.currentScreen = 'title';
+    /** @type {string | null} Last regular enemy ID picked for random encounters */
+    this.lastRegularEnemyId =
+      enemy.id !== 'boss' && enemy.id !== 'fiakier' && enemy.id !== 'pomocnik_fiakra'
+        ? enemy.id
+        : null;
     /** @type {string | null} */
     this.activeEventId = null;
     /** @type {boolean} */
@@ -1132,12 +1139,14 @@ export class GameState {
   }
 
   /**
-   * Marks a card to be kept for next turn (smycz_zakopane). Toggles if same card clicked again.
-   * @param {string} cardId
+   * Marks a hand slot to be kept for next turn (smycz_zakopane).
+   * Toggles off when the same slot is selected again.
+   * @param {number} handIndex
    */
-  setSmyczKeptCard(cardId) {
+  setSmyczKeptCard(handIndex) {
     if (!this.hasRelic('smycz_zakopane')) return;
-    this.smyczKeptCardId = this.smyczKeptCardId === cardId ? null : cardId;
+    if (handIndex < 0 || handIndex >= this.hand.length) return;
+    this.smyczKeptHandIndex = this.smyczKeptHandIndex === handIndex ? null : handIndex;
   }
 
   /**
@@ -1271,10 +1280,16 @@ export class GameState {
 
   /** @returns {import('../data/enemies.js').EnemyDef} */
   _pickRandomEnemyDef() {
-    const enemyIds = Object.keys(enemyLibrary).filter(
+    let enemyIds = Object.keys(enemyLibrary).filter(
       (id) => id !== 'boss' && id !== 'fiakier' && id !== 'pomocnik_fiakra'
     );
+
+    if (this.lastRegularEnemyId && enemyIds.length > 1) {
+      enemyIds = enemyIds.filter((id) => id !== this.lastRegularEnemyId);
+    }
+
     const enemyId = enemyIds[Math.floor(Math.random() * enemyIds.length)];
+    this.lastRegularEnemyId = enemyId;
     return enemyLibrary[enemyId];
   }
 
@@ -1840,6 +1855,14 @@ export class GameState {
       return { success: false, reason: 'blokada' };
     }
 
+    if (this.smyczKeptHandIndex !== null) {
+      if (handIndex === this.smyczKeptHandIndex) {
+        this.smyczKeptHandIndex = null;
+      } else if (handIndex < this.smyczKeptHandIndex) {
+        this.smyczKeptHandIndex -= 1;
+      }
+    }
+
     this.player.energy -= actualCost;
 
     const isFirstCardThisBattle =
@@ -1903,15 +1926,15 @@ export class GameState {
    * @returns {EndTurnResult}
    */
   endTurn() {
-    // Smycz Zakopane: extract kept card from hand before discarding
-    if (this.hasRelic('smycz_zakopane') && this.smyczKeptCardId) {
-      const keptIdx = this.hand.indexOf(this.smyczKeptCardId);
-      if (keptIdx >= 0) {
-        this.hand.splice(keptIdx, 1);
-        // smyczKeptCardId stays set so startTurn can re-add it
+    // Smycz Zakopane: extract exact selected card slot before discarding.
+    if (this.hasRelic('smycz_zakopane') && this.smyczKeptHandIndex !== null) {
+      if (this.smyczKeptHandIndex >= 0 && this.smyczKeptHandIndex < this.hand.length) {
+        const [keptCardId] = this.hand.splice(this.smyczKeptHandIndex, 1);
+        this.smyczKeptCardId = keptCardId ?? null;
       } else {
         this.smyczKeptCardId = null;
       }
+      this.smyczKeptHandIndex = null;
     }
 
     // spam_tagami: drain 2 DUTKI per turn while in hand
@@ -2031,6 +2054,7 @@ export class GameState {
     this.attackCardsPlayedThisBattle = 0;
     this.pocztowkaUsedThisBattle = false;
     this.smyczKeptCardId = null;
+    this.smyczKeptHandIndex = null;
     this.flaszkaCostSeed = {};
     this.termometerTurnParity = 0;
     this.battleTurnsElapsed = 0;
@@ -2085,6 +2109,7 @@ export class GameState {
     this.attackCardsPlayedThisBattle = 0;
     this.pocztowkaUsedThisBattle = false;
     this.smyczKeptCardId = null;
+    this.smyczKeptHandIndex = null;
     this.flaszkaCostSeed = {};
     this.termometerTurnParity = 0;
     this.battleTurnsElapsed = 0;

@@ -16,18 +16,18 @@ export const relicLibrary = {
   bilet_tpn: {
     id: 'bilet_tpn',
     name: 'Bilet TPN Ulgowy',
-    rarity: 'uncommon',
+    rarity: 'common',
     emoji: '🎫',
     desc: 'Co 3. zagrana karta Ataku w walce daje +1 Oscypka.',
-    price: 170,
+    price: 115,
   },
   wiatr_halny: {
     id: 'wiatr_halny',
     name: 'Wiatr Halny w Butelce',
-    rarity: 'common',
+    rarity: 'uncommon',
     emoji: '🌬️',
     desc: 'Na początku każdej tury: dobierz +1 kartę.',
-    price: 110,
+    price: 175,
   },
   flaszka_sliwowicy: {
     id: 'flaszka_sliwowicy',
@@ -144,10 +144,10 @@ export const relicLibrary = {
   szczegliwa_podkowa: {
     id: 'szczegliwa_podkowa',
     name: 'Szczęśliwa Podkowa',
-    rarity: 'uncommon',
+    rarity: 'common',
     emoji: '🍀',
     desc: 'Wygranie walki mając ≤40% Krzepy daje bonus +25 dutków.',
-    price: 180,
+    price: 105,
   },
   goralski_zegarek: {
     id: 'goralski_zegarek',
@@ -168,10 +168,10 @@ export const relicLibrary = {
   mapa_zakopanego: {
     id: 'mapa_zakopanego',
     name: 'Mapa Zakopanego',
-    rarity: 'rare',
+    rarity: 'uncommon',
     emoji: '🗺️',
     desc: "Widzisz, co kryje się pod '?' na mapie.",
-    price: 250,
+    price: 195,
   },
   pas_bacowski: {
     id: 'pas_bacowski',
@@ -184,10 +184,10 @@ export const relicLibrary = {
   certyfikowany_oscypek: {
     id: 'certyfikowany_oscypek',
     name: 'Certyfikowany Oscypek',
-    rarity: 'rare',
+    rarity: 'uncommon',
     emoji: '🧀',
     desc: 'Za wejście do sklepu: +2 do maksymalnej Krzepy (maks. 3 razy na run).',
-    price: 295,
+    price: 190,
   },
 };
 

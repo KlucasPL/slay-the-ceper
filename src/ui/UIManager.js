@@ -439,7 +439,7 @@ export class UIManager {
       const canPlay = player.energy >= actualCost && !card.unplayable;
 
       const cardEl = document.createElement('div');
-      const isKept = this.state.smyczKeptCardId === cardId;
+      const isKept = this.state.smyczKeptHandIndex === index;
       cardEl.className = `card ${this._rarityClass(card.rarity)} card-${card.type}${canPlay ? '' : ' disabled'}${isKept ? ' card--kept' : ''}`;
 
       if (card.exhaust) {
@@ -479,7 +479,7 @@ export class UIManager {
         keepBtn.title = isKept ? 'Anuluj zachowanie' : 'Zachowaj na następną turę';
         keepBtn.addEventListener('click', (e) => {
           e.stopPropagation();
-          this.state.setSmyczKeptCard(cardId);
+          this.state.setSmyczKeptCard(index);
           this.updateUI();
         });
         cardEl.appendChild(keepBtn);

@@ -5,6 +5,17 @@
 /** @type {ReleaseNoteEntry[]} */
 export const releaseNotesData = [
   {
+    version: 'v1.1.1 - Re-tiering Pamiątek',
+    date: 'Kwiecień 2026',
+    changes: [
+      '⚖️ RE-TIERING: Zmieniono rzadkości wybranych pamiątek, żeby lepiej rozłożyć power level między Common/Uncommon/Rare.',
+      '⬇️ RARE -> UNCOMMON: Mapa Zakopanego, Certyfikowany Oscypek.',
+      '⬇️ UNCOMMON -> COMMON: Bilet TPN Ulgowy, Szczęśliwa Podkowa.',
+      '⬆️ COMMON -> UNCOMMON: Wiatr Halny w Butelce.',
+      '🛖 EKONOMIA SKLEPU: Skorygowano ceny tych pamiątek tak, by pozostały spójne z nowymi tierami.',
+    ],
+  },
+  {
     version: 'v1.1.0 - Wielki Rebalans',
     date: 'Kwiecień 2026',
     changes: [
