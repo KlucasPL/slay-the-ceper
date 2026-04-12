@@ -368,7 +368,10 @@ export const cardLibrary = {
     desc: 'Zadaje 8 obrażeń. Jeśli wróg nie ma Gardy, zadaje 12 obrażeń.',
     effect(state) {
       const base = state.enemy.block > 0 ? 8 : 12;
-      const dmg = state._calcAttackDamage(state.player, base + state.getCardDamageBonus('pchniecie_ciupaga'));
+      const dmg = state._calcAttackDamage(
+        state.player,
+        base + state.getCardDamageBonus('pchniecie_ciupaga')
+      );
       const damage = state._applyDamageToEnemy(dmg);
       return {
         playerAnim: 'anim-attack-p',
@@ -398,7 +401,7 @@ export const cardLibrary = {
     rarity: 'uncommon',
     cost: 0,
     price: 95,
-    emoji: '🧾',
+    emoji: '🔎',
     desc: 'Odrzuć 1 kartę, dobierz 2 karty.',
     effect(state) {
       if (state.hand.length > 0) {
@@ -421,7 +424,10 @@ export const cardLibrary = {
     exhaust: true,
     effect(state) {
       const bonus = Math.floor(state.player.block / 2);
-      const dmg = state._calcAttackDamage(state.player, 8 + bonus + state.getCardDamageBonus('lodolamacz'));
+      const dmg = state._calcAttackDamage(
+        state.player,
+        8 + bonus + state.getCardDamageBonus('lodolamacz')
+      );
       const damage = state._applyDamageToEnemy(dmg);
       return {
         playerAnim: 'anim-attack-p',
@@ -457,7 +463,10 @@ export const cardLibrary = {
     effect(state) {
       const isLastCardInHand = state.hand.length === 0;
       const base = isLastCardInHand ? 30 : 15;
-      const dmg = state._calcAttackDamage(state.player, base + state.getCardDamageBonus('zemsta_gorala'));
+      const dmg = state._calcAttackDamage(
+        state.player,
+        base + state.getCardDamageBonus('zemsta_gorala')
+      );
       const damage = state._applyDamageToEnemy(dmg);
       return {
         playerAnim: 'anim-attack-p',

@@ -8,7 +8,7 @@ import { statusTooltipRegistry } from './statusTooltips.js';
 export class UIManager {
   /**
    * @param {import('../state/GameState.js').GameState} state
-  * @param {import('../logic/AudioManager.js').AudioManager} audioManager
+   * @param {import('../logic/AudioManager.js').AudioManager} audioManager
    */
   constructor(state, audioManager) {
     this.state = state;
@@ -42,7 +42,8 @@ export class UIManager {
     titleScreen?.addEventListener('pointerdown', unlockMenuMusic);
 
     const cornerOptionsBtn = document.getElementById('corner-options-btn');
-    if (cornerOptionsBtn) cornerOptionsBtn.addEventListener('click', () => this._openOptionsModal());
+    if (cornerOptionsBtn)
+      cornerOptionsBtn.addEventListener('click', () => this._openOptionsModal());
 
     document
       .getElementById('title-btn-normal')
@@ -122,21 +123,14 @@ export class UIManager {
     document
       .getElementById('library-tab-relics')
       .addEventListener('click', () => this._setLibraryTab('relics'));
-    document
-      .querySelectorAll('.library-filter')
-      .forEach((filterBtn) => {
-        filterBtn.addEventListener('click', () => {
-          const rarity = filterBtn.dataset.rarity;
-          if (
-            rarity === 'all' ||
-            rarity === 'common' ||
-            rarity === 'uncommon' ||
-            rarity === 'rare'
-          ) {
-            this._setLibraryFilter(rarity);
-          }
-        });
+    document.querySelectorAll('.library-filter').forEach((filterBtn) => {
+      filterBtn.addEventListener('click', () => {
+        const rarity = filterBtn.dataset.rarity;
+        if (rarity === 'all' || rarity === 'common' || rarity === 'uncommon' || rarity === 'rare') {
+          this._setLibraryFilter(rarity);
+        }
       });
+    });
     document
       .getElementById('library-back-btn')
       .addEventListener('click', () => this._closeLibraryOverlay());
@@ -342,10 +336,7 @@ export class UIManager {
     if (isTitle) {
       titleScreen.classList.remove('is-hiding', 'hidden');
     } else {
-      titleScreen.classList.toggle(
-        'hidden',
-        !titleScreen.classList.contains('is-hiding')
-      );
+      titleScreen.classList.toggle('hidden', !titleScreen.classList.contains('is-hiding'));
     }
     titleScreen.setAttribute('aria-hidden', String(!isTitle));
     this.audioManager.setContext(isTitle ? 'title' : 'inGame');
@@ -593,6 +584,7 @@ export class UIManager {
         rachunekResistEvent.target === 'enemy' ? 'sprite-enemy' : 'sprite-player';
       this._showFloatingText(targetSprite, rachunekResistEvent.text, 'floating-shame');
     }
+    this._showLansDutkiSpentFeedback();
 
     if (effect.enemyAnim) {
       // Attack card: player lunges, then enemy reacts
@@ -650,6 +642,7 @@ export class UIManager {
     if (lansBreakText) {
       this._showFloatingText('sprite-player', lansBreakText, 'floating-shame');
     }
+    this._showLansDutkiSpentFeedback();
 
     setTimeout(() => {
       this._triggerAnim('sprite-enemy', 'anim-attack-e', 300);
@@ -1150,7 +1143,14 @@ export class UIManager {
     const levels = document.getElementById('map-levels');
     const message = document.getElementById('map-message');
     const continueBtn = document.getElementById('map-continue-btn');
+    const mapHpCurrent = document.getElementById('map-hp-current');
+    const mapHpMax = document.getElementById('map-hp-max');
+    const mapDutki = document.getElementById('map-dutki');
     if (!levels || !message || !continueBtn) return;
+
+    if (mapHpCurrent) mapHpCurrent.textContent = String(this.state.player.hp);
+    if (mapHpMax) mapHpMax.textContent = String(this.state.player.maxHp);
+    if (mapDutki) mapDutki.textContent = String(this.state.dutki);
 
     const mapTitle = document.querySelector('#map-overlay .event-title');
     if (mapTitle) {
@@ -1230,13 +1230,17 @@ export class UIManager {
           hint.title = weather ? `${weather.name}: ${weather.desc}` : 'Pogoda';
           hint.setAttribute(
             'aria-label',
-            weather ? `Pogoda na polu ${node.label}: ${weather.name}. ${weather.desc}` : 'Pogoda na polu'
+            weather
+              ? `Pogoda na polu ${node.label}: ${weather.name}. ${weather.desc}`
+              : 'Pogoda na polu'
           );
           hint.setAttribute('aria-expanded', 'false');
 
           const tooltip = document.createElement('span');
           tooltip.className = 'weather-tooltip';
-          tooltip.textContent = weather ? `${weather.name}: ${weather.desc}` : 'Brak danych o pogodzie.';
+          tooltip.textContent = weather
+            ? `${weather.name}: ${weather.desc}`
+            : 'Brak danych o pogodzie.';
           hint.appendChild(tooltip);
 
           hint.addEventListener('click', (event) => {
@@ -1425,7 +1429,15 @@ export class UIManager {
     const choicesContainer = document.getElementById('random-event-choices');
     const result = document.getElementById('random-event-result');
     const continueBtn = document.getElementById('random-event-continue-btn');
-    if (!overlay || !title || !image || !description || !choicesContainer || !result || !continueBtn) {
+    if (
+      !overlay ||
+      !title ||
+      !image ||
+      !description ||
+      !choicesContainer ||
+      !result ||
+      !continueBtn
+    ) {
       return;
     }
 
@@ -1809,9 +1821,7 @@ export class UIManager {
             .sort((a, b) => a.cost - b.cost || a.name.localeCompare(b.name, 'pl'))
         : Object.values(relicLibrary)
             .filter((relic) =>
-              this.libraryRarityFilter === 'all'
-                ? true
-                : relic.rarity === this.libraryRarityFilter
+              this.libraryRarityFilter === 'all' ? true : relic.rarity === this.libraryRarityFilter
             )
             .sort((a, b) => a.name.localeCompare(b.name, 'pl'));
 
@@ -1995,6 +2005,16 @@ export class UIManager {
     setTimeout(() => {
       float.remove();
     }, 1100);
+  }
+
+  _showLansDutkiSpentFeedback() {
+    const spent = this.state.consumeLansDutkiSpentEvent();
+    if (spent <= 0) return;
+    this._showFloatingText(
+      'sprite-player',
+      `LANS: -${spent} ${this.state.getDutkiLabel(spent)}`,
+      'floating-dutki-loss'
+    );
   }
 
   /**

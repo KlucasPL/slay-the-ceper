@@ -74,7 +74,8 @@ export const eventLibrary = {
       },
       {
         text: 'Przejażdżka bryczką (150 dutków)',
-        description: 'Wsiadasz dumnie na tył. Bryczka rusza z kopyta, omijając wszystkich turystów!',
+        description:
+          'Wsiadasz dumnie na tył. Bryczka rusza z kopyta, omijając wszystkich turystów!',
         cost: 150,
         effect(state) {
           state.jumpToBoss = true;

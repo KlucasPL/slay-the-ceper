@@ -1,3 +1,159 @@
+const spekulantSprite = `
+<svg viewBox="0 0 100 100" width="120" height="120">
+  <!-- legs -->
+  <line x1="44" y1="82" x2="40" y2="97" stroke="#111827" stroke-width="7"/>
+  <line x1="56" y1="82" x2="60" y2="97" stroke="#111827" stroke-width="7"/>
+  <rect x="34" y="94" width="14" height="5" rx="2" fill="#0a0a14"/>
+  <rect x="52" y="94" width="14" height="5" rx="2" fill="#0a0a14"/>
+  <!-- suit body -->
+  <rect x="34" y="50" width="32" height="32" rx="6" fill="#1a2a4a" stroke="#0f1a30" stroke-width="2"/>
+  <!-- shirt + tie -->
+  <rect x="45" y="50" width="10" height="32" fill="#f5f5f0"/>
+  <polygon points="50,54 47,58 50,74 53,58" fill="#cc3300"/>
+  <!-- tie pin -->
+  <rect x="48" y="64" width="4" height="2" rx="1" fill="#d4a520"/>
+  <!-- lapels -->
+  <polygon points="34,50 45,50 40,62" fill="#142038"/>
+  <polygon points="66,50 55,50 60,62" fill="#142038"/>
+  <!-- left arm — pointing gesture -->
+  <line x1="34" y1="58" x2="16" y2="70" stroke="#f0c090" stroke-width="6" stroke-linecap="round"/>
+  <rect x="8" y="66" width="12" height="8" rx="2" fill="#1a2a4a"/>
+  <line x1="10" y1="70" x2="19" y2="70" stroke="#f0c090" stroke-width="3" stroke-linecap="round"/>
+  <!-- right arm + briefcase -->
+  <line x1="66" y1="60" x2="80" y2="68" stroke="#f0c090" stroke-width="6" stroke-linecap="round"/>
+  <rect x="76" y="64" width="18" height="14" rx="3" fill="#5a3010" stroke="#3a1a00" stroke-width="2"/>
+  <rect x="83" y="62" width="4" height="4" rx="1" fill="#8a5020" stroke="#3a1a00" stroke-width="1"/>
+  <line x1="76" y1="71" x2="94" y2="71" stroke="#8a5020" stroke-width="1.5"/>
+  <circle cx="85" cy="68" r="2" fill="#d4a520"/>
+  <!-- watch -->
+  <rect x="75" y="76" width="7" height="5" rx="1" fill="#f5f5f0" stroke="#3a1a00" stroke-width="1"/>
+  <!-- head -->
+  <circle cx="50" cy="31" r="13" fill="#f0c090"/>
+  <!-- slight baldness -->
+  <path d="M 38,26 Q 50,14 62,26 L 62,30 Q 50,22 38,30 Z" fill="#e0b080"/>
+  <!-- eyes — squinting confident -->
+  <line x1="44" y1="28" x2="47" y2="27" stroke="#111" stroke-width="2" stroke-linecap="round"/>
+  <line x1="53" y1="27" x2="56" y2="28" stroke="#111" stroke-width="2" stroke-linecap="round"/>
+  <!-- smirk -->
+  <path d="M 45,36 Q 50,39 56,36" fill="none" stroke="#5a3020" stroke-width="2"/>
+  <!-- moustache -->
+  <path d="M 44,33 Q 47,31 50,33 Q 53,31 56,33" fill="#5a3020"/>
+  <!-- floating dutki coins -->
+  <circle cx="18" cy="28" r="4" fill="#d4a520" opacity="0.7"/>
+  <text x="18" y="31" text-anchor="middle" font-size="5" font-weight="bold" fill="#7a5500">D</text>
+  <circle cx="82" cy="22" r="3.5" fill="#d4a520" opacity="0.6"/>
+  <text x="82" y="25" text-anchor="middle" font-size="4.5" font-weight="bold" fill="#7a5500">D</text>
+  <circle cx="12" cy="44" r="3" fill="#d4a520" opacity="0.5"/>
+  <text x="12" y="47" text-anchor="middle" font-size="4" font-weight="bold" fill="#7a5500">D</text>
+</svg>`;
+
+const mistrzRedykuSprite = `
+<svg viewBox="0 0 100 100" width="120" height="120">
+  <!-- legs — stocky -->
+  <line x1="43" y1="82" x2="38" y2="97" stroke="#111" stroke-width="9"/>
+  <line x1="57" y1="82" x2="62" y2="97" stroke="#111" stroke-width="9"/>
+  <rect x="30" y="93" width="16" height="5" rx="2" fill="#0a0a0a"/>
+  <rect x="54" y="93" width="16" height="5" rx="2" fill="#0a0a0a"/>
+  <!-- white trousers with embroidery lines -->
+  <rect x="34" y="67" width="32" height="18" rx="3" fill="#f8f8f0"/>
+  <line x1="34" y1="72" x2="50" y2="72" stroke="#111" stroke-width="1.5" stroke-dasharray="2,2"/>
+  <line x1="50" y1="72" x2="66" y2="72" stroke="#111" stroke-width="1.5" stroke-dasharray="2,2"/>
+  <line x1="34" y1="78" x2="66" y2="78" stroke="#b8000a" stroke-width="1.2"/>
+  <!-- leather belt -->
+  <rect x="34" y="64" width="32" height="5" rx="1" fill="#5a3010"/>
+  <rect x="47" y="64" width="6" height="5" fill="#d4a520"/>
+  <!-- body — broad, white shirt + black vest -->
+  <rect x="30" y="42" width="40" height="26" rx="7" fill="#f5f5f0" stroke="#c8c0b0" stroke-width="1.5"/>
+  <rect x="30" y="42" width="15" height="26" rx="5" fill="#111" opacity="0.85"/>
+  <rect x="55" y="42" width="15" height="26" rx="5" fill="#111" opacity="0.85"/>
+  <!-- shirt embroidery -->
+  <line x1="45" y1="45" x2="55" y2="45" stroke="#b8000a" stroke-width="1.2"/>
+  <line x1="45" y1="49" x2="55" y2="49" stroke="#b8000a" stroke-width="1.2"/>
+  <!-- left arm — relaxed -->
+  <line x1="30" y1="50" x2="14" y2="62" stroke="#f2c6a3" stroke-width="7" stroke-linecap="round"/>
+  <line x1="14" y1="62" x2="10" y2="75" stroke="#f2c6a3" stroke-width="6" stroke-linecap="round"/>
+  <!-- right arm — ciupaga raised -->
+  <line x1="70" y1="50" x2="84" y2="36" stroke="#f2c6a3" stroke-width="7" stroke-linecap="round"/>
+  <line x1="82" y1="38" x2="78" y2="14" stroke="#5a3010" stroke-width="4" stroke-linecap="round"/>
+  <ellipse cx="77" cy="11" rx="5" ry="3" fill="#4a2808" transform="rotate(-30 77 11)"/>
+  <!-- head — broad face -->
+  <circle cx="50" cy="26" r="15" fill="#c49a6c"/>
+  <!-- grey moustache -->
+  <path d="M 40,31 Q 45,27 50,30 Q 55,27 60,31" fill="#888"/>
+  <!-- frown brows -->
+  <line x1="42" y1="21" x2="47" y2="23" stroke="#555" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="58" y1="21" x2="53" y2="23" stroke="#555" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- eyes -->
+  <circle cx="45" cy="25" r="2" fill="#111"/>
+  <circle cx="55" cy="25" r="2" fill="#111"/>
+  <!-- chin scar -->
+  <line x1="49" y1="34" x2="52" y2="37" stroke="#a07040" stroke-width="1.5"/>
+  <!-- góralski hat -->
+  <rect x="36" y="13" width="28" height="9" rx="2" fill="#111"/>
+  <rect x="33" y="21" width="34" height="3" rx="1" fill="#0a0a0a"/>
+  <rect x="33" y="20" width="34" height="2" fill="#b8000a"/>
+  <path d="M 61,14 Q 67,10 65,6 Q 62,9 60,14" fill="#228b22"/>
+  <!-- sheep silhouettes -->
+  <ellipse cx="10" cy="82" rx="7" ry="4" fill="#e8e8e0" opacity="0.7"/>
+  <circle cx="10" cy="78" r="3" fill="#e8e8e0" opacity="0.7"/>
+  <ellipse cx="22" cy="86" rx="6" ry="3.5" fill="#e8e8e0" opacity="0.6"/>
+  <circle cx="22" cy="83" r="2.5" fill="#e8e8e0" opacity="0.6"/>
+</svg>`;
+
+const ceprzyca_vipSprite = `
+<svg viewBox="0 0 100 100" width="120" height="120">
+  <!-- legs -->
+  <line x1="44" y1="82" x2="41" y2="97" stroke="#3a5f8a" stroke-width="7"/>
+  <line x1="56" y1="82" x2="59" y2="97" stroke="#3a5f8a" stroke-width="7"/>
+  <!-- sandals -->
+  <rect x="34" y="94" width="14" height="4" rx="1" fill="#cc6633"/>
+  <rect x="52" y="94" width="14" height="4" rx="1" fill="#cc6633"/>
+  <!-- jeans -->
+  <rect x="36" y="66" width="28" height="18" rx="4" fill="#3a5f8a"/>
+  <!-- blouse -->
+  <rect x="34" y="44" width="32" height="24" rx="6" fill="#f5f0e8" stroke="#d8cfc0" stroke-width="1.5"/>
+  <!-- blouse pattern dots -->
+  <circle cx="42" cy="50" r="1.5" fill="#e84393" opacity="0.7"/>
+  <circle cx="50" cy="47" r="1.5" fill="#e84393" opacity="0.7"/>
+  <circle cx="58" cy="51" r="1.5" fill="#e84393" opacity="0.7"/>
+  <circle cx="45" cy="57" r="1.5" fill="#e84393" opacity="0.6"/>
+  <circle cx="55" cy="55" r="1.5" fill="#e84393" opacity="0.6"/>
+  <!-- left arm -->
+  <line x1="34" y1="52" x2="18" y2="62" stroke="#f5c6a0" stroke-width="6" stroke-linecap="round"/>
+  <!-- designer bag -->
+  <rect x="9" y="58" width="13" height="10" rx="3" fill="#e84393" stroke="#9a1a53" stroke-width="1.5"/>
+  <path d="M 12,58 Q 15,54 19,58" fill="none" stroke="#9a1a53" stroke-width="1.5"/>
+  <!-- right arm — phone -->
+  <line x1="66" y1="52" x2="80" y2="44" stroke="#f5c6a0" stroke-width="6" stroke-linecap="round"/>
+  <rect x="76" y="36" width="9" height="14" rx="2" fill="#111" stroke="#333" stroke-width="1"/>
+  <rect x="77" y="37" width="7" height="11" rx="1" fill="#4af"/>
+  <!-- head -->
+  <circle cx="50" cy="28" r="13" fill="#f5c6a0"/>
+  <!-- sunglasses on forehead -->
+  <rect x="40" y="18" width="8" height="4" rx="2" fill="#111" opacity="0.8"/>
+  <rect x="51" y="18" width="8" height="4" rx="2" fill="#111" opacity="0.8"/>
+  <line x1="48" y1="20" x2="51" y2="20" stroke="#333" stroke-width="1.5"/>
+  <!-- eyes — slightly annoyed -->
+  <line x1="43" y1="26" x2="46" y2="25" stroke="#333" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="54" y1="25" x2="57" y2="26" stroke="#333" stroke-width="1.8" stroke-linecap="round"/>
+  <!-- lip gloss mouth — pursed -->
+  <path d="M 46,33 Q 50,36 54,33" fill="none" stroke="#e84393" stroke-width="2"/>
+  <!-- straw hat -->
+  <ellipse cx="50" cy="17" rx="18" ry="4" fill="#e8d070" stroke="#9a8020" stroke-width="1.5"/>
+  <rect x="39" y="10" width="22" height="8" rx="4" fill="#e8d070" stroke="#9a8020" stroke-width="1.5"/>
+  <!-- hat ribbon with dots -->
+  <rect x="39" y="16" width="22" height="2.5" fill="#fff" opacity="0.8"/>
+  <circle cx="42" cy="17.2" r="1" fill="#e84393"/>
+  <circle cx="46" cy="17.2" r="1" fill="#e84393"/>
+  <circle cx="50" cy="17.2" r="1" fill="#e84393"/>
+  <circle cx="54" cy="17.2" r="1" fill="#e84393"/>
+  <circle cx="58" cy="17.2" r="1" fill="#e84393"/>
+  <!-- social media aura: stars / hearts -->
+  <text x="16" y="30" font-size="7" opacity="0.65">❤️</text>
+  <text x="78" y="26" font-size="6" opacity="0.6">⭐</text>
+  <text x="22" y="16" font-size="5" opacity="0.5">✨</text>
+</svg>`;
+
 /**
  * @typedef {{ type: 'attack', name: string, damage: number, hits?: number, applyWeak?: number, applyFrail?: number, applyVulnerable?: number, damagePerCardInHand?: boolean, gainPed?: number, usePed?: boolean, stealDutki?: number } | { type: 'block', name: string, block: number, heal?: number } | { type: 'buff', name: string, strengthGain?: number, block?: number } | { type: 'status', name: string, addStatusCard?: string, amount?: number, applyStun?: number }} EnemyMoveDef
  * @typedef {{ id: string, name: string, emoji: string, hp: number, maxHp: number, block: number, baseAttack?: number, passive?: string, spriteSvg: string, patternType: 'random'|'loop', pattern?: EnemyMoveDef[], elite?: boolean }} EnemyDef
@@ -392,7 +548,13 @@ export const enemyLibrary = {
     patternType: 'loop',
     passive: 'blokada_parkingowa',
     pattern: [
-      { type: 'attack', name: 'Bilet za wycieraczką', damage: 5, hits: 1, damagePerCardInHand: true },
+      {
+        type: 'attack',
+        name: 'Bilet za wycieraczką',
+        damage: 5,
+        hits: 1,
+        damagePerCardInHand: true,
+      },
       { type: 'attack', name: 'Kłótnia o rezerwację', damage: 0, hits: 0, applyFrail: 2 },
       { type: 'status', name: 'Blokada na koło', applyStun: 1 },
     ],
@@ -407,7 +569,6 @@ export const enemyLibrary = {
     baseAttack: 0,
     spriteSvg: kolejkarzSprite,
     patternType: 'loop',
-    elite: true,
     pattern: [
       { type: 'attack', name: 'Szturchanie w kolejce', damage: 5, hits: 2 },
       { type: 'status', name: 'Zmiana regulaminu', addStatusCard: 'ulotka', amount: 1 },
@@ -424,11 +585,67 @@ export const enemyLibrary = {
     baseAttack: 0,
     spriteSvg: naganiaczTermSprite,
     patternType: 'loop',
-    elite: true,
     pattern: [
       { type: 'buff', name: 'Krzykliwa zachęta', strengthGain: 1, block: 8 },
       { type: 'attack', name: 'Promka spod budki', damage: 9, hits: 1, applyVulnerable: 1 },
       { type: 'attack', name: 'Zasyp ulotkami', damage: 4, hits: 2, applyFrail: 1 },
+    ],
+  },
+  spekulant: {
+    id: 'spekulant',
+    name: 'Spekulant z Zakopanego',
+    emoji: '💼',
+    hp: 92,
+    maxHp: 92,
+    block: 0,
+    baseAttack: 0,
+    spriteSvg: spekulantSprite,
+    patternType: 'loop',
+    passive: 'lichwa',
+    elite: true,
+    pattern: [
+      { type: 'attack', name: 'Umowa wstępna', damage: 8, hits: 1, applyVulnerable: 1 },
+      { type: 'attack', name: 'Podwyżka czynszu', damage: 11, hits: 1, stealDutki: 5 },
+      { type: 'buff', name: 'Kancelaria prawna', strengthGain: 1, block: 12 },
+      { type: 'attack', name: 'Eksmisja Odwrócona', damage: 6, hits: 2, applyWeak: 1 },
+    ],
+  },
+  mistrz_redyku: {
+    id: 'mistrz_redyku',
+    name: 'Mistrz Redyku',
+    emoji: '🐑',
+    hp: 88,
+    maxHp: 88,
+    block: 0,
+    baseAttack: 0,
+    spriteSvg: mistrzRedykuSprite,
+    patternType: 'loop',
+    passive: 'hart_ducha',
+    elite: true,
+    pattern: [
+      { type: 'buff', name: 'Poświst', strengthGain: 1, block: 8 },
+      { type: 'attack', name: 'Uderzenie Bacówką', damage: 12, hits: 1, applyFrail: 1 },
+      { type: 'attack', name: 'Redyk przez dolinę', damage: 4, hits: 3 },
+      { type: 'attack', name: 'Zbójnicki taniec', damage: 15, hits: 1 },
+    ],
+  },
+  ceprzyca_vip: {
+    id: 'ceprzyca_vip',
+    name: 'Ceprzyca VIP',
+    emoji: '👒',
+    hp: 85,
+    maxHp: 85,
+    block: 0,
+    baseAttack: 0,
+    spriteSvg: ceprzyca_vipSprite,
+    patternType: 'loop',
+    passive: 'influencer_aura',
+    elite: true,
+    pattern: [
+      { type: 'attack', name: 'Zdjęcie z widokiem', damage: 6, hits: 1, applyVulnerable: 2 },
+      { type: 'status', name: 'Rezerwacja VIP', addStatusCard: 'ulotka', amount: 1 },
+      { type: 'attack', name: 'Awantura o cenę', damage: 11, hits: 1, applyWeak: 2 },
+      { type: 'block', name: 'Concierge na ratunek', block: 10, heal: 3 },
     ],
   },
   fiakier: {
@@ -446,7 +663,14 @@ export const enemyLibrary = {
       { type: 'attack', name: 'Batogiem po grzbiecie', damage: 12, hits: 1, gainPed: 3 },
       { type: 'buff', name: 'Rozped', strengthGain: 2, block: 8 },
       { type: 'attack', name: 'Przyspieszenie', damage: 16, hits: 1, usePed: true },
-      { type: 'attack', name: 'Zamach Batem', damage: 14, hits: 1, applyVulnerable: 2, stealDutki: 6 },
+      {
+        type: 'attack',
+        name: 'Zamach Batem',
+        damage: 14,
+        hits: 1,
+        applyVulnerable: 2,
+        stealDutki: 6,
+      },
     ],
   },
   pomocnik_fiakra: {
