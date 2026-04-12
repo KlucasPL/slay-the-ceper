@@ -11,6 +11,10 @@ export const releaseNotesData = [
       '🗺️ STRUKTURA RUNA: Wyprawa ma teraz 15 poziomów, gwarantowaną Watrę w połowie trasy oraz końcową Watrę przed bossem, co stabilizuje tempo przygotowania do finału.',
       '🎁 SKARB I ŚCIEŻKI: Każdy run zawiera dokładnie jeden gwarantowany węzeł skarbu we wczesnym-midgame, a połączenia na mapie są czytelniejsze i nie przecinają się lokalnie.',
       '👹 PRAWDZIWE ELITY: Węzły elitarne korzystają z osobnej puli przeciwników, pojawiają się najwcześniej od y=4 i dają dedykowaną nagrodę 1 z 3 pamiątek (z fallbackiem do kart rare).',
+      '👑 NOWE ELITY: Elitarne starcia zyskały nową pulę przeciwników z wyraźnie różnymi stylami walki, więc każda walka elitarna ma własny charakter i tempo.',
+      '⚖️ LEPSZY BALANS ELIT: Dopracowano siłę wybranych elit, żeby nadal były wymagające, ale rzadziej kończyły run przez pojedynczy zbyt mocny spike.',
+      '🧭 CZYTELNIEJ W TRAKCIE RUNA: Na mapie widzisz teraz od razu aktualną Krzepę i Dutki, więc łatwiej planować ryzyko kolejnych węzłów.',
+      '💰 JAŚNIEJSZE EFEKTY WALKI: Efekty związane z utratą Dutków (np. interakcje z LANS-em) są lepiej sygnalizowane podczas starcia.',
     ],
   },
   {
