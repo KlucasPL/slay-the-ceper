@@ -494,6 +494,18 @@ describe('GameState', () => {
       expect(s.dutki).toBe(8);
     });
 
+    it('emits one-shot event with Dutki spent by Lans', () => {
+      const s = freshState();
+      s.player.status.lans = 1;
+      s.player.block = 0;
+      s.dutki = 20;
+
+      s.takeDamage(6);
+
+      expect(s.consumeLansDutkiSpentEvent()).toBe(12);
+      expect(s.consumeLansDutkiSpentEvent()).toBe(0);
+    });
+
     it('breaks lans, stuns player and applies remaining HP damage when funds are low', () => {
       const s = freshState();
       s.player.status.lans = 1;
@@ -507,6 +519,7 @@ describe('GameState', () => {
       expect(s.player.status.lans).toBe(0);
       expect(s.player.stunned).toBe(true);
       expect(s.consumeLansBreakEvent()).toBe('BANKRUT!');
+      expect(s.consumeLansDutkiSpentEvent()).toBe(5);
     });
 
     it('works based on player.status.lans as single source', () => {
@@ -1394,7 +1407,7 @@ describe('GameState', () => {
     it('starts with 50 Dutki and generated map', () => {
       const s = freshState();
       expect(s.dutki).toBe(50);
-      expect(s.map).toHaveLength(10);
+      expect(s.map).toHaveLength(15);
       s.map.forEach((level) => {
         expect(level).toHaveLength(3);
       });
@@ -1411,25 +1424,40 @@ describe('GameState', () => {
       });
       expect(s.map[0][1]?.connections.length).toBeGreaterThanOrEqual(2);
 
-      for (let level = 1; level <= 7; level++) {
+      for (let level = 1; level <= s.map.length - 3; level++) {
         expect(s.map[level].some(Boolean)).toBe(true);
       }
 
-      expect(s.map[8][1]?.type).toBe('campfire');
-      expect(s.map[9][1]?.type).toBe('boss');
+      expect(s.map[Math.floor(s.map.length / 2)][1]?.type).toBe('campfire');
+      expect(s.map[s.map.length - 2][1]?.type).toBe('campfire');
+      expect(s.map[s.map.length - 1][1]?.type).toBe('boss');
 
       for (let level = 0; level < s.map.length - 1; level++) {
         s.map[level].forEach((node, x) => {
           if (!node) return;
           expect(node.x).toBe(x);
           expect(node.y).toBe(level);
-          if (level === 6) return;
+          if (level === s.map.length - 3) return;
           expect(node.connections.length).toBeGreaterThan(0);
           node.connections.forEach((targetX) => {
             expect(Math.abs(targetX - x)).toBeLessThanOrEqual(1);
             expect(s.map[level + 1][targetX]).not.toBeNull();
           });
         });
+
+        for (let leftX = 0; leftX < 2; leftX++) {
+          const leftNode = s.map[level][leftX];
+          if (!leftNode) continue;
+          for (let rightX = leftX + 1; rightX < 3; rightX++) {
+            const rightNode = s.map[level][rightX];
+            if (!rightNode) continue;
+            leftNode.connections.forEach((leftTarget) => {
+              rightNode.connections.forEach((rightTarget) => {
+                expect(leftTarget <= rightTarget).toBe(true);
+              });
+            });
+          }
+        }
       }
 
       for (let level = 1; level < s.map.length; level++) {
@@ -1440,10 +1468,18 @@ describe('GameState', () => {
         });
       }
 
-      s.map[7].forEach((node) => {
+      s.map[s.map.length - 3].forEach((node) => {
         if (!node) return;
         expect(node.connections).toEqual([1]);
       });
+
+      const treasureNodes = s.map
+        .flatMap((row, y) => row.map((node, x) => ({ node, x, y })))
+        .filter(({ node }) => node?.type === 'treasure');
+      expect(treasureNodes).toHaveLength(1);
+      expect(treasureNodes[0].x).toBe(1);
+      expect(treasureNodes[0].y).toBeGreaterThanOrEqual(3);
+      expect(treasureNodes[0].y).toBeLessThanOrEqual(5);
 
       const queue = [{ x: 1, y: 0 }];
       const seen = new Set();
@@ -1469,8 +1505,14 @@ describe('GameState', () => {
       const allNodes = s.map.flat().filter(Boolean);
       const shopCount = allNodes.filter((node) => node.type === 'shop').length;
       const treasureCount = allNodes.filter((node) => node.type === 'treasure').length;
-      expect(shopCount).toBeLessThanOrEqual(2);
-      expect(treasureCount).toBeLessThanOrEqual(1);
+      const eliteCount = allNodes.filter((node) => node.type === 'elite').length;
+      const earliestElite = allNodes
+        .filter((node) => node.type === 'elite')
+        .reduce((min, node) => Math.min(min, node.y), Infinity);
+      expect(shopCount).toBeLessThanOrEqual(3);
+      expect(treasureCount).toBe(1);
+      expect(eliteCount).toBeGreaterThanOrEqual(1);
+      expect(earliestElite).toBeGreaterThanOrEqual(4);
     });
 
     it('battle reward grants 28-36 Dutki only once per battle', () => {
@@ -1482,6 +1524,60 @@ describe('GameState', () => {
       expect(first).toBeLessThanOrEqual(36);
       expect(second).toBe(0);
       expect(s.dutki).toBe(first);
+    });
+
+    it('removeCrossingConnections swaps targets to remove local crossings', () => {
+      const s = freshState();
+      /** @type {Array<Array<any>>} */
+      const map = [
+        [
+          {
+            x: 0,
+            y: 0,
+            type: 'fight',
+            label: 'Bitka',
+            emoji: '⚔️',
+            weather: 'clear',
+            connections: [1],
+          },
+          {
+            x: 1,
+            y: 0,
+            type: 'fight',
+            label: 'Bitka',
+            emoji: '⚔️',
+            weather: 'clear',
+            connections: [0],
+          },
+          null,
+        ],
+        [
+          {
+            x: 0,
+            y: 1,
+            type: 'fight',
+            label: 'Bitka',
+            emoji: '⚔️',
+            weather: 'clear',
+            connections: [],
+          },
+          {
+            x: 1,
+            y: 1,
+            type: 'fight',
+            label: 'Bitka',
+            emoji: '⚔️',
+            weather: 'clear',
+            connections: [],
+          },
+          null,
+        ],
+      ];
+
+      s._removeCrossingConnections(map);
+
+      expect(map[0][0].connections).toEqual([0]);
+      expect(map[0][1].connections).toEqual([1]);
     });
 
     it('does not allow travelling to later nodes before the first fight starts', () => {
@@ -1707,7 +1803,7 @@ describe('GameState', () => {
       expect(s.deck).not.toContain('gasior');
     });
   });
-  
+
   describe('cepr - Pytanie o drogę (status action)', () => {
     it('adds 2 ulotka cards to player discard on second loop move', () => {
       const s = freshState();
@@ -2151,6 +2247,104 @@ describe('GameState', () => {
       expect(next.id).not.toBe('cepr');
     });
 
+    it('elite pool pick only returns enemies marked as elite', () => {
+      const s = freshState();
+      const elite = s._pickRandomEnemyDef(true);
+      expect(Boolean(enemyLibrary[elite.id]?.elite)).toBe(true);
+    });
+
+    it('event-node battles always use regular enemy pool (never elite pool)', () => {
+      const s = freshState();
+      s.map = [
+        [
+          null,
+          {
+            x: 1,
+            y: 0,
+            type: 'fight',
+            label: 'Bitka',
+            emoji: '⚔️',
+            weather: 'clear',
+            connections: [1],
+          },
+          null,
+        ],
+        [
+          null,
+          {
+            x: 1,
+            y: 1,
+            type: 'event',
+            label: 'Wydarzenie',
+            emoji: '❓',
+            weather: 'clear',
+            connections: [],
+          },
+          null,
+        ],
+      ];
+      s.currentLevel = 1;
+      s.currentNodeIndex = 1;
+      s.currentNode = { x: 1, y: 1 };
+      const picker = vi.spyOn(s, '_pickRandomEnemyDef');
+
+      s.resetBattle();
+
+      expect(picker).toHaveBeenCalledWith(false);
+    });
+
+    it('elite node battles use elite enemy pool', () => {
+      const s = freshState();
+      s.map = [
+        [
+          null,
+          {
+            x: 1,
+            y: 0,
+            type: 'fight',
+            label: 'Bitka',
+            emoji: '⚔️',
+            weather: 'clear',
+            connections: [1],
+          },
+          null,
+        ],
+        [
+          null,
+          {
+            x: 1,
+            y: 1,
+            type: 'elite',
+            label: 'Elita',
+            emoji: '🗡️',
+            weather: 'clear',
+            connections: [],
+          },
+          null,
+        ],
+      ];
+      s.currentLevel = 1;
+      s.currentNodeIndex = 1;
+      s.currentNode = { x: 1, y: 1 };
+
+      s.resetBattle();
+
+      expect(s.enemy.isElite).toBe(true);
+    });
+
+    it('elite enemies are scaled up and grant higher Dutki reward', () => {
+      const s = freshState();
+      const eliteState = s._createEnemyState(enemyLibrary.spekulant);
+      expect(eliteState.isElite).toBe(true);
+      expect(eliteState.maxHp).toBe(Math.round(92 * 1.25));
+
+      s.enemy = eliteState;
+      s.pendingBattleDutki = true;
+      vi.spyOn(Math, 'random').mockReturnValue(0);
+      const drop = s.grantBattleDutki();
+      expect(drop).toBe(42);
+    });
+
     it('can start scripted battle against pomocnik_fiakra', () => {
       const s = freshState();
       const started = s.startBattleWithEnemyId('pomocnik_fiakra');
@@ -2246,12 +2440,15 @@ describe('GameState', () => {
         'boss',
         'busiarz',
         'cepr',
+        'ceprzyca_vip',
         'fiakier',
         'influencerka',
         'konik_spod_kuznic',
+        'mistrz_redyku',
         'naganiacz_z_krupowek',
         'parkingowy',
         'pomocnik_fiakra',
+        'spekulant',
       ]);
     });
 
@@ -2420,4 +2617,94 @@ describe('GameState', () => {
     });
   });
 
+  describe('elite passives', () => {
+    it('lichwa does not steal Dutki when only Garda is damaged', () => {
+      const s = freshState();
+      s.enemy = s._createEnemyState(enemyLibrary.spekulant);
+      s.enemy.block = 99;
+      s.dutki = 50;
+      s.combat.activeSide = 'player';
+
+      s._applyDamageToEnemy(6);
+
+      expect(s.enemy.hp).toBe(s.enemy.maxHp);
+      expect(s.dutki).toBe(50);
+      expect(s.enemy.lichwaTriggeredThisTurn).toBe(false);
+    });
+
+    it('lichwa steals once per player turn and can trigger again next turn', () => {
+      const s = freshState();
+      s.enemy = s._createEnemyState(enemyLibrary.spekulant);
+      s.enemy.block = 0;
+      s.dutki = 50;
+      s.combat.activeSide = 'player';
+
+      s._applyDamageToEnemy(3);
+      s._applyDamageToEnemy(3);
+      expect(s.dutki).toBe(47);
+      expect(s.enemy.lichwaTriggeredThisTurn).toBe(true);
+
+      s.startTurn();
+      s.combat.activeSide = 'player';
+      s._applyDamageToEnemy(3);
+      expect(s.dutki).toBe(44);
+    });
+
+    it('hart_ducha triggers exactly once after dropping below 50% HP', () => {
+      const s = freshState();
+      s.enemy = s._createEnemyState(enemyLibrary.mistrz_redyku);
+      s.enemy.block = 0;
+      s.combat.activeSide = 'player';
+
+      const baseStrength = s.enemy.status.strength;
+      const triggerDamage = Math.floor(s.enemy.maxHp / 2) + 1;
+      s._applyDamageToEnemy(triggerDamage);
+
+      expect(s.enemy.hartDuchaTriggered).toBe(true);
+      expect(s.enemy.status.strength).toBe(baseStrength + 3);
+      expect(s.enemy.block).toBe(10);
+
+      const blockBeforeSecondHit = s.enemy.block;
+      s._applyDamageToEnemy(1);
+      expect(s.enemy.status.strength).toBe(baseStrength + 3);
+      expect(s.enemy.block).toBe(blockBeforeSecondHit - 1);
+    });
+
+    it('hart_ducha does not trigger at or above 50% HP threshold', () => {
+      const s = freshState();
+      s.enemy = s._createEnemyState(enemyLibrary.mistrz_redyku);
+      s.enemy.block = 0;
+      s.combat.activeSide = 'player';
+
+      const damageToHalf = Math.floor(s.enemy.maxHp / 2);
+      s._applyDamageToEnemy(damageToHalf);
+
+      expect(s.enemy.hp).toBeGreaterThanOrEqual(s.enemy.maxHp * 0.5);
+      expect(s.enemy.hartDuchaTriggered).toBe(false);
+      expect(s.enemy.status.strength).toBe(0);
+    });
+
+    it('mistrz_redyku intent damage grows after hart_ducha triggers', () => {
+      const s = freshState();
+      s.enemy = s._createEnemyState(enemyLibrary.mistrz_redyku);
+      s.player.block = 0;
+      s.combat.activeSide = 'player';
+
+      s.enemy.currentIntent = {
+        type: 'attack',
+        name: 'Redyk przez dolinę',
+        damage: 4,
+        hits: 3,
+      };
+      const damageBefore = s.getEnemyIntentDamage();
+
+      const triggerDamage = Math.floor(s.enemy.maxHp / 2) + 1;
+      s.enemy.block = 0;
+      s._applyDamageToEnemy(triggerDamage);
+
+      const damageAfter = s.getEnemyIntentDamage();
+      expect(s.enemy.hartDuchaTriggered).toBe(true);
+      expect(damageAfter).toBeGreaterThan(damageBefore);
+    });
+  });
 });

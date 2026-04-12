@@ -16,6 +16,8 @@ const CARD_REWARD_RARITY_WEIGHTS = {
   rare: 0.15,
 };
 
+const MIN_ELITE_LEVEL = 4;
+
 /**
  * @typedef {import('../data/cards.js').StatusDef} StatusDef
  * @typedef {{ name: string, hp: number, maxHp: number, block: number, energy: number, maxEnergy: number, status: StatusDef, stunned: boolean, cardsPlayedThisTurn: number }} PlayerState
@@ -24,7 +26,7 @@ const CARD_REWARD_RARITY_WEIGHTS = {
  * @typedef {'fight' | 'elite' | 'shop' | 'treasure' | 'event' | 'campfire' | 'boss'} MapNodeType
  * @typedef {{ x: number, y: number, type: MapNodeType, label: string, emoji: string, weather: WeatherId, connections: number[] }} MapNode
  * @typedef {import('../data/events.js').GameEventDef} GameEventDef
- * @typedef {{ id: string, name: string, emoji: string, hp: number, maxHp: number, block: number, nextAttack: number, baseAttack: number, status: StatusDef, rachunek: number, ped: number, spriteSvg: string, patternType: 'random'|'loop', pattern: EnemyMoveDef[], patternIndex: number, currentIntent: EnemyMoveDef, tookHpDamageThisTurn: boolean, bossArtifact?: number, passive: string | null }} EnemyState
+ * @typedef {{ id: string, name: string, emoji: string, hp: number, maxHp: number, block: number, nextAttack: number, baseAttack: number, status: StatusDef, rachunek: number, ped: number, spriteSvg: string, patternType: 'random'|'loop', pattern: EnemyMoveDef[], patternIndex: number, currentIntent: EnemyMoveDef, tookHpDamageThisTurn: boolean, bossArtifact?: number, passive: string | null, isElite: boolean, lichwaTriggeredThisTurn: boolean, hartDuchaTriggered: boolean }} EnemyState
  * @typedef {{ success: false, reason?: string } | { success: true, effect: import('../data/cards.js').CardEffectResult }} PlayCardResult
  * @typedef {{ enemyAttack: { raw: number, blocked: number, dealt: number }, enemyPassiveHeal: { amount: number, text: string } | null, playerPassiveHeal: { amount: number, text: string } | null }} EndTurnResult
  * @typedef {{ cards: string[], relic: string | null }} ShopStock
@@ -148,6 +150,8 @@ export class GameState {
     this.enemyBankruptcyBonus = 0;
     /** @type {boolean} */
     this.lansBreakEvent = false;
+    /** @type {number} One-shot accumulator for Dutki consumed by active Lans */
+    this.lansDutkiSpentEvent = 0;
     /** @type {boolean} One-shot flag for messaging when enemy resists rachunek win condition */
     this.rachunekResistEvent = false;
     /** @type {boolean} Global audio mute flag */
@@ -156,6 +160,12 @@ export class GameState {
     this.hasStartedFirstBattle = false;
     /** @type {boolean} Rare power: reflect damage when enough block is lost */
     this.dumaPodhalaActive = false;
+    /** @type {number | null} */
+    this.guaranteedTreasureRow = null;
+    /** @type {number} */
+    this.guaranteedTreasureColumn = 1;
+    /** @type {number | null} */
+    this.midCampfireLevel = null;
     /** @type {{ outcome: 'player_win' | 'enemy_win', finalDeck: import('../data/cards.js').CardDef[], finalRelics: import('../data/relics.js').RelicDef[], killerName: string | null, runStats: { totalDutkiEarned: number, floorReached: number, totalTurnsPlayed: number } } | null} */
     this.runSummary = null;
     /** @type {EnemyState} */
@@ -166,19 +176,37 @@ export class GameState {
   /** @returns {(MapNode | null)[][]} */
   generateMap() {
     /** @type {(MapNode | null)[][]} */
-    const generated = Array.from({ length: 10 }, () => Array(3).fill(null));
+    const generated = Array.from({ length: 15 }, () => Array(3).fill(null));
+    const midCampfireLevel = Math.floor(generated.length / 2);
+    const guaranteedTreasureRow = 3 + Math.floor(Math.random() * 3);
+    this.midCampfireLevel = midCampfireLevel;
+    this.guaranteedTreasureRow = guaranteedTreasureRow;
+    this.guaranteedTreasureColumn = 1;
+
     generated[0][1] = this._createMapNode('fight', 1, 0);
 
     const lastMidLevel = generated.length - 3;
     for (let y = 1; y <= lastMidLevel; y++) {
+      if (y === midCampfireLevel) {
+        generated[y][1] = this._createMapNode('campfire', 1, y);
+        continue;
+      }
+      if (y === guaranteedTreasureRow) {
+        generated[y][this.guaranteedTreasureColumn] = this._createMapNode(
+          'treasure',
+          this.guaranteedTreasureColumn,
+          y
+        );
+        continue;
+      }
       for (let x = 0; x < 3; x++) {
         if (Math.random() < 0.7) {
-          generated[y][x] = this._createMapNode(this._rollMidNodeType(), x, y);
+          generated[y][x] = this._createMapNode(this._rollMidNodeType(y), x, y);
         }
       }
       if (!generated[y].some(Boolean)) {
         const forcedX = Math.floor(Math.random() * 3);
-        generated[y][forcedX] = this._createMapNode(this._rollMidNodeType(), forcedX, y);
+        generated[y][forcedX] = this._createMapNode(this._rollMidNodeType(y), forcedX, y);
       }
     }
 
@@ -187,8 +215,11 @@ export class GameState {
 
     this._seedRequiredPaths(generated);
     this._connectOptionalGridNodes(generated);
+    this._removeCrossingConnections(generated);
+    this._pruneUnreachableNodes(generated);
     this._ensureGuaranteedPathRewards(generated);
     this._enforceSpecialNodeLimits(generated);
+    this._ensureReachableElite(generated);
 
     this.map = generated;
     this.currentLevel = 0;
@@ -207,7 +238,7 @@ export class GameState {
   _createMapNode(type, x, y) {
     const meta = {
       fight: { label: 'Bitka', emoji: '⚔️' },
-      elite: { label: 'Elita', emoji: '⚔️' },
+      elite: { label: 'Elita', emoji: '🗡️' },
       shop: { label: 'Jarmark', emoji: '🛖' },
       treasure: { label: 'Skarb', emoji: '🎁' },
       event: { label: 'Wydarzenie', emoji: '❓' },
@@ -223,13 +254,12 @@ export class GameState {
   }
 
   /** @returns {MapNodeType} */
-  _rollMidNodeType() {
+  _rollMidNodeType(level = MIN_ELITE_LEVEL) {
     const roll = Math.random();
-    if (roll < 0.2) return 'event';
-    if (roll < 0.65) return 'fight';
-    if (roll < 0.72) return 'elite';
-    if (roll < 0.89) return 'shop';
-    return 'treasure';
+    if (roll < 0.27) return 'event';
+    if (roll < 0.58) return 'fight';
+    if (roll < 0.71) return level >= MIN_ELITE_LEVEL ? 'elite' : 'fight';
+    return 'shop';
   }
 
   /**
@@ -254,6 +284,8 @@ export class GameState {
     const startNode = map[0][1];
     if (!startNode) return;
     const campfireLevel = map.length - 2;
+    const midCampfireLevel = this.midCampfireLevel ?? Math.floor(map.length / 2);
+    const guaranteedTreasureRow = this.guaranteedTreasureRow;
     const lastMidLevel = campfireLevel - 1;
 
     const firstTargets = [0, 1, 2];
@@ -263,7 +295,7 @@ export class GameState {
 
     seededTargets.forEach((targetX) => {
       if (!map[1][targetX]) {
-        map[1][targetX] = this._createMapNode(this._rollMidNodeType(), targetX, 1);
+        map[1][targetX] = this._createMapNode(this._rollMidNodeType(1), targetX, 1);
       }
       this._linkNode(startNode, targetX);
     });
@@ -275,7 +307,7 @@ export class GameState {
       let currentX = startX;
       for (let y = 1; y < campfireLevel; y++) {
         let nextX;
-        if (y === lastMidLevel) {
+        if (y === lastMidLevel || y + 1 === midCampfireLevel || y + 1 === guaranteedTreasureRow) {
           nextX = 1;
         } else {
           const options = this._getAdjacentColumns(currentX);
@@ -286,7 +318,8 @@ export class GameState {
         }
 
         if (!map[y + 1][nextX]) {
-          const nextType = y + 1 === campfireLevel ? 'campfire' : this._rollMidNodeType();
+          const forcedType = this._forcedNodeTypeForLevel(y + 1, map.length);
+          const nextType = forcedType ?? this._rollMidNodeType(y + 1);
           map[y + 1][nextX] = this._createMapNode(nextType, nextX, y + 1);
         }
 
@@ -372,6 +405,48 @@ export class GameState {
   }
 
   /**
+   * Removes crossing edges between adjacent map levels.
+   * For any pair of edges (a->t1, b->t2) where a < b and t1 > t2,
+   * targets are swapped to (a->t2, b->t1). This preserves edge count and
+   * inbound totals while eliminating local crossings.
+   * @param {(MapNode | null)[][]} map
+   */
+  _removeCrossingConnections(map) {
+    for (let y = 0; y < map.length - 1; y++) {
+      let changed = true;
+      while (changed) {
+        changed = false;
+
+        for (let leftX = 0; leftX < 2 && !changed; leftX++) {
+          const leftNode = map[y][leftX];
+          if (!leftNode) continue;
+
+          for (let rightX = leftX + 1; rightX < 3 && !changed; rightX++) {
+            const rightNode = map[y][rightX];
+            if (!rightNode) continue;
+
+            for (const leftTarget of leftNode.connections) {
+              for (const rightTarget of rightNode.connections) {
+                if (leftTarget <= rightTarget) continue;
+
+                // Swap edge targets to remove crossing while preserving degree counts.
+                leftNode.connections = leftNode.connections.filter((x) => x !== leftTarget);
+                rightNode.connections = rightNode.connections.filter((x) => x !== rightTarget);
+                this._linkNode(leftNode, rightTarget);
+                this._linkNode(rightNode, leftTarget);
+                changed = true;
+
+                if (changed) break;
+              }
+              if (changed) break;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  /**
    * @param {(MapNode | null)[][]} map
    */
   _ensureGuaranteedPathRewards(map) {
@@ -381,18 +456,14 @@ export class GameState {
       .filter((node) => node && node.y > 0 && node.y < map.length - 2);
 
     const shopNode = reachableNodes.find((node) => node.type === 'shop');
-    const treasureNode = reachableNodes.find((node) => node.type === 'treasure');
-    if (shopNode && treasureNode) return;
+    if (shopNode) return;
 
-    const rewardCandidates = reachableNodes.filter((node) => node.y <= map.length - 3);
+    const rewardCandidates = reachableNodes.filter(
+      (node) => node.y <= map.length - 3 && node.y !== this.guaranteedTreasureRow
+    );
     if (!shopNode) {
       const target = rewardCandidates[0];
       if (target) this._setNodeType(target, 'shop');
-    }
-
-    if (!treasureNode) {
-      const target = rewardCandidates.find((node) => node.type !== 'shop') ?? rewardCandidates[1];
-      if (target) this._setNodeType(target, 'treasure');
     }
   }
 
@@ -413,13 +484,47 @@ export class GameState {
       .filter((node) => node && node.y > 0 && node.y < map.length - 2);
 
     const guaranteedShop = reachableRewardNodes.find((node) => node.type === 'shop');
-    const guaranteedTreasure = reachableRewardNodes.find((node) => node.type === 'treasure');
+    const guaranteedTreasureRow = this.guaranteedTreasureRow;
+    const guaranteedTreasureColumn = this.guaranteedTreasureColumn;
 
     if (guaranteedShop) protectedKeys.add(`${guaranteedShop.x},${guaranteedShop.y}`);
-    if (guaranteedTreasure) protectedKeys.add(`${guaranteedTreasure.x},${guaranteedTreasure.y}`);
+    if (guaranteedTreasureRow !== null) {
+      protectedKeys.add(`${guaranteedTreasureColumn},${guaranteedTreasureRow}`);
+    }
 
     this._trimNodeType(map, 'treasure', 1, protectedKeys, reachableKeys);
-    this._trimNodeType(map, 'shop', 2, protectedKeys, reachableKeys);
+    this._trimNodeType(map, 'shop', 3, protectedKeys, reachableKeys);
+  }
+
+  /**
+   * @param {number} level
+   * @param {number} mapLength
+   * @returns {MapNodeType | null}
+   */
+  _forcedNodeTypeForLevel(level, mapLength) {
+    if (level === mapLength - 1) return 'boss';
+    if (level === mapLength - 2) return 'campfire';
+    if (this.midCampfireLevel !== null && level === this.midCampfireLevel) return 'campfire';
+    if (this.guaranteedTreasureRow !== null && level === this.guaranteedTreasureRow) {
+      return 'treasure';
+    }
+    return null;
+  }
+
+  /**
+   * @param {(MapNode | null)[][]} map
+   */
+  _ensureReachableElite(map) {
+    const reachable = this._getReachableCoordinates(map)
+      .map(({ x, y }) => map[y]?.[x] ?? null)
+      .filter((node) => node && node.y > 0 && node.y < map.length - 2);
+
+    if (reachable.some((node) => node.type === 'elite' && node.y >= MIN_ELITE_LEVEL)) return;
+
+    const candidate = reachable.find((node) => node.type === 'fight' && node.y >= MIN_ELITE_LEVEL);
+    if (candidate) {
+      this._setNodeType(candidate, 'elite');
+    }
   }
 
   /**
@@ -499,7 +604,7 @@ export class GameState {
     if (!node) return;
     const meta = {
       fight: { label: 'Bitka', emoji: '⚔️' },
-      elite: { label: 'Elita', emoji: '⚔️' },
+      elite: { label: 'Elita', emoji: '🗡️' },
       shop: { label: 'Jarmark', emoji: '🛖' },
       treasure: { label: 'Skarb', emoji: '🎁' },
       event: { label: 'Wydarzenie', emoji: '❓' },
@@ -563,6 +668,7 @@ export class GameState {
         for (let x = 0; x < 3; x++) {
           const node = map[y][x];
           if (!node) continue;
+          if (y === this.guaranteedTreasureRow && x === this.guaranteedTreasureColumn) continue;
           if (!this._hasInbound(map, y, x)) {
             map[y][x] = null;
             changed = true;
@@ -740,6 +846,13 @@ export class GameState {
     if (!this.lansBreakEvent) return null;
     this.lansBreakEvent = false;
     return 'BANKRUT!';
+  }
+
+  /** @returns {number} */
+  consumeLansDutkiSpentEvent() {
+    const spent = this.lansDutkiSpentEvent;
+    this.lansDutkiSpentEvent = 0;
+    return spent;
   }
 
   /** @returns {{ target: 'enemy', text: string } | null} */
@@ -1176,12 +1289,18 @@ export class GameState {
   grantBattleDutki() {
     if (!this.pendingBattleDutki) return 0;
     const base = 28 + Math.floor(Math.random() * 9);
-    let drop = (this.enemy.isBankrupt && this.hasRelic('magnes_na_lodowke'))
-      ? Math.floor(base * 1.5)
-      : base;
+    let drop =
+      this.enemy.isBankrupt && this.hasRelic('magnes_na_lodowke') ? Math.floor(base * 1.5) : base;
+
+    if (this.enemy.isElite) {
+      drop = Math.floor(drop * 1.5);
+    }
 
     // Szczęśliwa Podkowa: +25 Dutki when HP ≤ 40% at end of battle
-    if (this.hasRelic('szczegliwa_podkowa') && this.player.hp <= Math.floor(this.player.maxHp * 0.4)) {
+    if (
+      this.hasRelic('szczegliwa_podkowa') &&
+      this.player.hp <= Math.floor(this.player.maxHp * 0.4)
+    ) {
       drop += 25;
     }
 
@@ -1256,10 +1375,11 @@ export class GameState {
     const isFinalBossVariant = enemyDef.id === 'boss' || enemyDef.id === 'fiakier';
     const isMainBoss = enemyDef.id === 'boss';
     const scale = isFinalBossVariant ? 1 : this.enemyScaleFactor;
+    const eliteDamageScale = enemyDef.elite ? 1.15 : 1;
     const pattern = enemyDef.pattern
       ? enemyDef.pattern.map((move) => {
           if (move.type !== 'attack') return { ...move };
-          return { ...move, damage: Math.round(move.damage * scale) };
+          return { ...move, damage: Math.round(move.damage * scale * eliteDamageScale) };
         })
       : [];
     const bossBaseHp = this.difficulty === 'hard' ? 330 : 230;
@@ -1270,7 +1390,8 @@ export class GameState {
           ? bossBaseHp
           : enemyDef.maxHp;
     const dzwonekMod = this.hasRelic('dzwonek_owcy') ? 0.8 : 1.0;
-    const maxHp = Math.round(baseMaxHp * scale * dzwonekMod);
+    const eliteHpScale = enemyDef.elite ? 1.25 : 1;
+    const maxHp = Math.round(baseMaxHp * scale * dzwonekMod * eliteHpScale);
     /** @type {EnemyState} */
     const enemyState = {
       id: enemyDef.id,
@@ -1280,7 +1401,7 @@ export class GameState {
       maxHp,
       block: enemyDef.block,
       nextAttack: 0,
-      baseAttack: Math.round((enemyDef.baseAttack ?? 0) * scale),
+      baseAttack: Math.round((enemyDef.baseAttack ?? 0) * scale * eliteDamageScale),
       status: defaultStatus(),
       rachunek: 0,
       ped: 0,
@@ -1292,6 +1413,9 @@ export class GameState {
       tookHpDamageThisTurn: false,
       bossArtifact: isMainBoss ? 2 : 0,
       passive: enemyDef.passive ?? null,
+      isElite: Boolean(enemyDef.elite),
+      lichwaTriggeredThisTurn: false,
+      hartDuchaTriggered: false,
     };
     enemyState.currentIntent = this._buildEnemyIntent(enemyState);
     enemyState.nextAttack =
@@ -1300,17 +1424,31 @@ export class GameState {
   }
 
   /** @returns {import('../data/enemies.js').EnemyDef} */
-  _pickRandomEnemyDef() {
+  _pickRandomEnemyDef(isElite = false) {
     let enemyIds = Object.keys(enemyLibrary).filter(
       (id) => id !== 'boss' && id !== 'fiakier' && id !== 'pomocnik_fiakra'
     );
 
-    if (this.lastRegularEnemyId && enemyIds.length > 1) {
+    enemyIds = enemyIds.filter((id) => Boolean(enemyLibrary[id]?.elite) === isElite);
+
+    if (enemyIds.length === 0) {
+      enemyIds = Object.keys(enemyLibrary).filter(
+        (id) =>
+          id !== 'boss' &&
+          id !== 'fiakier' &&
+          id !== 'pomocnik_fiakra' &&
+          Boolean(enemyLibrary[id]?.elite) !== isElite
+      );
+    }
+
+    if (!isElite && this.lastRegularEnemyId && enemyIds.length > 1) {
       enemyIds = enemyIds.filter((id) => id !== this.lastRegularEnemyId);
     }
 
     const enemyId = enemyIds[Math.floor(Math.random() * enemyIds.length)];
-    this.lastRegularEnemyId = enemyId;
+    if (!isElite) {
+      this.lastRegularEnemyId = enemyId;
+    }
     return enemyLibrary[enemyId];
   }
 
@@ -1482,11 +1620,38 @@ export class GameState {
     const dealt = dmg - blocked;
     this.enemy.block -= blocked;
     this.enemy.hp -= dealt;
+
     if (this.enemy.hp < hpBefore) {
       this.enemy.tookHpDamageThisTurn = true;
+
+      if (
+        this.enemy.passive === 'lichwa' &&
+        this.combat.activeSide === 'player' &&
+        !this.enemy.lichwaTriggeredThisTurn
+      ) {
+        this.dutki = Math.max(0, this.dutki - 3);
+        this.enemy.lichwaTriggeredThisTurn = true;
+      }
+
+      if (
+        this.enemy.passive === 'hart_ducha' &&
+        !this.enemy.hartDuchaTriggered &&
+        this.enemy.hp > 0 &&
+        this.enemy.hp < this.enemy.maxHp * 0.5
+      ) {
+        this.enemy.status.strength += 3;
+        this.enemy.block += 10;
+        this.enemy.hartDuchaTriggered = true;
+      }
     }
+
     this._checkEnemyBankruptcy();
-    if (dmg > 0 && this.enemy.passive === 'ochrona_wizerunku' && this.combat.activeSide === 'player') {
+
+    if (
+      dmg > 0 &&
+      this.enemy.passive === 'ochrona_wizerunku' &&
+      this.combat.activeSide === 'player'
+    ) {
       if (this.player.block > 0) {
         this.player.block -= 1;
       } else {
@@ -1512,21 +1677,29 @@ export class GameState {
   takeDamage(amount) {
     const blocked = Math.min(this.player.block, amount);
     let dealt = amount - blocked;
+    let lansSpent = 0;
     this.player.block -= blocked;
 
     if (dealt > 0 && this._isLansActive()) {
       const requiredDutki = dealt * 2;
       if (this.dutki >= requiredDutki) {
         this.dutki -= requiredDutki;
+        lansSpent += requiredDutki;
         dealt = 0;
       } else {
-        const prevented = Math.floor(this.dutki / 2);
+        const availableDutki = this.dutki;
+        const prevented = Math.floor(availableDutki / 2);
         dealt = Math.max(0, dealt - prevented);
+        lansSpent += availableDutki;
         this.dutki = 0;
         this._setLansActive(false);
         this.player.stunned = true;
         this.lansBreakEvent = true;
       }
+    }
+
+    if (lansSpent > 0) {
+      this.lansDutkiSpentEvent += lansSpent;
     }
 
     this.player.hp -= dealt;
@@ -1537,7 +1710,11 @@ export class GameState {
       this.dutki = Math.max(0, this.dutki - 3);
     }
 
-    if (this.player.status.duma_podhala > 0 && this.combat.activeSide === 'enemy' && blocked >= 10) {
+    if (
+      this.player.status.duma_podhala > 0 &&
+      this.combat.activeSide === 'enemy' &&
+      blocked >= 10
+    ) {
       const reflected = Math.floor(blocked / 10) * 5;
       this._applyDamageToEnemy(reflected);
     }
@@ -1713,14 +1890,12 @@ export class GameState {
     }
 
     if (this.enemy.id === 'boss') {
-      specials.push(
-        {
-          icon: '🛡️',
-          label: 'Artefakt',
-          value: this.enemy.bossArtifact ?? 0,
-          tooltip: 'Blokuje pierwsze 2 negatywne statusy nałożone przez gracza.',
-        }
-      );
+      specials.push({
+        icon: '🛡️',
+        label: 'Artefakt',
+        value: this.enemy.bossArtifact ?? 0,
+        tooltip: 'Blokuje pierwsze 2 negatywne statusy nałożone przez gracza.',
+      });
     }
 
     if (this.enemy.passive === 'brak_reszty') {
@@ -1810,6 +1985,7 @@ export class GameState {
     this.combat.playerAttackMissed = false;
 
     this.enemy.tookHpDamageThisTurn = false;
+    this.enemy.lichwaTriggeredThisTurn = false;
     this.player.cardsPlayedThisTurn = 0;
 
     this.battleTurnsElapsed += 1;
@@ -1852,7 +2028,6 @@ export class GameState {
     if (this.hasRelic('papryczka_marka')) {
       this.player.hp = Math.max(1, this.player.hp - 2);
     }
-
   }
 
   /**
@@ -1948,6 +2123,8 @@ export class GameState {
    * @returns {EndTurnResult}
    */
   endTurn() {
+    const playerHandSizeBeforeDiscard = this.hand.length;
+
     // Smycz Zakopane: extract exact selected card slot before discarding.
     if (this.hasRelic('smycz_zakopane') && this.smyczKeptHandIndex !== null) {
       if (this.smyczKeptHandIndex >= 0 && this.smyczKeptHandIndex < this.hand.length) {
@@ -2032,6 +2209,11 @@ export class GameState {
       this.enemy.status.strength += 2;
     }
 
+    // influencer_aura: ceprzyca VIP gains block if player ended turn with a large hand.
+    if (this.enemy.passive === 'influencer_aura' && playerHandSizeBeforeDiscard >= 3) {
+      this.enemy.block += 5;
+    }
+
     const enemyAttack = this._applyEnemyIntent();
 
     // Zepsuty Termometr: enemy status ticks every other turn
@@ -2059,7 +2241,7 @@ export class GameState {
   /**
    * Resets combat after victory with fixed enemy stats from enemyLibrary.
    * - Keep player HP between battles (no auto-heal)
-  * - Boss node: spawn random final boss variant (Król Krupówek or Fiakier)
+   * - Boss node: spawn random final boss variant (Król Krupówek or Fiakier)
    * - Clear blocks and statuses
    * - Move hand/discard/exhaust back to deck and shuffle
    * - Start a fresh turn
@@ -2093,7 +2275,7 @@ export class GameState {
     this.player.stunned = false;
 
     const allCards = [...this.hand, ...this.discard, ...this.exhaust, ...this.deck];
-    this.deck = allCards.filter(id => cardLibrary[id]?.type !== 'status');
+    this.deck = allCards.filter((id) => cardLibrary[id]?.type !== 'status');
     this.hand = [];
     this.discard = [];
     this.exhaust = [];
@@ -2101,11 +2283,12 @@ export class GameState {
 
     const currentNode = this.getCurrentMapNode();
     const isBossNode = currentNode?.type === 'boss';
+    const isEliteNode = currentNode?.type === 'elite';
     const nextEnemy = isBossNode
       ? this.forceMainBossNextBattle
         ? enemyLibrary.boss
         : this._pickFinalBossDef()
-      : this._pickRandomEnemyDef();
+      : this._pickRandomEnemyDef(isEliteNode);
     if (isBossNode) {
       this.forceMainBossNextBattle = false;
     }
@@ -2191,8 +2374,7 @@ export class GameState {
       .map((id) => relicLibrary[id])
       .filter(Boolean)
       .map((relic) => ({ ...relic }));
-    const killerName =
-      outcome === 'enemy_win' ? `${this.enemy.name} ${this.enemy.emoji}` : null;
+    const killerName = outcome === 'enemy_win' ? `${this.enemy.name} ${this.enemy.emoji}` : null;
 
     this.runSummary = {
       outcome,

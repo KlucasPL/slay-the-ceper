@@ -176,11 +176,7 @@ body {
   color: #ffe8b7;
   background:
     linear-gradient(180deg, rgba(112, 78, 43, 0.96), rgba(84, 56, 30, 0.98)),
-    repeating-linear-gradient(
-      90deg,
-      rgba(255, 255, 255, 0.06) 0 8px,
-      rgba(0, 0, 0, 0.06) 8px 16px
-    );
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.06) 0 8px, rgba(0, 0, 0, 0.06) 8px 16px);
 }
 
 .title-start-btn--library:hover,
@@ -1354,6 +1350,27 @@ h1 {
   color: #ffd45e;
 }
 
+.map-resource-strip {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 0 auto 10px;
+}
+
+.map-resource-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(23, 14, 9, 0.82);
+  color: #ffe4b7;
+  font-weight: 700;
+  font-size: 0.92rem;
+}
+
 .hidden {
   display: none !important;
 }
@@ -1375,14 +1392,34 @@ h1 {
 }
 
 .map-link {
-  stroke: rgba(255, 255, 255, 0.25);
-  stroke-width: 2;
+  stroke: rgba(255, 239, 218, 0.32);
+  stroke-width: 2.6;
   fill: none;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 2px rgba(38, 23, 10, 0.45));
+  transition:
+    stroke 0.2s ease,
+    stroke-width 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.map-link.done {
+  stroke: rgba(255, 206, 136, 0.48);
+}
+
+.map-link.future {
+  opacity: 0.6;
+}
+
+.map-link.available {
+  stroke: rgba(255, 220, 133, 0.9);
+  stroke-width: 3.2;
 }
 
 .map-link.active {
   stroke: #ffd45e;
-  stroke-width: 2.8;
+  stroke-width: 4;
+  filter: drop-shadow(0 0 8px rgba(255, 212, 94, 0.65));
 }
 
 .map-levels {
@@ -1432,6 +1469,26 @@ h1 {
 
 .map-node-btn .map-node-label {
   font-size: 0.75rem;
+}
+
+  .map-resource-pill {
+    font-size: 0.84rem;
+    padding: 5px 9px;
+  }
+
+.map-node-btn.map-node-type-elite {
+  border-color: rgba(255, 130, 76, 0.85);
+  box-shadow:
+    0 0 0 1px rgba(255, 130, 76, 0.35) inset,
+    0 0 12px rgba(255, 98, 57, 0.22);
+}
+
+.map-node-btn.map-node-type-elite .map-node-label {
+  color: #ffd3b6;
+}
+
+.map-node-btn.map-node-type-elite.available {
+  border-color: #ff8b54;
 }
 
 .map-node-wrap {

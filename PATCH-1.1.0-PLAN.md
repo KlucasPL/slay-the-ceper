@@ -189,8 +189,8 @@ Obecnie rare pool jest zbyt krótki, więc łatwo powtarza te same scenariusze r
 Wdrożone w kodzie:
 
 - nowe rare payoffy pełnią różne role:
-	- ofensywny finisher: `zemsta_gorala`
-	- defensywno-kontrolny power: `duma_podhala`
+  - ofensywny finisher: `zemsta_gorala`
+  - defensywno-kontrolny power: `duma_podhala`
 
 ## Pakiet C - Midgame i roster przeciwników
 
@@ -234,11 +234,11 @@ Przykład:
 Wdrożone w kodzie:
 
 - `Influencerka`:
-	- `Selfie z zaskoczenia`: `applyVulnerable 1 -> 2`
-	- `Oznaczenie w relacji`: `amount 1 -> 2` (`spam_tagami`)
+  - `Selfie z zaskoczenia`: `applyVulnerable 1 -> 2`
+  - `Oznaczenie w relacji`: `amount 1 -> 2` (`spam_tagami`)
 - `Busiarz`:
-	- `Wyprzedzanie na trzeciego`: `applyFrail 1 -> 2`
-	- `Zbieranie kompletu`: `heal 5 -> 3` (block bez zmian)
+  - `Wyprzedzanie na trzeciego`: `applyFrail 1 -> 2`
+  - `Zbieranie kompletu`: `heal 5 -> 3` (block bez zmian)
 - Testy: zaktualizowano i rozszerzono testy intencji/movesetu (`busiarz`, nowy blok `influencerka`) — 201 testów ✓, build ✓
 
 ### C3. Zmniejszyć różnicę między bossami — **DONE (iteracja 1)**
@@ -257,7 +257,7 @@ Cel:
 Wdrożone w kodzie:
 
 - `Król Krupówek (Misiek)`: delikatnie obniżono największy pojedynczy spike obrażeń:
-	- `Uścisk Krupówek`: `damage 25 -> 23`
+  - `Uścisk Krupówek`: `damage 25 -> 23`
 - `GameState.getCombatSpecialStatuses()`: doprecyzowano tooltip Artefaktu Miska (blokuje **2** negatywne statusy, zgodnie z implementacją)
 - Testy: dodano nowy test potwierdzający 4. intent Miska i zredukowane obrażenia `Uścisku Krupówek` (201 testów ✓, build ✓)
 
@@ -376,9 +376,9 @@ Uzupełnienie (nowa propozycja):
 Rekomendowany model balansu dla `1.1.0`:
 
 - rozkład wyniku eventu:
-	- `60%` klasyczne wydarzenie z `eventLibrary`
-	- `25%` starcie z losowym zwykłym wrogiem (bez bossów)
-	- `15%` zwykły sklep (identyczny z dedykowanym nodem `shop`)
+  - `60%` klasyczne wydarzenie z `eventLibrary`
+  - `25%` starcie z losowym zwykłym wrogiem (bez bossów)
+  - `15%` zwykły sklep (identyczny z dedykowanym nodem `shop`)
 - uzasadnienie: event pojawia się na ~20% nodów, sklep wewnątrz eventu to 15% z tego — łącznie ~3% wszystkich nodów, co jest za rzadkie by istotnie wpłynąć na ekonomię
 
 Dlaczego to działa balansowo:
