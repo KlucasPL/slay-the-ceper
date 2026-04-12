@@ -1,8 +1,8 @@
 /**
- * @typedef {{ strength: number, weak: number, fragile: number, vulnerable: number, next_double: boolean, energy_next_turn: number }} StatusDef
+ * @typedef {{ strength: number, weak: number, fragile: number, vulnerable: number, next_double: boolean, energy_next_turn: number, lans: number, duma_podhala: number }} StatusDef
  * @typedef {{ playerAnim?: string, enemyAnim?: string, damage?: { raw: number, blocked: number, dealt: number } }} CardEffectResult
  * @typedef {'common' | 'uncommon' | 'rare'} RarityDef
- * @typedef {{ id: string, name: string, type: 'attack' | 'skill' | 'status', cost: number, price: number, rarity: RarityDef, emoji: string, desc: string, isStarter?: boolean, exhaust?: boolean, unplayable?: boolean, effect: (state: import('../state/GameState.js').GameState) => CardEffectResult }} CardDef
+ * @typedef {{ id: string, name: string, type: 'attack' | 'skill' | 'status' | 'power', cost: number, price: number, rarity: RarityDef, emoji: string, desc: string, isStarter?: boolean, exhaust?: boolean, unplayable?: boolean, effect: (state: import('../state/GameState.js').GameState) => CardEffectResult }} CardDef
  */
 
 /** @type {Record<string, CardDef>} */
@@ -51,10 +51,11 @@ export const cardLibrary = {
     price: 70,
     isStarter: true,
     emoji: '👞',
-    desc: 'Zadaje 12 obrażeń. Śmierdzi jak diabli.',
+    desc: 'Zadaje 12 obrażeń i nakłada 1 Słabości. Śmierdzi jak diabli.',
     effect(state) {
       const dmg = state._calcAttackDamage(state.player, 12 + state.getCardDamageBonus('kierpce'));
       const damage = state._applyDamageToEnemy(dmg);
+      state.applyEnemyDebuff('weak', 1);
       return {
         playerAnim: 'anim-attack-p',
         enemyAnim: damage.dealt > 0 ? 'anim-damage' : 'anim-block',
@@ -159,7 +160,7 @@ export const cardLibrary = {
     name: 'Podatek Klimatyczny',
     type: 'skill',
     rarity: 'rare',
-    cost: 2,
+    cost: 3,
     price: 115,
     emoji: '🌍',
     desc: 'Podwój obecny Rachunek wroga. PRZEPADO.',
@@ -173,15 +174,15 @@ export const cardLibrary = {
   wypozyczone_gogle: {
     id: 'wypozyczone_gogle',
     name: 'Wypożyczone Gogle',
-    type: 'skill',
+    type: 'power',
     rarity: 'uncommon',
     cost: 1,
     price: 85,
     emoji: '🥽',
-    desc: 'Zyskaj status Lans. Otrzymujesz obrażenia w Dutkach zamiast HP.',
+    desc: 'Zyskaj status Lans. Otrzymujesz obrażenia w dutkach zamiast HP.',
     exhaust: true,
     effect(state) {
-      state.player.hasLans = true;
+      state.player.status.lans = 1;
       return { playerAnim: 'anim-block' };
     },
   },
@@ -193,9 +194,9 @@ export const cardLibrary = {
     cost: 1,
     price: 80,
     emoji: '📸',
-    desc: 'Jeśli masz aktywny Lans, zyskaj 20 Dutków. Inaczej nic się nie dzieje.',
+    desc: 'Jeśli masz aktywny Lans, zyskaj 20 dutków. Inaczej nic się nie dzieje.',
     effect(state) {
-      if (state.player.hasLans) {
+      if (state.player.status.lans > 0) {
         state.dutki += 20;
       }
       return { playerAnim: 'anim-block' };
@@ -260,7 +261,7 @@ export const cardLibrary = {
     cost: 1,
     price: 95,
     emoji: '🗡️',
-    desc: 'Zadaje 9 obrażeń. Jeśli Wróg pada: +30 Dutki.',
+    desc: 'Zadaje 9 obrażeń. Jeśli wróg pada: +30 dutków.',
     exhaust: true,
     effect(state) {
       const dmg = state._calcAttackDamage(state.player, 9 + state.getCardDamageBonus('janosik'));
@@ -329,6 +330,142 @@ export const cardLibrary = {
       };
     },
   },
+  mocny_organizm: {
+    id: 'mocny_organizm',
+    name: 'Mocny Organizm',
+    type: 'attack',
+    rarity: 'rare',
+    cost: 2,
+    price: 130,
+    emoji: '💪',
+    desc: 'Zadaje 10 obrażeń. Jeśli wróg pada: na stałe +2 do maksymalnej Krzepy. PRZEPADO.',
+    exhaust: true,
+    effect(state) {
+      const dmg = state._calcAttackDamage(
+        state.player,
+        10 + state.getCardDamageBonus('mocny_organizm')
+      );
+      const damage = state._applyDamageToEnemy(dmg);
+      if (state.enemy.hp <= 0) {
+        state.gainMaxHp(2);
+      }
+      return {
+        playerAnim: 'anim-attack-p',
+        enemyAnim: damage.dealt > 0 ? 'anim-damage' : 'anim-block',
+        damage,
+      };
+    },
+  },
+
+  pchniecie_ciupaga: {
+    id: 'pchniecie_ciupaga',
+    name: 'Pchnięcie Ciupagą',
+    type: 'attack',
+    rarity: 'common',
+    cost: 1,
+    price: 70,
+    emoji: '🪓',
+    desc: 'Zadaje 8 obrażeń. Jeśli wróg nie ma Gardy, zadaje 12 obrażeń.',
+    effect(state) {
+      const base = state.enemy.block > 0 ? 8 : 12;
+      const dmg = state._calcAttackDamage(state.player, base + state.getCardDamageBonus('pchniecie_ciupaga'));
+      const damage = state._applyDamageToEnemy(dmg);
+      return {
+        playerAnim: 'anim-attack-p',
+        enemyAnim: damage.dealt > 0 ? 'anim-damage' : 'anim-block',
+        damage,
+      };
+    },
+  },
+  barchanowe_gacie: {
+    id: 'barchanowe_gacie',
+    name: 'Barchanowe Gacie',
+    type: 'skill',
+    rarity: 'common',
+    cost: 1,
+    price: 65,
+    emoji: '🩳',
+    desc: 'Zyskujesz 7 Gardy. Jeśli masz Lans, zyskujesz 10 Gardy.',
+    effect(state) {
+      state.gainPlayerBlockFromCard(state.player.status.lans > 0 ? 10 : 7);
+      return { playerAnim: 'anim-block' };
+    },
+  },
+  szukanie_okazji: {
+    id: 'szukanie_okazji',
+    name: 'Szukanie Okazji',
+    type: 'skill',
+    rarity: 'uncommon',
+    cost: 0,
+    price: 95,
+    emoji: '🧾',
+    desc: 'Odrzuć 1 kartę, dobierz 2 karty.',
+    effect(state) {
+      if (state.hand.length > 0) {
+        const idx = Math.floor(Math.random() * state.hand.length);
+        state.discard.push(state.hand.splice(idx, 1)[0]);
+      }
+      state._drawCards(2);
+      return { playerAnim: 'anim-block' };
+    },
+  },
+  lodolamacz: {
+    id: 'lodolamacz',
+    name: 'Lodołamacz',
+    type: 'attack',
+    rarity: 'uncommon',
+    cost: 2,
+    price: 100,
+    emoji: '🧊',
+    desc: 'Zadaje 8 obrażeń. Dodatkowo zadaje obrażenia równe połowie Twojej aktualnej Gardy. PRZEPADO.',
+    exhaust: true,
+    effect(state) {
+      const bonus = Math.floor(state.player.block / 2);
+      const dmg = state._calcAttackDamage(state.player, 8 + bonus + state.getCardDamageBonus('lodolamacz'));
+      const damage = state._applyDamageToEnemy(dmg);
+      return {
+        playerAnim: 'anim-attack-p',
+        enemyAnim: damage.dealt > 0 ? 'anim-damage' : 'anim-block',
+        damage,
+      };
+    },
+  },
+  duma_podhala: {
+    id: 'duma_podhala',
+    name: 'Duma Podhala',
+    type: 'power',
+    rarity: 'rare',
+    cost: 2,
+    price: 140,
+    emoji: '🏔️',
+    desc: 'Do końca walki: za każde 10 Gardy straconej od ataku wroga zadajesz mu 5 obrażeń.',
+    exhaust: true,
+    effect(state) {
+      state.player.status.duma_podhala = 1;
+      return { playerAnim: 'anim-block' };
+    },
+  },
+  zemsta_gorala: {
+    id: 'zemsta_gorala',
+    name: 'Zemsta Górala',
+    type: 'attack',
+    rarity: 'rare',
+    cost: 2,
+    price: 130,
+    emoji: '⚔️',
+    desc: 'Zadaje 15 obrażeń. Jeśli to ostatnia karta na ręce, zadaje podwójne obrażenia.',
+    effect(state) {
+      const isLastCardInHand = state.hand.length === 0;
+      const base = isLastCardInHand ? 30 : 15;
+      const dmg = state._calcAttackDamage(state.player, base + state.getCardDamageBonus('zemsta_gorala'));
+      const damage = state._applyDamageToEnemy(dmg);
+      return {
+        playerAnim: 'anim-attack-p',
+        enemyAnim: damage.dealt > 0 ? 'anim-damage' : 'anim-block',
+        damage,
+      };
+    },
+  },
 
   ulotka: {
     id: 'ulotka',
@@ -359,7 +496,7 @@ export const cardLibrary = {
     exhaust: true,
     unplayable: true,
     emoji: '🏷️',
-    desc: 'Niegrywalna. Póki na ręce, tracisz 2 Dutki co turę.',
+    desc: 'Niegrywalna. Póki na ręce, tracisz 2 dutki co turę.',
     effect(state) {
       void state;
       return {};

@@ -251,6 +251,66 @@ const parkingowySprite = `
   <path d="M 42,42 Q 46,46 50,43 Q 54,46 58,42 Q 54,40 50,42 Q 46,40 42,42 Z" fill="#4a2a10"/>
 </svg>`;
 
+const kolejkarzSprite = `
+<svg viewBox="0 0 100 100" width="120" height="120">
+  <rect x="10" y="12" width="80" height="20" rx="8" fill="#d8ecff" stroke="#2f5f8a" stroke-width="2"/>
+  <line x1="18" y1="22" x2="82" y2="22" stroke="#2f5f8a" stroke-width="1.5"/>
+  <text x="50" y="27" text-anchor="middle" font-size="8" font-weight="bold" fill="#1f4060">Kolejka</text>
+  <line x1="44" y1="81" x2="40" y2="96" stroke="#2e2e2e" stroke-width="7"/>
+  <line x1="56" y1="81" x2="60" y2="96" stroke="#2e2e2e" stroke-width="7"/>
+  <rect x="34" y="93" width="14" height="5" rx="2" fill="#161616"/>
+  <rect x="52" y="93" width="14" height="5" rx="2" fill="#161616"/>
+  <rect x="36" y="50" width="28" height="31" rx="6" fill="#3f6da3" stroke="#1f3e63" stroke-width="2"/>
+  <rect x="39" y="56" width="22" height="14" rx="3" fill="#8ec0e8" opacity="0.85"/>
+  <line x1="50" y1="50" x2="50" y2="81" stroke="#f0f6ff" stroke-width="2" opacity="0.5"/>
+  <line x1="36" y1="58" x2="20" y2="68" stroke="#f1c39e" stroke-width="6" stroke-linecap="round"/>
+  <rect x="12" y="62" width="10" height="14" rx="2" fill="#f7f3e8" stroke="#a99f87" stroke-width="1.5"/>
+  <line x1="14" y1="67" x2="20" y2="67" stroke="#7a725f" stroke-width="1"/>
+  <line x1="64" y1="58" x2="79" y2="48" stroke="#f1c39e" stroke-width="6" stroke-linecap="round"/>
+  <rect x="76" y="42" width="12" height="10" rx="2" fill="#ffe07a" stroke="#9f7a1f" stroke-width="1.5"/>
+  <line x1="78" y1="46" x2="86" y2="46" stroke="#9f7a1f" stroke-width="1"/>
+  <circle cx="50" cy="31" r="14" fill="#f1c39e"/>
+  <path d="M 36,29 Q 50,17 64,29 L 64,35 L 36,35 Z" fill="#2c4f74"/>
+  <rect x="34" y="35" width="32" height="4" rx="2" fill="#1c3550"/>
+  <circle cx="45" cy="31" r="2" fill="#101010"/>
+  <circle cx="55" cy="31" r="2" fill="#101010"/>
+  <path d="M 44,39 Q 50,42 56,39" fill="none" stroke="#5c3421" stroke-width="2"/>
+</svg>`;
+
+const naganiaczTermSprite = `
+<svg viewBox="0 0 100 100" width="120" height="120">
+  <defs>
+    <linearGradient id="krupowkiJacket" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#db3434"/>
+      <stop offset="100%" stop-color="#8e1616"/>
+    </linearGradient>
+  </defs>
+  <ellipse cx="50" cy="88" rx="33" ry="8" fill="#1f2428" opacity="0.24"/>
+  <line x1="44" y1="82" x2="40" y2="97" stroke="#2f3337" stroke-width="7"/>
+  <line x1="56" y1="82" x2="60" y2="97" stroke="#2f3337" stroke-width="7"/>
+  <rect x="34" y="94" width="14" height="5" rx="2" fill="#141516"/>
+  <rect x="52" y="94" width="14" height="5" rx="2" fill="#141516"/>
+  <rect x="35" y="50" width="30" height="32" rx="7" fill="url(#krupowkiJacket)" stroke="#541010" stroke-width="2"/>
+  <rect x="44" y="50" width="12" height="32" fill="#111" opacity="0.2"/>
+  <line x1="35" y1="60" x2="20" y2="70" stroke="#efc5a2" stroke-width="6" stroke-linecap="round"/>
+  <rect x="11" y="61" width="15" height="19" rx="2" fill="#fff7dd" stroke="#9c8d5f" stroke-width="1.5"/>
+  <line x1="14" y1="66" x2="23" y2="66" stroke="#a78b36" stroke-width="1.2"/>
+  <line x1="14" y1="70" x2="23" y2="70" stroke="#a78b36" stroke-width="1.2"/>
+  <line x1="14" y1="74" x2="21" y2="74" stroke="#a78b36" stroke-width="1.2"/>
+  <line x1="65" y1="60" x2="80" y2="52" stroke="#efc5a2" stroke-width="6" stroke-linecap="round"/>
+  <rect x="73" y="44" width="18" height="13" rx="3" fill="#ffd45c" stroke="#8f6713" stroke-width="1.8"/>
+  <text x="82" y="53" text-anchor="middle" font-size="5" font-weight="bold" fill="#69490a">PROMO</text>
+  <circle cx="50" cy="31" r="14" fill="#efc5a2"/>
+  <path d="M 35,28 Q 50,12 65,28 L 64,39 L 36,39 Z" fill="#191b1d"/>
+  <rect x="34" y="35" width="32" height="4" rx="2" fill="#0f1112"/>
+  <circle cx="45" cy="32" r="2" fill="#0f0f0f"/>
+  <circle cx="55" cy="32" r="2" fill="#0f0f0f"/>
+  <path d="M 42,39 Q 50,44 58,39" fill="none" stroke="#5b3622" stroke-width="2"/>
+  <path d="M 43,26 Q 50,24 57,26" fill="none" stroke="#0f1112" stroke-width="1.5"/>
+  <circle cx="18" cy="19" r="3" fill="#ffe8a3" opacity="0.8"/>
+  <circle cx="80" cy="18" r="2.5" fill="#ffe8a3" opacity="0.75"/>
+</svg>`;
+
 /** @type {Record<string, EnemyDef>} */
 export const enemyLibrary = {
   cepr: {
@@ -282,8 +342,8 @@ export const enemyLibrary = {
     passive: 'brak_reszty',
     pattern: [
       { type: 'attack', name: 'Trąbienie na pieszych', damage: 4, hits: 2 },
-      { type: 'attack', name: 'Wyprzedzanie na trzeciego', damage: 8, hits: 1, applyFrail: 1 },
-      { type: 'block', name: 'Zbieranie kompletu', block: 10, heal: 5 },
+      { type: 'attack', name: 'Wyprzedzanie na trzeciego', damage: 8, hits: 1, applyFrail: 2 },
+      { type: 'block', name: 'Zbieranie kompletu', block: 10, heal: 3 },
     ],
   },
   baba: {
@@ -315,8 +375,8 @@ export const enemyLibrary = {
     patternType: 'loop',
     passive: 'parcie_na_szklo',
     pattern: [
-      { type: 'attack', name: 'Selfie z zaskoczenia', damage: 5, hits: 1, applyVulnerable: 1 },
-      { type: 'status', name: 'Oznaczenie w relacji', addStatusCard: 'spam_tagami', amount: 1 },
+      { type: 'attack', name: 'Selfie z zaskoczenia', damage: 5, hits: 1, applyVulnerable: 2 },
+      { type: 'status', name: 'Oznaczenie w relacji', addStatusCard: 'spam_tagami', amount: 2 },
       { type: 'block', name: 'Filtr upiększający', block: 12, heal: 4 },
     ],
   },
@@ -324,8 +384,8 @@ export const enemyLibrary = {
     id: 'parkingowy',
     name: 'Parkingowy z Palenicy',
     emoji: '🚧',
-    hp: 110,
-    maxHp: 110,
+    hp: 95,
+    maxHp: 95,
     block: 0,
     baseAttack: 0,
     spriteSvg: parkingowySprite,
@@ -337,22 +397,70 @@ export const enemyLibrary = {
       { type: 'status', name: 'Blokada na koło', applyStun: 1 },
     ],
   },
+  konik_spod_kuznic: {
+    id: 'konik_spod_kuznic',
+    name: 'Konik spod Kuźnic',
+    emoji: '🚠',
+    hp: 74,
+    maxHp: 74,
+    block: 0,
+    baseAttack: 0,
+    spriteSvg: kolejkarzSprite,
+    patternType: 'loop',
+    pattern: [
+      { type: 'attack', name: 'Szturchanie w kolejce', damage: 5, hits: 2 },
+      { type: 'status', name: 'Zmiana regulaminu', addStatusCard: 'ulotka', amount: 1 },
+      { type: 'attack', name: 'Priorytet VIP', damage: 10, hits: 1, applyWeak: 1 },
+    ],
+  },
+  naganiacz_z_krupowek: {
+    id: 'naganiacz_z_krupowek',
+    name: 'Naganiacz z Krupówek',
+    emoji: '♨️',
+    hp: 82,
+    maxHp: 82,
+    block: 0,
+    baseAttack: 0,
+    spriteSvg: naganiaczTermSprite,
+    patternType: 'loop',
+    pattern: [
+      { type: 'buff', name: 'Krzykliwa zachęta', strengthGain: 1, block: 8 },
+      { type: 'attack', name: 'Promka spod budki', damage: 9, hits: 1, applyVulnerable: 1 },
+      { type: 'attack', name: 'Zasyp ulotkami', damage: 4, hits: 2, applyFrail: 1 },
+    ],
+  },
   fiakier: {
     id: 'fiakier',
     name: 'Fiakier spod Krupówek',
     emoji: '🐴',
-    hp: 250,
-    maxHp: 250,
+    hp: 270,
+    maxHp: 270,
     block: 0,
     baseAttack: 0,
     spriteSvg: fiakierSprite,
     patternType: 'loop',
     passive: 'rachunek_za_kurs',
     pattern: [
-      { type: 'attack', name: 'Batogiem po grzbiecie', damage: 8, hits: 1, gainPed: 3 },
-      { type: 'attack', name: 'Przyspieszenie', damage: 13, hits: 1, usePed: true },
-      { type: 'attack', name: 'Opłata za kurs', damage: 5, hits: 1, stealDutki: 6 },
-      { type: 'attack', name: 'Zamach Batem', damage: 0, hits: 0, applyVulnerable: 2 },
+      { type: 'attack', name: 'Batogiem po grzbiecie', damage: 12, hits: 1, gainPed: 3 },
+      { type: 'buff', name: 'Rozped', strengthGain: 2, block: 8 },
+      { type: 'attack', name: 'Przyspieszenie', damage: 16, hits: 1, usePed: true },
+      { type: 'attack', name: 'Zamach Batem', damage: 14, hits: 1, applyVulnerable: 2, stealDutki: 6 },
+    ],
+  },
+  pomocnik_fiakra: {
+    id: 'pomocnik_fiakra',
+    name: 'Pomocnik Fiakra',
+    emoji: '🧢',
+    hp: 58,
+    maxHp: 58,
+    block: 0,
+    baseAttack: 0,
+    spriteSvg: fiakierSprite,
+    patternType: 'loop',
+    pattern: [
+      { type: 'attack', name: 'Bat po łydkach', damage: 9, hits: 1 },
+      { type: 'attack', name: 'Szarpnięcie lejców', damage: 7, hits: 1, applyFrail: 1 },
+      { type: 'block', name: 'Zbieranie oddechu', block: 6 },
     ],
   },
   boss: {
@@ -370,7 +478,7 @@ export const enemyLibrary = {
       { type: 'buff', name: 'Górski Ryk', strengthGain: 2, block: 10 },
       { type: 'attack', name: 'Agresywne pozowanie', damage: 4, hits: 3 },
       { type: 'attack', name: 'Podatek od zdjęcia', damage: 15, hits: 1, applyFrail: 2 },
-      { type: 'attack', name: 'Uścisk Krupówek', damage: 25, hits: 1 },
+      { type: 'attack', name: 'Uścisk Krupówek', damage: 23, hits: 1 },
     ],
   },
 };

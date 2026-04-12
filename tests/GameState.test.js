@@ -48,6 +48,16 @@ function freshBusiarzState() {
 }
 
 /** @returns {GameState} */
+function freshInfluencerkaState() {
+  const s = new GameState({ ...mockPlayer }, enemyLibrary.influencerka);
+  s.player.energy = 3;
+  s.hand = [];
+  s.deck = [];
+  s.discard = [];
+  return s;
+}
+
+/** @returns {GameState} */
 function freshBabaState() {
   const s = new GameState({ ...mockPlayer }, enemyLibrary.baba);
   s.player.energy = 3;
@@ -120,6 +130,20 @@ describe('GameState', () => {
       expect(result.effect.damage?.blocked).toBe(2);
       expect(result.effect.damage?.dealt).toBe(4);
     });
+
+    it('returns reason:blokada when Parkingowy card limit is exceeded', () => {
+      const s = freshState(3);
+      s.enemy = structuredClone(enemyLibrary.parkingowy);
+      s.player.cardsPlayedThisTurn = 3;
+      s.hand = ['ciupaga'];
+
+      const result = s.playCard(0);
+
+      expect(result.success).toBe(false);
+      expect(result.reason).toBe('blokada');
+      expect(s.hand).toEqual(['ciupaga']);
+      expect(s.player.energy).toBe(3);
+    });
   });
 
   // ── Original cards ────────────────────────────────────────────────────────
@@ -153,13 +177,14 @@ describe('GameState', () => {
   });
 
   describe('kierpce', () => {
-    it('deals 12 damage', () => {
+    it('deals 12 damage and applies 1 weak', () => {
       const s = freshState(3);
       s.hand = ['kierpce'];
       s.enemy.hp = 40;
       s.enemy.block = 0;
       s.playCard(0);
       expect(s.enemy.hp).toBe(28);
+      expect(s.enemy.status.weak).toBe(1);
     });
   });
 
@@ -384,8 +409,20 @@ describe('GameState', () => {
       s.playCard(0);
       expect(s.checkWinCondition()).toBe('player_win');
       expect(s.enemy.hp).toBe(0);
-      expect(s.dutki).toBe(55);
+      expect(s.dutki).toBe(53);
       expect(s.lastVictoryMessage).toContain('Wróg zbankrutował');
+    });
+
+    it('caps bankruptcy bonus at 25 dutki', () => {
+      const s = freshState();
+      s.enemy.hp = 100;
+      s.enemy.rachunek = 120;
+      s.dutki = 0;
+
+      s.enemyBankrupt();
+
+      expect(s.enemyBankruptcyBonus).toBe(25);
+      expect(s.dutki).toBe(25);
     });
   });
 
@@ -398,16 +435,29 @@ describe('GameState', () => {
       expect(s.enemy.rachunek).toBe(24);
       expect(s.exhaust).toContain('podatek_klimatyczny');
     });
+
+    it('requires 3 Oscypki to play', () => {
+      const s = freshState(2);
+      s.hand = ['podatek_klimatyczny'];
+      const result = s.playCard(0);
+
+      expect(result.success).toBe(false);
+      expect(s.hand).toContain('podatek_klimatyczny');
+    });
   });
 
   describe('wypozyczone_gogle', () => {
     it('enables lans and exhausts', () => {
       const s = freshState();
       s.hand = ['wypozyczone_gogle'];
-      s.player.hasLans = false;
+      s.player.status.lans = 0;
       s.playCard(0);
-      expect(s.player.hasLans).toBe(true);
+      expect(s.player.status.lans).toBe(1);
       expect(s.exhaust).toContain('wypozyczone_gogle');
+    });
+
+    it('is a power card', () => {
+      expect(cardLibrary.wypozyczone_gogle.type).toBe('power');
     });
   });
 
@@ -415,7 +465,7 @@ describe('GameState', () => {
     it('gives +20 dutki when lans is active', () => {
       const s = freshState();
       s.hand = ['zdjecie_z_misiem'];
-      s.player.hasLans = true;
+      s.player.status.lans = 1;
       s.dutki = 10;
       s.playCard(0);
       expect(s.dutki).toBe(30);
@@ -424,7 +474,7 @@ describe('GameState', () => {
     it('does nothing without lans', () => {
       const s = freshState();
       s.hand = ['zdjecie_z_misiem'];
-      s.player.hasLans = false;
+      s.player.status.lans = 0;
       s.dutki = 10;
       s.playCard(0);
       expect(s.dutki).toBe(10);
@@ -434,7 +484,7 @@ describe('GameState', () => {
   describe('lans status', () => {
     it('converts HP damage to dutki when funds are enough', () => {
       const s = freshState();
-      s.player.hasLans = true;
+      s.player.status.lans = 1;
       s.player.block = 0;
       s.player.hp = 40;
       s.dutki = 20;
@@ -446,7 +496,7 @@ describe('GameState', () => {
 
     it('breaks lans, stuns player and applies remaining HP damage when funds are low', () => {
       const s = freshState();
-      s.player.hasLans = true;
+      s.player.status.lans = 1;
       s.player.block = 0;
       s.player.hp = 30;
       s.dutki = 5;
@@ -454,9 +504,49 @@ describe('GameState', () => {
       expect(result.dealt).toBe(4);
       expect(s.player.hp).toBe(26);
       expect(s.dutki).toBe(0);
-      expect(s.player.hasLans).toBe(false);
+      expect(s.player.status.lans).toBe(0);
       expect(s.player.stunned).toBe(true);
       expect(s.consumeLansBreakEvent()).toBe('BANKRUT!');
+    });
+
+    it('works based on player.status.lans as single source', () => {
+      const s = freshState();
+      s.player.status.lans = 1;
+      s.player.block = 0;
+      s.player.hp = 35;
+      s.dutki = 20;
+      const result = s.takeDamage(6);
+      expect(result.dealt).toBe(0);
+      expect(s.player.hp).toBe(35);
+      expect(s.dutki).toBe(8);
+    });
+
+    it('stunned blocks playing attack cards only', () => {
+      const s = freshState();
+      s.player.stunned = true;
+      s.player.energy = 3;
+      s.hand = ['ciupaga'];
+
+      const result = s.playCard(0);
+
+      expect(result.success).toBe(false);
+      expect(result.reason).toBe('stunned_attack');
+      expect(s.hand).toEqual(['ciupaga']);
+      expect(s.player.energy).toBe(3);
+    });
+
+    it('stunned still allows skill cards to be played', () => {
+      const s = freshState();
+      s.player.stunned = true;
+      s.player.energy = 3;
+      s.hand = ['gasior'];
+      s.player.block = 0;
+
+      const result = s.playCard(0);
+
+      expect(result.success).toBe(true);
+      expect(s.player.block).toBe(5);
+      expect(s.player.energy).toBe(2);
     });
   });
 
@@ -596,6 +686,151 @@ describe('GameState', () => {
     });
   });
 
+  describe('pchniecie_ciupaga', () => {
+    it('deals 12 damage when enemy has no Garda', () => {
+      const s = freshState();
+      s.hand = ['pchniecie_ciupaga'];
+      s.enemy.hp = 40;
+      s.enemy.block = 0;
+      s.playCard(0);
+      expect(s.enemy.hp).toBe(28);
+    });
+
+    it('deals 8 base damage when enemy has Garda', () => {
+      const s = freshState();
+      s.hand = ['pchniecie_ciupaga'];
+      s.enemy.hp = 40;
+      s.enemy.block = 5;
+      s.playCard(0);
+      expect(s.enemy.hp).toBe(37);
+      expect(s.enemy.block).toBe(0);
+    });
+  });
+
+  describe('barchanowe_gacie', () => {
+    it('grants 7 Garda without Lans', () => {
+      const s = freshState();
+      s.hand = ['barchanowe_gacie'];
+      s.player.status.lans = 0;
+      s.playCard(0);
+      expect(s.player.block).toBe(7);
+    });
+
+    it('grants 10 Garda with Lans', () => {
+      const s = freshState();
+      s.hand = ['barchanowe_gacie'];
+      s.player.status.lans = 1;
+      s.playCard(0);
+      expect(s.player.block).toBe(10);
+    });
+  });
+
+  describe('szukanie_okazji', () => {
+    it('discards one card from hand and draws two', () => {
+      const s = freshState();
+      s.hand = ['szukanie_okazji', 'ciupaga'];
+      s.deck = ['gasior', 'hej'];
+      vi.spyOn(Math, 'random').mockReturnValue(0);
+
+      s.playCard(0);
+
+      expect(s.hand).toHaveLength(2);
+      expect(s.discard).toContain('ciupaga');
+      expect(s.discard).toContain('szukanie_okazji');
+    });
+  });
+
+  describe('lodolamacz', () => {
+    it('deals base + half current Garda and exhausts', () => {
+      const s = freshState();
+      s.hand = ['lodolamacz'];
+      s.player.block = 10;
+      s.enemy.hp = 40;
+      s.enemy.block = 0;
+
+      s.playCard(0);
+
+      expect(s.enemy.hp).toBe(27);
+      expect(s.exhaust).toContain('lodolamacz');
+    });
+  });
+
+  describe('duma_podhala', () => {
+    it('reflects damage when enough Garda is lost to enemy attack', () => {
+      const s = freshState();
+      s.hand = ['duma_podhala'];
+      s.enemy.hp = 50;
+      s.enemy.block = 0;
+      s.player.block = 20;
+
+      s.playCard(0);
+      expect(s.player.status.duma_podhala).toBe(1);
+      setEnemyIntent(s, { type: 'attack', name: 'Atak', damage: 25, hits: 1 });
+      s.endTurn();
+
+      expect(s.enemy.hp).toBe(40);
+    });
+
+    it('is a power card and exhausts', () => {
+      expect(cardLibrary.duma_podhala.type).toBe('power');
+      expect(cardLibrary.duma_podhala.exhaust).toBe(true);
+    });
+  });
+
+  describe('zemsta_gorala', () => {
+    it('deals 15 damage normally', () => {
+      const s = freshState();
+      s.hand = ['zemsta_gorala', 'ciupaga'];
+      s.enemy.hp = 40;
+      s.enemy.block = 0;
+
+      s.playCard(0);
+
+      expect(s.enemy.hp).toBe(25);
+    });
+
+    it('deals 30 damage when played as last card in hand', () => {
+      const s = freshState();
+      s.hand = ['zemsta_gorala'];
+      s.enemy.hp = 40;
+      s.enemy.block = 0;
+
+      s.playCard(0);
+
+      expect(s.enemy.hp).toBe(10);
+    });
+  });
+
+  describe('mocny_organizm', () => {
+    it('deals 10 damage and does not increase max HP when enemy survives', () => {
+      const s = freshState();
+      s.hand = ['mocny_organizm'];
+      s.enemy.hp = 30;
+      s.enemy.block = 0;
+      const beforeMaxHp = s.player.maxHp;
+
+      s.playCard(0);
+
+      expect(s.enemy.hp).toBe(20);
+      expect(s.player.maxHp).toBe(beforeMaxHp);
+    });
+
+    it('increases max HP by 2 when attack kills enemy', () => {
+      const s = freshState();
+      s.hand = ['mocny_organizm'];
+      s.enemy.hp = 10;
+      s.enemy.block = 0;
+      s.player.hp = 30;
+      const beforeMaxHp = s.player.maxHp;
+
+      s.playCard(0);
+
+      expect(s.enemy.hp).toBe(0);
+      expect(s.player.maxHp).toBe(beforeMaxHp + 2);
+      expect(s.player.hp).toBe(32);
+    });
+  });
+
   describe('relics', () => {
     it('adds a relic only once', () => {
       const s = freshState();
@@ -604,12 +839,48 @@ describe('GameState', () => {
       expect(s.relics).toEqual(['kierpce_wyprzedazy']);
     });
 
-    it('flaszka_sliwowicy gives +5 strength at battle start', () => {
+    it('pas_bacowski increases max HP by 6 on pickup', () => {
+      const s = freshState();
+      s.player.hp = 40;
+      const beforeMaxHp = s.player.maxHp;
+
+      s.addRelic('pas_bacowski');
+
+      expect(s.player.maxHp).toBe(beforeMaxHp + 6);
+      expect(s.player.hp).toBe(46);
+    });
+
+    it('certyfikowany_oscypek grants +2 max HP on shop entry up to 3 times', () => {
+      const s = freshState();
+      s.addRelic('certyfikowany_oscypek');
+      const baseMaxHp = s.player.maxHp;
+
+      s.generateShopStock();
+      s.generateShopStock();
+      s.generateShopStock();
+      s.generateShopStock();
+
+      expect(s.player.maxHp).toBe(baseMaxHp + 6);
+      expect(s.certyfikowanyOscypekShopProcs).toBe(3);
+    });
+
+    it('flaszka_sliwowicy gives +4 strength at battle start', () => {
       const s = freshState();
       s.addRelic('flaszka_sliwowicy');
       s.player.status.strength = 0;
       s.resetBattle();
-      expect(s.player.status.strength).toBe(5);
+      expect(s.player.status.strength).toBe(4);
+    });
+
+    it('wiatr_halny draws +1 card each turn start', () => {
+      const s = freshState();
+      s.addRelic('wiatr_halny');
+      s.deck = [...startingDeck, ...startingDeck];
+      s.hand = [];
+      s.discard = [];
+      s.startTurn();
+      // normal draw is 5, wiatr_halny adds 1 more
+      expect(s.hand.length).toBe(6);
     });
 
     it('papryczka_marka gives +3 strength at battle start', () => {
@@ -686,22 +957,22 @@ describe('GameState', () => {
       expect(playerPassiveHeal).toBeNull();
     });
 
-    it('papucie_po_babci heals 2 HP at end of turn when hasLans', () => {
+    it('papucie_po_babci heals 2 HP at end of turn when Lans is active', () => {
       const s = freshState();
       s.addRelic('papucie_po_babci');
       s.player.hp = 25;
-      s.player.hasLans = true;
+      s.player.status.lans = 1;
       setEnemyIntent(s, { type: 'block', name: 'Obserwuje', block: 0 });
       const { playerPassiveHeal } = s.endTurn();
       expect(s.player.hp).toBe(27);
       expect(playerPassiveHeal).not.toBeNull();
     });
 
-    it('papucie_po_babci does not heal when hasLans is false', () => {
+    it('papucie_po_babci does not heal when Lans is inactive', () => {
       const s = freshState();
       s.addRelic('papucie_po_babci');
       s.player.hp = 25;
-      s.player.hasLans = false;
+      s.player.status.lans = 0;
       setEnemyIntent(s, { type: 'block', name: 'Obserwuje', block: 0 });
       s.endTurn();
       expect(s.player.hp).toBe(25);
@@ -713,8 +984,8 @@ describe('GameState', () => {
       s.enemy.isBankrupt = true;
       s.pendingBattleDutki = true;
       const drop = s.grantBattleDutki();
-      expect(drop).toBeGreaterThanOrEqual(45);
-      expect(drop).toBeLessThanOrEqual(60);
+      expect(drop).toBeGreaterThanOrEqual(42);
+      expect(drop).toBeLessThanOrEqual(54);
     });
 
     it('grantBattleDutki normal drop without magnes_na_lodowke', () => {
@@ -722,41 +993,216 @@ describe('GameState', () => {
       s.enemy.isBankrupt = true;
       s.pendingBattleDutki = true;
       const drop = s.grantBattleDutki();
-      expect(drop).toBeGreaterThanOrEqual(30);
-      expect(drop).toBeLessThanOrEqual(40);
+      expect(drop).toBeGreaterThanOrEqual(28);
+      expect(drop).toBeLessThanOrEqual(36);
     });
 
-    it('pekniete_liczydlo deals 3 HP to enemy when rachunek is added', () => {
+    describe('szczegliwa_podkowa', () => {
+      it('grants +25 dutki when player HP is at or below 40% at end of battle', () => {
+        const s = freshState();
+        s.addRelic('szczegliwa_podkowa');
+        s.player.hp = Math.floor(s.player.maxHp * 0.4);
+        s.pendingBattleDutki = true;
+        vi.spyOn(Math, 'random').mockReturnValue(0);
+        const drop = s.grantBattleDutki();
+        expect(drop).toBe(28 + 25);
+      });
+
+      it('does not grant bonus when player HP is above 40%', () => {
+        const s = freshState();
+        s.addRelic('szczegliwa_podkowa');
+        s.player.hp = Math.floor(s.player.maxHp * 0.41) + 1;
+        s.pendingBattleDutki = true;
+        vi.spyOn(Math, 'random').mockReturnValue(0);
+        const drop = s.grantBattleDutki();
+        expect(drop).toBe(28);
+      });
+    });
+
+    describe('termos_z_herbatka', () => {
+      it('heals +4 HP when battle ends in 2 turns or fewer', () => {
+        const s = freshState();
+        s.addRelic('termos_z_herbatka');
+        s.player.hp = 40;
+        s.battleTurnsElapsed = 2;
+        s.pendingBattleDutki = true;
+        vi.spyOn(Math, 'random').mockReturnValue(0);
+        s.grantBattleDutki();
+        expect(s.player.hp).toBe(44);
+      });
+
+      it('grants +15 dutki when battle lasts more than 2 turns', () => {
+        const s = freshState();
+        s.addRelic('termos_z_herbatka');
+        s.player.hp = 50;
+        s.battleTurnsElapsed = 3;
+        s.pendingBattleDutki = true;
+        vi.spyOn(Math, 'random').mockReturnValue(0);
+        const drop = s.grantBattleDutki();
+        expect(drop).toBe(28 + 15);
+        expect(s.player.hp).toBe(50);
+      });
+    });
+
+    describe('goralski_zegarek', () => {
+      it('first skill costs 0 on even turns', () => {
+        const s = freshState();
+        s.addRelic('goralski_zegarek');
+        s.battleTurnsElapsed = 2;
+        s.zegarekFreeSkillAvailable = true;
+        expect(s.getCardCostInHand('gasior')).toBe(0);
+      });
+
+      it('skill costs normal on odd turns', () => {
+        const s = freshState();
+        s.addRelic('goralski_zegarek');
+        s.battleTurnsElapsed = 1;
+        s.zegarekFreeSkillAvailable = false;
+        expect(s.getCardCostInHand('gasior')).toBe(cardLibrary['gasior'].cost);
+      });
+
+      it('zegarek flag resets after a skill is played', () => {
+        const s = freshState();
+        s.addRelic('goralski_zegarek');
+        s.battleTurnsElapsed = 2;
+        s.zegarekFreeSkillAvailable = true;
+        s.hand = ['gasior'];
+        s.player.energy = 3;
+        s.playCard(0);
+        expect(s.zegarekFreeSkillAvailable).toBe(false);
+      });
+
+      it('flag is set on even turns in startTurn', () => {
+        const s = freshState();
+        s.addRelic('goralski_zegarek');
+        // battleTurnsElapsed starts at 0, startTurn increments to 1 (odd) — no flag
+        expect(s.zegarekFreeSkillAvailable).toBe(false);
+        // simulate second turn
+        s.battleTurnsElapsed = 1;
+        s.startTurn();
+        expect(s.zegarekFreeSkillAvailable).toBe(true);
+      });
+    });
+
+    describe('zlota_karta_zakopianczyka', () => {
+      it('getShopRemovalPrice returns 25 with relic', () => {
+        const s = freshState();
+        s.addRelic('zlota_karta_zakopianczyka');
+        expect(s.getShopRemovalPrice()).toBe(25);
+      });
+
+      it('getShopRemovalPrice returns 100 without relic', () => {
+        const s = freshState();
+        expect(s.getShopRemovalPrice()).toBe(100);
+      });
+
+      it('getCardShopPrice applies 15% discount with relic', () => {
+        const s = freshState();
+        s.addRelic('zlota_karta_zakopianczyka');
+        const basePrice = cardLibrary['ciupaga'].price;
+        expect(s.getCardShopPrice('ciupaga')).toBe(Math.floor(basePrice * 0.85));
+      });
+
+      it('getCardShopPrice returns base price without relic', () => {
+        const s = freshState();
+        const basePrice = cardLibrary['ciupaga'].price;
+        expect(s.getCardShopPrice('ciupaga')).toBe(basePrice);
+      });
+    });
+
+    it('pekniete_liczydlo heals player by 2 HP when rachunek is added', () => {
       const s = freshState();
       s.addRelic('pekniete_liczydlo');
-      s.enemy.hp = 50;
+      s.player.hp = 40;
       s.enemy.rachunek = 0;
       s.enemy.maxRachunek = 9999;
       s.addEnemyRachunek(5);
-      expect(s.enemy.hp).toBe(47);
+      expect(s.player.hp).toBe(42);
     });
 
-    it('blacha_przewodnika starts battle with hasLans active', () => {
+    it('pekniete_liczydlo heal does not exceed max HP', () => {
+      const s = freshState();
+      s.addRelic('pekniete_liczydlo');
+      s.player.hp = s.player.maxHp - 1;
+
+      s.addEnemyRachunek(5);
+
+      expect(s.player.hp).toBe(s.player.maxHp);
+    });
+
+    it('fiakier takes only 70% of incoming rachunek', () => {
+      const s = freshState();
+      s.enemy = structuredClone(enemyLibrary.fiakier);
+      s.enemy.hp = 999;
+      s.enemy.rachunek = 0;
+
+      s.addEnemyRachunek(10);
+
+      expect(s.enemy.rachunek).toBe(7);
+    });
+
+    it('fiakier rachunek reduction still applies minimum 1 stack', () => {
+      const s = freshState();
+      s.enemy = structuredClone(enemyLibrary.fiakier);
+      s.enemy.hp = 999;
+      s.enemy.rachunek = 0;
+
+      s.addEnemyRachunek(1);
+
+      expect(s.enemy.rachunek).toBe(1);
+    });
+
+    it('fiakier is not bankrupted by a single 10-rachunek hit at 10 hp', () => {
+      const s = freshState();
+      s.enemy = structuredClone(enemyLibrary.fiakier);
+      s.enemy.hp = 10;
+      s.enemy.rachunek = 0;
+
+      s.addEnemyRachunek(10);
+
+      expect(s.enemy.rachunek).toBe(7);
+      expect(s.enemy.isBankrupt).toBeFalsy();
+      expect(s.checkWinCondition()).toBeNull();
+    });
+
+    it('emits rachunek resistance event for Gaździna (targowanie_sie)', () => {
+      const s = freshState();
+      s.enemy = structuredClone(enemyLibrary.baba);
+      s.enemy.hp = 40;
+      s.enemy.rachunek = 0;
+
+      s.addEnemyRachunek(10);
+
+      expect(s.enemy.rachunek).toBe(10);
+      expect(s.enemy.isBankrupt).toBeFalsy();
+      expect(s.consumeRachunekResistEvent()).toEqual({
+        target: 'enemy',
+        text: 'ODPORNA NA RACHUNEK!',
+      });
+      expect(s.consumeRachunekResistEvent()).toBeNull();
+    });
+
+    it('blacha_przewodnika starts battle with lans status active', () => {
       const s = freshState();
       s.addRelic('blacha_przewodnika');
-      s.player.hasLans = false;
+      s.player.status.lans = 0;
       s._applyBattleStartRelics();
-      expect(s.player.hasLans).toBe(true);
+      expect(s.player.status.lans).toBe(1);
     });
 
-    it('lustrzane_gogle adds +2 block per block card when hasLans', () => {
+    it('lustrzane_gogle adds +2 block per block card when Lans is active', () => {
       const s = freshState();
       s.addRelic('lustrzane_gogle');
-      s.player.hasLans = true;
+      s.player.status.lans = 1;
       s.player.block = 0;
       s.gainPlayerBlockFromCard(5);
       expect(s.player.block).toBe(7);
     });
 
-    it('lustrzane_gogle does not add bonus block without hasLans', () => {
+    it('lustrzane_gogle does not add bonus block without Lans', () => {
       const s = freshState();
       s.addRelic('lustrzane_gogle');
-      s.player.hasLans = false;
+      s.player.status.lans = 0;
       s.player.block = 0;
       s.gainPlayerBlockFromCard(5);
       expect(s.player.block).toBe(5);
@@ -869,6 +1315,61 @@ describe('GameState', () => {
       expect(s._rollMidNodeType()).toBe('event');
     });
 
+    describe('rollEventNodeOutcome', () => {
+      it('returns event for roll < 0.6', () => {
+        const s = freshState();
+        vi.spyOn(Math, 'random').mockReturnValue(0.59);
+        expect(s.rollEventNodeOutcome()).toBe('event');
+      });
+
+      it('returns fight for roll between 0.6 and 0.85', () => {
+        const s = freshState();
+        vi.spyOn(Math, 'random').mockReturnValue(0.6);
+        expect(s.rollEventNodeOutcome()).toBe('fight');
+      });
+
+      it('returns shop for roll >= 0.85', () => {
+        const s = freshState();
+        vi.spyOn(Math, 'random').mockReturnValue(0.85);
+        expect(s.rollEventNodeOutcome()).toBe('shop');
+      });
+    });
+
+    describe('event node eventOutcome pre-roll', () => {
+      it('event node has eventOutcome property after _createMapNode', () => {
+        const s = freshState();
+        const node = s._createMapNode('event', 0, 1);
+        expect(node).toHaveProperty('eventOutcome');
+      });
+
+      it('eventOutcome is event when roll < 0.6', () => {
+        const s = freshState();
+        vi.spyOn(Math, 'random').mockReturnValue(0.5);
+        const node = s._createMapNode('event', 0, 1);
+        expect(node.eventOutcome).toBe('event');
+      });
+
+      it('eventOutcome is fight when 0.6 <= roll < 0.85', () => {
+        const s = freshState();
+        vi.spyOn(Math, 'random').mockReturnValue(0.7);
+        const node = s._createMapNode('event', 0, 1);
+        expect(node.eventOutcome).toBe('fight');
+      });
+
+      it('eventOutcome is shop when roll >= 0.85', () => {
+        const s = freshState();
+        vi.spyOn(Math, 'random').mockReturnValue(0.9);
+        const node = s._createMapNode('event', 0, 1);
+        expect(node.eventOutcome).toBe('shop');
+      });
+
+      it('non-event nodes do not have eventOutcome', () => {
+        const s = freshState();
+        const node = s._createMapNode('fight', 1, 0);
+        expect(node.eventOutcome).toBeUndefined();
+      });
+    });
+
     it('starts with 50 Dutki and generated map', () => {
       const s = freshState();
       expect(s.dutki).toBe(50);
@@ -951,13 +1452,13 @@ describe('GameState', () => {
       expect(treasureCount).toBeLessThanOrEqual(1);
     });
 
-    it('battle reward grants 30-40 Dutki only once per battle', () => {
+    it('battle reward grants 28-36 Dutki only once per battle', () => {
       const s = freshState();
       s.dutki = 0;
       const first = s.grantBattleDutki();
       const second = s.grantBattleDutki();
-      expect(first).toBeGreaterThanOrEqual(30);
-      expect(first).toBeLessThanOrEqual(40);
+      expect(first).toBeGreaterThanOrEqual(28);
+      expect(first).toBeLessThanOrEqual(36);
       expect(second).toBe(0);
       expect(s.dutki).toBe(first);
     });
@@ -1065,8 +1566,16 @@ describe('GameState', () => {
       const result = s.applyActiveEventChoice(1);
 
       expect(result.success).toBe(false);
-      expect(result.message).toBe('Nie masz tyle Dutków.');
+      expect(result.message).toBe('Nie masz tylu dutków.');
       expect(s.dutki).toBe(9);
+    });
+
+    it('fiakier event defines low-dutki fallback fight against pomocnik_fiakra', () => {
+      const fallback = eventLibrary.fiakier_event.fallbackFight;
+      expect(fallback).toBeTruthy();
+      if (!fallback) return;
+      expect(fallback.minDutki).toBe(10);
+      expect(fallback.enemyId).toBe('pomocnik_fiakra');
     });
 
     it('fiakier ride choice enables jump-to-boss shortcut and forces main boss', () => {
@@ -1221,7 +1730,7 @@ describe('GameState', () => {
         name: 'Wyprzedzanie na trzeciego',
         damage: 8,
         hits: 1,
-        applyFrail: 1,
+        applyFrail: 2,
       });
     });
 
@@ -1233,7 +1742,7 @@ describe('GameState', () => {
         type: 'block',
         name: 'Zbieranie kompletu',
         block: 10,
-        heal: 5,
+        heal: 3,
       });
       s.endTurn();
       expect(s.enemy.block).toBe(10);
@@ -1261,13 +1770,44 @@ describe('GameState', () => {
       expect(s.dutki).toBe(30);
     });
 
-    it('Zbieranie kompletu heals enemy by 5', () => {
+    it('Zbieranie kompletu heals enemy by 3', () => {
       const s = freshBusiarzState();
       s.endTurn();
       s.endTurn();
       s.enemy.hp = s.enemy.maxHp - 10;
       s.endTurn();
-      expect(s.enemy.hp).toBe(s.enemy.maxHp - 5);
+      expect(s.enemy.hp).toBe(s.enemy.maxHp - 7);
+    });
+  });
+
+  describe('influencerka', () => {
+    it('starts with Selfie z zaskoczenia as first intent', () => {
+      const s = freshInfluencerkaState();
+      expect(s.enemy.currentIntent).toEqual({
+        type: 'attack',
+        name: 'Selfie z zaskoczenia',
+        damage: 5,
+        hits: 1,
+        applyVulnerable: 2,
+      });
+    });
+
+    it('cycles to Oznaczenie w relacji on second turn', () => {
+      const s = freshInfluencerkaState();
+      s.endTurn();
+      expect(s.enemy.currentIntent).toEqual({
+        type: 'status',
+        name: 'Oznaczenie w relacji',
+        addStatusCard: 'spam_tagami',
+        amount: 2,
+      });
+    });
+
+    it('Oznaczenie w relacji adds two spam_tagami cards', () => {
+      const s = freshInfluencerkaState();
+      s.endTurn();
+      s.endTurn();
+      expect(s.discard.filter((id) => id === 'spam_tagami').length).toBeGreaterThanOrEqual(2);
     });
   });
 
@@ -1481,10 +2021,22 @@ describe('GameState', () => {
         strength: 2,
         weak: 3,
         fragile: 1,
+        vulnerable: 0,
         next_double: true,
         energy_next_turn: 1,
+        lans: 1,
+        duma_podhala: 1,
       };
-      s.enemy.status = { strength: 4, weak: 2, fragile: 2, next_double: true, energy_next_turn: 0 };
+      s.enemy.status = {
+        strength: 4,
+        weak: 2,
+        fragile: 2,
+        vulnerable: 0,
+        next_double: true,
+        energy_next_turn: 0,
+        lans: 0,
+        duma_podhala: 0,
+      };
 
       s.resetBattle();
 
@@ -1497,6 +2049,8 @@ describe('GameState', () => {
         vulnerable: 0,
         next_double: false,
         energy_next_turn: 0,
+        lans: 0,
+        duma_podhala: 0,
       });
       expect(s.enemy.status).toEqual({
         strength: 0,
@@ -1505,6 +2059,8 @@ describe('GameState', () => {
         vulnerable: 0,
         next_double: false,
         energy_next_turn: 0,
+        lans: 0,
+        duma_podhala: 0,
       });
     });
 
@@ -1555,6 +2111,37 @@ describe('GameState', () => {
       expect(s.enemy.maxHp).toBe(88);
     });
 
+    it('can load Parkingowego from the enemy library with lowered HP', () => {
+      const s = freshState();
+      vi.spyOn(s, '_pickRandomEnemyDef').mockReturnValue(enemyLibrary.parkingowy);
+      s.resetBattle();
+      expect(s.enemy.id).toBe('parkingowy');
+      expect(s.enemy.name).toBe('Parkingowy z Palenicy');
+      expect(s.enemy.maxHp).toBe(95);
+    });
+
+    it('can start scripted battle against pomocnik_fiakra', () => {
+      const s = freshState();
+      const started = s.startBattleWithEnemyId('pomocnik_fiakra');
+
+      expect(started).toBe(true);
+      expect(s.enemy.id).toBe('pomocnik_fiakra');
+      expect(s.enemy.maxHp).toBe(58);
+      expect(s.pendingBattleDutki).toBe(true);
+    });
+
+    it('pomocnik_fiakra victory grants standard 28-36 dutki range', () => {
+      const s = freshState();
+      s.startBattleWithEnemyId('pomocnik_fiakra');
+      s.pendingBattleDutki = true;
+      vi.spyOn(Math, 'random').mockReturnValue(0.99);
+
+      const drop = s.grantBattleDutki();
+
+      expect(drop).toBeGreaterThanOrEqual(28);
+      expect(drop).toBeLessThanOrEqual(36);
+    });
+
     it('spawns Król Krupówek on boss node when boss variant is rolled', () => {
       const s = freshState();
       s.map = [
@@ -1585,13 +2172,56 @@ describe('GameState', () => {
       s.resetBattle();
       expect(s.enemy.id).toBe('fiakier');
       expect(s.enemy.name).toBe('Fiakier spod Krupówek');
-      expect(s.enemy.maxHp).toBe(250);
+      expect(s.enemy.maxHp).toBe(270);
       expect(s.enemy.bossArtifact).toBe(0);
+    });
+
+    it('gives Król Krupówek 330 HP on hard mode', () => {
+      const s = freshState();
+      s.difficulty = 'hard';
+      s.map = [
+        [null, { x: 1, y: 0, type: 'fight', label: 'Bitka', emoji: '⚔️', connections: [1] }, null],
+        [null, { x: 1, y: 1, type: 'boss', label: 'Boss', emoji: '👑', connections: [] }, null],
+      ];
+      s.currentLevel = 1;
+      s.currentNodeIndex = 1;
+      s.currentNode = { x: 1, y: 1 };
+      vi.spyOn(Math, 'random').mockReturnValue(0);
+      s.resetBattle();
+      expect(s.enemy.id).toBe('boss');
+      expect(s.enemy.maxHp).toBe(330);
+    });
+
+    it('gives Fiakier 330 HP on hard mode', () => {
+      const s = freshState();
+      s.difficulty = 'hard';
+      s.map = [
+        [null, { x: 1, y: 0, type: 'fight', label: 'Bitka', emoji: '⚔️', connections: [1] }, null],
+        [null, { x: 1, y: 1, type: 'boss', label: 'Boss', emoji: '👑', connections: [] }, null],
+      ];
+      s.currentLevel = 1;
+      s.currentNodeIndex = 1;
+      s.currentNode = { x: 1, y: 1 };
+      vi.spyOn(Math, 'random').mockReturnValue(0.99);
+      s.resetBattle();
+      expect(s.enemy.id).toBe('fiakier');
+      expect(s.enemy.maxHp).toBe(330);
     });
 
     it('enemy library includes final boss definition', () => {
       const ids = Object.keys(enemyLibrary).sort();
-      expect(ids).toEqual(['baba', 'boss', 'busiarz', 'cepr', 'fiakier', 'influencerka', 'parkingowy']);
+      expect(ids).toEqual([
+        'baba',
+        'boss',
+        'busiarz',
+        'cepr',
+        'fiakier',
+        'influencerka',
+        'konik_spod_kuznic',
+        'naganiacz_z_krupowek',
+        'parkingowy',
+        'pomocnik_fiakra',
+      ]);
     });
 
     it('event library includes fiakier event definition', () => {
@@ -1697,6 +2327,17 @@ describe('GameState', () => {
       expect(s.enemy.currentIntent.hits).toBe(3);
     });
 
+    it('fourth intent is Uścisk Krupówek with reduced spike damage (23)', () => {
+      const s = freshBossState();
+      s.endTurn(); // execute Górski Ryk -> intent 2
+      s.endTurn(); // execute Agresywne pozowanie -> intent 3
+      s.endTurn(); // execute Podatek od zdjęcia -> intent 4
+      expect(s.enemy.currentIntent.type).toBe('attack');
+      expect(s.enemy.currentIntent.name).toBe('Uścisk Krupówek');
+      expect(s.enemy.currentIntent.damage).toBe(23);
+      expect(s.enemy.currentIntent.hits).toBe(1);
+    });
+
     it('ochrona_wizerunku deals 1 thorns to player per attack hit', () => {
       const s = freshBossState();
       s.player.hp = 50;
@@ -1716,6 +2357,32 @@ describe('GameState', () => {
       s.hand = ['ciupaga'];
       s.player.energy = 3;
       s.playCard(0);
+      expect(s.player.hp).toBe(49);
+    });
+
+    it('ochrona_wizerunku takes garda first if player has block', () => {
+      const s = freshBossState();
+      s.player.hp = 50;
+      s.player.block = 5;
+      s.enemy.hp = 300;
+      s.enemy.block = 0;
+      s.hand = ['ciupaga'];
+      s.player.energy = 3;
+      s.playCard(0);
+      expect(s.player.block).toBe(4);
+      expect(s.player.hp).toBe(50);
+    });
+
+    it('ochrona_wizerunku takes HP only when player has 0 garda', () => {
+      const s = freshBossState();
+      s.player.hp = 50;
+      s.player.block = 0;
+      s.enemy.hp = 300;
+      s.enemy.block = 0;
+      s.hand = ['ciupaga'];
+      s.player.energy = 3;
+      s.playCard(0);
+      expect(s.player.block).toBe(0);
       expect(s.player.hp).toBe(49);
     });
   });

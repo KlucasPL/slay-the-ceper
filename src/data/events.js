@@ -11,6 +11,7 @@
  *   title: string,
  *   description: string,
  *   image: string,
+ *   fallbackFight?: { minDutki: number, enemyId: string, message: string },
  *   choices: EventChoiceDef[],
  * }} GameEventDef
  */
@@ -47,9 +48,15 @@ export const eventLibrary = {
     description:
       "Wielka bryczka tarasuje przejście. Fiakier w zakurzonym kapeluszu strzela z bata i patrzy na Twoją sakiewkę. 'Panocku, koń tyż głodny, a patrzynie na luksusy kosztuje!'",
     image: fiakierEventSvg,
+    fallbackFight: {
+      minDutki: 10,
+      enemyId: 'pomocnik_fiakra',
+      message:
+        "Fiakier mierzy Cię wzrokiem: 'Bez dutków to se możesz po asfalcie tupać, a nie moją bryką jechać! Naucy Cie rozumu...'",
+    },
     choices: [
       {
-        text: 'Pogłaskaj konia (30 Dutków)',
+        text: 'Pogłaskaj konia (30 dutków)',
         description: 'Koń jest miły w dotyku. Chwila relaksu regeneruje siły.',
         cost: 30,
         effect(state) {
@@ -58,7 +65,7 @@ export const eventLibrary = {
         },
       },
       {
-        text: 'Popatrz na konia (10 Dutków)',
+        text: 'Popatrz na konia (10 dutków)',
         description: 'Tylko rzuciłeś okiem na kopyta, ale Fiakier już wyciąga rękę po zapłatę.',
         cost: 10,
         effect() {
@@ -66,7 +73,7 @@ export const eventLibrary = {
         },
       },
       {
-        text: 'Przejażdżka bryczką (150 Dutków)',
+        text: 'Przejażdżka bryczką (150 dutków)',
         description: 'Wsiadasz dumnie na tył. Bryczka rusza z kopyta, omijając wszystkich turystów!',
         cost: 150,
         effect(state) {

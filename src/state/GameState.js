@@ -18,7 +18,7 @@ const CARD_REWARD_RARITY_WEIGHTS = {
 
 /**
  * @typedef {import('../data/cards.js').StatusDef} StatusDef
- * @typedef {{ name: string, hp: number, maxHp: number, block: number, energy: number, maxEnergy: number, status: StatusDef, hasLans: boolean, stunned: boolean, cardsPlayedThisTurn: number }} PlayerState
+ * @typedef {{ name: string, hp: number, maxHp: number, block: number, energy: number, maxEnergy: number, status: StatusDef, stunned: boolean, cardsPlayedThisTurn: number }} PlayerState
  * @typedef {import('../data/enemies.js').EnemyMoveDef} EnemyMoveDef
  * @typedef {import('../data/weather.js').WeatherId} WeatherId
  * @typedef {'fight' | 'elite' | 'shop' | 'treasure' | 'event' | 'campfire' | 'boss'} MapNodeType
@@ -32,7 +32,16 @@ const CARD_REWARD_RARITY_WEIGHTS = {
 
 /** @returns {StatusDef} */
 function defaultStatus() {
-  return { strength: 0, weak: 0, fragile: 0, vulnerable: 0, next_double: false, energy_next_turn: 0 };
+  return {
+    strength: 0,
+    weak: 0,
+    fragile: 0,
+    vulnerable: 0,
+    next_double: false,
+    energy_next_turn: 0,
+    lans: 0,
+    duma_podhala: 0,
+  };
 }
 
 export class GameState {
@@ -42,7 +51,7 @@ export class GameState {
    */
   constructor(character, enemy) {
     /** @type {PlayerState} */
-    this.player = { ...character, status: defaultStatus(), hasLans: false, stunned: false, cardsPlayedThisTurn: 0 };
+    this.player = { ...character, status: defaultStatus(), stunned: false, cardsPlayedThisTurn: 0 };
     /** @type {number} */
     this.dutki = 50;
     /** @type {number} Number of won battles used for scaling */
@@ -61,6 +70,8 @@ export class GameState {
     this.seenRelicOffers = [];
     /** @type {boolean} Whether the first hard-mode shop guarantee has been consumed */
     this.hardFirstShopRolled = false;
+    /** @type {number} Certyfikowany Oscypek: number of shop-entry max HP boosts applied this run */
+    this.certyfikowanyOscypekShopProcs = 0;
     /** @type {Record<string, number>} */
     this.cardDamageBonus = {};
     /** @type {(MapNode | null)[][]} */
@@ -87,6 +98,10 @@ export class GameState {
     this.flaszkaCostSeed = {};
     /** @type {number} Parity for zepsuty_termometr: 0=tick enemy status, 1=skip */
     this.termometerTurnParity = 0;
+    /** @type {number} Turns elapsed in current battle (incremented at start of each player turn) */
+    this.battleTurnsElapsed = 0;
+    /** @type {boolean} Góralski Zegarek: free skill available this turn */
+    this.zegarekFreeSkillAvailable = false;
     /** @type {ShopStock} */
     this.shopStock = { cards: [], relic: null };
     /** @type {string} */
@@ -118,10 +133,14 @@ export class GameState {
     this.enemyBankruptcyBonus = 0;
     /** @type {boolean} */
     this.lansBreakEvent = false;
+    /** @type {boolean} One-shot flag for messaging when enemy resists rachunek win condition */
+    this.rachunekResistEvent = false;
     /** @type {boolean} Global audio mute flag */
     this.isMuted = false;
     /** @type {boolean} */
     this.hasStartedFirstBattle = false;
+    /** @type {boolean} Rare power: reflect damage when enough block is lost */
+    this.dumaPodhalaActive = false;
     /** @type {EnemyState} */
     this.enemy = this._createEnemyState(enemy);
     this.generateMap();
@@ -179,7 +198,11 @@ export class GameState {
       boss: { label: 'Boss', emoji: '👑' },
     };
     const weather = this._rollNodeWeather(type);
-    return { ...meta[type], x, y, type, weather, connections: [] };
+    const node = { ...meta[type], x, y, type, weather, connections: [] };
+    if (type === 'event') {
+      node.eventOutcome = this.rollEventNodeOutcome();
+    }
+    return node;
   }
 
   /** @returns {MapNodeType} */
@@ -589,6 +612,14 @@ export class GameState {
     return eventLibrary[eventId] ?? null;
   }
 
+  /** @returns {'event' | 'fight' | 'shop'} */
+  rollEventNodeOutcome() {
+    const roll = Math.random();
+    if (roll < 0.6) return 'event';
+    if (roll < 0.85) return 'fight';
+    return 'shop';
+  }
+
   /**
    * @param {string | null} eventId
    */
@@ -622,7 +653,7 @@ export class GameState {
     }
 
     if (this.dutki < choice.cost) {
-      return { success: false, message: 'Nie masz tyle Dutków.' };
+      return { success: false, message: 'Nie masz tylu dutków.' };
     }
 
     this.dutki -= choice.cost;
@@ -656,6 +687,21 @@ export class GameState {
   }
 
   /**
+   * @param {number} amount
+   * @returns {string}
+   */
+  getDutkiLabel(amount) {
+    const abs = Math.abs(amount);
+    const lastTwo = abs % 100;
+    const last = abs % 10;
+
+    if (lastTwo >= 12 && lastTwo <= 14) return 'dutków';
+    if (last === 1) return 'dutka';
+    if (last >= 2 && last <= 4) return 'dutki';
+    return 'dutków';
+  }
+
+  /**
    * @param {'player' | 'enemy'} side
    */
   _registerWeatherMiss(side) {
@@ -677,6 +723,13 @@ export class GameState {
     return 'BANKRUT!';
   }
 
+  /** @returns {{ target: 'enemy', text: string } | null} */
+  consumeRachunekResistEvent() {
+    if (!this.rachunekResistEvent) return null;
+    this.rachunekResistEvent = false;
+    return { target: 'enemy', text: 'ODPORNA NA RACHUNEK!' };
+  }
+
   _checkEnemyBankruptcy() {
     if (this.enemyBankruptFlag) return;
     if (this.enemy.passive === 'targowanie_sie') return;
@@ -690,11 +743,11 @@ export class GameState {
     this.enemyBankruptFlag = true;
     this.enemy.hp = 0;
     this.enemy.isBankrupt = true;
-    const bonus = Math.floor(this.enemy.rachunek / 2);
+    const bonus = Math.min(25, Math.floor(this.enemy.rachunek / 3));
     this.enemyBankruptcyBonus = bonus;
     if (bonus > 0) {
       this.dutki += bonus;
-      this.lastVictoryMessage = `Wróg zbankrutował! +${bonus} dutków`;
+      this.lastVictoryMessage = `Wróg zbankrutował! +${bonus} ${this.getDutkiLabel(bonus)}`;
     } else {
       this.lastVictoryMessage = 'Wróg zbankrutował!';
     }
@@ -705,9 +758,17 @@ export class GameState {
    */
   addEnemyRachunek(amount) {
     if (amount <= 0) return;
-    this.enemy.rachunek += amount;
+    if (this.enemy.passive === 'targowanie_sie') {
+      this.rachunekResistEvent = true;
+    }
+    let appliedAmount = amount;
+    if (this.enemy.id === 'fiakier') {
+      // Fiakier has a soft counter to Rachunek builds: only 70% incoming stacks apply.
+      appliedAmount = Math.max(1, Math.floor(amount * 0.7));
+    }
+    this.enemy.rachunek += appliedAmount;
     if (this.hasRelic('pekniete_liczydlo')) {
-      this.enemy.hp = Math.max(0, this.enemy.hp - 3);
+      this.player.hp = Math.min(this.player.maxHp, this.player.hp + 2);
     }
     this._checkEnemyBankruptcy();
   }
@@ -859,6 +920,11 @@ export class GameState {
    * @returns {ShopStock}
    */
   generateShopStock() {
+    if (this.hasRelic('certyfikowany_oscypek') && this.certyfikowanyOscypekShopProcs < 3) {
+      this.gainMaxHp(2);
+      this.certyfikowanyOscypekShopProcs += 1;
+    }
+
     const cardPool = Object.keys(cardLibrary).filter((id) => !cardLibrary[id]?.isStarter);
 
     const relicPool = this._buildAvailableRelicPool();
@@ -954,7 +1020,21 @@ export class GameState {
     this.relics.push(relicId);
     this._markRelicAsSeen(relicId);
 
+    if (relicId === 'pas_bacowski') {
+      this.gainMaxHp(6);
+    }
+
     return true;
+  }
+
+  /**
+   * Permanently increases player's maximum HP and heals by the same amount.
+   * @param {number} amount
+   */
+  gainMaxHp(amount) {
+    if (amount <= 0) return;
+    this.player.maxHp += amount;
+    this.player.hp = Math.min(this.player.maxHp, this.player.hp + amount);
   }
 
   /**
@@ -1022,7 +1102,33 @@ export class GameState {
     if (this.hasRelic('flaszka_sliwowicy') && cardId in this.flaszkaCostSeed) {
       return this.flaszkaCostSeed[cardId];
     }
-    return cardLibrary[cardId]?.cost ?? 0;
+    const card = cardLibrary[cardId];
+    if (this.zegarekFreeSkillAvailable && card?.type === 'skill') {
+      return 0;
+    }
+    return card?.cost ?? 0;
+  }
+
+  /**
+   * Returns the shop purchase price for a card, applying active relic discounts.
+   * @param {string} cardId
+   * @returns {number}
+   */
+  getCardShopPrice(cardId) {
+    const base = cardLibrary[cardId]?.price ?? 0;
+    if (this.hasRelic('zlota_karta_zakopianczyka')) {
+      return Math.floor(base * 0.85);
+    }
+    return base;
+  }
+
+  /**
+   * Returns the current cost to remove a card in the shop.
+   * @returns {number}
+   */
+  getShopRemovalPrice() {
+    if (this.hasRelic('zlota_karta_zakopianczyka')) return 25;
+    return 100;
   }
 
   /**
@@ -1039,12 +1145,29 @@ export class GameState {
    */
   grantBattleDutki() {
     if (!this.pendingBattleDutki) return 0;
-    const base = 30 + Math.floor(Math.random() * 11);
-    const drop = (this.enemy.isBankrupt && this.hasRelic('magnes_na_lodowke'))
+    const base = 28 + Math.floor(Math.random() * 9);
+    let drop = (this.enemy.isBankrupt && this.hasRelic('magnes_na_lodowke'))
       ? Math.floor(base * 1.5)
       : base;
+
+    // Szczęśliwa Podkowa: +25 Dutki when HP ≤ 40% at end of battle
+    if (this.hasRelic('szczegliwa_podkowa') && this.player.hp <= Math.floor(this.player.maxHp * 0.4)) {
+      drop += 25;
+    }
+
     this.dutki += drop;
     this.pendingBattleDutki = false;
+
+    // Termos z Herbatką: ≤2 turns → +4 HP, otherwise → +15 Dutki
+    if (this.hasRelic('termos_z_herbatka')) {
+      if (this.battleTurnsElapsed <= 2) {
+        this.healPlayer(4);
+      } else {
+        this.dutki += 15;
+        drop += 15;
+      }
+    }
+
     return drop;
   }
 
@@ -1060,7 +1183,7 @@ export class GameState {
    */
   _applyBattleStartRelics() {
     if (this.hasRelic('flaszka_sliwowicy')) {
-      this.player.status.strength += 5;
+      this.player.status.strength += 4;
     }
 
     if (this.hasRelic('papryczka_marka')) {
@@ -1068,8 +1191,20 @@ export class GameState {
     }
 
     if (this.hasRelic('blacha_przewodnika')) {
-      this.player.hasLans = true;
+      this.player.status.lans = 1;
     }
+  }
+
+  /** @returns {boolean} */
+  _isLansActive() {
+    return this.player.status.lans > 0;
+  }
+
+  /**
+   * @param {boolean} active
+   */
+  _setLansActive(active) {
+    this.player.status.lans = active ? 1 : 0;
   }
 
   /**
@@ -1077,7 +1212,7 @@ export class GameState {
    */
   gainPlayerBlockFromCard(amount) {
     let effective = this.player.status.fragile > 0 ? Math.floor(amount * 0.75) : amount;
-    if (this.hasRelic('lustrzane_gogle') && this.player.hasLans) {
+    if (this.hasRelic('lustrzane_gogle') && this._isLansActive()) {
       effective += 2;
     }
     this.player.block += effective;
@@ -1098,7 +1233,12 @@ export class GameState {
         })
       : [];
     const bossBaseHp = this.difficulty === 'hard' ? 330 : 230;
-    const baseMaxHp = isMainBoss ? bossBaseHp : enemyDef.maxHp;
+    const baseMaxHp =
+      this.difficulty === 'hard' && isFinalBossVariant
+        ? bossBaseHp
+        : isMainBoss
+          ? bossBaseHp
+          : enemyDef.maxHp;
     const dzwonekMod = this.hasRelic('dzwonek_owcy') ? 0.8 : 1.0;
     const maxHp = Math.round(baseMaxHp * scale * dzwonekMod);
     /** @type {EnemyState} */
@@ -1131,7 +1271,9 @@ export class GameState {
 
   /** @returns {import('../data/enemies.js').EnemyDef} */
   _pickRandomEnemyDef() {
-    const enemyIds = Object.keys(enemyLibrary).filter((id) => id !== 'boss' && id !== 'fiakier');
+    const enemyIds = Object.keys(enemyLibrary).filter(
+      (id) => id !== 'boss' && id !== 'fiakier' && id !== 'pomocnik_fiakra'
+    );
     const enemyId = enemyIds[Math.floor(Math.random() * enemyIds.length)];
     return enemyLibrary[enemyId];
   }
@@ -1155,6 +1297,8 @@ export class GameState {
     this.smyczKeptCardId = null;
     this.flaszkaCostSeed = {};
     this.termometerTurnParity = 0;
+    this.battleTurnsElapsed = 0;
+    this.zegarekFreeSkillAvailable = false;
     this._setCurrentWeatherFromNode();
     this._applyBattleStartRelics();
     this.startTurn();
@@ -1307,7 +1451,11 @@ export class GameState {
     }
     this._checkEnemyBankruptcy();
     if (dmg > 0 && this.enemy.passive === 'ochrona_wizerunku' && this.combat.activeSide === 'player') {
-      this.player.hp -= 1;
+      if (this.player.block > 0) {
+        this.player.block -= 1;
+      } else {
+        this.player.hp -= 1;
+      }
     }
     return { raw: dmg, blocked, dealt };
   }
@@ -1330,7 +1478,7 @@ export class GameState {
     let dealt = amount - blocked;
     this.player.block -= blocked;
 
-    if (dealt > 0 && this.player.hasLans) {
+    if (dealt > 0 && this._isLansActive()) {
       const requiredDutki = dealt * 2;
       if (this.dutki >= requiredDutki) {
         this.dutki -= requiredDutki;
@@ -1339,7 +1487,7 @@ export class GameState {
         const prevented = Math.floor(this.dutki / 2);
         dealt = Math.max(0, dealt - prevented);
         this.dutki = 0;
-        this.player.hasLans = false;
+        this._setLansActive(false);
         this.player.stunned = true;
         this.lansBreakEvent = true;
       }
@@ -1352,6 +1500,12 @@ export class GameState {
     if (dealt > 0 && this.enemy.passive === 'brak_reszty') {
       this.dutki = Math.max(0, this.dutki - 3);
     }
+
+    if (this.player.status.duma_podhala > 0 && this.combat.activeSide === 'enemy' && blocked >= 10) {
+      const reflected = Math.floor(blocked / 10) * 5;
+      this._applyDamageToEnemy(reflected);
+    }
+
     return { raw: amount, blocked, dealt };
   }
 
@@ -1528,7 +1682,7 @@ export class GameState {
           icon: '🛡️',
           label: 'Artefakt',
           value: this.enemy.bossArtifact ?? 0,
-          tooltip: 'Blokuje pierwsze 3 negatywne statusy nałożone przez gracza.',
+          tooltip: 'Blokuje pierwsze 2 negatywne statusy nałożone przez gracza.',
         }
       );
     }
@@ -1538,7 +1692,7 @@ export class GameState {
         icon: '💸',
         label: 'Brak Reszty',
         value: null,
-        tooltip: 'Gdy zadaje obrażenia HP, kradnie 3 Dutki.',
+        tooltip: 'Gdy zadaje obrażenia HP, kradnie 3 dutki.',
       });
     }
 
@@ -1578,12 +1732,21 @@ export class GameState {
       });
     }
 
+    if (this.enemy.id === 'fiakier') {
+      specials.push({
+        icon: '🧾',
+        label: 'Twardy Taryfikator',
+        value: '70%',
+        tooltip: 'Fiakier przyjmuje tylko 70% nakładanego Rachunku (minimum 1).',
+      });
+    }
+
     if ((this.enemy.ped ?? 0) > 0) {
       specials.push({
         icon: '💨',
         label: 'Pęd',
         value: this.enemy.ped,
-        tooltip: 'Fiakier nabrał pędu. Następny atak „Przyspieszenie" zadada o tyle więcej obrażeń.',
+        tooltip: 'Fiakier nabrał pędu. Następny atak „Przyspieszenie" zada o tyle więcej obrażeń.',
       });
     }
 
@@ -1613,10 +1776,11 @@ export class GameState {
     this.enemy.tookHpDamageThisTurn = false;
     this.player.cardsPlayedThisTurn = 0;
 
-    // Fiakier: add 2 Rachunek to itself at the start of each player turn
-    if (this.enemy.passive === 'rachunek_za_kurs') {
-      this.addEnemyRachunek(1);
-    }
+    this.battleTurnsElapsed += 1;
+
+    // Góralski Zegarek: first Skill costs 0 on even turns (2, 4, 6...)
+    this.zegarekFreeSkillAvailable =
+      this.hasRelic('goralski_zegarek') && this.battleTurnsElapsed % 2 === 0;
 
     this._applyHalnyBlockDrain(this.player);
     this.player.energy = this.player.maxEnergy + this.player.status.energy_next_turn;
@@ -1630,14 +1794,9 @@ export class GameState {
       this.smyczKeptCardId = null;
     }
 
-    // Wiatr Halny: 50% draw +2, 50% discard random card from hand
+    // Wiatr Halny: +1 card draw every turn
     if (this.hasRelic('wiatr_halny')) {
-      if (Math.random() < 0.5) {
-        this._drawCards(2);
-      } else if (this.hand.length > 0) {
-        const idx = Math.floor(Math.random() * this.hand.length);
-        this.discard.push(this.hand.splice(idx, 1)[0]);
-      }
+      this._drawCards(1);
     }
 
     // Flaszka Śliwowicy: randomize card costs per card type in hand this turn
@@ -1657,9 +1816,6 @@ export class GameState {
       this.player.hp = Math.max(1, this.player.hp - 2);
     }
 
-    if (this.player.stunned) {
-      this.player.energy = 0;
-    }
   }
 
   /**
@@ -1669,13 +1825,16 @@ export class GameState {
    * @returns {PlayCardResult}
    */
   playCard(handIndex) {
-    if (this.player.stunned) return { success: false };
-
     const cardId = this.hand[handIndex];
     const card = cardLibrary[cardId];
     const actualCost = this.getCardCostInHand(cardId);
     if (!card || this.player.energy < actualCost) return { success: false };
     if (card.unplayable) return { success: false };
+
+    // Ogłuszenie po rozbiciu Lansu blokuje tylko karty ataku w bieżącej turze.
+    if (this.player.stunned && card.type === 'attack') {
+      return { success: false, reason: 'stunned_attack' };
+    }
 
     if (this.enemy.passive === 'blokada_parkingowa' && this.player.cardsPlayedThisTurn >= 3) {
       return { success: false, reason: 'blokada' };
@@ -1717,6 +1876,11 @@ export class GameState {
       this._applyDamageToEnemy(4);
     }
 
+    // Góralski Zegarek: consume free skill flag when a skill is played
+    if (this.zegarekFreeSkillAvailable && card.type === 'skill') {
+      this.zegarekFreeSkillAvailable = false;
+    }
+
     // Bilet TPN: every 3rd attack card this battle grants +1 energy
     if (card.type === 'attack') {
       this.attackCardsPlayedThisBattle += 1;
@@ -1750,7 +1914,7 @@ export class GameState {
       }
     }
 
-    // spam_tagami: drain 2 dutki per turn while in hand
+    // spam_tagami: drain 2 DUTKI per turn while in hand
     if (this.hand.includes('spam_tagami')) {
       this.dutki = Math.max(0, this.dutki - 2);
     }
@@ -1788,7 +1952,7 @@ export class GameState {
       }
     }
 
-    if (this.hasRelic('papucie_po_babci') && this.player.hasLans) {
+    if (this.hasRelic('papucie_po_babci') && this._isLansActive()) {
       const hpBefore = this.player.hp;
       this.healPlayer(2);
       const healed = this.player.hp - hpBefore;
@@ -1819,7 +1983,7 @@ export class GameState {
     this.enemy.block = 0;
 
     // parcie_na_szklo: influencerka gains strength when player has Lans
-    if (this.enemy.passive === 'parcie_na_szklo' && this.player.hasLans) {
+    if (this.enemy.passive === 'parcie_na_szklo' && this._isLansActive()) {
       this.enemy.status.strength += 2;
     }
 
@@ -1869,13 +2033,17 @@ export class GameState {
     this.smyczKeptCardId = null;
     this.flaszkaCostSeed = {};
     this.termometerTurnParity = 0;
+    this.battleTurnsElapsed = 0;
+    this.zegarekFreeSkillAvailable = false;
     this.enemyBankruptFlag = false;
     this.enemyBankruptcyBonus = 0;
     this.lansBreakEvent = false;
+    this.rachunekResistEvent = false;
+    this.dumaPodhalaActive = false;
     this.lastVictoryMessage = '';
 
     this.player.status = defaultStatus();
-    this.player.hasLans = false;
+    this._setLansActive(false);
     this.player.stunned = false;
 
     const allCards = [...this.hand, ...this.discard, ...this.exhaust, ...this.deck];
@@ -1901,6 +2069,51 @@ export class GameState {
 
     this._applyBattleStartRelics();
     this.startTurn();
+  }
+
+  /**
+   * Starts a fresh battle against a specific enemy ID without entering the random encounter pool.
+   * Intended for scripted transitions (e.g., event fallback fights).
+   * @param {string} enemyId
+   * @returns {boolean}
+   */
+  startBattleWithEnemyId(enemyId) {
+    const enemyDef = enemyLibrary[enemyId];
+    if (!enemyDef) return false;
+
+    this.player.block = 0;
+    this.attackCardsPlayedThisBattle = 0;
+    this.pocztowkaUsedThisBattle = false;
+    this.smyczKeptCardId = null;
+    this.flaszkaCostSeed = {};
+    this.termometerTurnParity = 0;
+    this.battleTurnsElapsed = 0;
+    this.zegarekFreeSkillAvailable = false;
+    this.enemyBankruptFlag = false;
+    this.enemyBankruptcyBonus = 0;
+    this.lansBreakEvent = false;
+    this.rachunekResistEvent = false;
+    this.dumaPodhalaActive = false;
+    this.lastVictoryMessage = '';
+
+    this.player.status = defaultStatus();
+    this._setLansActive(false);
+    this.player.stunned = false;
+
+    const allCards = [...this.hand, ...this.discard, ...this.exhaust, ...this.deck];
+    this.deck = allCards.filter((id) => cardLibrary[id]?.type !== 'status');
+    this.hand = [];
+    this.discard = [];
+    this.exhaust = [];
+    this._shuffle(this.deck);
+
+    this.enemy = this._createEnemyState(enemyDef);
+    this._setCurrentWeatherFromNode();
+    this.pendingBattleDutki = true;
+
+    this._applyBattleStartRelics();
+    this.startTurn();
+    return true;
   }
 
   /**

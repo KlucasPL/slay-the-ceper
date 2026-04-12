@@ -1,7 +1,9 @@
 import { cardLibrary } from '../data/cards.js';
+import { enemyLibrary } from '../data/enemies.js';
 import { relicLibrary } from '../data/relics.js';
 import { releaseNotesData } from '../data/releaseNotes.js';
 import { weatherLibrary } from '../data/weather.js';
+import { statusTooltipRegistry } from './statusTooltips.js';
 
 export class UIManager {
   /**
@@ -23,6 +25,8 @@ export class UIManager {
     this.libraryTab = 'cards';
     /** @type {'all' | 'common' | 'uncommon' | 'rare'} */
     this.libraryRarityFilter = 'all';
+    /** @type {string | null} */
+    this.pendingEventFallbackEnemyId = null;
   }
 
   /**
@@ -348,18 +352,6 @@ export class UIManager {
     if (!el) return;
     el.innerHTML = '';
 
-    /** @type {Record<string,{icon:string,label:string,tooltip:string}>} */
-    const defs = {
-      strength: { icon: '💢', label: 'Siła', tooltip: 'Każdy punkt Siły dodaje +1 do obrażeń ataków.' },
-      weak: { icon: '🤢', label: 'Słabość', tooltip: 'Zmniejsza zadawane obrażenia o 25% i spada o 1 co turę.' },
-      fragile: { icon: '🫧', label: 'Kruchość', tooltip: 'Zmniejsza zyskiwaną Gardę o 25%. Spada o 1 co turę.' },
-      vulnerable: { icon: '💥', label: 'Podatność', tooltip: 'Otrzymujesz 50% więcej obrażeń. Spada o 1 co turę.' },
-      next_double: { icon: '✨', label: 'Podwójny cios', tooltip: 'Następny cios zada podwójne obrażenia, a potem efekt zniknie.' },
-      energy_next_turn: { icon: '⚡', label: 'Bonus Oscypek', tooltip: 'Na początku następnej tury dostaniesz dodatkowy Oscypek.' },
-      lans: { icon: '🕶️', label: 'Lans', tooltip: 'Gdy zabraknie Gardy, obrażenia są opłacane dutkami (1 dmg = 2 dutki), aż do rozbicia lansu.' },
-      stunned: { icon: '😵', label: 'Ogłuszony', tooltip: 'Nie możesz zagrywać kart w tej turze po rozbiciu lansu.' },
-    };
-
     /**
      * @param {string} icon
      * @param {string} label
@@ -394,19 +386,36 @@ export class UIManager {
       el.appendChild(element);
     };
 
-    if (status.strength > 0) tag(defs.strength.icon, defs.strength.label, status.strength, defs.strength.tooltip);
-    if (status.weak > 0) tag(defs.weak.icon, defs.weak.label, status.weak, defs.weak.tooltip);
-    if (status.fragile > 0) tag(defs.fragile.icon, defs.fragile.label, status.fragile, defs.fragile.tooltip);
-    if (status.vulnerable > 0) tag(defs.vulnerable.icon, defs.vulnerable.label, status.vulnerable, defs.vulnerable.tooltip);
-    if (status.next_double) tag(defs.next_double.icon, defs.next_double.label, null, defs.next_double.tooltip);
-    if (status.energy_next_turn > 0)
-      tag(defs.energy_next_turn.icon, defs.energy_next_turn.label, `+${status.energy_next_turn}`, defs.energy_next_turn.tooltip);
+    Object.entries(status).forEach(([key, rawValue]) => {
+      const numericValue =
+        typeof rawValue === 'boolean' ? (rawValue ? 1 : 0) : Number(rawValue ?? 0);
+      if (numericValue <= 0) return;
 
-    if (containerId === 'p-statuses') {
-      if (this.state.player.hasLans)
-        tag(defs.lans.icon, defs.lans.label, null, defs.lans.tooltip);
-      if (this.state.player.stunned)
-        tag(defs.stunned.icon, defs.stunned.label, null, defs.stunned.tooltip);
+      const def = statusTooltipRegistry[key] ?? {
+        icon: '🔹',
+        label: key,
+        tooltip: `Aktywny status: ${key}`,
+      };
+      const isBoolean = typeof rawValue === 'boolean';
+      const shouldShowValue = def.showNumericValue ?? !isBoolean;
+
+      let displayValue = null;
+      if (shouldShowValue) {
+        if (key === 'energy_next_turn') {
+          displayValue = `+${numericValue}`;
+        } else {
+          displayValue = numericValue;
+        }
+      }
+
+      tag(def.icon, def.label, displayValue, def.tooltip);
+    });
+
+    if (containerId === 'p-statuses' && this.state.player.stunned) {
+      const stunnedDef = statusTooltipRegistry.stunned;
+      if (stunnedDef) {
+        tag(stunnedDef.icon, stunnedDef.label, null, stunnedDef.tooltip);
+      }
     }
 
     if (containerId === 'e-statuses') {
@@ -431,7 +440,7 @@ export class UIManager {
 
       const cardEl = document.createElement('div');
       const isKept = this.state.smyczKeptCardId === cardId;
-      cardEl.className = `card ${this._rarityClass(card.rarity)}${canPlay ? '' : ' disabled'}${isKept ? ' card--kept' : ''}`;
+      cardEl.className = `card ${this._rarityClass(card.rarity)} card-${card.type}${canPlay ? '' : ' disabled'}${isKept ? ' card--kept' : ''}`;
 
       if (card.exhaust) {
         cardEl.classList.add('card-exhaust');
@@ -485,7 +494,14 @@ export class UIManager {
    */
   _handlePlayCard(handIndex) {
     const result = this.state.playCard(handIndex);
-    if (!result.success) return;
+    if (!result.success) {
+      if (result.reason === 'stunned_attack') {
+        this._showFloatingText('sprite-player', 'OGŁUSZONY! Ataki zablokowane', 'floating-shame');
+      } else if (result.reason === 'blokada') {
+        this._showFloatingText('sprite-enemy', 'PARKINGOWY: LIMIT 3 KART!', 'floating-shame');
+      }
+      return;
+    }
 
     const { effect } = result;
     const missEvent = this.state.consumeWeatherMissEvent();
@@ -493,6 +509,12 @@ export class UIManager {
       this.audioManager.playMissSound();
       const targetSprite = missEvent.target === 'enemy' ? 'sprite-enemy' : 'sprite-player';
       this._showFloatingText(targetSprite, missEvent.text, 'floating-damage');
+    }
+    const rachunekResistEvent = this.state.consumeRachunekResistEvent();
+    if (rachunekResistEvent) {
+      const targetSprite =
+        rachunekResistEvent.target === 'enemy' ? 'sprite-enemy' : 'sprite-player';
+      this._showFloatingText(targetSprite, rachunekResistEvent.text, 'floating-shame');
     }
 
     if (effect.enemyAnim) {
@@ -580,13 +602,17 @@ export class UIManager {
   _showEndGame(outcome) {
     if (outcome === 'player_win') {
       const droppedDutki = this.state.grantBattleDutki();
-      const isBossFight = this.state.enemy.id === 'boss';
+      const isBossFight = this.state.enemy.id === 'boss' || this.state.enemy.id === 'fiakier';
       const isBankrupt = this.state.enemy.isBankrupt;
       const bankruptBonus = this.state.enemyBankruptcyBonus;
       if (isBankrupt) {
         this.updateUI();
         if (bankruptBonus > 0) {
-          this._showFloatingText('sprite-enemy', `+${bankruptBonus} Dutków!`, 'floating-dutki');
+          this._showFloatingText(
+            'sprite-enemy',
+            `+${bankruptBonus} ${this.state.getDutkiLabel(bankruptBonus)}!`,
+            'floating-dutki'
+          );
         }
         setTimeout(() => {
           this._showVictoryOverlay(droppedDutki, isBossFight);
@@ -716,7 +742,7 @@ export class UIManager {
       lines.push(this.state.lastVictoryMessage);
     }
     if (droppedDutki > 0) {
-      lines.push(`Łup z bitki: +${droppedDutki} dutków`);
+      lines.push(`Łup z bitki: +${droppedDutki} ${this.state.getDutkiLabel(droppedDutki)}`);
     }
     rewardDutki.textContent = lines.join(' | ');
     rewardCards.innerHTML = '';
@@ -853,8 +879,12 @@ export class UIManager {
           btn.disabled = !isCurrent;
         }
 
+        const revealedEmoji =
+          node.type === 'event' && this.state.hasRelic('mapa_zakopanego')
+            ? this._revealedEventEmoji(node.eventOutcome)
+            : node.emoji;
         btn.innerHTML = `
-          <span class="map-node-emoji">${node.emoji}</span>
+          <span class="map-node-emoji">${revealedEmoji}</span>
           <span class="map-node-label">${node.label}</span>
         `;
 
@@ -984,6 +1014,21 @@ export class UIManager {
     }
 
     if (node.type === 'event') {
+      const outcome = node.eventOutcome ?? this.state.rollEventNodeOutcome();
+      if (outcome === 'fight') {
+        this.state.hasStartedFirstBattle = true;
+        this.state.currentScreen = 'battle';
+        this.state.resetBattle();
+        this._hideOverlay('map-overlay');
+        document.getElementById('end-turn-btn').disabled = false;
+        this.updateUI();
+        return;
+      }
+      if (outcome === 'shop') {
+        this.state.currentScreen = 'map';
+        this._openShop();
+        return;
+      }
       this.state.currentScreen = 'event';
       this._openRandomEvent();
       return;
@@ -1047,6 +1092,27 @@ export class UIManager {
 
     this.state.setActiveEvent(eventDef.id);
 
+    const fallbackFight = eventDef.fallbackFight;
+    if (fallbackFight && this.state.dutki < fallbackFight.minDutki) {
+      this.pendingEventFallbackEnemyId = fallbackFight.enemyId;
+      title.textContent = eventDef.title;
+      image.innerHTML = eventDef.image;
+      description.textContent = fallbackFight.message;
+      result.textContent = 'Przedzierasz się przez tłum i szykujesz do walki.';
+      continueBtn.classList.remove('hidden');
+      continueBtn.textContent = 'Stań do walki';
+      choicesContainer.innerHTML = '';
+
+      this._hideOverlay('map-overlay');
+      overlay.classList.remove('hidden');
+      overlay.setAttribute('aria-hidden', 'false');
+      this.updateUI();
+      return;
+    }
+
+    this.pendingEventFallbackEnemyId = null;
+    continueBtn.textContent = 'Kontynuuj';
+
     title.textContent = eventDef.title;
     image.innerHTML = eventDef.image;
     description.textContent = eventDef.description;
@@ -1096,6 +1162,22 @@ export class UIManager {
 
   _continueAfterRandomEvent() {
     this._hideOverlay('random-event-overlay');
+
+    if (this.pendingEventFallbackEnemyId) {
+      this.state.clearActiveEvent();
+      this.state.currentScreen = 'battle';
+      const started = this.state.startBattleWithEnemyId(this.pendingEventFallbackEnemyId);
+      this.pendingEventFallbackEnemyId = null;
+      if (!started) {
+        const emergencyEnemy = enemyLibrary.pomocnik_fiakra;
+        if (emergencyEnemy) {
+          this.state.enemy = this.state._createEnemyState(emergencyEnemy);
+        }
+      }
+      document.getElementById('end-turn-btn').disabled = false;
+      this.updateUI();
+      return;
+    }
 
     if (this.state.applyJumpToBossShortcut()) {
       this.mapMessage = 'Fiakier skrócił drogę. Następny przystanek: finał wyprawy.';
@@ -1160,7 +1242,8 @@ export class UIManager {
 
       const price = document.createElement('div');
       price.className = 'shop-item-price';
-      price.textContent = `${card.price} 💰`;
+      const cardShopPrice = this.state.getCardShopPrice(cardId);
+      price.textContent = `${cardShopPrice} 💰`;
 
       const btn = document.createElement('button');
       btn.type = 'button';
@@ -1168,9 +1251,10 @@ export class UIManager {
       btn.textContent = 'Kup';
       btn.title = `${card.name}: ${card.desc}`;
       btn.setAttribute('aria-label', `Kup kartę ${card.name}. ${card.desc}`);
-      btn.disabled = this.state.dutki < card.price;
+      btn.disabled = this.state.dutki < cardShopPrice;
       btn.addEventListener('click', () => {
-        const result = this.state.buyItem(card, 'card');
+        const cardWithPrice = { ...card, price: cardShopPrice };
+        const result = this.state.buyItem(cardWithPrice, 'card');
         message.textContent = result.message;
         this._renderShopOffers();
         this.updateUI();
@@ -1227,7 +1311,9 @@ export class UIManager {
     healBtn.disabled = this.state.dutki < 75 || this.state.player.hp >= this.state.player.maxHp;
     this._populateRemoveCardSelect();
     const select = document.getElementById('shop-remove-select');
-    removeBtn.disabled = this.state.dutki < 100 || !select.value;
+    const removalPrice = this.state.getShopRemovalPrice();
+    removeBtn.textContent = `Usuń kartę (${removalPrice} 💰)`;
+    removeBtn.disabled = this.state.dutki < removalPrice || !select.value;
 
     if (!message.textContent) {
       message.textContent = this.state.lastShopMessage;
@@ -1261,7 +1347,8 @@ export class UIManager {
     const message = document.getElementById('shop-message');
     const cardId = select.value;
     if (!cardId) return;
-    if (!this.state.spendDutki(100)) {
+    const removalPrice = this.state.getShopRemovalPrice();
+    if (!this.state.spendDutki(removalPrice)) {
       message.textContent = 'Ni mos tela dutków, synek!';
       return;
     }
@@ -1381,31 +1468,50 @@ export class UIManager {
       const card = document.createElement('article');
       card.className = `library-item ${this._rarityClass(item.rarity)}`;
 
-      const title = document.createElement('h3');
-      title.className = 'library-item-title';
-      title.textContent = `${item.emoji} ${item.name}`;
-
-      const rarity = document.createElement('p');
-      rarity.className = 'library-item-rarity';
-      rarity.textContent = this._rarityLabel(item.rarity, this.libraryTab === 'cards' ? 'card' : 'relic');
-
-      const desc = document.createElement('p');
-      desc.className = 'library-item-desc';
-      desc.textContent = item.desc;
-
-      card.append(title, rarity, desc);
-
       if (this.libraryTab === 'cards') {
         const cardDef = /** @type {import('../data/cards.js').CardDef} */ (item);
-        const cost = document.createElement('span');
-        cost.className = 'library-item-cost';
-        cost.textContent = `${cardDef.cost} Osc.`;
-        card.prepend(cost);
+        card.className = `library-item card ${this._rarityClass(cardDef.rarity)} card-${cardDef.type}`;
+
+        const cost = document.createElement('div');
+        cost.className = 'card-cost';
+        cost.textContent = String(cardDef.cost);
+
+        const title = document.createElement('div');
+        title.className = 'card-title';
+        title.textContent = cardDef.name;
+
+        const rarity = document.createElement('div');
+        rarity.className = 'card-rarity';
+        rarity.textContent = this._rarityLabel(cardDef.rarity, 'card');
+
+        const emoji = document.createElement('div');
+        emoji.className = 'card-img';
+        emoji.textContent = cardDef.emoji;
+
+        const desc = document.createElement('div');
+        desc.className = 'card-desc';
+        desc.textContent = cardDef.desc;
+
+        card.append(cost, title, rarity, emoji, desc);
 
         if (cardDef.exhaust) {
           card.classList.add('card-exhaust');
           card.appendChild(this._createExhaustBadge());
         }
+      } else {
+        const title = document.createElement('h3');
+        title.className = 'library-item-title';
+        title.textContent = `${item.emoji} ${item.name}`;
+
+        const rarity = document.createElement('p');
+        rarity.className = 'library-item-rarity';
+        rarity.textContent = this._rarityLabel(item.rarity, 'relic');
+
+        const desc = document.createElement('p');
+        desc.className = 'library-item-desc';
+        desc.textContent = item.desc;
+
+        card.append(title, rarity, desc);
       }
 
       grid.appendChild(card);
@@ -1449,6 +1555,16 @@ export class UIManager {
    * @param {'common' | 'uncommon' | 'rare' | undefined} rarity
    * @returns {string}
    */
+  /**
+   * @param {string | undefined} outcome
+   * @returns {string}
+   */
+  _revealedEventEmoji(outcome) {
+    if (outcome === 'fight') return '⚔️';
+    if (outcome === 'shop') return '🛖';
+    return '❓';
+  }
+
   _rarityClass(rarity) {
     return `rarity-${rarity ?? 'common'}`;
   }

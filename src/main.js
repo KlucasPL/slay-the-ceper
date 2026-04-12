@@ -15,22 +15,31 @@ const menuTracks = import.meta.glob('./audio/*.mp3', {
 const [menuTrackUrl] = Object.values(menuTracks);
 
 const params = new URLSearchParams(window.location.search);
-const debugBoss = params.get('debugBoss');
+const debugEnemyRaw = params.get('debugBoss') ?? params.get('debugEnemy');
+const debugEnemyAliases = {
+	konik: 'konik_spod_kuznic',
+	naganiacz: 'naganiacz_z_krupowek',
+};
+const debugBoss = debugEnemyAliases[debugEnemyRaw] ?? debugEnemyRaw;
+const hasValidDebugBoss =
+	debugBoss === 'random-boss' || (debugBoss !== null && Boolean(enemyLibrary[debugBoss]));
 
 /** @type {import('./data/enemies.js').EnemyDef} */
 let initialEnemy = enemyLibrary.cepr;
-if (debugBoss === 'boss') {
-	initialEnemy = enemyLibrary.boss;
-} else if (debugBoss === 'fiakier') {
-	initialEnemy = enemyLibrary.fiakier;
-} else if (debugBoss === 'random-boss') {
+
+// Debug mode: ?debugBoss=<enemyId> or ?debugEnemy=<enemyId> jumps directly to that enemy
+// Shortcuts: ?debugEnemy=konik and ?debugEnemy=naganiacz
+if (debugBoss === 'random-boss') {
 	initialEnemy = Math.random() < 0.5 ? enemyLibrary.boss : enemyLibrary.fiakier;
+} else if (debugBoss && enemyLibrary[debugBoss]) {
+	initialEnemy = enemyLibrary[debugBoss];
 }
 
 const state = new GameState(characters.jedrek, initialEnemy);
 state.initGame(startingDeck);
 
-if (debugBoss === 'boss' || debugBoss === 'fiakier' || debugBoss === 'random-boss') {
+// Jump to battle screen in debug mode
+if (hasValidDebugBoss) {
 	state.currentScreen = 'battle';
 }
 

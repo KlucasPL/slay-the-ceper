@@ -5,12 +5,28 @@
 /** @type {ReleaseNoteEntry[]} */
 export const releaseNotesData = [
   {
+    version: 'v1.1.0 - Wielki Rebalans',
+    date: 'Kwiecień 2026',
+    changes: [
+      '🆕 NOWOŚCI: Dodano 7 nowych kart.',
+      '👺 NOWI PRZECIWNICY: Dodano 2 nowych przeciwników.',
+      '🎒 NOWE PAMIĄTKI: Dodano 2 nowe pamiątki.',
+      '⚖️ SYSTEMOWY REBALANS: Uporządkowano ekonomię runa, tempo walk i role archetypów, żeby zmniejszyć snowball i podbić znaczenie decyzji.',
+      '🧾 RACHUNEK: Ścieżka bankructwa została ograniczona ekonomicznie.',
+      '🌅 EARLY/MIDGAME: Wczesne walki konsekwentniej wymuszają obronę, a próg wejścia w środek gry został wygładzony.',
+      '👑 FINAŁ: Bossowie są bliżej siebie poziomem trudności.',
+      '🎒 PAMIĄTKI: Łączna pula reliktów po aktualizacji wynosi 23 i obejmuje więcej efektów ekonomicznych, mapowych oraz warunkowych.',
+      '🗺️ MAPA I EVENTY: Wydarzenia losowe generują teraz walki/sklep/wydarzenie specjalne',
+      '🛖 SKLEP: Ceny i nagrody zostały zestrojone pod większą wagę wyborów.',
+    ],
+  },
+  {
     version: 'v1.0.2 - Uspokojenie Finału',
     date: 'Kwiecień 2026',
     changes: [
       '👹 BALANS BOSSÓW: Obaj finałowi przeciwnicy zostali osłabieni, żeby końcówka runa mniej karała talie bez idealnego setupu.',
       '🐻 BIAŁY MISIEK: Ma mniej Krzepy, mniej ładunków Artefaktu i słabszy atak wielouderzeniowy.',
-      '🐴 FIAKIER: Wolniej narzuca Rachunek, ma mniej Krzepy, słabsze Przyspieszenie i zabiera mniej Dutków.',
+      '🐴 FIAKIER: Wolniej narzuca Rachunek, ma mniej Krzepy, słabsze Przyspieszenie i zabiera mniej dutków.',
       '🧾 BALANS KART: Paragon za Gofra ma teraz PRZEPADO, żeby trudniej było nim spamować w długich walkach.',
       '🎴 NAGRODY PO BITCE: Rzadkie karty wpadają teraz częściej w rewardach, więc łatwiej złożyć build z mocniejszym payoffem.',
       '❓ MAPA: Szansa na wydarzenie losowe na środkowych polach została zmniejszona z 30% do 20%, żeby run częściej prowadził przez walki i sklepy.',
