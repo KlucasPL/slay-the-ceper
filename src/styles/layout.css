@@ -1951,6 +1951,17 @@ h1 {
 
 /* --- Portrait mobile (narrow screens) --- */
 @media (max-width: 600px) {
+  .corner-options-btn {
+    top: 8px;
+    right: 8px;
+    min-width: 66px;
+    height: 36px;
+    border-width: 1px;
+    font-size: 0.72rem;
+    letter-spacing: 0.03em;
+    padding: 0 9px;
+  }
+
   .victory-overlay,
   .event-overlay {
     align-items: flex-start;
@@ -2138,6 +2149,15 @@ h1 {
 
 /* --- Landscape mobile (low-height viewport) --- */
 @media (orientation: landscape) and (max-height: 560px) {
+  .corner-options-btn {
+    top: 6px;
+    right: 6px;
+    min-width: 62px;
+    height: 32px;
+    font-size: 0.68rem;
+    padding: 0 8px;
+  }
+
   #game-wrapper {
     display: grid;
     height: 100dvh;
