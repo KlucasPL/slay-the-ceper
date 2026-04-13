@@ -1296,7 +1296,7 @@ describe('GameState', () => {
       expect(s.checkWinCondition()).toBeNull();
     });
 
-    it('emits rachunek resistance event for Gaździna (targowanie_sie)', () => {
+    it('emits rachunek resistance event for Gaździna and keeps rachunek at 0', () => {
       const s = freshState();
       s.enemy = structuredClone(enemyLibrary.baba);
       s.enemy.hp = 40;
@@ -1304,7 +1304,7 @@ describe('GameState', () => {
 
       s.addEnemyRachunek(10);
 
-      expect(s.enemy.rachunek).toBe(10);
+      expect(s.enemy.rachunek).toBe(0);
       expect(s.enemy.isBankrupt).toBeFalsy();
       expect(s.consumeRachunekResistEvent()).toEqual({
         target: 'enemy',

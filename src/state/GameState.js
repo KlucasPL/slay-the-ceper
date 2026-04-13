@@ -1069,6 +1069,9 @@ export class GameState {
     if (amount <= 0) return;
     if (this.enemy.passive === 'targowanie_sie') {
       this.rachunekResistEvent = true;
+      this.enemy.rachunek = 0;
+      this._checkEnemyBankruptcy();
+      return;
     }
     let appliedAmount = amount;
     if (this.enemy.id === 'fiakier') {
