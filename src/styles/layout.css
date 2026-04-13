@@ -544,7 +544,10 @@ h1 {
 .intent {
   color: #ff6b6b;
   font-weight: bold;
-  height: 25px;
+  min-height: 1.4em;
+  line-height: 1.2;
+  white-space: normal;
+  overflow-wrap: anywhere;
   margin-bottom: 10px;
 }
 
@@ -1991,7 +1994,10 @@ h1 {
   }
   .intent {
     font-size: 0.75em;
-    height: 14px;
+    min-height: 2.2em;
+    line-height: 1.15;
+    white-space: normal;
+    overflow-wrap: anywhere;
     margin-bottom: 2px;
   }
 
