@@ -731,12 +731,7 @@ export class GameState {
     this.currentNode = { x: nodeIndex, y: level };
     this.maxFloorReached = Math.max(this.maxFloorReached, level + 1);
     const node = this.getCurrentMapNode();
-    if (
-      node &&
-      this.debugForcedNextNodeType &&
-      node.type !== 'boss' &&
-      node.type !== 'campfire'
-    ) {
+    if (node && this.debugForcedNextNodeType && node.type !== 'boss' && node.type !== 'campfire') {
       this._setNodeType(node, this.debugForcedNextNodeType);
       this.debugForcedNextNodeType = null;
     }

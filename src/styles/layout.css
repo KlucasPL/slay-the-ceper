@@ -1471,10 +1471,10 @@ h1 {
   font-size: 0.75rem;
 }
 
-  .map-resource-pill {
-    font-size: 0.84rem;
-    padding: 5px 9px;
-  }
+.map-resource-pill {
+  font-size: 0.84rem;
+  padding: 5px 9px;
+}
 
 .map-node-btn.map-node-type-elite {
   border-color: rgba(255, 130, 76, 0.85);

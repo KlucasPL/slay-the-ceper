@@ -129,7 +129,11 @@ export class DebugOverlay {
     const playerPanel = this._buildPlayerPanel();
     body.append(mapPanel, battlePanel, playerPanel);
 
-    this._setActiveTab('map', [mapTabBtn, battleTabBtn, playerTabBtn], [mapPanel, battlePanel, playerPanel]);
+    this._setActiveTab(
+      'map',
+      [mapTabBtn, battleTabBtn, playerTabBtn],
+      [mapPanel, battlePanel, playerPanel]
+    );
 
     this.logEl = document.createElement('div');
     this.logEl.className = 'debug-log';
@@ -206,7 +210,9 @@ export class DebugOverlay {
     const eventGroup = this._group('Event Tools');
     const spawnFiakierBtn = this._button('Spawn: Wąsaty Fiakier', () => {
       const started = this.ui.launchDebugEvent('fiakier_event');
-      this._log(started ? 'Spawned event: Wąsaty Fiakier' : 'Failed to spawn event: Wąsaty Fiakier');
+      this._log(
+        started ? 'Spawned event: Wąsaty Fiakier' : 'Failed to spawn event: Wąsaty Fiakier'
+      );
     });
     eventGroup.append(spawnFiakierBtn);
 
@@ -317,7 +323,9 @@ export class DebugOverlay {
     const grantRelicBtn = this._button('Grant Selected Relic', () => {
       const added = this.state.addRelic(relicSelect.value);
       this.ui.applyDebugRefresh({ checkWin: false });
-      this._log(added ? `Granted relic: ${relicSelect.value}` : `Relic not added: ${relicSelect.value}`);
+      this._log(
+        added ? `Granted relic: ${relicSelect.value}` : `Relic not added: ${relicSelect.value}`
+      );
     });
 
     const randomRelicBtn = this._button('Grant Random Relic', () => {
