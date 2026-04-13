@@ -26,7 +26,7 @@ const MIN_ELITE_LEVEL = 4;
  * @typedef {'fight' | 'elite' | 'shop' | 'treasure' | 'event' | 'campfire' | 'boss'} MapNodeType
  * @typedef {{ x: number, y: number, type: MapNodeType, label: string, emoji: string, weather: WeatherId, connections: number[] }} MapNode
  * @typedef {import('../data/events.js').GameEventDef} GameEventDef
- * @typedef {{ id: string, name: string, emoji: string, hp: number, maxHp: number, block: number, nextAttack: number, baseAttack: number, status: StatusDef, rachunek: number, ped: number, spriteSvg: string, patternType: 'random'|'loop', pattern: EnemyMoveDef[], patternIndex: number, currentIntent: EnemyMoveDef, tookHpDamageThisTurn: boolean, bossArtifact?: number, passive: string | null, isElite: boolean, lichwaTriggeredThisTurn: boolean, hartDuchaTriggered: boolean }} EnemyState
+ * @typedef {{ id: string, name: string, emoji: string, hp: number, maxHp: number, block: number, nextAttack: number, baseAttack: number, status: StatusDef, rachunek: number, ped: number, spriteSvg: string, patternType: 'random'|'loop', pattern: EnemyMoveDef[], patternIndex: number, currentIntent: EnemyMoveDef, tookHpDamageThisTurn: boolean, bossArtifact?: number, passive: string | null, isElite: boolean, isBoss: boolean, stunnedTurns: number, lichwaTriggeredThisTurn: boolean, hartDuchaTriggered: boolean }} EnemyState
  * @typedef {{ success: false, reason?: string } | { success: true, effect: import('../data/cards.js').CardEffectResult }} PlayCardResult
  * @typedef {{ enemyAttack: { raw: number, blocked: number, dealt: number }, enemyPassiveHeal: { amount: number, text: string } | null, playerPassiveHeal: { amount: number, text: string } | null }} EndTurnResult
  * @typedef {{ cards: string[], relic: string | null }} ShopStock
@@ -90,6 +90,14 @@ export class GameState {
     this.maxFloorReached = 1;
     /** @type {{ x: number, y: number }} */
     this.currentNode = { x: 0, y: 0 };
+    /** @type {number} */
+    this.debugMapRows = 15;
+    /** @type {MapNodeType | null} */
+    this.debugForcedNextNodeType = null;
+    /** @type {boolean} */
+    this.debugRevealAllMap = false;
+    /** @type {boolean} */
+    this.debugGodMode = false;
     /** @type {boolean} */
     this.pendingBattleDutki = true;
     /** @type {'normal' | 'hard'} */
@@ -146,6 +154,8 @@ export class GameState {
     };
     /** @type {boolean} */
     this.enemyBankruptFlag = false;
+    /** @type {boolean} */
+    this.enemyBankruptcyPending = false;
     /** @type {number} */
     this.enemyBankruptcyBonus = 0;
     /** @type {boolean} */
@@ -174,9 +184,11 @@ export class GameState {
   }
 
   /** @returns {(MapNode | null)[][]} */
-  generateMap() {
+  generateMap(rows = this.debugMapRows) {
+    const clampedRows = Math.min(25, Math.max(10, Math.floor(rows)));
+    this.debugMapRows = clampedRows;
     /** @type {(MapNode | null)[][]} */
-    const generated = Array.from({ length: 15 }, () => Array(3).fill(null));
+    const generated = Array.from({ length: clampedRows }, () => Array(3).fill(null));
     const midCampfireLevel = Math.floor(generated.length / 2);
     const guaranteedTreasureRow = 3 + Math.floor(Math.random() * 3);
     this.midCampfireLevel = midCampfireLevel;
@@ -718,7 +730,17 @@ export class GameState {
     this.currentNodeIndex = nodeIndex;
     this.currentNode = { x: nodeIndex, y: level };
     this.maxFloorReached = Math.max(this.maxFloorReached, level + 1);
-    return this.getCurrentMapNode();
+    const node = this.getCurrentMapNode();
+    if (
+      node &&
+      this.debugForcedNextNodeType &&
+      node.type !== 'boss' &&
+      node.type !== 'campfire'
+    ) {
+      this._setNodeType(node, this.debugForcedNextNodeType);
+      this.debugForcedNextNodeType = null;
+    }
+    return node;
   }
 
   /**
@@ -863,11 +885,27 @@ export class GameState {
   }
 
   _checkEnemyBankruptcy() {
-    if (this.enemyBankruptFlag) return;
-    if (this.enemy.passive === 'targowanie_sie') return;
-    if (this.enemy.rachunek <= 0) return;
-    if (this.enemy.rachunek < this.enemy.hp) return;
+    if (this.enemyBankruptFlag) {
+      this.enemyBankruptcyPending = false;
+      return;
+    }
+    this.enemyBankruptcyPending = this._isEnemyBankruptcyConditionMet();
+  }
+
+  /** @returns {boolean} */
+  _isEnemyBankruptcyConditionMet() {
+    if (this.enemy.passive === 'targowanie_sie') return false;
+    if (this.enemy.rachunek <= 0) return false;
+    return this.enemy.rachunek >= this.enemy.hp;
+  }
+
+  /** @returns {boolean} */
+  _resolveEnemyBankruptcyAtTurnStart() {
+    this._checkEnemyBankruptcy();
+    if (!this.enemyBankruptcyPending) return false;
     this.enemyBankrupt();
+    this.enemyBankruptcyPending = false;
+    return true;
   }
 
   enemyBankrupt() {
@@ -883,6 +921,7 @@ export class GameState {
     } else {
       this.lastVictoryMessage = 'Wróg zbankrutował!';
     }
+    this.enemyBankruptcyPending = false;
   }
 
   /**
@@ -1414,6 +1453,8 @@ export class GameState {
       bossArtifact: isMainBoss ? 2 : 0,
       passive: enemyDef.passive ?? null,
       isElite: Boolean(enemyDef.elite),
+      isBoss: Boolean(enemyDef.isBoss) || isFinalBossVariant,
+      stunnedTurns: 0,
       lichwaTriggeredThisTurn: false,
       hartDuchaTriggered: false,
     };
@@ -1674,6 +1715,10 @@ export class GameState {
    * @returns {{ raw: number, blocked: number, dealt: number }}
    */
   takeDamage(amount) {
+    if (this.debugGodMode) {
+      return { raw: amount, blocked: amount, dealt: 0 };
+    }
+
     const blocked = Math.min(this.player.block, amount);
     let dealt = amount - blocked;
     let lansSpent = 0;
@@ -1726,6 +1771,11 @@ export class GameState {
    */
   _applyEnemyIntent() {
     const intent = this.enemy.currentIntent;
+
+    if (this.enemy.stunnedTurns > 0) {
+      this.enemy.stunnedTurns -= 1;
+      return { raw: 0, blocked: 0, dealt: 0 };
+    }
 
     if (intent.type === 'block') {
       this.enemy.block += intent.block;
@@ -1829,6 +1879,9 @@ export class GameState {
    */
   getEnemyIntentText() {
     const intent = this.enemy.currentIntent;
+    if (this.enemy.stunnedTurns > 0) {
+      return `Zamiar: Ogłuszony (😵 ${this.enemy.stunnedTurns})`;
+    }
     if (intent.type === 'block') {
       return `Zamiar: ${intent.name} (🛡️ ${intent.block})`;
     }
@@ -1957,6 +2010,15 @@ export class GameState {
         label: 'Pęd',
         value: this.enemy.ped,
         tooltip: 'Fiakier nabrał pędu. Następny atak „Przyspieszenie" zada o tyle więcej obrażeń.',
+      });
+    }
+
+    if (this.enemy.stunnedTurns > 0) {
+      specials.push({
+        icon: '😵',
+        label: 'Ogłuszony',
+        value: this.enemy.stunnedTurns,
+        tooltip: 'Pominie najbliższą akcję za każdy poziom ogłuszenia.',
       });
     }
 
@@ -2200,6 +2262,15 @@ export class GameState {
     // Enemy loses old block at the start of its own turn, before taking a new action.
     this.combat.activeSide = 'enemy';
     this.combat.firstAttackUsed = false;
+
+    if (this._resolveEnemyBankruptcyAtTurnStart()) {
+      return {
+        enemyAttack: { raw: 0, blocked: 0, dealt: 0 },
+        enemyPassiveHeal,
+        playerPassiveHeal,
+      };
+    }
+
     this._applyHalnyBlockDrain(this.enemy);
     this.enemy.block = 0;
 
@@ -2263,6 +2334,7 @@ export class GameState {
     this.battleTurnsElapsed = 0;
     this.zegarekFreeSkillAvailable = false;
     this.enemyBankruptFlag = false;
+    this.enemyBankruptcyPending = false;
     this.enemyBankruptcyBonus = 0;
     this.lansBreakEvent = false;
     this.rachunekResistEvent = false;
@@ -2319,6 +2391,7 @@ export class GameState {
     this.battleTurnsElapsed = 0;
     this.zegarekFreeSkillAvailable = false;
     this.enemyBankruptFlag = false;
+    this.enemyBankruptcyPending = false;
     this.enemyBankruptcyBonus = 0;
     this.lansBreakEvent = false;
     this.rachunekResistEvent = false;
@@ -2418,6 +2491,9 @@ export class GameState {
     this.currentNodeIndex = 1;
     this.currentNode = { x: 1, y: 0 };
     this.maxFloorReached = 1;
+    this.debugForcedNextNodeType = null;
+    this.debugRevealAllMap = false;
+    this.debugGodMode = false;
     this.pendingBattleDutki = true;
     this.enemyScaleFactor = 1.0;
     this.attackCardsPlayedThisBattle = 0;
@@ -2447,6 +2523,7 @@ export class GameState {
       missEventTarget: null,
     };
     this.enemyBankruptFlag = false;
+    this.enemyBankruptcyPending = false;
     this.enemyBankruptcyBonus = 0;
     this.lansBreakEvent = false;
     this.rachunekResistEvent = false;
@@ -2457,5 +2534,54 @@ export class GameState {
     this.enemy = this._createEnemyState(enemyLibrary.cepr);
     this.generateMap();
     this.initGame(startingDeck);
+  }
+
+  /**
+   * @param {number} rows
+   */
+  setDebugMapRows(rows) {
+    this.debugMapRows = Math.min(25, Math.max(10, Math.floor(rows)));
+  }
+
+  /**
+   * @param {MapNodeType | null} type
+   */
+  setDebugNextNodeType(type) {
+    this.debugForcedNextNodeType = type;
+  }
+
+  /**
+   * @param {boolean} enabled
+   */
+  setDebugRevealAllMap(enabled) {
+    this.debugRevealAllMap = Boolean(enabled);
+  }
+
+  /**
+   * @param {boolean} enabled
+   */
+  setDebugGodMode(enabled) {
+    this.debugGodMode = Boolean(enabled);
+  }
+
+  resetCurrentTurnActions() {
+    this.player.cardsPlayedThisTurn = 0;
+    this.combat.playerAttackMissCheck = false;
+    this.combat.playerAttackMissRolled = false;
+    this.combat.playerAttackMissed = false;
+  }
+
+  /**
+   * @param {'weak' | 'vulnerable' | 'fragile' | 'stun'} status
+   * @param {number} amount
+   */
+  applyEnemyDebugStatus(status, amount) {
+    const value = Math.max(0, Math.floor(amount));
+    if (value <= 0) return;
+    if (status === 'stun') {
+      this.enemy.stunnedTurns += value;
+      return;
+    }
+    this.enemy.status[status] += value;
   }
 }

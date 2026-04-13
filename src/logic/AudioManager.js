@@ -10,6 +10,8 @@ export class AudioManager {
 
     /** @type {Set<HTMLAudioElement>} */
     this.tracks = new Set();
+    /** @type {Map<HTMLAudioElement, number>} */
+    this.trackBaseVolume = new Map();
 
     /** @type {boolean} */
     this.hasUnlocked = false;
@@ -23,16 +25,23 @@ export class AudioManager {
     this.gameMusicEnabled = this._readBool(this.storageKeyGame, true);
 
     const menuUrl = new URL('../audio/menu_theme.mp3', import.meta.url).href;
-    const gameUrl = new URL('../audio/summit_sprint.mp3', import.meta.url).href;
+    const mapUrl = new URL('../audio/summit_sprint.mp3', import.meta.url).href;
+    const gameUrl = new URL('../audio/battle.mp3', import.meta.url).href;
+    const bossUrl = new URL('../audio/boss.mp3', import.meta.url).href;
     const victoryUrl = new URL('../audio/summit_stomp.mp3', import.meta.url).href;
     const defeatUrl = new URL('../audio/echoes_mourning_valley.mp3', import.meta.url).href;
     const shopUrl = new URL('../audio/shop.mp3', import.meta.url).href;
     const watraUrl = new URL('../audio/watra.mp3', import.meta.url).href;
+    const fiakierEventUrl = new URL('../audio/fiakier_event.mp3', import.meta.url).href;
 
     /** @type {HTMLAudioElement} */
     this.menuTrack = this._createTrack(menuUrl, true, 0.7);
     /** @type {HTMLAudioElement} */
+    this.mapTrack = this._createTrack(mapUrl, true, 0.45);
+    /** @type {HTMLAudioElement} */
     this.gameTrack = this._createTrack(gameUrl, true, 0.45);
+    /** @type {HTMLAudioElement} */
+    this.bossTrack = this._createTrack(bossUrl, true, 0.52);
     /** @type {HTMLAudioElement} */
     this.victoryTrack = this._createTrack(victoryUrl, false, 0.65);
     /** @type {HTMLAudioElement} */
@@ -41,12 +50,14 @@ export class AudioManager {
     this.shopTrack = this._createTrack(shopUrl, true, 0.5);
     /** @type {HTMLAudioElement} */
     this.watraTrack = this._createTrack(watraUrl, true, 0.5);
+    /** @type {HTMLAudioElement} */
+    this.fiakierEventTrack = this._createTrack(fiakierEventUrl, true, 0.5);
 
     /** @type {'title' | 'inGame'} */
     this.context = 'title';
     /** @type {'none' | 'defeat'} */
     this.themeLock = 'none';
-    /** @type {'battle' | 'shop' | 'campfire' | 'map'} */
+    /** @type {'battle' | 'boss' | 'shop' | 'campfire' | 'map' | 'event'} */
     this.gameScene = 'map';
 
     /** @type {AudioContext | null} */
@@ -110,6 +121,7 @@ export class AudioManager {
     audio.loop = loop;
     audio.volume = volume;
     this.tracks.add(audio);
+    this.trackBaseVolume.set(audio, volume);
     return audio;
   }
 
@@ -157,11 +169,21 @@ export class AudioManager {
     this.menuTrack.pause();
     this.menuTrack.currentTime = 0;
     this._stopOneShotThemes();
-    this.gameScene = 'battle';
+    this.gameScene = 'map';
     if (this.gameMusicEnabled) {
-      this.playBattleMusic();
+      this.playMapMusic();
     } else {
       this._stopInGameSceneTracks();
+    }
+  }
+
+  playMapMusic() {
+    if (this.themeLock === 'defeat') return;
+    this.gameScene = 'map';
+    this.menuTrack.pause();
+    this._stopInGameSceneTracks();
+    if (this.gameMusicEnabled) {
+      this._play(this.mapTrack);
     }
   }
 
@@ -173,6 +195,54 @@ export class AudioManager {
     if (this.gameMusicEnabled) {
       this._play(this.gameTrack);
     }
+  }
+
+  playFiakierEventMusic() {
+    if (this.themeLock === 'defeat') return;
+    this.gameScene = 'event';
+    this.menuTrack.pause();
+    this._stopInGameSceneTracks();
+    if (this.gameMusicEnabled) {
+      this._play(this.fiakierEventTrack);
+    }
+  }
+
+  playBossMusic() {
+    if (this.themeLock === 'defeat') return;
+    this.gameScene = 'boss';
+    this.menuTrack.pause();
+
+    const gameWasPlaying = !this.gameTrack.paused;
+
+    this.shopTrack.pause();
+    this.shopTrack.currentTime = 0;
+    this.watraTrack.pause();
+    this.watraTrack.currentTime = 0;
+    this.mapTrack.pause();
+    this.mapTrack.currentTime = 0;
+    this.fiakierEventTrack.pause();
+    this.fiakierEventTrack.currentTime = 0;
+    this.bossTrack.pause();
+    this.bossTrack.currentTime = 0;
+
+    if (!this.gameMusicEnabled) {
+      this.gameTrack.pause();
+      this.gameTrack.currentTime = 0;
+      return;
+    }
+
+    if (gameWasPlaying) {
+      this._fadeOutTrack(this.gameTrack, 500, () => {
+        if (this.themeLock === 'defeat') return;
+        if (!this.gameMusicEnabled || this.gameScene !== 'boss') return;
+        this._play(this.bossTrack);
+      });
+      return;
+    }
+
+    this.gameTrack.pause();
+    this.gameTrack.currentTime = 0;
+    this._play(this.bossTrack);
   }
 
   startInGameMusic() {
@@ -193,10 +263,7 @@ export class AudioManager {
     this.shopTrack.pause();
     this.shopTrack.currentTime = 0;
     if (this.gameScene === 'shop') {
-      this.gameScene = 'battle';
-      if (this.context === 'inGame' && this.gameMusicEnabled && this.themeLock !== 'defeat') {
-        this.playBattleMusic();
-      }
+      this.gameScene = 'map';
     }
   }
 
@@ -214,10 +281,7 @@ export class AudioManager {
     this.watraTrack.pause();
     this.watraTrack.currentTime = 0;
     if (this.gameScene === 'campfire') {
-      this.gameScene = 'battle';
-      if (this.context === 'inGame' && this.gameMusicEnabled && this.themeLock !== 'defeat') {
-        this.playBattleMusic();
-      }
+      this.gameScene = 'map';
     }
   }
 
@@ -226,12 +290,18 @@ export class AudioManager {
   }
 
   _stopInGameSceneTracks() {
+    this.mapTrack.pause();
+    this.mapTrack.currentTime = 0;
     this.gameTrack.pause();
     this.gameTrack.currentTime = 0;
+    this.bossTrack.pause();
+    this.bossTrack.currentTime = 0;
     this.shopTrack.pause();
     this.shopTrack.currentTime = 0;
     this.watraTrack.pause();
     this.watraTrack.currentTime = 0;
+    this.fiakierEventTrack.pause();
+    this.fiakierEventTrack.currentTime = 0;
   }
 
   playVictoryTheme() {
@@ -294,7 +364,10 @@ export class AudioManager {
     } else if (this.themeLock === 'defeat') {
       this._play(this.defeatTrack);
     } else if (this.context === 'inGame') {
-      if (this.gameScene === 'battle') this.playBattleMusic();
+      if (this.gameScene === 'map') this.playMapMusic();
+      else if (this.gameScene === 'battle') this.playBattleMusic();
+      else if (this.gameScene === 'boss') this.playBossMusic();
+      else if (this.gameScene === 'event') this.playFiakierEventMusic();
       else if (this.gameScene === 'shop') this.playShopMusic();
       else if (this.gameScene === 'campfire') this.playCampfireMusic();
     }
@@ -362,5 +435,38 @@ export class AudioManager {
     void track.play().catch(() => {
       // Autoplay can fail before user gesture. We retry on next interaction.
     });
+  }
+
+  /**
+   * @param {HTMLAudioElement} track
+   * @param {number} durationMs
+   * @param {(() => void) | undefined} onComplete
+   */
+  _fadeOutTrack(track, durationMs, onComplete) {
+    if (track.paused) {
+      track.currentTime = 0;
+      track.volume = this.trackBaseVolume.get(track) ?? track.volume;
+      onComplete?.();
+      return;
+    }
+
+    const originalVolume = this.trackBaseVolume.get(track) ?? track.volume;
+    const startVolume = track.volume;
+    const startedAt = performance.now();
+
+    const step = (now) => {
+      const progress = Math.min(1, (now - startedAt) / durationMs);
+      track.volume = Math.max(0, startVolume * (1 - progress));
+      if (progress < 1) {
+        requestAnimationFrame(step);
+        return;
+      }
+      track.pause();
+      track.currentTime = 0;
+      track.volume = originalVolume;
+      onComplete?.();
+    };
+
+    requestAnimationFrame(step);
   }
 }

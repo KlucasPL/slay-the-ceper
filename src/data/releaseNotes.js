@@ -5,6 +5,14 @@
 /** @type {ReleaseNoteEntry[]} */
 export const releaseNotesData = [
   {
+    version: 'v1.2.1 - Muzyka i Płynność Wyprawy',
+    date: 'Kwiecień 2026',
+    changes: [
+      '🎵 NOWA MUZYKA I LEPSZE PRZEJŚCIA: Dodano osobne motywy dla mapy, zwykłej walki, bossa i wydarzenia Wąsatego Fiakra, a przejścia między mapą, wydarzeniem i starciem wracają teraz zawsze do właściwego utworu bez nakładania dźwięku.',
+      '💥 LEPSZE WYCZUCIE TURY PRZECIWNIKA: Rozstrzygnięcia związane z bankructwem przeciwnika są bardziej spójne z rytmem tury i animacji.',
+    ],
+  },
+  {
     version: 'v1.2.0 - Struktura Runa i Prawdziwe Elity',
     date: 'Kwiecień 2026',
     changes: [
