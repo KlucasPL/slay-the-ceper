@@ -156,7 +156,7 @@ const ceprzyca_vipSprite = `
 
 /**
  * @typedef {{ type: 'attack', name: string, damage: number, hits?: number, applyWeak?: number, applyFrail?: number, applyVulnerable?: number, damagePerCardInHand?: boolean, gainPed?: number, usePed?: boolean, stealDutki?: number } | { type: 'block', name: string, block: number, heal?: number } | { type: 'buff', name: string, strengthGain?: number, block?: number } | { type: 'status', name: string, addStatusCard?: string, amount?: number, applyStun?: number }} EnemyMoveDef
- * @typedef {{ id: string, name: string, emoji: string, hp: number, maxHp: number, block: number, baseAttack?: number, passive?: string, spriteSvg: string, patternType: 'random'|'loop', pattern?: EnemyMoveDef[], elite?: boolean }} EnemyDef
+ * @typedef {{ id: string, name: string, emoji: string, hp: number, maxHp: number, block: number, baseAttack?: number, passive?: string, spriteSvg: string, patternType: 'random'|'loop', pattern?: EnemyMoveDef[], elite?: boolean, isBoss?: boolean }} EnemyDef
  */
 
 const ceprSprite = `
@@ -659,6 +659,7 @@ export const enemyLibrary = {
     spriteSvg: fiakierSprite,
     patternType: 'loop',
     passive: 'rachunek_za_kurs',
+    isBoss: true,
     pattern: [
       { type: 'attack', name: 'Batogiem po grzbiecie', damage: 12, hits: 1, gainPed: 3 },
       { type: 'buff', name: 'Rozped', strengthGain: 2, block: 8 },
@@ -700,6 +701,7 @@ export const enemyLibrary = {
     spriteSvg: bossSprite,
     patternType: 'loop',
     passive: 'ochrona_wizerunku',
+    isBoss: true,
     pattern: [
       { type: 'buff', name: 'Górski Ryk', strengthGain: 2, block: 10 },
       { type: 'attack', name: 'Agresywne pozowanie', damage: 4, hits: 3 },

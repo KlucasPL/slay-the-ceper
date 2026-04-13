@@ -401,12 +401,18 @@ describe('GameState', () => {
       expect(s.discard).not.toContain('paragon_za_gofra');
     });
 
-    it('can bankrupt enemy when rachunek reaches current hp', () => {
+    it('bankrupts enemy at the start of enemy turn when rachunek reaches current hp', () => {
       const s = freshState();
       s.hand = ['paragon_za_gofra'];
       s.enemy.hp = 10;
       s.dutki = 50;
       s.playCard(0);
+
+      // Bankructwo is now deferred and resolves on enemy turn start.
+      expect(s.checkWinCondition()).toBe(null);
+
+      s.endTurn();
+
       expect(s.checkWinCondition()).toBe('player_win');
       expect(s.enemy.hp).toBe(0);
       expect(s.dutki).toBe(53);

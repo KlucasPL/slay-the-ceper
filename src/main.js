@@ -57,3 +57,11 @@ const audioManager = new AudioManager({ state });
 
 const ui = new UIManager(state, audioManager);
 ui.init();
+
+const isDevEnvironment = import.meta.env.DEV;
+
+if (isDevEnvironment) {
+  const { DebugOverlay } = await import('./ui/DebugOverlay.js');
+  const debugOverlay = new DebugOverlay({ state, ui });
+  debugOverlay.mount();
+}

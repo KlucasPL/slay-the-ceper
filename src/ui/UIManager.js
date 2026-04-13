@@ -160,6 +160,9 @@ export class UIManager {
     this._renderAudioOptions();
     this.updateUI();
     this._syncScreenState();
+    if (this.state.currentScreen === 'battle') {
+      this._playEncounterMusic();
+    }
     this._renderCornerOptionsButton();
   }
 
@@ -643,6 +646,14 @@ export class UIManager {
       this._showFloatingText('sprite-player', lansBreakText, 'floating-shame');
     }
     this._showLansDutkiSpentFeedback();
+
+    const immediateWin = this.state.checkWinCondition();
+    if (immediateWin) {
+      this.isAnimating = false;
+      this._syncEndTurnButtonState();
+      this._showEndGame(immediateWin);
+      return;
+    }
 
     setTimeout(() => {
       this._triggerAnim('sprite-enemy', 'anim-attack-e', 300);
@@ -1137,6 +1148,7 @@ export class UIManager {
     const overlay = document.getElementById('map-overlay');
     overlay.classList.remove('hidden');
     overlay.setAttribute('aria-hidden', 'false');
+    this.audioManager.playMapMusic();
   }
 
   _renderMapTrack() {
@@ -1165,6 +1177,7 @@ export class UIManager {
 
     const reachable = new Set(this.state.getReachableNodes());
     const canStartFirstFight = !this.state.hasStartedFirstBattle && this.state.currentLevel === 0;
+    const revealAllMap = this.state.debugRevealAllMap;
     /** @type {HTMLElement[][]} */
     const nodeButtons = [];
 
@@ -1211,7 +1224,7 @@ export class UIManager {
         }
 
         const revealedEmoji =
-          node.type === 'event' && this.state.hasRelic('mapa_zakopanego')
+          node.type === 'event' && (this.state.hasRelic('mapa_zakopanego') || revealAllMap)
             ? this._revealedEventEmoji(node.eventOutcome)
             : node.emoji;
         btn.innerHTML = `
@@ -1276,6 +1289,7 @@ export class UIManager {
     svg.innerHTML = '';
 
     const reachableTargets = this.state.getReachableNodes();
+    const revealAllMap = this.state.debugRevealAllMap;
 
     const treeRect = tree.getBoundingClientRect();
     for (let level = 0; level < this.state.map.length - 1; level++) {
@@ -1312,7 +1326,7 @@ export class UIManager {
           } else if (isFuturePath) {
             curve.classList.add('future');
           }
-          if (isReachable) {
+          if (isReachable || revealAllMap) {
             curve.classList.add('available');
           }
           if (isCurrent && isReachable) {
@@ -1336,6 +1350,7 @@ export class UIManager {
       this.state.hasStartedFirstBattle = true;
       this.state.currentScreen = 'battle';
       this._hideOverlay('map-overlay');
+      this._playEncounterMusic();
       document.getElementById('end-turn-btn').disabled = false;
       this.updateUI();
       return;
@@ -1350,7 +1365,7 @@ export class UIManager {
       this.state.currentScreen = 'battle';
       this.state.resetBattle();
       this._hideOverlay('map-overlay');
-      this.audioManager.playBattleMusic();
+      this._playEncounterMusic();
       document.getElementById('end-turn-btn').disabled = false;
       this.updateUI();
       return;
@@ -1369,7 +1384,7 @@ export class UIManager {
         this.state.currentScreen = 'battle';
         this.state.resetBattle();
         this._hideOverlay('map-overlay');
-        this.audioManager.playBattleMusic();
+        this._playEncounterMusic();
         document.getElementById('end-turn-btn').disabled = false;
         this.updateUI();
         return;
@@ -1404,7 +1419,7 @@ export class UIManager {
     this.mapMessage = '';
     this.state.resetBattle();
     this._hideOverlay('map-overlay');
-    this.audioManager.playBattleMusic();
+    this._playEncounterMusic();
     document.getElementById('end-turn-btn').disabled = false;
     this.updateUI();
   }
@@ -1421,7 +1436,10 @@ export class UIManager {
     this.updateUI();
   }
 
-  _openRandomEvent() {
+  /**
+   * @param {string | null} [forcedEventId]
+   */
+  _openRandomEvent(forcedEventId = null) {
     const overlay = document.getElementById('random-event-overlay');
     const title = document.getElementById('random-event-title');
     const image = document.getElementById('random-event-image');
@@ -1441,7 +1459,13 @@ export class UIManager {
       return;
     }
 
-    const eventDef = this.state.pickRandomEventDef();
+    let eventDef = null;
+    if (forcedEventId) {
+      this.state.setActiveEvent(forcedEventId);
+      eventDef = this.state.getActiveEventDef();
+    } else {
+      eventDef = this.state.pickRandomEventDef();
+    }
     if (!eventDef) {
       this.mapMessage = 'Cisza na szlaku... dziś nic się nie wydarzyło.';
       this.state.currentScreen = 'map';
@@ -1449,7 +1473,13 @@ export class UIManager {
       return;
     }
 
-    this.state.setActiveEvent(eventDef.id);
+    if (!forcedEventId) {
+      this.state.setActiveEvent(eventDef.id);
+    }
+
+    if (eventDef.id === 'fiakier_event') {
+      this.audioManager.playFiakierEventMusic();
+    }
 
     const fallbackFight = eventDef.fallbackFight;
     if (fallbackFight && this.state.dutki < fallbackFight.minDutki) {
@@ -1533,7 +1563,7 @@ export class UIManager {
           this.state.enemy = this.state._createEnemyState(emergencyEnemy);
         }
       }
-      this.audioManager.playBattleMusic();
+      this._playEncounterMusic();
       document.getElementById('end-turn-btn').disabled = false;
       this.updateUI();
       return;
@@ -1916,6 +1946,82 @@ export class UIManager {
     const overlay = document.getElementById(overlayId);
     overlay.classList.add('hidden');
     overlay.setAttribute('aria-hidden', 'true');
+  }
+
+  _playEncounterMusic() {
+    const currentNode = this.state.getCurrentMapNode();
+    const isBossEncounter = currentNode?.type === 'boss' || Boolean(this.state.enemy?.isBoss);
+    if (isBossEncounter) {
+      this.audioManager.playBossMusic();
+      return;
+    }
+    this.audioManager.playBattleMusic();
+  }
+
+  /**
+   * @param {string} eventId
+   * @returns {boolean}
+   */
+  launchDebugEvent(eventId) {
+    this.state.setActiveEvent(eventId);
+    const eventDef = this.state.getActiveEventDef();
+    if (!eventDef) {
+      this.state.clearActiveEvent();
+      return false;
+    }
+
+    this.state.currentScreen = 'event';
+    this.pendingEventFallbackEnemyId = null;
+    this._hideOverlay('map-overlay');
+    this._hideOverlay('shop-overlay');
+    this._hideOverlay('campfire-overlay');
+    this._hideOverlay('random-event-overlay');
+    this._openRandomEvent(eventDef.id);
+    this.updateUI();
+    return true;
+  }
+
+  refreshMapOverlay() {
+    const overlay = document.getElementById('map-overlay');
+    if (!overlay || overlay.classList.contains('hidden')) return;
+    this._renderMapTrack();
+  }
+
+  /**
+   * @param {string} enemyId
+   * @returns {boolean}
+   */
+  launchDebugBattle(enemyId) {
+    const started = this.state.startBattleWithEnemyId(enemyId);
+    if (!started) return false;
+
+    this.state.currentScreen = 'battle';
+    this.state.hasStartedFirstBattle = true;
+    this._hideOverlay('map-overlay');
+    this._hideOverlay('shop-overlay');
+    this._hideOverlay('campfire-overlay');
+    this._hideOverlay('random-event-overlay');
+    this._playEncounterMusic();
+    const endTurnBtn = document.getElementById('end-turn-btn');
+    if (endTurnBtn) endTurnBtn.disabled = false;
+    this.updateUI();
+    return true;
+  }
+
+  /**
+   * @param {{ checkWin?: boolean, refreshMap?: boolean }} [options]
+   */
+  applyDebugRefresh(options = {}) {
+    const { checkWin = true, refreshMap = false } = options;
+    if (refreshMap) {
+      this.refreshMapOverlay();
+    }
+    this.updateUI();
+    if (!checkWin) return;
+    const win = this.state.checkWinCondition();
+    if (win) {
+      this._showEndGame(win);
+    }
   }
 
   /**
