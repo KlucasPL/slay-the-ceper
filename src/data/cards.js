@@ -1,8 +1,8 @@
 /**
- * @typedef {{ strength: number, weak: number, fragile: number, vulnerable: number, next_double: boolean, energy_next_turn: number, lans: number, duma_podhala: number }} StatusDef
+ * @typedef {{ strength: number, weak: number, fragile: number, vulnerable: number, next_double: boolean, energy_next_turn: number, lans: number, duma_podhala: number, furia_turysty: number }} StatusDef
  * @typedef {{ playerAnim?: string, enemyAnim?: string, damage?: { raw: number, blocked: number, dealt: number } }} CardEffectResult
  * @typedef {'common' | 'uncommon' | 'rare'} RarityDef
- * @typedef {{ id: string, name: string, type: 'attack' | 'skill' | 'status' | 'power', cost: number, price: number, rarity: RarityDef, emoji: string, desc: string, isStarter?: boolean, exhaust?: boolean, unplayable?: boolean, effect: (state: import('../state/GameState.js').GameState) => CardEffectResult }} CardDef
+ * @typedef {{ id: string, name: string, type: 'attack' | 'skill' | 'status' | 'power', cost: number, price: number, rarity: RarityDef, emoji: string, desc: string, isStarter?: boolean, eventOnly?: boolean, exhaust?: boolean, unplayable?: boolean, effect: (state: import('../state/GameState.js').GameState) => CardEffectResult }} CardDef
  */
 
 /** @type {Record<string, CardDef>} */
@@ -473,6 +473,78 @@ export const cardLibrary = {
         enemyAnim: damage.dealt > 0 ? 'anim-damage' : 'anim-block',
         damage,
       };
+    },
+  },
+
+  prestiz_na_kredyt: {
+    id: 'prestiz_na_kredyt',
+    name: 'Prestiż na Kredyt',
+    type: 'skill',
+    rarity: 'rare',
+    eventOnly: true,
+    cost: 1,
+    price: 135,
+    emoji: '⛓️',
+    desc: 'Zyskujesz 6 Gardy. +2 Gardy za każde 20 dutków (max +14).',
+    effect(state) {
+      state.gainPlayerBlockFromCard(state.getPrestizNaKredytBlock());
+      return { playerAnim: 'anim-block' };
+    },
+  },
+
+  furia_turysty: {
+    id: 'furia_turysty',
+    name: 'Furia Turysty',
+    type: 'skill',
+    rarity: 'uncommon',
+    eventOnly: true,
+    cost: 0,
+    price: 90,
+    emoji: '😡',
+    desc: 'Do końca tury: +50% zadawanych obrażeń. Tracisz 3 Krzepy. PRZEPADO.',
+    exhaust: true,
+    effect(state) {
+      state.player.status.furia_turysty = 1;
+      state.player.hp = Math.max(1, state.player.hp - 3);
+      return { playerAnim: 'anim-block' };
+    },
+  },
+
+  spostrzegawczosc: {
+    id: 'spostrzegawczosc',
+    name: 'Spostrzegawczość',
+    type: 'skill',
+    rarity: 'rare',
+    eventOnly: true,
+    cost: 0,
+    price: 135,
+    emoji: '👁️',
+    desc: 'Dobierz 1. Jeśli to Atak, następny Atak w tej turze zadaje +2 obrażenia. PRZEPADO.',
+    exhaust: true,
+    effect(state) {
+      const drawn = state._drawCards(1);
+      const drawnCardId = drawn[0] ?? null;
+      if (drawnCardId && cardLibrary[drawnCardId]?.type === 'attack') {
+        state.queueNextAttackCardBonus(2);
+      }
+      return { playerAnim: 'anim-block' };
+    },
+  },
+
+  pocieszenie: {
+    id: 'pocieszenie',
+    name: 'Pocieszenie',
+    type: 'status',
+    rarity: 'common',
+    eventOnly: true,
+    cost: 0,
+    price: 1,
+    emoji: '🩹',
+    desc: 'Dobierz 1. PRZEPADO.',
+    exhaust: true,
+    effect(state) {
+      state._drawCards(1);
+      return { playerAnim: 'anim-block' };
     },
   },
 

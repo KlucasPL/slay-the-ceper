@@ -5,6 +5,17 @@
 /** @type {ReleaseNoteEntry[]} */
 export const releaseNotesData = [
   {
+    version: 'v1.2.2 - Hazard na Krupówkach',
+    date: 'Kwiecień 2026',
+    changes: [
+      '🎲 NOWE WYDARZENIE: Na trasie możesz trafić na Hazard na Kartonie z kilkoma różnymi wyborami i konsekwencjami, które zmieniają przebieg runa.',
+      '🎨 DRUGIE NOWE WYDARZENIE: Do puli doszedł też Uliczny Karykaturzysta, czyli kolejne spotkanie z własnymi wyborami i nagrodami wpływającymi na build.',
+      '⚔️ NOWE STARCIE SPECJALNE: W ramach wydarzenia pojawia się unikalna walka z Naganiaczami oraz dedykowana nagroda powiązana z tym spotkaniem.',
+      '🎁 CZYTELNIEJSZE NAGRODY: Po elitach i wybranych starciach nagrody układają się bardziej przewidywalnie, dzięki czemu łatwiej planować dalsze decyzje.',
+      '🗺️ PŁYNNIEJSZY RUN: Dopracowano mapę i losowość wydarzeń, aby wyprawy częściej trzymały dobre tempo walk i dawały bardziej satysfakcjonujące wybory.',
+    ],
+  },
+  {
     version: 'v1.2.1 - Muzyka i Płynność Wyprawy',
     date: 'Kwiecień 2026',
     changes: [

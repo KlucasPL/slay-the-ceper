@@ -33,6 +33,8 @@ export class AudioManager {
     const shopUrl = new URL('../audio/shop.mp3', import.meta.url).href;
     const watraUrl = new URL('../audio/watra.mp3', import.meta.url).href;
     const fiakierEventUrl = new URL('../audio/fiakier_event.mp3', import.meta.url).href;
+    const karykaturaEventUrl = new URL('../audio/karykatura_event.mp3', import.meta.url).href;
+    const trzyKubkiEventUrl = new URL('../audio/event_trzy_kubki.mp3', import.meta.url).href;
 
     /** @type {HTMLAudioElement} */
     this.menuTrack = this._createTrack(menuUrl, true, 0.7);
@@ -52,6 +54,10 @@ export class AudioManager {
     this.watraTrack = this._createTrack(watraUrl, true, 0.5);
     /** @type {HTMLAudioElement} */
     this.fiakierEventTrack = this._createTrack(fiakierEventUrl, true, 0.5);
+    /** @type {HTMLAudioElement} */
+    this.karykaturaEventTrack = this._createTrack(karykaturaEventUrl, true, 0.5);
+    /** @type {HTMLAudioElement} */
+    this.trzyKubkiEventTrack = this._createTrack(trzyKubkiEventUrl, true, 0.5);
 
     /** @type {'title' | 'inGame'} */
     this.context = 'title';
@@ -59,6 +65,8 @@ export class AudioManager {
     this.themeLock = 'none';
     /** @type {'battle' | 'boss' | 'shop' | 'campfire' | 'map' | 'event'} */
     this.gameScene = 'map';
+    /** @type {'fiakier' | 'karykatura' | 'trzy_kubki' | null} */
+    this.eventSceneTrack = null;
 
     /** @type {AudioContext | null} */
     this.sfxContext = null;
@@ -153,6 +161,7 @@ export class AudioManager {
     if (context === 'title') {
       this.themeLock = 'none';
       this.gameScene = 'map';
+      this.eventSceneTrack = null;
       this._stopInGameSceneTracks();
       this._stopOneShotThemes();
       if (this.menuMusicEnabled) {
@@ -170,6 +179,7 @@ export class AudioManager {
     this.menuTrack.currentTime = 0;
     this._stopOneShotThemes();
     this.gameScene = 'map';
+    this.eventSceneTrack = null;
     if (this.gameMusicEnabled) {
       this.playMapMusic();
     } else {
@@ -197,14 +207,37 @@ export class AudioManager {
     }
   }
 
-  playFiakierEventMusic() {
+  /**
+   * @param {string} eventId
+   */
+  playEventMusic(eventId) {
     if (this.themeLock === 'defeat') return;
     this.gameScene = 'event';
     this.menuTrack.pause();
     this._stopInGameSceneTracks();
-    if (this.gameMusicEnabled) {
-      this._play(this.fiakierEventTrack);
+
+    let eventTrack = this.fiakierEventTrack;
+    if (eventId === 'event_karykaturzysta') {
+      this.eventSceneTrack = 'karykatura';
+      eventTrack = this.karykaturaEventTrack;
+    } else if (eventId === 'event_hazard_karton') {
+      this.eventSceneTrack = 'trzy_kubki';
+      eventTrack = this.trzyKubkiEventTrack;
+    } else {
+      this.eventSceneTrack = 'fiakier';
     }
+
+    if (this.gameMusicEnabled) {
+      this._play(eventTrack);
+    }
+  }
+
+  playFiakierEventMusic() {
+    this.playEventMusic('fiakier_event');
+  }
+
+  playKarykaturaEventMusic() {
+    this.playEventMusic('event_karykaturzysta');
   }
 
   playBossMusic() {
@@ -222,6 +255,10 @@ export class AudioManager {
     this.mapTrack.currentTime = 0;
     this.fiakierEventTrack.pause();
     this.fiakierEventTrack.currentTime = 0;
+    this.karykaturaEventTrack.pause();
+    this.karykaturaEventTrack.currentTime = 0;
+    this.trzyKubkiEventTrack.pause();
+    this.trzyKubkiEventTrack.currentTime = 0;
     this.bossTrack.pause();
     this.bossTrack.currentTime = 0;
 
@@ -302,6 +339,10 @@ export class AudioManager {
     this.watraTrack.currentTime = 0;
     this.fiakierEventTrack.pause();
     this.fiakierEventTrack.currentTime = 0;
+    this.karykaturaEventTrack.pause();
+    this.karykaturaEventTrack.currentTime = 0;
+    this.trzyKubkiEventTrack.pause();
+    this.trzyKubkiEventTrack.currentTime = 0;
   }
 
   playVictoryTheme() {
@@ -367,8 +408,11 @@ export class AudioManager {
       if (this.gameScene === 'map') this.playMapMusic();
       else if (this.gameScene === 'battle') this.playBattleMusic();
       else if (this.gameScene === 'boss') this.playBossMusic();
-      else if (this.gameScene === 'event') this.playFiakierEventMusic();
-      else if (this.gameScene === 'shop') this.playShopMusic();
+      else if (this.gameScene === 'event') {
+        if (this.eventSceneTrack === 'karykatura') this.playKarykaturaEventMusic();
+        else if (this.eventSceneTrack === 'trzy_kubki') this.playEventMusic('event_hazard_karton');
+        else this.playFiakierEventMusic();
+      } else if (this.gameScene === 'shop') this.playShopMusic();
       else if (this.gameScene === 'campfire') this.playCampfireMusic();
     }
     return this.gameMusicEnabled;

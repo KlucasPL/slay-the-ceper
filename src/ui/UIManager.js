@@ -362,9 +362,13 @@ export class UIManager {
     const enemySprite = document.getElementById('sprite-enemy');
     const enemyId = this.state.enemy.id;
     enemyName.textContent = `${this.state.enemy.name} ${this.state.enemy.emoji}`;
-    if (enemySprite.dataset.enemyId !== enemyId) {
+    if (
+      enemySprite.dataset.enemyId !== enemyId ||
+      enemySprite.dataset.enemySpriteSvg !== this.state.enemy.spriteSvg
+    ) {
       enemySprite.innerHTML = this.state.enemy.spriteSvg;
       enemySprite.dataset.enemyId = enemyId;
+      enemySprite.dataset.enemySpriteSvg = this.state.enemy.spriteSvg;
     }
     if (this.state.enemy.isBankrupt && this.state.enemy.rachunek > 0) {
       enemySprite.classList.add('bankrupt-animation');
@@ -499,6 +503,16 @@ export class UIManager {
   /**
    * Rebuilds the card hand in the DOM.
    */
+  _getCardDescription(card) {
+    if (card.id === 'prestiz_na_kredyt') {
+      return `Zyskujesz ${this.state.getPrestizNaKredytBlock()} Gardy (bazowo 6, +2 za każde 20 dutków, max +14).`;
+    }
+    return card.desc;
+  }
+
+  /**
+   * Rebuilds the card hand in the DOM.
+   */
   _renderHand() {
     const { hand, player, enemy } = this.state;
     const handDiv = document.getElementById('hand');
@@ -538,7 +552,7 @@ export class UIManager {
       imgEl.textContent = card.emoji;
       const descEl = document.createElement('div');
       descEl.className = 'card-desc';
-      descEl.textContent = card.desc;
+      descEl.textContent = this._getCardDescription(card);
 
       cardEl.append(costEl, titleEl, rarityEl, imgEl, descEl);
 
@@ -580,6 +594,14 @@ export class UIManager {
       this.audioManager.playMissSound();
       const targetSprite = missEvent.target === 'enemy' ? 'sprite-enemy' : 'sprite-player';
       this._showFloatingText(targetSprite, missEvent.text, 'floating-damage');
+    }
+    if (this.state.consumeEnemyEvasionEvent()) {
+      this.audioManager.playMissSound();
+      this._showFloatingText('sprite-enemy', 'UNIK!', 'floating-damage');
+    }
+    const phaseTransitionText = this.state.consumeEnemyPhaseTransitionMessage();
+    if (phaseTransitionText) {
+      this._showFloatingText('sprite-enemy', phaseTransitionText, 'floating-shame');
     }
     const rachunekResistEvent = this.state.consumeRachunekResistEvent();
     if (rachunekResistEvent) {
@@ -635,6 +657,14 @@ export class UIManager {
       const targetSprite = missEvent.target === 'enemy' ? 'sprite-enemy' : 'sprite-player';
       this._showFloatingText(targetSprite, missEvent.text, 'floating-damage');
     }
+    if (this.state.consumeEnemyEvasionEvent()) {
+      this.audioManager.playMissSound();
+      this._showFloatingText('sprite-enemy', 'UNIK!', 'floating-damage');
+    }
+    const phaseTransitionText = this.state.consumeEnemyPhaseTransitionMessage();
+    if (phaseTransitionText) {
+      this._showFloatingText('sprite-enemy', phaseTransitionText, 'floating-shame');
+    }
     if (result.enemyPassiveHeal) {
       this._showFloatingText('sprite-enemy', result.enemyPassiveHeal.text, 'floating-heal');
     }
@@ -688,6 +718,7 @@ export class UIManager {
       const isEliteFight = currentNode?.type === 'elite';
       const isBankrupt = this.state.enemy.isBankrupt;
       const bankruptBonus = this.state.enemyBankruptcyBonus;
+      const scriptedEventRewardRelic = this.state.consumePendingEventVictoryRelicReward();
 
       if (isBossFight) {
         this.audioManager.playVictoryTheme();
@@ -720,12 +751,21 @@ export class UIManager {
           );
         }
         setTimeout(() => {
+          if (scriptedEventRewardRelic) {
+            this._showScriptedEventBattleRewards(scriptedEventRewardRelic, droppedDutki);
+            return;
+          }
           if (isEliteFight) {
             this._showEliteRewardOverlay(droppedDutki);
           } else {
             this._showVictoryOverlay(droppedDutki, isBossFight);
           }
         }, 2500);
+        return;
+      }
+
+      if (scriptedEventRewardRelic) {
+        this._showScriptedEventBattleRewards(scriptedEventRewardRelic, droppedDutki);
         return;
       }
 
@@ -756,6 +796,18 @@ export class UIManager {
     this._openMapOverlay();
     document.getElementById('end-turn-btn').disabled = true;
     this.updateUI();
+  }
+
+  /**
+   * Displays a victory reward overlay with 3 random non-basic cards.
+   */
+  _showScriptedEventBattleRewards(relicId, droppedDutki) {
+    const choices = this._pickRewardCards(3);
+    this.pendingBattleRelicClaimAction = () => {
+      this._showCardRewardScreen(droppedDutki, choices, false);
+    };
+    this.showRelicScreen(relicId, 'battle');
+    document.getElementById('end-turn-btn').disabled = true;
   }
 
   /**
@@ -870,6 +922,7 @@ export class UIManager {
 
     choices.forEach((cardId) => {
       const card = cardLibrary[cardId];
+      const cardDesc = this._getCardDescription(card);
       const cardEl = document.createElement('button');
       cardEl.type = 'button';
       cardEl.className = `reward-card ${this._rarityClass(card.rarity)}`;
@@ -878,7 +931,7 @@ export class UIManager {
         <div class="reward-emoji">${card.emoji}</div>
         <div class="reward-name">${card.name}</div>
         <div class="reward-rarity">${this._rarityLabel(card.rarity, 'card')}</div>
-        <div class="reward-desc">${card.desc}</div>
+        <div class="reward-desc">${cardDesc}</div>
       `;
       if (card.exhaust) {
         cardEl.classList.add('card-exhaust');
@@ -1068,9 +1121,7 @@ export class UIManager {
    * @returns {string[]}
    */
   _pickEliteRewardRelics(count) {
-    const pool = Object.keys(relicLibrary).filter((id) => !this.state.relics.includes(id));
-    if (pool.length < count) return [];
-    return this.state._pickUniqueItems(pool, relicLibrary, count);
+    return this.state.generateRelicChoices(count);
   }
 
   /**
@@ -1079,7 +1130,10 @@ export class UIManager {
    */
   _pickRareRewardCards(count) {
     const pool = Object.keys(cardLibrary).filter(
-      (id) => !cardLibrary[id]?.isStarter && cardLibrary[id]?.rarity === 'rare'
+      (id) =>
+        !cardLibrary[id]?.isStarter &&
+        !cardLibrary[id]?.eventOnly &&
+        cardLibrary[id]?.rarity === 'rare'
     );
     return this.state._pickUniqueItems(pool, cardLibrary, count);
   }
@@ -1088,14 +1142,23 @@ export class UIManager {
    * @param {number} droppedDutki
    */
   _showEliteRewardOverlay(droppedDutki) {
-    const relicChoices = this._pickEliteRewardRelics(3);
-    if (relicChoices.length < 3) {
-      const fallbackChoices = this._pickRareRewardCards(3);
-      this._showCardRewardScreen(droppedDutki, fallbackChoices, false, {
-        title: 'Elita pokonana! Wybierz kartę rare:',
+    const eliteCardChoices = this._pickRareRewardCards(3);
+    const hasThreeRareChoices = eliteCardChoices.length >= 3;
+    const cardChoices = hasThreeRareChoices ? eliteCardChoices : this._pickRewardCards(3);
+    const cardTitle = hasThreeRareChoices
+      ? 'Elita pokonana! Wybierz kartę rare:'
+      : 'Elita pokonana! Wybierz kartę:';
+    const goToCardPhase = () => {
+      this._showCardRewardScreen(droppedDutki, cardChoices, false, {
+        title: cardTitle,
         allowSkip: false,
       });
       document.getElementById('end-turn-btn').disabled = true;
+    };
+
+    const relicChoices = this._pickEliteRewardRelics(3);
+    if (relicChoices.length < 3) {
+      goToCardPhase();
       return;
     }
 
@@ -1131,7 +1194,7 @@ export class UIManager {
       `;
       relicEl.addEventListener('click', () => {
         this.state.addRelic(relicId);
-        this._closeRewardScreens(false);
+        goToCardPhase();
       });
       rewardCards.appendChild(relicEl);
     });
@@ -1477,8 +1540,12 @@ export class UIManager {
       this.state.setActiveEvent(eventDef.id);
     }
 
-    if (eventDef.id === 'fiakier_event') {
-      this.audioManager.playFiakierEventMusic();
+    if (
+      eventDef.id === 'fiakier_event' ||
+      eventDef.id === 'event_karykaturzysta' ||
+      eventDef.id === 'event_hazard_karton'
+    ) {
+      this.audioManager.playEventMusic(eventDef.id);
     }
 
     const fallbackFight = eventDef.fallbackFight;
@@ -1514,9 +1581,15 @@ export class UIManager {
       choiceBtn.type = 'button';
       choiceBtn.className = 'random-event-choice';
       choiceBtn.disabled = this.state.dutki < choice.cost;
+      const fallbackConsequence =
+        choice.cost > 0
+          ? `Koszt: ${choice.cost} ${this.state.getDutkiLabel(choice.cost)}.`
+          : 'Koszt: brak.';
+      const consequence = choice.consequence ?? fallbackConsequence;
       choiceBtn.innerHTML = `
         <span class="random-event-choice-title">${choice.text}</span>
         <span class="random-event-choice-desc">${choice.description}</span>
+        <span class="random-event-choice-impact">Skutek: ${consequence}</span>
       `;
       choiceBtn.addEventListener('click', () => this._handleRandomEventChoice(choiceIndex));
       choicesContainer.appendChild(choiceBtn);
@@ -1552,10 +1625,33 @@ export class UIManager {
   _continueAfterRandomEvent() {
     this._hideOverlay('random-event-overlay');
 
+    const queuedEventBattle = this.state.consumeQueuedEventBattle();
+    if (queuedEventBattle) {
+      this.state.clearActiveEvent();
+      this.state.currentScreen = 'battle';
+      const started = this.state.startBattleWithEnemyId(queuedEventBattle.enemyId, {
+        battleContext: 'event',
+        rewardRelicId: queuedEventBattle.rewardRelicId,
+      });
+      if (!started) {
+        this.mapMessage = 'Nie udało się rozpocząć walki eventowej.';
+        this.state.currentScreen = 'map';
+        this._openMapOverlay();
+        this.updateUI();
+        return;
+      }
+      this._playEncounterMusic();
+      document.getElementById('end-turn-btn').disabled = false;
+      this.updateUI();
+      return;
+    }
+
     if (this.pendingEventFallbackEnemyId) {
       this.state.clearActiveEvent();
       this.state.currentScreen = 'battle';
-      const started = this.state.startBattleWithEnemyId(this.pendingEventFallbackEnemyId);
+      const started = this.state.startBattleWithEnemyId(this.pendingEventFallbackEnemyId, {
+        battleContext: 'event',
+      });
       this.pendingEventFallbackEnemyId = null;
       if (!started) {
         const emergencyEnemy = enemyLibrary.pomocnik_fiakra;
@@ -1610,6 +1706,7 @@ export class UIManager {
     cards.forEach((cardId) => {
       const card = cardLibrary[cardId];
       if (!card) return;
+      const cardDesc = this._getCardDescription(card);
 
       const cardBox = document.createElement('div');
       cardBox.className = `shop-item ${this._rarityClass(card.rarity)}`;
@@ -1621,12 +1718,12 @@ export class UIManager {
       const title = document.createElement('div');
       title.className = 'shop-item-title';
       title.textContent = `${card.emoji} ${card.name}`;
-      title.title = card.desc;
-      title.setAttribute('aria-label', `${card.name}: ${card.desc}`);
+      title.title = cardDesc;
+      title.setAttribute('aria-label', `${card.name}: ${cardDesc}`);
 
       const desc = document.createElement('div');
       desc.className = 'shop-item-desc';
-      desc.textContent = card.desc;
+      desc.textContent = cardDesc;
 
       const rarity = document.createElement('div');
       rarity.className = 'shop-item-rarity';
@@ -1641,8 +1738,8 @@ export class UIManager {
       btn.type = 'button';
       btn.className = 'shop-card-btn';
       btn.textContent = 'Kup';
-      btn.title = `${card.name}: ${card.desc}`;
-      btn.setAttribute('aria-label', `Kup kartę ${card.name}. ${card.desc}`);
+      btn.title = `${card.name}: ${cardDesc}`;
+      btn.setAttribute('aria-label', `Kup kartę ${card.name}. ${cardDesc}`);
       btn.disabled = this.state.dutki < cardShopPrice;
       btn.addEventListener('click', () => {
         const cardWithPrice = { ...card, price: cardShopPrice };
@@ -1886,7 +1983,7 @@ export class UIManager {
 
         const desc = document.createElement('div');
         desc.className = 'card-desc';
-        desc.textContent = cardDef.desc;
+        desc.textContent = this._getCardDescription(cardDef);
 
         card.append(cost, title, rarity, emoji, desc);
 
@@ -1992,7 +2089,7 @@ export class UIManager {
    * @returns {boolean}
    */
   launchDebugBattle(enemyId) {
-    const started = this.state.startBattleWithEnemyId(enemyId);
+    const started = this.state.startBattleWithEnemyId(enemyId, { battleContext: 'debug' });
     if (!started) return false;
 
     this.state.currentScreen = 'battle';
