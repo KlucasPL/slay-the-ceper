@@ -155,8 +155,8 @@ const ceprzyca_vipSprite = `
 </svg>`;
 
 /**
- * @typedef {{ type: 'attack', name: string, damage: number, hits?: number, applyWeak?: number, applyFrail?: number, applyVulnerable?: number, damagePerCardInHand?: boolean, gainPed?: number, usePed?: boolean, stealDutki?: number } | { type: 'block', name: string, block: number, heal?: number } | { type: 'buff', name: string, strengthGain?: number, block?: number } | { type: 'status', name: string, addStatusCard?: string, amount?: number, applyStun?: number }} EnemyMoveDef
- * @typedef {{ id: string, name: string, emoji: string, hp: number, maxHp: number, block: number, baseAttack?: number, passive?: string, spriteSvg: string, patternType: 'random'|'loop', pattern?: EnemyMoveDef[], elite?: boolean, isBoss?: boolean }} EnemyDef
+ * @typedef {{ type: 'attack', name: string, damage: number, hits?: number, applyWeak?: number, applyFrail?: number, applyVulnerable?: number, damagePerCardInHand?: boolean, gainPed?: number, usePed?: boolean, stealDutki?: number } | { type: 'block', name: string, block: number, heal?: number, gainEvasion?: number } | { type: 'buff', name: string, strengthGain?: number, block?: number } | { type: 'status', name: string, addStatusCard?: string, amount?: number, applyStun?: number }} EnemyMoveDef
+ * @typedef {{ id: string, name: string, emoji: string, hp: number, maxHp: number, block: number, baseAttack?: number, passive?: string, spriteSvg: string, phase2SpriteSvg?: string, patternType: 'random'|'loop', pattern?: EnemyMoveDef[], phaseTwoPattern?: EnemyMoveDef[], elite?: boolean, isBoss?: boolean, eventOnly?: boolean }} EnemyDef
  */
 
 const ceprSprite = `
@@ -467,6 +467,55 @@ const naganiaczTermSprite = `
   <circle cx="80" cy="18" r="2.5" fill="#ffe8a3" opacity="0.75"/>
 </svg>`;
 
+const naganiaczeDuoPhase1Sprite = `
+<svg viewBox="0 0 120 100" width="120" height="120">
+  <rect x="16" y="86" width="88" height="8" rx="4" fill="#1f1f1f" opacity="0.45"/>
+
+  <g transform="translate(20,6)">
+    <line x1="20" y1="80" x2="16" y2="95" stroke="#252525" stroke-width="7"/>
+    <line x1="32" y1="80" x2="36" y2="95" stroke="#252525" stroke-width="7"/>
+    <rect x="10" y="48" width="28" height="34" rx="7" fill="#333"/>
+    <path d="M 10,54 Q 24,42 38,54 L 38,62 Q 24,56 10,62 Z" fill="#2a2a2a"/>
+    <line x1="10" y1="58" x2="-4" y2="66" stroke="#5a5a5a" stroke-width="6" stroke-linecap="round"/>
+    <line x1="38" y1="60" x2="52" y2="50" stroke="#5a5a5a" stroke-width="6" stroke-linecap="round"/>
+    <circle cx="24" cy="36" r="13" fill="#444"/>
+    <rect x="12" y="22" width="24" height="12" rx="4" fill="#2f2f2f"/>
+    <circle cx="20" cy="36" r="2" fill="#111"/>
+    <circle cx="28" cy="36" r="2" fill="#111"/>
+  </g>
+
+  <g transform="translate(64,16)">
+    <line x1="12" y1="72" x2="8" y2="94" stroke="#2e2e2e" stroke-width="6"/>
+    <line x1="22" y1="72" x2="26" y2="94" stroke="#2e2e2e" stroke-width="6"/>
+    <rect x="4" y="45" width="24" height="28" rx="6" fill="#444"/>
+    <line x1="4" y1="52" x2="-8" y2="62" stroke="#666" stroke-width="5" stroke-linecap="round"/>
+    <line x1="28" y1="54" x2="40" y2="44" stroke="#666" stroke-width="5" stroke-linecap="round"/>
+    <circle cx="16" cy="31" r="11" fill="#555"/>
+    <circle cx="12" cy="31" r="1.7" fill="#111"/>
+    <circle cx="20" cy="31" r="1.7" fill="#111"/>
+    <path d="M 10,37 Q 16,40 22,37" fill="none" stroke="#1d1d1d" stroke-width="2"/>
+  </g>
+</svg>`;
+
+const naganiaczeDuoPhase2Sprite = `
+<svg viewBox="0 0 120 100" width="120" height="120">
+  <rect x="28" y="86" width="64" height="8" rx="4" fill="#1f1f1f" opacity="0.45"/>
+
+  <g transform="translate(46,10)">
+    <line x1="14" y1="76" x2="10" y2="95" stroke="#2e2e2e" stroke-width="7"/>
+    <line x1="26" y1="76" x2="30" y2="95" stroke="#2e2e2e" stroke-width="7"/>
+    <rect x="6" y="45" width="28" height="32" rx="7" fill="#444"/>
+    <line x1="6" y1="54" x2="-8" y2="62" stroke="#777" stroke-width="6" stroke-linecap="round"/>
+    <line x1="34" y1="54" x2="44" y2="64" stroke="#777" stroke-width="6" stroke-linecap="round"/>
+    <polygon points="42,64 54,58 52,72" fill="#888" stroke="#1a1a1a" stroke-width="1.5"/>
+    <circle cx="20" cy="30" r="12" fill="#5a5a5a"/>
+    <path d="M 11,22 Q 20,16 29,22" fill="none" stroke="#2a2a2a" stroke-width="2"/>
+    <circle cx="16" cy="30" r="2" fill="#111"/>
+    <circle cx="24" cy="30" r="2" fill="#111"/>
+    <path d="M 14,37 Q 20,41 26,37" fill="none" stroke="#1d1d1d" stroke-width="2"/>
+  </g>
+</svg>`;
+
 /** @type {Record<string, EnemyDef>} */
 export const enemyLibrary = {
   cepr: {
@@ -579,6 +628,7 @@ export const enemyLibrary = {
     id: 'naganiacz_z_krupowek',
     name: 'Naganiacz z Krupówek',
     emoji: '♨️',
+    eventOnly: true,
     hp: 82,
     maxHp: 82,
     block: 0,
@@ -589,6 +639,27 @@ export const enemyLibrary = {
       { type: 'buff', name: 'Krzykliwa zachęta', strengthGain: 1, block: 8 },
       { type: 'attack', name: 'Promka spod budki', damage: 9, hits: 1, applyVulnerable: 1 },
       { type: 'attack', name: 'Zasyp ulotkami', damage: 4, hits: 2, applyFrail: 1 },
+    ],
+  },
+  naganiacze_duo: {
+    id: 'naganiacze_duo',
+    name: 'Naganiacze z Krupówek',
+    emoji: '🕴️',
+    eventOnly: true,
+    hp: 80,
+    maxHp: 80,
+    block: 0,
+    baseAttack: 0,
+    spriteSvg: naganiaczeDuoPhase1Sprite,
+    phase2SpriteSvg: naganiaczeDuoPhase2Sprite,
+    patternType: 'loop',
+    pattern: [
+      { type: 'attack', name: 'Podpuszczanie', damage: 6, hits: 1, applyWeak: 1 },
+      { type: 'attack', name: 'Szybkie Palce', damage: 4, hits: 2, stealDutki: 2 },
+    ],
+    phaseTwoPattern: [
+      { type: 'attack', name: 'Desperackie Cięcie', damage: 3, hits: 3 },
+      { type: 'block', name: 'Unik w Tłumie', block: 12, gainEvasion: 1 },
     ],
   },
   spekulant: {

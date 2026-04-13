@@ -17,6 +17,11 @@ const CARD_REWARD_RARITY_WEIGHTS = {
 };
 
 const MIN_ELITE_LEVEL = 4;
+const MID_NODE_EVENT_CHANCE = 0.34;
+const MID_NODE_FIGHT_CHANCE = 0.2;
+const MID_NODE_ELITE_CHANCE = 0.08;
+const EVENT_OUTCOME_EVENT_CHANCE = 0.68;
+const EVENT_OUTCOME_FIGHT_CHANCE = 0.12;
 
 /**
  * @typedef {import('../data/cards.js').StatusDef} StatusDef
@@ -26,7 +31,7 @@ const MIN_ELITE_LEVEL = 4;
  * @typedef {'fight' | 'elite' | 'shop' | 'treasure' | 'event' | 'campfire' | 'boss'} MapNodeType
  * @typedef {{ x: number, y: number, type: MapNodeType, label: string, emoji: string, weather: WeatherId, connections: number[] }} MapNode
  * @typedef {import('../data/events.js').GameEventDef} GameEventDef
- * @typedef {{ id: string, name: string, emoji: string, hp: number, maxHp: number, block: number, nextAttack: number, baseAttack: number, status: StatusDef, rachunek: number, ped: number, spriteSvg: string, patternType: 'random'|'loop', pattern: EnemyMoveDef[], patternIndex: number, currentIntent: EnemyMoveDef, tookHpDamageThisTurn: boolean, bossArtifact?: number, passive: string | null, isElite: boolean, isBoss: boolean, stunnedTurns: number, lichwaTriggeredThisTurn: boolean, hartDuchaTriggered: boolean }} EnemyState
+ * @typedef {{ id: string, name: string, emoji: string, hp: number, maxHp: number, block: number, nextAttack: number, baseAttack: number, status: StatusDef, rachunek: number, ped: number, spriteSvg: string, phase2SpriteSvg?: string, patternType: 'random'|'loop', pattern: EnemyMoveDef[], phaseTwoPattern: EnemyMoveDef[], patternIndex: number, currentIntent: EnemyMoveDef, tookHpDamageThisTurn: boolean, bossArtifact?: number, passive: string | null, isElite: boolean, isBoss: boolean, stunnedTurns: number, lichwaTriggeredThisTurn: boolean, hartDuchaTriggered: boolean, portraitShameTurns: number, phaseTwoTriggered: boolean, evasionCharges: number }} EnemyState
  * @typedef {{ success: false, reason?: string } | { success: true, effect: import('../data/cards.js').CardEffectResult }} PlayCardResult
  * @typedef {{ enemyAttack: { raw: number, blocked: number, dealt: number }, enemyPassiveHeal: { amount: number, text: string } | null, playerPassiveHeal: { amount: number, text: string } | null }} EndTurnResult
  * @typedef {{ cards: string[], relic: string | null }} ShopStock
@@ -43,6 +48,7 @@ function defaultStatus() {
     energy_next_turn: 0,
     lans: 0,
     duma_podhala: 0,
+    furia_turysty: 0,
   };
 }
 
@@ -130,6 +136,8 @@ export class GameState {
     this.lastVictoryMessage = '';
     /** @type {'title' | 'map' | 'battle' | 'event'} */
     this.currentScreen = 'title';
+    /** @type {'map' | 'event' | 'debug'} */
+    this.battleContext = 'map';
     /** @type {string | null} Last regular enemy ID picked for random encounters */
     this.lastRegularEnemyId =
       enemy.id !== 'boss' && enemy.id !== 'fiakier' && enemy.id !== 'pomocnik_fiakra'
@@ -137,6 +145,12 @@ export class GameState {
         : null;
     /** @type {string | null} */
     this.activeEventId = null;
+    /** @type {string | null} Last randomly selected event ID to avoid immediate repeats */
+    this.lastRandomEventId = null;
+    /** @type {string | null} */
+    this.pendingEventBattleEnemyId = null;
+    /** @type {string | null} */
+    this.pendingEventVictoryRelicId = null;
     /** @type {boolean} */
     this.jumpToBoss = false;
     /** @type {boolean} */
@@ -170,6 +184,14 @@ export class GameState {
     this.hasStartedFirstBattle = false;
     /** @type {boolean} Rare power: reflect damage when enough block is lost */
     this.dumaPodhalaActive = false;
+    /** @type {number} One-shot bonus consumed by the next played attack card */
+    this.nextAttackCardBonus = 0;
+    /** @type {number} Temporary attack bonus bound to the currently resolving attack card */
+    this.currentAttackCardBonus = 0;
+    /** @type {boolean} */
+    this.enemyEvasionEvent = false;
+    /** @type {string | null} */
+    this.enemyPhaseTransitionMessage = null;
     /** @type {number | null} */
     this.guaranteedTreasureRow = null;
     /** @type {number} */
@@ -232,6 +254,7 @@ export class GameState {
     this._ensureGuaranteedPathRewards(generated);
     this._enforceSpecialNodeLimits(generated);
     this._ensureReachableElite(generated);
+    this._ensureReachableTrueEvent(generated);
 
     this.map = generated;
     this.currentLevel = 0;
@@ -268,9 +291,11 @@ export class GameState {
   /** @returns {MapNodeType} */
   _rollMidNodeType(level = MIN_ELITE_LEVEL) {
     const roll = Math.random();
-    if (roll < 0.27) return 'event';
-    if (roll < 0.58) return 'fight';
-    if (roll < 0.71) return level >= MIN_ELITE_LEVEL ? 'elite' : 'fight';
+    if (roll < MID_NODE_EVENT_CHANCE) return 'event';
+    if (roll < MID_NODE_EVENT_CHANCE + MID_NODE_FIGHT_CHANCE) return 'fight';
+    if (roll < MID_NODE_EVENT_CHANCE + MID_NODE_FIGHT_CHANCE + MID_NODE_ELITE_CHANCE) {
+      return level >= MIN_ELITE_LEVEL ? 'elite' : 'fight';
+    }
     return 'shop';
   }
 
@@ -540,6 +565,31 @@ export class GameState {
   }
 
   /**
+   * Guarantees that at least one reachable `event` node resolves to a real event window
+   * (eventOutcome === 'event') during a run.
+   * @param {(MapNode | null)[][]} map
+   */
+  _ensureReachableTrueEvent(map) {
+    const reachable = this._getReachableCoordinates(map)
+      .map(({ x, y }) => map[y]?.[x] ?? null)
+      .filter((node) => node && node.y > 0 && node.y < map.length - 2);
+
+    if (reachable.some((node) => node.type === 'event' && node.eventOutcome === 'event')) return;
+
+    const existingEventNode = reachable.find((node) => node.type === 'event');
+    if (existingEventNode) {
+      existingEventNode.eventOutcome = 'event';
+      return;
+    }
+
+    const promoteCandidate = reachable.find((node) => node.type === 'fight');
+    if (!promoteCandidate) return;
+
+    this._setNodeType(promoteCandidate, 'event');
+    promoteCandidate.eventOutcome = 'event';
+  }
+
+  /**
    * @param {(MapNode | null)[][]} map
    * @param {MapNodeType} type
    * @param {number} maxCount
@@ -627,6 +677,11 @@ export class GameState {
     node.label = meta[type].label;
     node.emoji = meta[type].emoji;
     node.weather = this._rollNodeWeather(type);
+    if (type === 'event') {
+      node.eventOutcome = this.rollEventNodeOutcome();
+    } else {
+      delete node.eventOutcome;
+    }
   }
 
   /**
@@ -747,17 +802,43 @@ export class GameState {
 
   /** @returns {GameEventDef | null} */
   pickRandomEventDef() {
-    const eventIds = Object.keys(eventLibrary);
+    const currentAct = this._getCurrentAct();
+    let eventIds = Object.keys(eventLibrary).filter((id) => {
+      const eventDef = eventLibrary[id];
+      return !eventDef?.act || eventDef.act === currentAct;
+    });
     if (eventIds.length === 0) return null;
+
+    if (this.lastRandomEventId && eventIds.length > 1) {
+      eventIds = eventIds.filter((id) => id !== this.lastRandomEventId);
+    }
+
     const eventId = eventIds[Math.floor(Math.random() * eventIds.length)];
+    this.lastRandomEventId = eventId;
     return eventLibrary[eventId] ?? null;
+  }
+
+  /** @returns {'I' | 'II' | 'III'} */
+  _getCurrentAct() {
+    const rows = Math.max(1, this.map.length);
+    const ratio = this.currentLevel / rows;
+    if (ratio < 1 / 3) return 'I';
+    if (ratio < 2 / 3) return 'II';
+    return 'III';
+  }
+
+  /** @returns {number} */
+  getPrestizNaKredytBlock() {
+    const baseBlock = 6;
+    const bonus = Math.min(14, Math.floor(this.dutki / 20) * 2);
+    return baseBlock + bonus;
   }
 
   /** @returns {'event' | 'fight' | 'shop'} */
   rollEventNodeOutcome() {
     const roll = Math.random();
-    if (roll < 0.6) return 'event';
-    if (roll < 0.85) return 'fight';
+    if (roll < EVENT_OUTCOME_EVENT_CHANCE) return 'event';
+    if (roll < EVENT_OUTCOME_EVENT_CHANCE + EVENT_OUTCOME_FIGHT_CHANCE) return 'fight';
     return 'shop';
   }
 
@@ -879,6 +960,59 @@ export class GameState {
     return { target: 'enemy', text: 'ODPORNA NA RACHUNEK!' };
   }
 
+  /** @returns {boolean} */
+  consumeEnemyEvasionEvent() {
+    if (!this.enemyEvasionEvent) return false;
+    this.enemyEvasionEvent = false;
+    return true;
+  }
+
+  /** @returns {string | null} */
+  consumeEnemyPhaseTransitionMessage() {
+    if (!this.enemyPhaseTransitionMessage) return null;
+    const message = this.enemyPhaseTransitionMessage;
+    this.enemyPhaseTransitionMessage = null;
+    return message;
+  }
+
+  /**
+   * @param {number} amount
+   */
+  queueNextAttackCardBonus(amount) {
+    if (amount <= 0) return;
+    this.nextAttackCardBonus += amount;
+  }
+
+  /**
+   * @param {string} enemyId
+   * @param {string | null} [victoryRelicId]
+   */
+  queueEventBattle(enemyId, victoryRelicId = null) {
+    this.pendingEventBattleEnemyId = enemyId;
+    this.pendingEventVictoryRelicId = victoryRelicId;
+  }
+
+  /** @returns {{ enemyId: string, rewardRelicId: string | null } | null} */
+  consumeQueuedEventBattle() {
+    if (!this.pendingEventBattleEnemyId) return null;
+    const payload = {
+      enemyId: this.pendingEventBattleEnemyId,
+      rewardRelicId: this.pendingEventVictoryRelicId,
+    };
+    this.pendingEventBattleEnemyId = null;
+    this.pendingEventVictoryRelicId = null;
+    return payload;
+  }
+
+  /** @returns {string | null} */
+  consumePendingEventVictoryRelicReward() {
+    if (this.battleContext !== 'event') return null;
+    if (!this.pendingEventVictoryRelicId) return null;
+    const relicId = this.pendingEventVictoryRelicId;
+    this.pendingEventVictoryRelicId = null;
+    return relicId;
+  }
+
   _checkEnemyBankruptcy() {
     if (this.enemyBankruptFlag) {
       this.enemyBankruptcyPending = false;
@@ -984,11 +1118,28 @@ export class GameState {
   }
 
   /**
+   * Builds a multi-choice relic offer (e.g. elite reward screen) from the same
+   * global pool rules as other relic rewards.
+   * @param {number} count
+   * @returns {string[]}
+   */
+  generateRelicChoices(count) {
+    const pool = this._buildAvailableRelicPool();
+    if (pool.length < count) return [];
+
+    const choices = this._pickUniqueItems(pool, relicLibrary, count);
+    choices.forEach((relicId) => this._markRelicAsSeen(relicId));
+    return choices;
+  }
+
+  /**
    * @param {number} count
    * @returns {string[]}
    */
   generateCardRewardChoices(count) {
-    const pool = Object.keys(cardLibrary).filter((id) => !cardLibrary[id]?.isStarter);
+    const pool = Object.keys(cardLibrary).filter(
+      (id) => !cardLibrary[id]?.isStarter && !cardLibrary[id]?.eventOnly
+    );
     return this._pickUniqueItems(pool, cardLibrary, count, CARD_REWARD_RARITY_WEIGHTS);
   }
 
@@ -997,7 +1148,10 @@ export class GameState {
    */
   _buildAvailableRelicPool() {
     return Object.keys(relicLibrary).filter(
-      (id) => !this.relics.includes(id) && !this.seenRelicOffers.includes(id)
+      (id) =>
+        !this.relics.includes(id) &&
+        !this.seenRelicOffers.includes(id) &&
+        !relicLibrary[id]?.eventOnly
     );
   }
 
@@ -1100,9 +1254,11 @@ export class GameState {
       this.certyfikowanyOscypekShopProcs += 1;
     }
 
-    const cardPool = Object.keys(cardLibrary).filter((id) => !cardLibrary[id]?.isStarter);
+    const cardPool = Object.keys(cardLibrary).filter(
+      (id) => !cardLibrary[id]?.isStarter && !cardLibrary[id]?.eventOnly
+    );
 
-    const relicPool = this._buildAvailableRelicPool();
+    const relicPool = this._buildAvailableRelicPool().filter((id) => !relicLibrary[id]?.eventOnly);
     let relicId = null;
     const shouldForceHardPapryczka = this.difficulty === 'hard' && !this.hardFirstShopRolled;
 
@@ -1341,6 +1497,11 @@ export class GameState {
     this.addDutki(drop);
     this.pendingBattleDutki = false;
 
+    if (this.hasRelic('zasluzony_portfel') && this.battleContext !== 'event') {
+      this.addDutki(6);
+      drop += 6;
+    }
+
     // Termos z Herbatką: ≤2 turns → +4 HP, otherwise → +15 Dutki
     if (this.hasRelic('termos_z_herbatka')) {
       if (this.battleTurnsElapsed <= 2) {
@@ -1375,6 +1536,11 @@ export class GameState {
 
     if (this.hasRelic('blacha_przewodnika')) {
       this.player.status.lans = 1;
+    }
+
+    if (this.hasRelic('krzywy_portret')) {
+      this.enemy.portraitShameTurns = 1;
+      this._refreshEnemyIntent();
     }
   }
 
@@ -1416,6 +1582,12 @@ export class GameState {
           return { ...move, damage: Math.round(move.damage * scale * eliteDamageScale) };
         })
       : [];
+    const phaseTwoPattern = enemyDef.phaseTwoPattern
+      ? enemyDef.phaseTwoPattern.map((move) => {
+          if (move.type !== 'attack') return { ...move };
+          return { ...move, damage: Math.round(move.damage * scale * eliteDamageScale) };
+        })
+      : [];
     const bossBaseHp = this.difficulty === 'hard' ? 330 : 230;
     const baseMaxHp =
       this.difficulty === 'hard' && isFinalBossVariant
@@ -1440,8 +1612,10 @@ export class GameState {
       rachunek: 0,
       ped: 0,
       spriteSvg: enemyDef.spriteSvg,
+      phase2SpriteSvg: enemyDef.phase2SpriteSvg,
       patternType: enemyDef.patternType,
       pattern,
+      phaseTwoPattern,
       patternIndex: 0,
       currentIntent: { type: 'attack', name: 'Atak', damage: 0, hits: 1 },
       tookHpDamageThisTurn: false,
@@ -1452,6 +1626,9 @@ export class GameState {
       stunnedTurns: 0,
       lichwaTriggeredThisTurn: false,
       hartDuchaTriggered: false,
+      portraitShameTurns: 0,
+      phaseTwoTriggered: false,
+      evasionCharges: 0,
     };
     enemyState.currentIntent = this._buildEnemyIntent(enemyState);
     enemyState.nextAttack =
@@ -1462,7 +1639,11 @@ export class GameState {
   /** @returns {import('../data/enemies.js').EnemyDef} */
   _pickRandomEnemyDef(isElite = false) {
     let enemyIds = Object.keys(enemyLibrary).filter(
-      (id) => id !== 'boss' && id !== 'fiakier' && id !== 'pomocnik_fiakra'
+      (id) =>
+        id !== 'boss' &&
+        id !== 'fiakier' &&
+        id !== 'pomocnik_fiakra' &&
+        !enemyLibrary[id]?.eventOnly
     );
 
     enemyIds = enemyIds.filter((id) => Boolean(enemyLibrary[id]?.elite) === isElite);
@@ -1473,6 +1654,7 @@ export class GameState {
           id !== 'boss' &&
           id !== 'fiakier' &&
           id !== 'pomocnik_fiakra' &&
+          !enemyLibrary[id]?.eventOnly &&
           Boolean(enemyLibrary[id]?.elite) !== isElite
       );
     }
@@ -1509,6 +1691,7 @@ export class GameState {
     this.termometerTurnParity = 0;
     this.battleTurnsElapsed = 0;
     this.zegarekFreeSkillAvailable = false;
+    this._resetBattleScopedFlags();
     this._setCurrentWeatherFromNode();
     this._applyBattleStartRelics();
     this.startTurn();
@@ -1527,8 +1710,10 @@ export class GameState {
 
   /**
    * @param {number} amount
+   * @returns {string[]}
    */
   _drawCards(amount) {
+    const drawn = [];
     const effectiveAmount = amount;
     for (let i = 0; i < effectiveAmount; i++) {
       if (this.deck.length === 0) {
@@ -1537,8 +1722,13 @@ export class GameState {
         this.discard = [];
         this._shuffle(this.deck);
       }
-      this.hand.push(this.deck.pop());
+      const cardId = this.deck.pop();
+      if (typeof cardId === 'string') {
+        this.hand.push(cardId);
+        drawn.push(cardId);
+      }
     }
+    return drawn;
   }
 
   /**
@@ -1556,7 +1746,11 @@ export class GameState {
    */
   _buildEnemyIntent(enemyState) {
     if (enemyState.patternType === 'loop') {
-      const move = enemyState.pattern[enemyState.patternIndex % enemyState.pattern.length];
+      const activePattern =
+        enemyState.phaseTwoTriggered && enemyState.phaseTwoPattern.length > 0
+          ? enemyState.phaseTwoPattern
+          : enemyState.pattern;
+      const move = activePattern[enemyState.patternIndex % activePattern.length];
       return { ...move };
     }
 
@@ -1609,6 +1803,18 @@ export class GameState {
       sourceEntity.status.next_double = false;
     }
 
+    if (
+      sourceEntity === this.player &&
+      targetEntity === this.enemy &&
+      sourceEntity.status.furia_turysty > 0
+    ) {
+      dmg = Math.ceil(dmg * 1.5);
+    }
+
+    if (sourceEntity === this.enemy && this.enemy.portraitShameTurns > 0) {
+      dmg = Math.max(0, dmg - 2);
+    }
+
     if (targetEntity.status.vulnerable > 0) {
       dmg = Math.ceil(dmg * 1.5);
     }
@@ -1625,7 +1831,35 @@ export class GameState {
    */
   _calcAttackDamage(attacker, baseDmg) {
     const target = attacker === this.player ? this.enemy : this.player;
-    return this.calculateDamage(baseDmg, attacker, target);
+    const attackBonus =
+      attacker === this.player && target === this.enemy ? this.currentAttackCardBonus : 0;
+    return this.calculateDamage(baseDmg + attackBonus, attacker, target);
+  }
+
+  _handleEnemyPhaseTransitions() {
+    if (this.enemy.id !== 'naganiacze_duo') return;
+    if (this.enemy.phaseTwoTriggered) return;
+    if (this.enemy.hp > 40 || this.enemy.hp <= 0) return;
+
+    this.enemy.phaseTwoTriggered = true;
+    this.enemy.patternIndex = 0;
+    this.enemy.status.weak = 0;
+    this.enemy.status.fragile = 0;
+    this.enemy.status.vulnerable = 0;
+    this.enemy.status.strength += 2;
+    this.enemy.block += 8;
+    if (this.enemy.phase2SpriteSvg) {
+      this.enemy.spriteSvg = this.enemy.phase2SpriteSvg;
+    }
+    this.enemyPhaseTransitionMessage = 'Seba ucieka! Mati wpada w furię!';
+    this._refreshEnemyIntent();
+  }
+
+  _resetBattleScopedFlags() {
+    this.nextAttackCardBonus = 0;
+    this.currentAttackCardBonus = 0;
+    this.enemyEvasionEvent = false;
+    this.enemyPhaseTransitionMessage = null;
   }
 
   /**
@@ -1649,6 +1883,12 @@ export class GameState {
       if (this.combat.playerAttackMissed) {
         return { raw: 0, blocked: 0, dealt: 0 };
       }
+    }
+
+    if (this.combat.activeSide === 'player' && this.enemy.evasionCharges > 0) {
+      this.enemy.evasionCharges -= 1;
+      this.enemyEvasionEvent = true;
+      return { raw: 0, blocked: 0, dealt: 0 };
     }
 
     const hpBefore = this.enemy.hp;
@@ -1679,6 +1919,8 @@ export class GameState {
         this.enemy.block += 10;
         this.enemy.hartDuchaTriggered = true;
       }
+
+      this._handleEnemyPhaseTransitions();
     }
 
     this._checkEnemyBankruptcy();
@@ -1774,6 +2016,9 @@ export class GameState {
 
     if (intent.type === 'block') {
       this.enemy.block += intent.block;
+      if (intent.gainEvasion && intent.gainEvasion > 0) {
+        this.enemy.evasionCharges += intent.gainEvasion;
+      }
       if (intent.heal && intent.heal > 0) {
         this.enemy.hp = Math.min(this.enemy.maxHp, this.enemy.hp + intent.heal);
       }
@@ -1843,7 +2088,7 @@ export class GameState {
       this.enemy.ped = (this.enemy.ped ?? 0) + intent.gainPed;
     }
 
-    if (intent.stealDutki && intent.stealDutki > 0) {
+    if (intent.stealDutki && intent.stealDutki > 0 && dealt > 0) {
       if (this.dutki >= intent.stealDutki) {
         this.dutki -= intent.stealDutki;
       } else {
@@ -1878,7 +2123,8 @@ export class GameState {
       return `Zamiar: Ogłuszony (😵 ${this.enemy.stunnedTurns})`;
     }
     if (intent.type === 'block') {
-      return `Zamiar: ${intent.name} (🛡️ ${intent.block})`;
+      const evasionPart = intent.gainEvasion ? `, 🌀 ${intent.gainEvasion}` : '';
+      return `Zamiar: ${intent.name} (🛡️ ${intent.block}${evasionPart})`;
     }
 
     if (intent.type === 'buff') {
@@ -1904,11 +2150,12 @@ export class GameState {
     }
 
     const totalDamage = this.getEnemyIntentDamage();
+    const stealPart = intent.stealDutki ? `, 💰 -${intent.stealDutki}` : '';
     if (hits > 1) {
-      return `Zamiar: ${intent.name} (⚔️ ${totalDamage}, ${hits}x${intent.stealDutki ? `, 💰 -${intent.stealDutki}` : ''})`;
+      return `Zamiar: ${intent.name} (⚔️ ${totalDamage}, ${hits}x${stealPart})`;
     }
 
-    return `Zamiar: ${intent.name} (⚔️ ${totalDamage}${intent.stealDutki ? `, 💰 -${intent.stealDutki}` : ''})`;
+    return `Zamiar: ${intent.name} (⚔️ ${totalDamage}${stealPart})`;
   }
 
   /**
@@ -2017,6 +2264,15 @@ export class GameState {
       });
     }
 
+    if (this.enemy.evasionCharges > 0) {
+      specials.push({
+        icon: '🌀',
+        label: 'Unik',
+        value: this.enemy.evasionCharges,
+        tooltip: 'Anuluje najbliższy atak gracza i zużywa 1 ładunek.',
+      });
+    }
+
     return specials;
   }
 
@@ -2028,6 +2284,7 @@ export class GameState {
     if (status.weak > 0) status.weak--;
     if (status.fragile > 0) status.fragile--;
     if (status.vulnerable > 0) status.vulnerable--;
+    if (status.furia_turysty > 0) status.furia_turysty--;
   }
 
   /**
@@ -2043,6 +2300,8 @@ export class GameState {
     this.enemy.tookHpDamageThisTurn = false;
     this.enemy.lichwaTriggeredThisTurn = false;
     this.player.cardsPlayedThisTurn = 0;
+    this.nextAttackCardBonus = 0;
+    this.currentAttackCardBonus = 0;
 
     this.battleTurnsElapsed += 1;
     this.totalTurnsPlayed += 1;
@@ -2124,6 +2383,10 @@ export class GameState {
     const isAttackCard = card.type === 'attack';
 
     if (isAttackCard) {
+      if (this.nextAttackCardBonus > 0) {
+        this.currentAttackCardBonus = this.nextAttackCardBonus;
+        this.nextAttackCardBonus = 0;
+      }
       this.combat.playerAttackMissCheck =
         this.currentWeather === 'fog' && !this.combat.firstAttackUsed;
       this.combat.playerAttackMissRolled = false;
@@ -2168,6 +2431,7 @@ export class GameState {
     this.combat.playerAttackMissCheck = false;
     this.combat.playerAttackMissRolled = false;
     this.combat.playerAttackMissed = false;
+    this.currentAttackCardBonus = 0;
 
     this.player.cardsPlayedThisTurn += 1;
 
@@ -2281,6 +2545,10 @@ export class GameState {
 
     const enemyAttack = this._applyEnemyIntent();
 
+    if (this.enemy.portraitShameTurns > 0) {
+      this.enemy.portraitShameTurns -= 1;
+    }
+
     // Zepsuty Termometr: enemy status ticks every other turn
     if (!this.hasRelic('zepsuty_termometr') || this.termometerTurnParity === 0) {
       this._tickStatus(this.enemy.status);
@@ -2334,6 +2602,7 @@ export class GameState {
     this.lansBreakEvent = false;
     this.rachunekResistEvent = false;
     this.dumaPodhalaActive = false;
+    this._resetBattleScopedFlags();
     this.lastVictoryMessage = '';
 
     this.player.status = defaultStatus();
@@ -2359,6 +2628,7 @@ export class GameState {
       this.forceMainBossNextBattle = false;
     }
     this.enemy = this._createEnemyState(nextEnemy);
+    this.battleContext = 'map';
     this._setCurrentWeatherFromNode();
     this.pendingBattleDutki = true;
 
@@ -2370,11 +2640,14 @@ export class GameState {
    * Starts a fresh battle against a specific enemy ID without entering the random encounter pool.
    * Intended for scripted transitions (e.g., event fallback fights).
    * @param {string} enemyId
+   * @param {{ battleContext?: 'map' | 'event' | 'debug', rewardRelicId?: string | null }} [options]
    * @returns {boolean}
    */
-  startBattleWithEnemyId(enemyId) {
+  startBattleWithEnemyId(enemyId, options = {}) {
     const enemyDef = enemyLibrary[enemyId];
     if (!enemyDef) return false;
+
+    const { battleContext = 'map', rewardRelicId = null } = options;
 
     this.player.block = 0;
     this.attackCardsPlayedThisBattle = 0;
@@ -2391,6 +2664,7 @@ export class GameState {
     this.lansBreakEvent = false;
     this.rachunekResistEvent = false;
     this.dumaPodhalaActive = false;
+    this._resetBattleScopedFlags();
     this.lastVictoryMessage = '';
 
     this.player.status = defaultStatus();
@@ -2405,6 +2679,8 @@ export class GameState {
     this._shuffle(this.deck);
 
     this.enemy = this._createEnemyState(enemyDef);
+    this.battleContext = battleContext;
+    this.pendingEventVictoryRelicId = rewardRelicId;
     this._setCurrentWeatherFromNode();
     this.pendingBattleDutki = true;
 
@@ -2506,6 +2782,7 @@ export class GameState {
     this.currentScreen = 'map';
     this.lastRegularEnemyId = 'cepr';
     this.activeEventId = null;
+    this.lastRandomEventId = null;
     this.jumpToBoss = false;
     this.forceMainBossNextBattle = false;
     this.currentWeather = 'clear';
@@ -2524,6 +2801,10 @@ export class GameState {
     this.rachunekResistEvent = false;
     this.hasStartedFirstBattle = false;
     this.dumaPodhalaActive = false;
+    this._resetBattleScopedFlags();
+    this.battleContext = 'map';
+    this.pendingEventBattleEnemyId = null;
+    this.pendingEventVictoryRelicId = null;
     this.runSummary = null;
 
     this.enemy = this._createEnemyState(enemyLibrary.cepr);

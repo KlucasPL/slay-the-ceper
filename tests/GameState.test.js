@@ -219,6 +219,90 @@ describe('GameState', () => {
     });
   });
 
+  describe('prestiz_na_kredyt', () => {
+    it('grants 6 base block plus scaling from Dutki', () => {
+      const s = freshState();
+      s.hand = ['prestiz_na_kredyt'];
+      s.dutki = 60; // +6 bonus
+      s.player.block = 0;
+
+      s.playCard(0);
+
+      expect(s.player.block).toBe(12);
+    });
+
+    it('caps scaling bonus at +14 (20 total block)', () => {
+      const s = freshState();
+      s.hand = ['prestiz_na_kredyt'];
+      s.dutki = 999;
+      s.player.block = 0;
+
+      s.playCard(0);
+
+      expect(s.player.block).toBe(20);
+    });
+  });
+
+  describe('furia_turysty', () => {
+    it('applies fury buff and loses 3 HP on play', () => {
+      const s = freshState();
+      s.hand = ['furia_turysty'];
+      s.player.hp = 25;
+
+      s.playCard(0);
+
+      expect(s.player.status.furia_turysty).toBe(1);
+      expect(s.player.hp).toBe(22);
+      expect(s.exhaust).toContain('furia_turysty');
+    });
+  });
+
+  describe('spostrzegawczosc', () => {
+    it('draws 1 and grants +2 to next attack when drawn card is attack', () => {
+      const s = freshState(3);
+      s.hand = ['spostrzegawczosc', 'ciupaga'];
+      s.deck = ['ciupaga'];
+      s.enemy.hp = 50;
+      s.enemy.block = 0;
+
+      const skillResult = s.playCard(0);
+      expect(skillResult.success).toBe(true);
+
+      const attackIndex = s.hand.indexOf('ciupaga');
+      expect(attackIndex).toBeGreaterThanOrEqual(0);
+      s.playCard(attackIndex);
+      expect(s.enemy.hp).toBe(42);
+    });
+
+    it('does not grant bonus when drawn card is not attack', () => {
+      const s = freshState(3);
+      s.hand = ['spostrzegawczosc', 'ciupaga'];
+      s.deck = ['gasior'];
+      s.enemy.hp = 50;
+      s.enemy.block = 0;
+
+      s.playCard(0);
+
+      const attackIndex = s.hand.indexOf('ciupaga');
+      expect(attackIndex).toBeGreaterThanOrEqual(0);
+      s.playCard(attackIndex);
+      expect(s.enemy.hp).toBe(44);
+    });
+  });
+
+  describe('pocieszenie', () => {
+    it('draws 1 card and exhausts', () => {
+      const s = freshState(1);
+      s.hand = ['pocieszenie'];
+      s.deck = ['gasior', 'ciupaga'];
+
+      s.playCard(0);
+
+      expect(s.hand).toHaveLength(1);
+      expect(s.exhaust).toContain('pocieszenie');
+    });
+  });
+
   // ── Status effects ────────────────────────────────────────────────────────
   describe('calculateDamage', () => {
     it('applies weak penalty to source outgoing damage', () => {
@@ -252,6 +336,18 @@ describe('GameState', () => {
       s.currentWeather = 'frozen';
       s.player.status.weak = 1;
       expect(s.calculateDamage(8, s.player, s.enemy)).toBe(4);
+    });
+
+    it('applies Furia Turysty as +50% outgoing damage this turn', () => {
+      const s = freshState();
+      s.player.status.furia_turysty = 1;
+      expect(s.calculateDamage(8, s.player, s.enemy)).toBe(12);
+    });
+
+    it('reduces enemy outgoing damage by 2 while Krzywy Portret penalty is active', () => {
+      const s = freshState();
+      s.enemy.portraitShameTurns = 1;
+      expect(s.calculateDamage(10, s.enemy, s.player)).toBe(8);
     });
   });
 
@@ -1016,6 +1112,22 @@ describe('GameState', () => {
       expect(drop).toBeLessThanOrEqual(36);
     });
 
+    it('zasluzony_portfel grants +6 only outside event battles', () => {
+      const s = freshState();
+      s.addRelic('zasluzony_portfel');
+      s.pendingBattleDutki = true;
+      s.battleContext = 'map';
+      vi.spyOn(Math, 'random').mockReturnValue(0);
+
+      const mapDrop = s.grantBattleDutki();
+      expect(mapDrop).toBe(34);
+
+      s.pendingBattleDutki = true;
+      s.battleContext = 'event';
+      const eventDrop = s.grantBattleDutki();
+      expect(eventDrop).toBe(28);
+    });
+
     describe('szczegliwa_podkowa', () => {
       it('grants +25 dutki when player HP is at or below 40% at end of battle', () => {
         const s = freshState();
@@ -1209,6 +1321,16 @@ describe('GameState', () => {
       expect(s.player.status.lans).toBe(1);
     });
 
+    it('krzywy_portret applies opening enemy attack penalty for one turn', () => {
+      const s = freshState();
+      s.addRelic('krzywy_portret');
+      s.enemy.portraitShameTurns = 0;
+
+      s._applyBattleStartRelics();
+
+      expect(s.enemy.portraitShameTurns).toBe(1);
+    });
+
     it('lustrzane_gogle adds +2 block per block card when Lans is active', () => {
       const s = freshState();
       s.addRelic('lustrzane_gogle');
@@ -1349,29 +1471,54 @@ describe('GameState', () => {
   });
 
   describe('map and economy', () => {
-    it('rollMidNodeType can generate event nodes with 20% chance', () => {
+    it('rollMidNodeType can generate event nodes with tuned chance', () => {
       const s = freshState();
       vi.spyOn(Math, 'random').mockReturnValue(0.19);
       expect(s._rollMidNodeType()).toBe('event');
     });
 
     describe('rollEventNodeOutcome', () => {
-      it('returns event for roll < 0.6', () => {
+      it('returns event for roll < 0.68', () => {
         const s = freshState();
-        vi.spyOn(Math, 'random').mockReturnValue(0.59);
+        vi.spyOn(Math, 'random').mockReturnValue(0.67);
         expect(s.rollEventNodeOutcome()).toBe('event');
       });
 
-      it('returns fight for roll between 0.6 and 0.85', () => {
+      it('returns fight for roll between 0.68 and 0.8', () => {
         const s = freshState();
-        vi.spyOn(Math, 'random').mockReturnValue(0.6);
+        vi.spyOn(Math, 'random').mockReturnValue(0.79);
         expect(s.rollEventNodeOutcome()).toBe('fight');
       });
 
-      it('returns shop for roll >= 0.85', () => {
+      it('returns shop for roll >= 0.8', () => {
         const s = freshState();
-        vi.spyOn(Math, 'random').mockReturnValue(0.85);
+        vi.spyOn(Math, 'random').mockReturnValue(0.8);
         expect(s.rollEventNodeOutcome()).toBe('shop');
+      });
+    });
+
+    describe('pickRandomEventDef', () => {
+      it('does not repeat the same event twice in a row when alternatives exist', () => {
+        const s = freshState();
+        s.currentLevel = 0;
+        s.lastRandomEventId = 'fiakier_event';
+        vi.spyOn(Math, 'random').mockReturnValue(0);
+
+        const next = s.pickRandomEventDef();
+
+        expect(next).not.toBeNull();
+        expect(next?.id).not.toBe('fiakier_event');
+      });
+
+      it('stores selected event id as lastRandomEventId', () => {
+        const s = freshState();
+        s.currentLevel = 0;
+        vi.spyOn(Math, 'random').mockReturnValue(0);
+
+        const next = s.pickRandomEventDef();
+
+        expect(next).not.toBeNull();
+        expect(s.lastRandomEventId).toBe(next?.id ?? null);
       });
     });
 
@@ -1382,23 +1529,23 @@ describe('GameState', () => {
         expect(node).toHaveProperty('eventOutcome');
       });
 
-      it('eventOutcome is event when roll < 0.6', () => {
+      it('eventOutcome is event when roll < 0.68', () => {
         const s = freshState();
-        vi.spyOn(Math, 'random').mockReturnValue(0.5);
+        vi.spyOn(Math, 'random').mockReturnValue(0.67);
         const node = s._createMapNode('event', 0, 1);
         expect(node.eventOutcome).toBe('event');
       });
 
-      it('eventOutcome is fight when 0.6 <= roll < 0.85', () => {
+      it('eventOutcome is fight when 0.68 <= roll < 0.8', () => {
         const s = freshState();
-        vi.spyOn(Math, 'random').mockReturnValue(0.7);
+        vi.spyOn(Math, 'random').mockReturnValue(0.79);
         const node = s._createMapNode('event', 0, 1);
         expect(node.eventOutcome).toBe('fight');
       });
 
-      it('eventOutcome is shop when roll >= 0.85', () => {
+      it('eventOutcome is shop when roll >= 0.8', () => {
         const s = freshState();
-        vi.spyOn(Math, 'random').mockReturnValue(0.9);
+        vi.spyOn(Math, 'random').mockReturnValue(0.8);
         const node = s._createMapNode('event', 0, 1);
         expect(node.eventOutcome).toBe('shop');
       });
@@ -1532,6 +1679,37 @@ describe('GameState', () => {
       expect(s.dutki).toBe(first);
     });
 
+    it('guarantees at least one reachable true event on map', () => {
+      const s = freshState();
+
+      const queue = [{ x: 1, y: 0 }];
+      const seen = new Set();
+      let hasReachableTrueEvent = false;
+
+      while (queue.length > 0) {
+        const current = queue.shift();
+        const key = `${current.x},${current.y}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+
+        const node = s.map[current.y]?.[current.x];
+        if (!node) continue;
+
+        if (node.type === 'event' && node.eventOutcome === 'event') {
+          hasReachableTrueEvent = true;
+          break;
+        }
+
+        node.connections.forEach((targetX) => {
+          if (s.map[current.y + 1]?.[targetX]) {
+            queue.push({ x: targetX, y: current.y + 1 });
+          }
+        });
+      }
+
+      expect(hasReachableTrueEvent).toBe(true);
+    });
+
     it('removeCrossingConnections swaps targets to remove local crossings', () => {
       const s = freshState();
       /** @type {Array<Array<any>>} */
@@ -1623,6 +1801,20 @@ describe('GameState', () => {
       stock.cards.forEach((cardId) => {
         expect(cardLibrary[cardId]?.isStarter).not.toBe(true);
       });
+    });
+
+    it('shop stock excludes event-only cards and relics', () => {
+      const s = freshState();
+
+      for (let i = 0; i < 40; i += 1) {
+        const stock = s.generateShopStock();
+        stock.cards.forEach((cardId) => {
+          expect(cardLibrary[cardId]?.eventOnly).not.toBe(true);
+        });
+        if (stock.relic) {
+          expect(relicLibrary[stock.relic]?.eventOnly).not.toBe(true);
+        }
+      }
     });
 
     it('assigns weather to combat nodes and halny to boss node', () => {
@@ -1724,6 +1916,97 @@ describe('GameState', () => {
       expect(s.jumpToBoss).toBe(false);
     });
 
+    it('karykaturzysta choice 0 spends 25 dutki and grants krzywy_portret', () => {
+      const s = freshState();
+      s.setActiveEvent('event_karykaturzysta');
+      s.dutki = 50;
+
+      const result = s.applyActiveEventChoice(0);
+
+      expect(result.success).toBe(true);
+      expect(s.dutki).toBe(25);
+      expect(s.hasRelic('krzywy_portret')).toBe(true);
+    });
+
+    it('karykaturzysta choice 1 grants furia_turysty card', () => {
+      const s = freshState();
+      s.setActiveEvent('event_karykaturzysta');
+
+      const result = s.applyActiveEventChoice(1);
+
+      expect(result.success).toBe(true);
+      expect(s.deck).toContain('furia_turysty');
+    });
+
+    it('karykaturzysta choice 2 loses 5 HP and grants prestiz_na_kredyt card', () => {
+      const s = freshState();
+      s.setActiveEvent('event_karykaturzysta');
+      s.player.hp = 20;
+
+      const result = s.applyActiveEventChoice(2);
+
+      expect(result.success).toBe(true);
+      expect(s.player.hp).toBe(15);
+      expect(s.deck).toContain('prestiz_na_kredyt');
+    });
+
+    it('hazard option 1 win branch grants +45 dutki after paying 20', () => {
+      const s = freshState();
+      s.setActiveEvent('event_hazard_karton');
+      s.dutki = 50;
+      vi.spyOn(Math, 'random').mockReturnValue(0.2);
+
+      const result = s.applyActiveEventChoice(0);
+
+      expect(result.success).toBe(true);
+      expect(s.dutki).toBe(75);
+      expect(result.message).toContain('Wygrana!');
+    });
+
+    it('hazard option 1 loss branch adds pocieszenie to deck', () => {
+      const s = freshState();
+      s.setActiveEvent('event_hazard_karton');
+      s.dutki = 50;
+      vi.spyOn(Math, 'random').mockReturnValue(0.8);
+
+      const result = s.applyActiveEventChoice(0);
+
+      expect(result.success).toBe(true);
+      expect(s.dutki).toBe(30);
+      expect(s.deck).toContain('pocieszenie');
+      expect(result.message).toContain('Przegrana!');
+    });
+
+    it('hazard choices expose consequence descriptions for event UI', () => {
+      const hazard = eventLibrary.event_hazard_karton;
+
+      hazard.choices.forEach((choice) => {
+        expect(typeof choice.consequence).toBe('string');
+        expect(choice.consequence.trim().length).toBeGreaterThan(0);
+      });
+    });
+
+    it('hazard option 2 adds spostrzegawczosc card', () => {
+      const s = freshState();
+      s.setActiveEvent('event_hazard_karton');
+
+      const result = s.applyActiveEventChoice(1);
+
+      expect(result.success).toBe(true);
+      expect(s.deck).toContain('spostrzegawczosc');
+    });
+
+    it('hazard option 3 queues event battle and relic reward', () => {
+      const s = freshState();
+      s.setActiveEvent('event_hazard_karton');
+
+      const result = s.applyActiveEventChoice(2);
+      const queued = s.consumeQueuedEventBattle();
+
+      expect(result.success).toBe(true);
+      expect(queued).toEqual({ enemyId: 'naganiacze_duo', rewardRelicId: 'zasluzony_portfel' });
+    });
+
     it('buyItem buys a shop card once and removes it from stock', () => {
       const s = freshState();
       s.dutki = 500;
@@ -1799,6 +2082,48 @@ describe('GameState', () => {
 
       const [pickedCardId] = s.generateCardRewardChoices(1);
       expect(cardLibrary[pickedCardId]?.rarity).toBe('rare');
+    });
+
+    it('post-battle card rewards exclude event-only cards', () => {
+      const s = freshState();
+
+      for (let i = 0; i < 40; i += 1) {
+        const choices = s.generateCardRewardChoices(3);
+        choices.forEach((cardId) => {
+          expect(cardLibrary[cardId]?.eventOnly).not.toBe(true);
+        });
+      }
+    });
+
+    it('relic rewards exclude event-only relics', () => {
+      const s = freshState();
+
+      for (let i = 0; i < 40; i += 1) {
+        const relicId = s.generateRelicReward(true);
+        if (relicId) {
+          expect(relicLibrary[relicId]?.eventOnly).not.toBe(true);
+          s.addRelic(relicId);
+        }
+      }
+    });
+
+    it('generateRelicChoices excludes event-only and marks offered relics as seen', () => {
+      const s = freshState();
+
+      const firstOffer = s.generateRelicChoices(3);
+      expect(firstOffer).toHaveLength(3);
+      firstOffer.forEach((relicId) => {
+        expect(relicLibrary[relicId]?.eventOnly).not.toBe(true);
+      });
+      firstOffer.forEach((relicId) => {
+        expect(s.seenRelicOffers).toContain(relicId);
+      });
+
+      const secondOffer = s.generateRelicChoices(3);
+      expect(secondOffer).toHaveLength(3);
+      secondOffer.forEach((relicId) => {
+        expect(firstOffer).not.toContain(relicId);
+      });
     });
 
     it('removeCardFromDeck permanently removes selected card copy', () => {
@@ -2149,6 +2474,7 @@ describe('GameState', () => {
         energy_next_turn: 1,
         lans: 1,
         duma_podhala: 1,
+        furia_turysty: 1,
       };
       s.enemy.status = {
         strength: 4,
@@ -2159,6 +2485,7 @@ describe('GameState', () => {
         energy_next_turn: 0,
         lans: 0,
         duma_podhala: 0,
+        furia_turysty: 0,
       };
 
       s.resetBattle();
@@ -2174,6 +2501,7 @@ describe('GameState', () => {
         energy_next_turn: 0,
         lans: 0,
         duma_podhala: 0,
+        furia_turysty: 0,
       });
       expect(s.enemy.status).toEqual({
         strength: 0,
@@ -2184,6 +2512,7 @@ describe('GameState', () => {
         energy_next_turn: 0,
         lans: 0,
         duma_podhala: 0,
+        furia_turysty: 0,
       });
     });
 
@@ -2251,6 +2580,15 @@ describe('GameState', () => {
       const next = s._pickRandomEnemyDef();
 
       expect(next.id).not.toBe('cepr');
+    });
+
+    it('never rolls event-only enemies in regular map battles', () => {
+      const s = freshState();
+
+      for (let i = 0; i < 40; i += 1) {
+        const next = s._pickRandomEnemyDef();
+        expect(enemyLibrary[next.id]?.eventOnly).not.toBe(true);
+      }
     });
 
     it('elite pool pick only returns enemies marked as elite', () => {
@@ -2361,6 +2699,89 @@ describe('GameState', () => {
       expect(s.pendingBattleDutki).toBe(true);
     });
 
+    it('can start event battle with context and pending reward relic', () => {
+      const s = freshState();
+      const started = s.startBattleWithEnemyId('naganiacze_duo', {
+        battleContext: 'event',
+        rewardRelicId: 'zasluzony_portfel',
+      });
+
+      expect(started).toBe(true);
+      expect(s.battleContext).toBe('event');
+      expect(s.consumePendingEventVictoryRelicReward()).toBe('zasluzony_portfel');
+      expect(s.consumePendingEventVictoryRelicReward()).toBeNull();
+    });
+
+    it('naganiacze transition triggers once at hp <= 40 and applies phase buff', () => {
+      const s = freshState();
+      s.enemy = s._createEnemyState(enemyLibrary.naganiacze_duo);
+      s.enemy.status.weak = 2;
+      s.enemy.status.fragile = 2;
+      s.enemy.status.vulnerable = 2;
+      s.enemy.hp = 41;
+      s.enemy.block = 0;
+      s.player.status.strength = 0;
+
+      s._applyDamageToEnemy(1);
+
+      expect(s.enemy.phaseTwoTriggered).toBe(true);
+      expect(s.enemy.status.weak).toBe(0);
+      expect(s.enemy.status.fragile).toBe(0);
+      expect(s.enemy.status.vulnerable).toBe(0);
+      expect(s.enemy.status.strength).toBe(2);
+      expect(s.enemy.block).toBe(8);
+      expect(s.consumeEnemyPhaseTransitionMessage()).toContain('Seba ucieka');
+
+      const strengthAfterFirstTrigger = s.enemy.status.strength;
+      s._applyDamageToEnemy(1);
+      expect(s.enemy.status.strength).toBe(strengthAfterFirstTrigger);
+      expect(s.consumeEnemyPhaseTransitionMessage()).toBeNull();
+    });
+
+    it('naganiacze steal only when hit is unblocked', () => {
+      const s = freshState();
+      s.enemy = s._createEnemyState(enemyLibrary.naganiacze_duo);
+      s.dutki = 20;
+      setEnemyIntent(s, {
+        type: 'attack',
+        name: 'Szybkie Palce',
+        damage: 4,
+        hits: 2,
+        stealDutki: 2,
+      });
+
+      s.player.block = 8;
+      s.endTurn();
+      expect(s.dutki).toBe(20);
+
+      setEnemyIntent(s, {
+        type: 'attack',
+        name: 'Szybkie Palce',
+        damage: 4,
+        hits: 2,
+        stealDutki: 2,
+      });
+      s.player.block = 0;
+      s.endTurn();
+      expect(s.dutki).toBe(18);
+    });
+
+    it('enemy evasion charge cancels next incoming player attack', () => {
+      const s = freshState();
+      s.enemy = s._createEnemyState(enemyLibrary.naganiacze_duo);
+      s.enemy.evasionCharges = 1;
+      s.enemy.hp = 40;
+
+      const first = s._applyDamageToEnemy(10);
+      expect(first.dealt).toBe(0);
+      expect(s.enemy.hp).toBe(40);
+      expect(s.consumeEnemyEvasionEvent()).toBe(true);
+
+      const second = s._applyDamageToEnemy(10);
+      expect(second.dealt).toBe(10);
+      expect(s.enemy.hp).toBe(30);
+    });
+
     it('pomocnik_fiakra victory grants standard 28-36 dutki range', () => {
       const s = freshState();
       s.startBattleWithEnemyId('pomocnik_fiakra');
@@ -2452,6 +2873,7 @@ describe('GameState', () => {
         'konik_spod_kuznic',
         'mistrz_redyku',
         'naganiacz_z_krupowek',
+        'naganiacze_duo',
         'parkingowy',
         'pomocnik_fiakra',
         'spekulant',
@@ -2460,7 +2882,7 @@ describe('GameState', () => {
 
     it('event library includes fiakier event definition', () => {
       const ids = Object.keys(eventLibrary).sort();
-      expect(ids).toEqual(['fiakier_event']);
+      expect(ids).toEqual(['event_hazard_karton', 'event_karykaturzysta', 'fiakier_event']);
     });
 
     it('does not scale enemies in normal mode', () => {

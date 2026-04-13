@@ -1,4 +1,5 @@
 import { enemyLibrary } from '../data/enemies.js';
+import { eventLibrary } from '../data/events.js';
 import { relicLibrary } from '../data/relics.js';
 
 const STYLE_ID = 'debug-overlay-style';
@@ -208,13 +209,23 @@ export class DebugOverlay {
     overrideGroup.append(overrideSelect, fogToggleWrap);
 
     const eventGroup = this._group('Event Tools');
-    const spawnFiakierBtn = this._button('Spawn: Wąsaty Fiakier', () => {
-      const started = this.ui.launchDebugEvent('fiakier_event');
-      this._log(
-        started ? 'Spawned event: Wąsaty Fiakier' : 'Failed to spawn event: Wąsaty Fiakier'
-      );
+    const eventSelect = document.createElement('select');
+    eventSelect.className = 'debug-select';
+    Object.values(eventLibrary)
+      .sort((a, b) => a.title.localeCompare(b.title, 'pl'))
+      .forEach((eventDef) => {
+        const opt = document.createElement('option');
+        opt.value = eventDef.id;
+        opt.textContent = `${eventDef.title} (${eventDef.id})`;
+        eventSelect.appendChild(opt);
+      });
+    const spawnEventBtn = this._button('Spawn Selected Event', () => {
+      const eventId = eventSelect.value;
+      const started = this.ui.launchDebugEvent(eventId);
+      const eventTitle = eventLibrary[eventId]?.title ?? eventId;
+      this._log(started ? `Spawned event: ${eventTitle}` : `Failed to spawn event: ${eventTitle}`);
     });
-    eventGroup.append(spawnFiakierBtn);
+    eventGroup.append(eventSelect, spawnEventBtn);
 
     panel.append(mapRowsGroup, overrideGroup, eventGroup);
     return panel;

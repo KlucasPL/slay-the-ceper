@@ -2,12 +2,14 @@
  * @typedef {{
  *   text: string,
  *   description: string,
+ *   consequence?: string,
  *   cost: number,
  *   effect: (state: import('../state/GameState.js').GameState) => string,
  * }} EventChoiceDef
  *
  * @typedef {{
  *   id: string,
+ *   act?: 'I' | 'II' | 'III',
  *   title: string,
  *   description: string,
  *   image: string,
@@ -40,8 +42,148 @@ const fiakierEventSvg = `
   <path d="M 80,48 Q 98,40 104,48" fill="none" stroke="#5a3216" stroke-width="2"/>
 </svg>`;
 
+const karykaturzystaEventSvg = `
+<svg viewBox="0 0 240 140" width="220" height="130" aria-hidden="true">
+  <rect x="20" y="106" width="130" height="10" rx="5" fill="#6b4c2d"/>
+  <line x1="60" y1="40" x2="30" y2="106" stroke="#8a6a48" stroke-width="6" stroke-linecap="round"/>
+  <line x1="100" y1="40" x2="140" y2="106" stroke="#8a6a48" stroke-width="6" stroke-linecap="round"/>
+  <line x1="60" y1="40" x2="100" y2="40" stroke="#8a6a48" stroke-width="6" stroke-linecap="round"/>
+
+  <rect x="66" y="44" width="52" height="64" rx="4" fill="#f8f1df" stroke="#4a3522" stroke-width="3"/>
+  <path d="M78 66 Q92 48 106 66" fill="none" stroke="#2d2d2d" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="86" cy="76" r="3" fill="#2d2d2d"/>
+  <circle cx="99" cy="76" r="3" fill="#2d2d2d"/>
+  <path d="M82 90 Q93 100 104 90" fill="none" stroke="#2d2d2d" stroke-width="3" stroke-linecap="round"/>
+  <path d="M72 56 L78 54 M72 62 L78 60 M72 68 L78 66" stroke="#4b4b4b" stroke-width="2" stroke-linecap="round"/>
+
+  <ellipse cx="176" cy="82" rx="22" ry="28" fill="#213042"/>
+  <circle cx="176" cy="56" r="18" fill="#f0c39b"/>
+  <ellipse cx="176" cy="46" rx="22" ry="9" fill="#1d1d1d"/>
+  <path d="M161 46 Q176 28 191 46" fill="#2b2b2b"/>
+  <line x1="196" y1="88" x2="218" y2="70" stroke="#f0c39b" stroke-width="5" stroke-linecap="round"/>
+  <rect x="213" y="66" width="18" height="6" rx="3" fill="#2f2f2f"/>
+
+  <path d="M150 38 Q176 20 202 38" fill="#1a1a1a"/>
+  <circle cx="176" cy="22" r="4" fill="#e53935"/>
+</svg>`;
+
+const hazardKartonEventSvg = `
+<svg viewBox="0 0 240 140" width="220" height="130" aria-hidden="true">
+  <rect x="18" y="108" width="160" height="10" rx="5" fill="#6b4c2d"/>
+  <rect x="44" y="80" width="92" height="28" rx="3" fill="#b89562" stroke="#6b4c2d" stroke-width="3"/>
+  <line x1="44" y1="89" x2="136" y2="89" stroke="#8a6a48" stroke-width="2"/>
+  <line x1="44" y1="97" x2="136" y2="97" stroke="#8a6a48" stroke-width="2"/>
+  <circle cx="66" cy="74" r="7" fill="#2d2d2d"/>
+  <circle cx="90" cy="74" r="7" fill="#2d2d2d"/>
+  <circle cx="114" cy="74" r="7" fill="#2d2d2d"/>
+  <circle cx="90" cy="74" r="3" fill="#f5f1dd"/>
+
+  <rect x="158" y="58" width="42" height="52" rx="8" fill="#333"/>
+  <circle cx="179" cy="48" r="13" fill="#444"/>
+  <rect x="168" y="36" width="22" height="9" rx="3" fill="#222"/>
+  <circle cx="174" cy="49" r="2" fill="#111"/>
+  <circle cx="184" cy="49" r="2" fill="#111"/>
+  <path d="M 172,56 Q 179,60 186,56" fill="none" stroke="#111" stroke-width="2"/>
+
+  <line x1="200" y1="74" x2="222" y2="64" stroke="#f0c39b" stroke-width="5" stroke-linecap="round"/>
+  <rect x="218" y="58" width="12" height="10" rx="2" fill="#a87f47"/>
+
+  <text x="18" y="24" font-size="13" font-weight="700" fill="#2d2d2d">Gdzie jest kulka?!</text>
+</svg>`;
+
 /** @type {Record<string, GameEventDef>} */
 export const eventLibrary = {
+  event_hazard_karton: {
+    id: 'event_hazard_karton',
+    act: 'I',
+    title: 'Hazard na Kartonie',
+    description:
+      'Przy kartonie po bananach stoi podejrzany typ i miesza kubki. "Gdzie jest kulka?!"',
+    image: hazardKartonEventSvg,
+    choices: [
+      {
+        text: 'Wchodzę w to! (20 dutków)',
+        description: 'Stawiasz wszystko na szybkie oko i jeszcze szybszą rękę.',
+        consequence:
+          'Koszt: 20 dutków. Wynik: 50% WYGRANA (+45 dutków), 50% PRZEGRANA (karta Pocieszenie: dobierz 1).',
+        cost: 20,
+        effect(state) {
+          if (Math.random() < 0.5) {
+            state.addDutki(45);
+            return 'Wygrana! Czysty fart. Wyciągasz banknot z rąk oszusta (+45 dutków).';
+          }
+          state.deck.push('pocieszenie');
+          return 'Przegrana! Mrugnąłeś i kulka znikła. Dostajesz kartę Pocieszenie.';
+        },
+      },
+      {
+        text: 'Obserwuj z boku',
+        description: 'Nie grasz. Patrzysz, jak oszust robi robotę palcami.',
+        consequence:
+          'Koszt: 0 dutków. Nagroda: karta Spostrzegawczość (dobierz 1; jeśli to Attack, Twój następny atak w tej turze zadaje +2 obrażeń).',
+        cost: 0,
+        effect(state) {
+          state.deck.push('spostrzegawczosc');
+          return 'Zauważasz kulkę w rękawie. Twoje oczy są teraz ostrzejsze.';
+        },
+      },
+      {
+        text: 'Wywróć im stolik',
+        description: 'Masz dość wałków. Czas roznieść ten interes.',
+        consequence:
+          'Koszt: 0 dutków. Efekt: walka eventowa z Naganiaczami. Nagroda po wygranej: Zasłużony Portfel (+6 dutków po każdym zwycięstwie w walce nieeventowej).',
+        cost: 0,
+        effect(state) {
+          state.queueEventBattle('naganiacze_duo', 'zasluzony_portfel');
+          return 'W tłumie robi się ciasno. Seba i Mati ruszają na Ciebie!';
+        },
+      },
+    ],
+  },
+  event_karykaturzysta: {
+    id: 'event_karykaturzysta',
+    act: 'I',
+    title: 'Uliczny Karykaturzysta',
+    description:
+      'Na Krupówkach uliczny artysta pokazuje Ci groteskowy portret. "Płać, bo dorysuję rogi!"',
+    image: karykaturzystaEventSvg,
+    choices: [
+      {
+        text: 'Kup arcydzieło (25 dutków)',
+        description: 'Płacisz i zabierasz obraz, który wywołuje śmiech i wybija wrogów z rytmu.',
+        consequence:
+          'Koszt: 25 dutków. Nagroda: relikt Krzywy Portret (wróg zadaje -2 obrażeń przez 1 turę).',
+        cost: 25,
+        effect(state) {
+          state.addRelic('krzywy_portret');
+          return 'Transakcja dokonana. Portret jest tak brzydki, że aż fascynujący. Przeciwnicy nie będą mogli powstrzymać śmiechu.';
+        },
+      },
+      {
+        text: 'To nie ja!',
+        description: 'Odmawiasz zapłaty i odpalisz się jak granat pod Giewontem.',
+        consequence:
+          'Koszt: brak. Nagroda: karta Furia Turysty (0 kosztu, +50% obrażeń w turze, -3 Krzepy, PRZEPADO).',
+        cost: 0,
+        effect(state) {
+          state.deck.push('furia_turysty');
+          return 'Twoja twarz czerwienieje z oburzenia na tę zniewagę. Czujesz nagły przypływ adrenaliny i chęć mordu.';
+        },
+      },
+      {
+        text: 'Dorysuj złoty łańcuch i furę',
+        description: 'Pozujesz jak gwiazda. Plecy cierpną, ale styl musi się zgadzać.',
+        consequence:
+          'Koszt: -5 Krzepy. Nagroda: karta Prestiż na Kredyt (1 koszt, 6 Gardy +2 za każde 20 dutków, max +14 bonusu).',
+        cost: 0,
+        effect(state) {
+          state.player.hp = Math.max(1, state.player.hp - 5);
+          state.deck.push('prestiz_na_kredyt');
+          return 'Stoisz bez ruchu przez godzinę w nienaturalnej pozie, prężąc muskuły. Twoje plecy pulsują bólem, ale efekt na papierze jest czystym prestiżem.';
+        },
+      },
+    ],
+  },
   fiakier_event: {
     id: 'fiakier_event',
     title: 'Wąsaty Fiakier',
@@ -58,6 +200,7 @@ export const eventLibrary = {
       {
         text: 'Pogłaskaj konia (30 dutków)',
         description: 'Koń jest miły w dotyku. Chwila relaksu regeneruje siły.',
+        consequence: 'Koszt: 30 dutków. Efekt: +15 Krzepy.',
         cost: 30,
         effect(state) {
           state.healPlayer(15);
@@ -67,6 +210,7 @@ export const eventLibrary = {
       {
         text: 'Popatrz na konia (10 dutków)',
         description: 'Tylko rzuciłeś okiem na kopyta, ale Fiakier już wyciąga rękę po zapłatę.',
+        consequence: 'Koszt: 10 dutków. Efekt: brak dodatkowej nagrody.',
         cost: 10,
         effect() {
           return 'Fiakier mruknął coś pod nosem i schował monety. Nic się nie zmieniło.';
@@ -76,6 +220,8 @@ export const eventLibrary = {
         text: 'Przejażdżka bryczką (150 dutków)',
         description:
           'Wsiadasz dumnie na tył. Bryczka rusza z kopyta, omijając wszystkich turystów!',
+        consequence:
+          'Koszt: 150 dutków. Efekt: skrót do finału i wymuszenie walki z głównym bossem.',
         cost: 150,
         effect(state) {
           state.jumpToBoss = true;

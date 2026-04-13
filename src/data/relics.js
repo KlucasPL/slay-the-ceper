@@ -1,6 +1,6 @@
 /**
  * @typedef {'common' | 'uncommon' | 'rare'} RarityDef
- * @typedef {{ id: string, name: string, rarity: RarityDef, emoji: string, desc: string, price: number }} RelicDef
+ * @typedef {{ id: string, name: string, rarity: RarityDef, emoji: string, desc: string, price: number, eventOnly?: boolean }} RelicDef
  */
 
 /** @type {Record<string, RelicDef>} */
@@ -188,6 +188,24 @@ export const relicLibrary = {
     emoji: '🧀',
     desc: 'Za wejście do sklepu: +2 do maksymalnej Krzepy (maks. 3 razy na run).',
     price: 190,
+  },
+  krzywy_portret: {
+    id: 'krzywy_portret',
+    name: 'Krzywy Portret',
+    rarity: 'uncommon',
+    eventOnly: true,
+    emoji: '🖼️',
+    desc: 'Na start walki: wróg zadaje o 2 obrażenia mniej przez 1 turę.',
+    price: 180,
+  },
+  zasluzony_portfel: {
+    id: 'zasluzony_portfel',
+    name: 'Zasłużony Portfel',
+    rarity: 'uncommon',
+    eventOnly: true,
+    emoji: '💰',
+    desc: 'Po zwycięstwie w walce nie-eventowej: +6 dutków.',
+    price: 175,
   },
 };
 
