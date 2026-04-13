@@ -1,11 +1,24 @@
 import { cardLibrary, startingDeck } from '../data/cards.js';
 import { enemyLibrary } from '../data/enemies.js';
 import { relicLibrary } from '../data/relics.js';
+import {
+  tutorialFixedRelicId,
+  tutorialFixedCardRewardIds,
+  tutorialMapSequence,
+} from '../data/tutorialConfig.js';
 import { releaseNotesData } from '../data/releaseNotes.js';
 import { weatherLibrary } from '../data/weather.js';
 import { statusTooltipRegistry } from './statusTooltips.js';
 import { ActIntroOverlay } from './ActIntroOverlay.js';
 import { getSkipIntro, setSkipIntro } from '../logic/settings.js';
+import {
+  TUTORIAL_DONE_KEY,
+  tutorialPlayerStatus,
+  tutorialSteps,
+  buildTutorialMapExplanationText,
+  buildTutorialFinaleText,
+  createTutorialMiniMap,
+} from './tutorialFlow.js';
 
 export class UIManager {
   /**
@@ -37,6 +50,14 @@ export class UIManager {
     this.actIntroOverlay = new ActIntroOverlay();
     /** @type {boolean} */
     this.isActIntroPlaying = false;
+    /** @type {boolean} */
+    this.isTutorialMode = false;
+    /** @type {boolean} */
+    this.isTutorialGuidanceActive = false;
+    /** @type {number} */
+    this.tutorialStepIndex = 0;
+    /** @type {Element[]} */
+    this.tutorialFocusedElements = [];
   }
 
   /**
@@ -61,6 +82,9 @@ export class UIManager {
     document
       .getElementById('title-btn-hard')
       .addEventListener('click', () => this._handleTitleStart('hard'));
+    document
+      .getElementById('title-btn-tutorial')
+      .addEventListener('click', () => this._handleTutorialStart());
     document
       .getElementById('title-btn-normal')
       .addEventListener('mouseenter', unlockMenuMusic, { passive: true });
@@ -111,6 +135,18 @@ export class UIManager {
     document
       .getElementById('option-skip-intro-btn')
       ?.addEventListener('click', () => this._toggleSkipIntroOption());
+    document
+      .getElementById('tutorial-ack-btn')
+      ?.addEventListener('click', () => this._handleTutorialAcknowledge());
+    document.getElementById('tutorial-exit-btn')?.addEventListener('click', () => {
+      this._finishTutorialMode();
+    });
+    document
+      .getElementById('tutorial-repeat-btn')
+      ?.addEventListener('click', () => this._handleTutorialRepeat());
+    document
+      .getElementById('tutorial-finish-btn')
+      ?.addEventListener('click', () => this._handleTutorialFinish());
     document.getElementById('end-turn-btn').addEventListener('click', () => this._handleEndTurn());
     document
       .getElementById('map-continue-btn')
@@ -200,7 +236,28 @@ export class UIManager {
       },
       true
     );
+    document.addEventListener(
+      'click',
+      (event) => {
+        if (this._isTutorialInteractionAllowed(event.target)) return;
+        event.preventDefault();
+        event.stopPropagation();
+      },
+      true
+    );
+    document.addEventListener(
+      'keydown',
+      (event) => {
+        if (!this.isTutorialGuidanceActive) return;
+        if (event.key === 'Tab') return;
+        if (event.key === 'Escape') return;
+        event.preventDefault();
+        event.stopPropagation();
+      },
+      true
+    );
     window.addEventListener('resize', () => this._scaleGame());
+    window.addEventListener('resize', () => this._renderTutorialOverlay());
     this._scaleGame();
     this._renderReleaseNotesButtonLabel();
     this._renderReleaseNotes();
@@ -274,6 +331,8 @@ export class UIManager {
     if (gameWrapper) {
       gameWrapper.classList.toggle('hard-mode', this.state.difficulty === 'hard');
     }
+    this._syncTutorialExitButton();
+    this._renderTutorialOverlay();
   }
 
   /**
@@ -281,6 +340,10 @@ export class UIManager {
    */
   _handleTitleStart(difficulty) {
     if (this._isInputLocked()) return;
+    if (this.isTutorialMode) {
+      this._disableTutorialGuidance();
+      this.isTutorialMode = false;
+    }
     const titleScreen = document.getElementById('title-screen');
     if (!titleScreen) return;
 
@@ -417,6 +480,13 @@ export class UIManager {
     }
     titleScreen.setAttribute('aria-hidden', String(!isTitle));
     this.audioManager.setContext(isTitle ? 'title' : 'inGame');
+    if (this.isTutorialMode) {
+      document.body.dataset.appScene = 'TUTORIAL_SCENE';
+    } else if (isTitle) {
+      document.body.dataset.appScene = 'MAIN_MENU';
+    } else {
+      document.body.dataset.appScene = 'MAIN_GAME';
+    }
     this._renderCornerOptionsButton();
   }
 
@@ -731,6 +801,7 @@ export class UIManager {
       const cardEl = document.createElement('div');
       const isKept = this.state.smyczKeptHandIndex === index;
       cardEl.className = `card ${this._rarityClass(card.rarity)} card-${card.type}${canPlay ? '' : ' disabled'}${isKept ? ' card--kept' : ''}`;
+      cardEl.dataset.cardId = cardId;
 
       if (card.exhaust) {
         cardEl.classList.add('card-exhaust');
@@ -784,6 +855,11 @@ export class UIManager {
    */
   _handlePlayCard(handIndex) {
     if (this._isInputLocked()) return;
+    const selectedCardId = this.state.hand[handIndex];
+    if (!this._isTutorialCardPlayAllowed(selectedCardId)) {
+      this._showFloatingText('sprite-player', 'Najpierw zagraj wskazaną kartę.', 'floating-shame');
+      return;
+    }
     const result = this.state.playCard(handIndex);
     if (!result.success) {
       if (result.reason === 'stunned_attack') {
@@ -795,6 +871,7 @@ export class UIManager {
     }
 
     const { effect } = result;
+    this._handleTutorialCardPlayed(selectedCardId);
     const missEvent = this.state.consumeWeatherMissEvent();
     if (missEvent) {
       this.audioManager.playMissSound();
@@ -850,8 +927,16 @@ export class UIManager {
    */
   _handleEndTurn() {
     if (this._isInputLocked()) return;
+    if (!this._isTutorialEndTurnAllowed()) {
+      if (this.isTutorialGuidanceActive) {
+        this._showFloatingText('sprite-player', 'Jeszcze nie kończ tury.', 'floating-shame');
+      }
+      return;
+    }
     if (this.isAnimating || this.state.currentScreen !== 'battle') return;
     if (this.state.enemy.hp <= 0 || this.state.player.hp <= 0) return;
+
+    this._handleTutorialEndTurnClicked();
 
     this.isAnimating = true;
     this._syncEndTurnButtonState();
@@ -918,6 +1003,15 @@ export class UIManager {
    * @param {'player_win'|'enemy_win'} outcome
    */
   _showEndGame(outcome) {
+    if (this.isTutorialMode) {
+      if (outcome === 'player_win') {
+        this._startTutorialRewardPhase();
+      } else {
+        // Player lost in tutorial — restart from step 1
+        this._handleTutorialStart();
+      }
+      return;
+    }
     if (outcome === 'player_win') {
       const droppedDutki = this.state.grantBattleDutki();
       const currentNode = this.state.getCurrentMapNode();
@@ -1180,6 +1274,17 @@ export class UIManager {
       skipBtn.classList.remove('hidden');
     }
 
+    if (this.isTutorialMode) {
+      // Step 9 (index 8) — show map with tutorial overlay
+      this.tutorialStepIndex = 8;
+      this.isTutorialGuidanceActive = true;
+      this._setTutorialMiniMap();
+      this._openMapOverlay();
+      this.updateUI();
+      requestAnimationFrame(() => this._renderTutorialOverlay());
+      return;
+    }
+
     if (isBossFight) {
       this.state.captureRunSummary('player_win');
       this._showRunSummaryOverlay();
@@ -1342,6 +1447,7 @@ export class UIManager {
       (id) =>
         !cardLibrary[id]?.isStarter &&
         !cardLibrary[id]?.eventOnly &&
+        !cardLibrary[id]?.tutorialOnly &&
         cardLibrary[id]?.rarity === 'rare'
     );
     return this.state._pickUniqueItems(pool, cardLibrary, count);
@@ -1415,9 +1521,426 @@ export class UIManager {
     document.getElementById('end-turn-btn').disabled = true;
   }
 
+  _handleTutorialStart() {
+    if (this._isInputLocked()) return;
+
+    this._closeReleaseNotesModal();
+    this._closeOptionsModal();
+    this._hideOverlay('library-overlay');
+    this._hideOverlay('map-overlay');
+    this._hideOverlay('shop-overlay');
+    this._hideOverlay('campfire-overlay');
+    this._hideOverlay('random-event-overlay');
+    this._hideOverlay('relic-reward-screen');
+    this._hideOverlay('card-reward-screen');
+    this._hideOverlay('run-summary-overlay');
+    this._hideOverlay('pile-viewer-overlay');
+
+    this.state.resetForNewRun(startingDeck);
+    this.state.currentScreen = 'battle';
+    this.state.hasStartedFirstBattle = true;
+    this.mapMessage = '';
+
+    this.state.player.hp = this.state.player.maxHp;
+    this.state.player.energy = 3;
+    this.state.player.block = 0;
+    this.state.player.status = tutorialPlayerStatus();
+    this.state.player.stunned = false;
+    this.state.player.cardsPlayedThisTurn = 0;
+
+    this.state.enemy = this.state._createEnemyState(enemyLibrary.zagubiony_ceper);
+    this.state.enemy.currentIntent = {
+      type: 'attack',
+      name: 'Niezdarny Cios',
+      damage: 5,
+      hits: 1,
+    };
+    this.state.enemy.nextAttack = 5;
+    this.state.currentWeather = 'clear';
+    this.state.relics = ['ciupaga_dlugopis'];
+
+    this.state.deck = [];
+    this.state.discard = [];
+    this.state.exhaust = [];
+    this.state.hand = this._buildTutorialFixedHand();
+    this.state.pendingBattleDutki = false;
+
+    this.isAnimating = false;
+    this.isTutorialMode = true;
+    this.isTutorialGuidanceActive = true;
+    this.tutorialStepIndex = 0;
+
+    this._playEncounterMusic();
+    this.updateUI();
+    this._syncScreenState();
+  }
+
+  /** @returns {string[]} */
+  _buildTutorialFixedHand() {
+    return ['ciupaga', 'goralska_obrona', ...this._pickTutorialRandomCards(3)];
+  }
+
+  /**
+   * @param {number} count
+   * @returns {string[]}
+   */
+  _pickTutorialRandomCards(count) {
+    const pool = Object.keys(cardLibrary).filter((cardId) => {
+      if (cardId === 'ciupaga' || cardId === 'goralska_obrona') return false;
+      const card = cardLibrary[cardId];
+      if (!card) return false;
+      if (card.type === 'status' || card.unplayable) return false;
+      if (card.eventOnly || card.rarity === 'rare' || card.tutorialOnly) return false;
+      return true;
+    });
+
+    const picks = [];
+    const clonedPool = [...pool];
+    while (picks.length < count && clonedPool.length > 0) {
+      const roll = Math.floor(Math.random() * clonedPool.length);
+      picks.push(clonedPool.splice(roll, 1)[0]);
+    }
+    return picks;
+  }
+
+  _startTutorialRewardPhase() {
+    // Step 7 (index 6) — fixed, existing non-event/non-rare relic
+    const tutorialRelicId = tutorialFixedRelicId;
+    // Step 8 (index 7) — fixed starter-deck cards only
+    const tutorialCardChoices = [...tutorialFixedCardRewardIds];
+
+    this.tutorialStepIndex = 6;
+    this.isTutorialGuidanceActive = true;
+
+    this.pendingBattleRelicClaimAction = () => {
+      // Step 8 (index 7) — show card reward
+      this.tutorialStepIndex = 7;
+      this.isTutorialGuidanceActive = true;
+      this._showCardRewardScreen(0, tutorialCardChoices, false, {
+        title: 'Zdobyłeś kartę! Wybierz jedną:',
+        allowSkip: false,
+      });
+      this.updateUI();
+      requestAnimationFrame(() => this._renderTutorialOverlay());
+    };
+
+    this.showRelicScreen(tutorialRelicId, 'battle');
+    this.updateUI();
+    requestAnimationFrame(() => this._renderTutorialOverlay());
+  }
+
+  /**
+   * @param {{ dynamicText?: string, text?: string }} step
+   * @returns {string}
+   */
+  _resolveTutorialStepText(step) {
+    if (step.dynamicText === 'map_explain') {
+      return buildTutorialMapExplanationText((type) => this.state.getMapNodeMeta(type));
+    }
+    if (step.dynamicText === 'finale_text') {
+      return buildTutorialFinaleText((type) => this.state.getMapNodeMeta(type));
+    }
+    return step.text ?? '';
+  }
+
+  _positionTutorialBubble() {
+    const bubble = document.querySelector('#tutorial-overlay .tutorial-bubble');
+    if (!(bubble instanceof HTMLElement)) return;
+    const step = this._getCurrentTutorialStep();
+
+    const playerSprite = document.querySelector('#player .sprite');
+    const isBattleTutorial = this.isTutorialMode && this.state.currentScreen === 'battle';
+
+    if (!(playerSprite instanceof HTMLElement) || !isBattleTutorial) {
+      bubble.classList.remove('tutorial-bubble--player');
+      bubble.style.left = '';
+      bubble.style.top = '';
+      bubble.style.bottom = '';
+      bubble.style.transform = '';
+      bubble.style.setProperty('--tutorial-tail-left', '44px');
+      return;
+    }
+
+    const spriteRect = playerSprite.getBoundingClientRect();
+    const maxWidth = Math.min(560, window.innerWidth - 20);
+    const bubbleWidth = Math.min(maxWidth, bubble.offsetWidth || maxWidth);
+    const bubbleHeight = bubble.offsetHeight || 180;
+
+    const left = Math.max(
+      10,
+      Math.min(
+        spriteRect.left + spriteRect.width / 2 - bubbleWidth / 2,
+        window.innerWidth - bubbleWidth - 10
+      )
+    );
+    const isRelicExplanationStep = Boolean(step?.selectors?.includes('.relics-wrap'));
+    const top = isRelicExplanationStep
+      ? Math.max(10, Math.min(spriteRect.bottom + 14, window.innerHeight - bubbleHeight - 10))
+      : Math.max(10, spriteRect.top - bubbleHeight - 16);
+
+    bubble.classList.add('tutorial-bubble--player');
+    bubble.style.left = `${left}px`;
+    bubble.style.top = `${top}px`;
+    bubble.style.bottom = 'auto';
+    bubble.style.transform = 'none';
+
+    const tailLeft = Math.max(
+      24,
+      Math.min(spriteRect.left + spriteRect.width / 2 - left, bubbleWidth - 24)
+    );
+    bubble.style.setProperty('--tutorial-tail-left', `${tailLeft}px`);
+  }
+
+  _setTutorialMiniMap() {
+    const sequence = tutorialMapSequence;
+
+    this.state.map = createTutorialMiniMap(sequence, (type) => this.state.getMapNodeMeta(type));
+
+    this.state.currentLevel = 0;
+    this.state.currentNodeIndex = 1;
+    this.state.currentNode = { x: 1, y: 0 };
+    this.state.hasStartedFirstBattle = true;
+  }
+
+  _handleTutorialAcknowledge() {
+    const step = this._getCurrentTutorialStep();
+    if (!step) return;
+    if (step.action !== 'ack') return;
+    this.tutorialStepIndex += 1;
+    this.updateUI();
+  }
+
+  _getCurrentTutorialStep() {
+    if (!this.isTutorialGuidanceActive) return null;
+    if (this.tutorialStepIndex >= tutorialSteps.length) {
+      this.isTutorialGuidanceActive = false;
+      return null;
+    }
+    return tutorialSteps[this.tutorialStepIndex] ?? null;
+  }
+
+  _disableTutorialGuidance() {
+    this.isTutorialGuidanceActive = false;
+    this.tutorialStepIndex = tutorialSteps.length;
+    this._renderTutorialOverlay();
+  }
+
+  _syncTutorialExitButton() {
+    const exitBtn = document.getElementById('tutorial-exit-btn');
+    if (!exitBtn) return;
+    const shouldShow = this.isTutorialMode;
+    exitBtn.classList.toggle('hidden', !shouldShow);
+    exitBtn.setAttribute('aria-hidden', String(!shouldShow));
+  }
+
+  _renderTutorialOverlay() {
+    const overlay = document.getElementById('tutorial-overlay');
+    const text = document.getElementById('tutorial-text');
+    const ackBtn = document.getElementById('tutorial-ack-btn');
+    const layer = document.getElementById('tutorial-highlight-layer');
+    const concludeBtns = document.getElementById('tutorial-conclude-btns');
+    const bubble = overlay?.querySelector('.tutorial-bubble');
+    const dim = overlay?.querySelector('.tutorial-dim');
+    if (!overlay || !text || !ackBtn || !layer) return;
+
+    this.tutorialFocusedElements.forEach((element) => {
+      element.classList.remove('tutorial-focus-target');
+    });
+    this.tutorialFocusedElements = [];
+    layer.innerHTML = '';
+
+    const step = this._getCurrentTutorialStep();
+    if (!step) {
+      overlay.classList.add('hidden');
+      overlay.setAttribute('aria-hidden', 'true');
+      if (concludeBtns) concludeBtns.classList.add('hidden');
+      if (bubble) bubble.classList.remove('tutorial-bubble--conclude');
+      overlay.classList.remove('tutorial-overlay--map-explain');
+      if (bubble) bubble.classList.remove('tutorial-bubble--map-explain');
+      return;
+    }
+
+    overlay.classList.remove('hidden');
+    overlay.setAttribute('aria-hidden', 'false');
+    text.textContent = this._resolveTutorialStepText(step);
+
+    // Control ack button text and visibility
+    const showAck = step.action === 'ack';
+    ackBtn.classList.toggle('hidden', !showAck);
+    if (showAck) {
+      ackBtn.textContent = step.btnText ?? 'Zrozumiałem';
+    }
+
+    // Control conclude buttons (step 10 - conclusion)
+    if (concludeBtns) {
+      concludeBtns.classList.toggle('hidden', step.action !== 'conclude');
+    }
+    if (bubble) {
+      bubble.classList.toggle('tutorial-bubble--conclude', step.action === 'conclude');
+    }
+
+    const isMapExplainStep = step.dynamicText === 'map_explain';
+    overlay.classList.toggle('tutorial-overlay--map-explain', isMapExplainStep);
+    if (bubble) {
+      bubble.classList.toggle('tutorial-bubble--map-explain', isMapExplainStep);
+    }
+
+    // Control dim transparency for reward-phase steps (noDim flag)
+    if (dim) {
+      dim.style.opacity = step.noDim ? '0' : '';
+    }
+
+    const targets = step.selectors.flatMap((selector) =>
+      Array.from(document.querySelectorAll(selector)).filter(
+        (element) => !element.classList.contains('hidden')
+      )
+    );
+
+    targets.forEach((element) => {
+      element.classList.add('tutorial-focus-target');
+      this.tutorialFocusedElements.push(element);
+
+      const rect = element.getBoundingClientRect();
+      const highlight = document.createElement('div');
+      highlight.className = 'tutorial-highlight';
+      const padding = 6;
+      highlight.style.left = `${Math.max(0, rect.left - padding)}px`;
+      highlight.style.top = `${Math.max(0, rect.top - padding)}px`;
+      highlight.style.width = `${rect.width + padding * 2}px`;
+      highlight.style.height = `${rect.height + padding * 2}px`;
+      layer.appendChild(highlight);
+    });
+
+    this._positionTutorialBubble();
+  }
+
+  /**
+   * @param {EventTarget | null} target
+   * @returns {boolean}
+   */
+  _isTutorialInteractionAllowed(target) {
+    if (!this.isTutorialGuidanceActive) return true;
+    if (!(target instanceof Element)) return false;
+    if (target.closest('#tutorial-ack-btn')) return true;
+    if (target.closest('#tutorial-exit-btn')) return true;
+    if (target.closest('#tutorial-repeat-btn')) return true;
+    if (target.closest('#tutorial-finish-btn')) return true;
+    // Never allow map node clicks while tutorial guidance is active
+    if (target.closest('.map-node-btn')) return false;
+    return this.tutorialFocusedElements.some((element) => element.contains(target));
+  }
+
+  /**
+   * @param {string | undefined} cardId
+   * @returns {boolean}
+   */
+  _isTutorialCardPlayAllowed(cardId) {
+    if (!this.isTutorialGuidanceActive) return true;
+    const step = this._getCurrentTutorialStep();
+    if (!step) return true;
+    if (step.action !== 'play_card') return false;
+    return cardId === step.requiredCardId;
+  }
+
+  /**
+   * @param {string | undefined} cardId
+   */
+  _handleTutorialCardPlayed(cardId) {
+    if (!this.isTutorialGuidanceActive) return;
+    const step = this._getCurrentTutorialStep();
+    if (!step || step.action !== 'play_card') return;
+    if (cardId !== step.requiredCardId) return;
+    this.tutorialStepIndex += 1;
+  }
+
+  /** @returns {boolean} */
+  _isTutorialEndTurnAllowed() {
+    if (!this.isTutorialGuidanceActive) return true;
+    const step = this._getCurrentTutorialStep();
+    if (!step) return true;
+    return step.action === 'end_turn';
+  }
+
+  _handleTutorialEndTurnClicked() {
+    if (!this.isTutorialGuidanceActive) return;
+    const step = this._getCurrentTutorialStep();
+    if (!step || step.action !== 'end_turn') return;
+    this.tutorialStepIndex += 1;
+    // Disable guidance so the player finishes combat freely; reward phase will re-enable it.
+    this._disableTutorialGuidance();
+  }
+
+  _handleTutorialRepeat() {
+    // Reset to step 1 — restart the full tutorial from combat
+    this._handleTutorialStart();
+  }
+
+  _handleTutorialFinish() {
+    this._setTutorialDoneFlag();
+    // Transition to title screen but show finale message first
+    this.audioManager.clearDefeatThemeLock();
+
+    this._hideOverlay('map-overlay');
+    this._hideOverlay('shop-overlay');
+    this._hideOverlay('campfire-overlay');
+    this._hideOverlay('random-event-overlay');
+    this._hideOverlay('relic-reward-screen');
+    this._hideOverlay('card-reward-screen');
+    this._hideOverlay('run-summary-overlay');
+    this._hideOverlay('pile-viewer-overlay');
+
+    this.state.resetForNewRun(startingDeck);
+    this.state.currentScreen = 'title';
+    this.mapMessage = '';
+    // isTutorialMode=false hides exit button; keep guidance active for finale step
+    this.isTutorialMode = false;
+    this.tutorialStepIndex = tutorialSteps.length - 1; // finale step (index 10)
+    this.isTutorialGuidanceActive = true;
+    this.updateUI();
+    this._syncScreenState();
+    this._renderTutorialOverlay();
+  }
+
+  _finishTutorialMode() {
+    this._setTutorialDoneFlag();
+    this._disableTutorialGuidance();
+    this.isTutorialMode = false;
+    this.audioManager.clearDefeatThemeLock();
+
+    this._hideOverlay('map-overlay');
+    this._hideOverlay('shop-overlay');
+    this._hideOverlay('campfire-overlay');
+    this._hideOverlay('random-event-overlay');
+    this._hideOverlay('relic-reward-screen');
+    this._hideOverlay('card-reward-screen');
+    this._hideOverlay('run-summary-overlay');
+    this._hideOverlay('pile-viewer-overlay');
+
+    this.state.resetForNewRun(startingDeck);
+    this.state.currentScreen = 'title';
+    this.mapMessage = '';
+    this.updateUI();
+    this._syncScreenState();
+  }
+
+  _setTutorialDoneFlag() {
+    try {
+      localStorage.setItem(TUTORIAL_DONE_KEY, 'true');
+    } catch {
+      // Ignore blocked localStorage.
+    }
+  }
+
   _openMapOverlay() {
     this._renderMapTrack();
     const overlay = document.getElementById('map-overlay');
+    const panel = overlay?.querySelector('.event-panel');
+    const mapTree = document.getElementById('map-tree');
+
+    overlay?.classList.toggle('map-overlay--tutorial', this.isTutorialMode);
+    panel?.classList.toggle('map-panel--tutorial', this.isTutorialMode);
+    mapTree?.classList.toggle('map-tree--tutorial', this.isTutorialMode);
+
     overlay.classList.remove('hidden');
     overlay.setAttribute('aria-hidden', 'false');
     this.audioManager.playMapMusic();
@@ -2174,6 +2697,7 @@ export class UIManager {
     const entries =
       this.libraryTab === 'cards'
         ? Object.values(cardLibrary)
+            .filter((card) => !card.eventOnly && !card.tutorialOnly)
             .filter((card) =>
               this.libraryRarityFilter === 'all' ? true : card.rarity === this.libraryRarityFilter
             )

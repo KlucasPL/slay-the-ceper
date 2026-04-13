@@ -2877,6 +2877,7 @@ describe('GameState', () => {
         'parkingowy',
         'pomocnik_fiakra',
         'spekulant',
+        'zagubiony_ceper',
       ]);
     });
 

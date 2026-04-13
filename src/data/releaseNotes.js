@@ -5,6 +5,15 @@
 /** @type {ReleaseNoteEntry[]} */
 export const releaseNotesData = [
   {
+    version: 'v1.2.5 - Samouczek i wygoda na telefonach',
+    date: 'Kwiecień 2026',
+    changes: [
+      '🧭 NOWY SAMOUCZEK OD JĘDRKA: Dodano pełny tryb Samouczek, który krok po kroku tłumaczy walkę, nagrody i poruszanie się po mapie.',
+      '🎯 CZYTELNIEJSZE PROWADZENIE: Wskazówki w tutorialu lepiej prowadzą przez najważniejsze decyzje, dzięki czemu łatwiej wejść w rytm rozgrywki już od pierwszego starcia.',
+      '📱 LEPSZA CZYTELNOŚĆ NA TELEFONACH: Uporządkowano układ menu głównego i dymków, żeby nic się nie ucinało i żeby treści były czytelne na mniejszych ekranach.',
+    ],
+  },
+  {
     version: 'v1.2.4 - Intro i grafika pierwszej części na mapie',
     date: 'Kwiecień 2026',
     changes: [

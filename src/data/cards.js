@@ -2,7 +2,7 @@
  * @typedef {{ strength: number, weak: number, fragile: number, vulnerable: number, next_double: boolean, energy_next_turn: number, lans: number, duma_podhala: number, furia_turysty: number }} StatusDef
  * @typedef {{ playerAnim?: string, enemyAnim?: string, damage?: { raw: number, blocked: number, dealt: number } }} CardEffectResult
  * @typedef {'common' | 'uncommon' | 'rare'} RarityDef
- * @typedef {{ id: string, name: string, type: 'attack' | 'skill' | 'status' | 'power', cost: number, price: number, rarity: RarityDef, emoji: string, desc: string, isStarter?: boolean, eventOnly?: boolean, exhaust?: boolean, unplayable?: boolean, effect: (state: import('../state/GameState.js').GameState) => CardEffectResult }} CardDef
+ * @typedef {{ id: string, name: string, type: 'attack' | 'skill' | 'status' | 'power', cost: number, price: number, rarity: RarityDef, emoji: string, desc: string, isStarter?: boolean, eventOnly?: boolean, tutorialOnly?: boolean, exhaust?: boolean, unplayable?: boolean, effect: (state: import('../state/GameState.js').GameState) => CardEffectResult }} CardDef
  */
 
 /** @type {Record<string, CardDef>} */
@@ -36,6 +36,21 @@ export const cardLibrary = {
     price: 35,
     isStarter: true,
     emoji: '🏺',
+    desc: 'Zyskujesz 5 Gardy.',
+    effect(state) {
+      state.gainPlayerBlockFromCard(5);
+      return { playerAnim: 'anim-block' };
+    },
+  },
+  goralska_obrona: {
+    id: 'goralska_obrona',
+    name: 'Góralska Obrona',
+    type: 'skill',
+    rarity: 'common',
+    cost: 1,
+    price: 35,
+    tutorialOnly: true,
+    emoji: '🛡️',
     desc: 'Zyskujesz 5 Gardy.',
     effect(state) {
       state.gainPlayerBlockFromCard(5);

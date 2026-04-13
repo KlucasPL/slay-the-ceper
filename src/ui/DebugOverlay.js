@@ -240,6 +240,7 @@ export class DebugOverlay {
     const enemySelect = document.createElement('select');
     enemySelect.className = 'debug-select';
     Object.keys(enemyLibrary)
+      .filter((enemyId) => !enemyLibrary[enemyId]?.tutorialOnly)
       .sort((a, b) => a.localeCompare(b))
       .forEach((enemyId) => {
         const opt = document.createElement('option');

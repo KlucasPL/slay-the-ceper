@@ -22,10 +22,13 @@ const debugEnemyAliases = {
   vip: 'ceprzyca_vip',
 };
 const debugBoss = debugEnemyAliases[debugEnemyRaw] ?? debugEnemyRaw;
+const isDebugEnemyAllowed =
+  debugBoss !== null &&
+  Boolean(enemyLibrary[debugBoss]) &&
+  !enemyLibrary[debugBoss]?.eventOnly &&
+  !enemyLibrary[debugBoss]?.tutorialOnly;
 const hasValidDebugBoss =
-  debugBoss === 'random-boss' ||
-  debugBoss === 'random-elite' ||
-  (debugBoss !== null && Boolean(enemyLibrary[debugBoss]));
+  debugBoss === 'random-boss' || debugBoss === 'random-elite' || isDebugEnemyAllowed;
 
 /** @type {import('./data/enemies.js').EnemyDef} */
 let initialEnemy = enemyLibrary.cepr;
@@ -43,7 +46,7 @@ if (debugBoss === 'random-boss') {
   if (randomEliteId) {
     initialEnemy = enemyLibrary[randomEliteId];
   }
-} else if (debugBoss && enemyLibrary[debugBoss]) {
+} else if (isDebugEnemyAllowed) {
   initialEnemy = enemyLibrary[debugBoss];
 }
 
