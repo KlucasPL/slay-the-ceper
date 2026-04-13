@@ -106,6 +106,8 @@ export class GameState {
     this.debugGodMode = false;
     /** @type {boolean} */
     this.pendingBattleDutki = true;
+    /** @type {boolean} Global interaction lock used by cinematic overlays */
+    this.isInputLocked = false;
     /** @type {'normal' | 'hard'} */
     this.difficulty = 'normal';
     /** @type {number} Cumulative HP/damage multiplier for hard mode scaling */
@@ -114,6 +116,10 @@ export class GameState {
     this.attackCardsPlayedThisBattle = 0;
     /** @type {boolean} Whether pocztowka_giewont effect has fired this battle */
     this.pocztowkaUsedThisBattle = false;
+    /** @type {number} */
+    this.currentAct = 1;
+    /** @type {string} */
+    this.currentActName = 'KRUPÓWKI';
     /** @type {string | null} Card ID queued by smycz_zakopane for next turn */
     this.smyczKeptCardId = null;
     /** @type {number | null} Exact hand slot selected for smycz_zakopane */
@@ -1699,6 +1705,7 @@ export class GameState {
     this._applyBattleStartRelics();
     this.startTurn();
     this.pendingBattleDutki = true;
+    this.isInputLocked = false;
   }
 
   /**
@@ -2765,10 +2772,13 @@ export class GameState {
     this.currentNodeIndex = 1;
     this.currentNode = { x: 1, y: 0 };
     this.maxFloorReached = 1;
+    this.currentAct = 1;
+    this.currentActName = 'KRUPÓWKI';
     this.debugForcedNextNodeType = null;
     this.debugRevealAllMap = false;
     this.debugGodMode = false;
     this.pendingBattleDutki = true;
+    this.isInputLocked = false;
     this.enemyScaleFactor = 1.0;
     this.attackCardsPlayedThisBattle = 0;
     this.pocztowkaUsedThisBattle = false;

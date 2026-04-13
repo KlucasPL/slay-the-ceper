@@ -2,8 +2,10 @@ import './styles/layout.css';
 import './styles/animations.css';
 
 import { AudioManager } from './logic/AudioManager.js';
+import { getSkipIntro } from './logic/settings.js';
 import { GameState } from './state/GameState.js';
 import { UIManager } from './ui/UIManager.js';
+import { MotionComicIntro } from './ui/MotionComicIntro.js';
 import { characters } from './data/characters.js';
 import { enemyLibrary } from './data/enemies.js';
 import { startingDeck } from './data/cards.js';
@@ -48,20 +50,32 @@ if (debugBoss === 'random-boss') {
 const state = new GameState(characters.jedrek, initialEnemy);
 state.initGame(startingDeck);
 
-// Jump to battle screen in debug mode
-if (hasValidDebugBoss) {
-  state.currentScreen = 'battle';
+async function bootstrap() {
+  document.body.dataset.appScene = 'INTRO_SCENE';
+
+  // Skip intro when launching direct debug encounters, or when player disabled it in Options.
+  if (!hasValidDebugBoss && !getSkipIntro()) {
+    const intro = new MotionComicIntro();
+    await intro.play();
+  }
+
+  document.body.dataset.appScene = 'MAIN_GAME';
+
+  // Jump to battle screen in debug mode
+  if (hasValidDebugBoss) {
+    state.currentScreen = 'battle';
+  }
+
+  const audioManager = new AudioManager({ state });
+  const ui = new UIManager(state, audioManager);
+  ui.init();
+
+  const isDevEnvironment = import.meta.env.DEV;
+  if (isDevEnvironment) {
+    const { DebugOverlay } = await import('./ui/DebugOverlay.js');
+    const debugOverlay = new DebugOverlay({ state, ui });
+    debugOverlay.mount();
+  }
 }
 
-const audioManager = new AudioManager({ state });
-
-const ui = new UIManager(state, audioManager);
-ui.init();
-
-const isDevEnvironment = import.meta.env.DEV;
-
-if (isDevEnvironment) {
-  const { DebugOverlay } = await import('./ui/DebugOverlay.js');
-  const debugOverlay = new DebugOverlay({ state, ui });
-  debugOverlay.mount();
-}
+bootstrap();

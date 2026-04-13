@@ -1,6 +1,13 @@
 /**
  * Central manager for background music and runtime audio options.
  */
+import {
+  getMenuMusicEnabled,
+  setMenuMusicEnabled,
+  getGameMusicEnabled,
+  setGameMusicEnabled,
+} from './settings.js';
+
 export class AudioManager {
   /**
    * @param {{ state: import('../state/GameState.js').GameState }} options
@@ -16,15 +23,16 @@ export class AudioManager {
     /** @type {boolean} */
     this.hasUnlocked = false;
 
-    this.storageKeyMenu = 'slay-the-ceper:menu-music';
-    this.storageKeyGame = 'slay-the-ceper:game-music';
-
     /** @type {boolean} */
-    this.menuMusicEnabled = this._readBool(this.storageKeyMenu, true);
+    this.menuMusicEnabled = getMenuMusicEnabled();
     /** @type {boolean} */
-    this.gameMusicEnabled = this._readBool(this.storageKeyGame, true);
+    this.gameMusicEnabled = getGameMusicEnabled();
 
-    const menuUrl = new URL('../audio/menu_theme.mp3', import.meta.url).href;
+    // Two interchangeable menu BGM tracks — one is chosen at random each session.
+    const menuUrls = [
+      new URL('../audio/main_menu.mp3', import.meta.url).href,
+      new URL('../audio/main_menu_2.mp3', import.meta.url).href,
+    ];
     const mapUrl = new URL('../audio/summit_sprint.mp3', import.meta.url).href;
     const gameUrl = new URL('../audio/battle.mp3', import.meta.url).href;
     const bossUrl = new URL('../audio/boss.mp3', import.meta.url).href;
@@ -36,8 +44,10 @@ export class AudioManager {
     const karykaturaEventUrl = new URL('../audio/karykatura_event.mp3', import.meta.url).href;
     const trzyKubkiEventUrl = new URL('../audio/event_trzy_kubki.mp3', import.meta.url).href;
 
-    /** @type {HTMLAudioElement} */
-    this.menuTrack = this._createTrack(menuUrl, true, 0.7);
+    /** @type {HTMLAudioElement[]} Menu BGM pool — both tracks are pre-loaded; one is active at a time. */
+    this.menuTrackPool = menuUrls.map((url) => this._createTrack(url, true, 0.7));
+    /** @type {HTMLAudioElement} Randomly selected active menu track (re-randomized on each title entry). */
+    this.menuTrack = this._getRandomMenuTrack();
     /** @type {HTMLAudioElement} */
     this.mapTrack = this._createTrack(mapUrl, true, 0.45);
     /** @type {HTMLAudioElement} */
@@ -91,33 +101,6 @@ export class AudioManager {
   }
 
   /**
-   * @param {string} key
-   * @param {boolean} fallback
-   * @returns {boolean}
-   */
-  _readBool(key, fallback) {
-    try {
-      const raw = localStorage.getItem(key);
-      if (raw === null) return fallback;
-      return raw === 'true';
-    } catch {
-      return fallback;
-    }
-  }
-
-  /**
-   * @param {string} key
-   * @param {boolean} value
-   */
-  _writeBool(key, value) {
-    try {
-      localStorage.setItem(key, String(value));
-    } catch {
-      // Ignore localStorage write failures.
-    }
-  }
-
-  /**
    * @param {string} src
    * @param {boolean} loop
    * @param {number} volume
@@ -164,19 +147,18 @@ export class AudioManager {
       this.eventSceneTrack = null;
       this._stopInGameSceneTracks();
       this._stopOneShotThemes();
+      // Pick a fresh random track each time the player returns to the title screen.
+      this._stopAllMenuTracks();
+      this.menuTrack = this._getRandomMenuTrack();
       if (this.menuMusicEnabled) {
         this._play(this.menuTrack);
-      } else {
-        this.menuTrack.pause();
-        this.menuTrack.currentTime = 0;
       }
       return;
     }
 
     if (this.themeLock === 'defeat') return;
 
-    this.menuTrack.pause();
-    this.menuTrack.currentTime = 0;
+    this._stopAllMenuTracks();
     this._stopOneShotThemes();
     this.gameScene = 'map';
     this.eventSceneTrack = null;
@@ -190,7 +172,7 @@ export class AudioManager {
   playMapMusic() {
     if (this.themeLock === 'defeat') return;
     this.gameScene = 'map';
-    this.menuTrack.pause();
+    this._stopAllMenuTracks();
     this._stopInGameSceneTracks();
     if (this.gameMusicEnabled) {
       this._play(this.mapTrack);
@@ -200,7 +182,7 @@ export class AudioManager {
   playBattleMusic() {
     if (this.themeLock === 'defeat') return;
     this.gameScene = 'battle';
-    this.menuTrack.pause();
+    this._stopAllMenuTracks();
     this._stopInGameSceneTracks();
     if (this.gameMusicEnabled) {
       this._play(this.gameTrack);
@@ -213,7 +195,7 @@ export class AudioManager {
   playEventMusic(eventId) {
     if (this.themeLock === 'defeat') return;
     this.gameScene = 'event';
-    this.menuTrack.pause();
+    this._stopAllMenuTracks();
     this._stopInGameSceneTracks();
 
     let eventTrack = this.fiakierEventTrack;
@@ -243,7 +225,7 @@ export class AudioManager {
   playBossMusic() {
     if (this.themeLock === 'defeat') return;
     this.gameScene = 'boss';
-    this.menuTrack.pause();
+    this._stopAllMenuTracks();
 
     const gameWasPlaying = !this.gameTrack.paused;
 
@@ -289,7 +271,7 @@ export class AudioManager {
   playShopMusic() {
     if (this.themeLock === 'defeat') return;
     this.gameScene = 'shop';
-    this.menuTrack.pause();
+    this._stopAllMenuTracks();
     this._stopInGameSceneTracks();
     if (this.gameMusicEnabled) {
       this._play(this.shopTrack);
@@ -307,7 +289,7 @@ export class AudioManager {
   playCampfireMusic() {
     if (this.themeLock === 'defeat') return;
     this.gameScene = 'campfire';
-    this.menuTrack.pause();
+    this._stopAllMenuTracks();
     this._stopInGameSceneTracks();
     if (this.gameMusicEnabled) {
       this._play(this.watraTrack);
@@ -363,8 +345,28 @@ export class AudioManager {
     }
   }
 
+  /**
+   * Returns a randomly picked track from the menu BGM pool.
+   * @returns {HTMLAudioElement}
+   */
+  _getRandomMenuTrack() {
+    return this.menuTrackPool[Math.floor(Math.random() * this.menuTrackPool.length)];
+  }
+
+  /**
+   * Stops and rewinds every track in the menu BGM pool.
+   * Call this instead of `this.menuTrack.pause()` when you need a hard stop
+   * (e.g. entering the game, returning to a fresh title screen).
+   */
+  _stopAllMenuTracks() {
+    this.menuTrackPool.forEach((track) => {
+      track.pause();
+      track.currentTime = 0;
+    });
+  }
+
   _stopGameFlowTracks() {
-    this.menuTrack.pause();
+    this._stopAllMenuTracks();
     this._stopInGameSceneTracks();
     this._stopOneShotThemes();
   }
@@ -382,10 +384,9 @@ export class AudioManager {
    */
   toggleMenuMusic(enabled) {
     this.menuMusicEnabled = enabled;
-    this._writeBool(this.storageKeyMenu, enabled);
+    setMenuMusicEnabled(enabled);
     if (!enabled) {
-      this.menuTrack.pause();
-      this.menuTrack.currentTime = 0;
+      this._stopAllMenuTracks();
     } else if (this.context === 'title') {
       this._play(this.menuTrack);
     }
@@ -398,7 +399,7 @@ export class AudioManager {
    */
   toggleGameMusic(enabled) {
     this.gameMusicEnabled = enabled;
-    this._writeBool(this.storageKeyGame, enabled);
+    setGameMusicEnabled(enabled);
     if (!enabled) {
       this._stopInGameSceneTracks();
       this._stopOneShotThemes();

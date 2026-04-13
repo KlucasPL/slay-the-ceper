@@ -4,6 +4,8 @@ import { relicLibrary } from '../data/relics.js';
 import { releaseNotesData } from '../data/releaseNotes.js';
 import { weatherLibrary } from '../data/weather.js';
 import { statusTooltipRegistry } from './statusTooltips.js';
+import { ActIntroOverlay } from './ActIntroOverlay.js';
+import { getSkipIntro, setSkipIntro } from '../logic/settings.js';
 
 export class UIManager {
   /**
@@ -31,6 +33,10 @@ export class UIManager {
     this.isPileViewerOpen = false;
     /** @type {'draw' | 'discard' | 'exhaust' | null} */
     this.activePileViewer = null;
+    /** @type {ActIntroOverlay} */
+    this.actIntroOverlay = new ActIntroOverlay();
+    /** @type {boolean} */
+    this.isActIntroPlaying = false;
   }
 
   /**
@@ -102,6 +108,9 @@ export class UIManager {
     document
       .getElementById('option-game-music-btn')
       .addEventListener('click', () => this._toggleGameMusicOption());
+    document
+      .getElementById('option-skip-intro-btn')
+      ?.addEventListener('click', () => this._toggleSkipIntroOption());
     document.getElementById('end-turn-btn').addEventListener('click', () => this._handleEndTurn());
     document
       .getElementById('map-continue-btn')
@@ -179,6 +188,18 @@ export class UIManager {
         this._closePileViewer();
       }
     });
+    document.addEventListener(
+      'click',
+      (event) => {
+        if (!this._isInputLocked()) return;
+        const target = event.target;
+        if (!(target instanceof Element)) return;
+        if (target.closest('#act-intro-overlay')) return;
+        event.preventDefault();
+        event.stopPropagation();
+      },
+      true
+    );
     window.addEventListener('resize', () => this._scaleGame());
     this._scaleGame();
     this._renderReleaseNotesButtonLabel();
@@ -259,6 +280,7 @@ export class UIManager {
    * @param {'normal' | 'hard'} difficulty
    */
   _handleTitleStart(difficulty) {
+    if (this._isInputLocked()) return;
     const titleScreen = document.getElementById('title-screen');
     if (!titleScreen) return;
 
@@ -272,6 +294,7 @@ export class UIManager {
     this.mapMessage = '';
     this.audioManager.setContext('inGame');
     this._openMapOverlay();
+    this._onActChange();
     titleScreen.classList.add('is-hiding');
     titleScreen.setAttribute('aria-hidden', 'true');
 
@@ -324,6 +347,7 @@ export class UIManager {
   }
 
   _openOptionsModal() {
+    if (this._isInputLocked()) return;
     const modal = document.getElementById('options-modal');
     if (!modal) return;
     this._renderAudioOptions();
@@ -332,6 +356,7 @@ export class UIManager {
   }
 
   _closeOptionsModal() {
+    if (this._isInputLocked()) return;
     const modal = document.getElementById('options-modal');
     if (!modal) return;
     modal.classList.add('hidden');
@@ -352,15 +377,31 @@ export class UIManager {
     gameBtn.textContent = gameOn ? 'ON' : 'OFF';
     gameBtn.classList.toggle('is-on', gameOn);
     gameBtn.setAttribute('aria-pressed', String(gameOn));
+
+    const skipIntroBtn = document.getElementById('option-skip-intro-btn');
+    if (skipIntroBtn) {
+      const skipOn = getSkipIntro();
+      skipIntroBtn.textContent = skipOn ? 'ON' : 'OFF';
+      skipIntroBtn.classList.toggle('is-on', skipOn);
+      skipIntroBtn.setAttribute('aria-pressed', String(skipOn));
+    }
   }
 
   _toggleMenuMusicOption() {
+    if (this._isInputLocked()) return;
     this.audioManager.toggleMenuMusic(!this.audioManager.isMenuMusicEnabled);
     this._renderAudioOptions();
   }
 
   _toggleGameMusicOption() {
+    if (this._isInputLocked()) return;
     this.audioManager.toggleGameMusic(!this.audioManager.isGameMusicEnabled);
+    this._renderAudioOptions();
+  }
+
+  _toggleSkipIntroOption() {
+    if (this._isInputLocked()) return;
+    setSkipIntro(!getSkipIntro());
     this._renderAudioOptions();
   }
 
@@ -384,13 +425,15 @@ export class UIManager {
     if (!endTurnBtn) return;
 
     const inBattle = this.state.currentScreen === 'battle';
-    endTurnBtn.disabled = this.isAnimating || this.isPileViewerOpen || !inBattle;
+    endTurnBtn.disabled =
+      this.isAnimating || this.isPileViewerOpen || !inBattle || this._isInputLocked();
   }
 
   /**
    * @param {'draw' | 'discard' | 'exhaust'} pileType
    */
   _openPileViewer(pileType) {
+    if (this._isInputLocked()) return;
     if (this.state.currentScreen !== 'battle') return;
     this.isPileViewerOpen = true;
     this.activePileViewer = pileType;
@@ -399,6 +442,7 @@ export class UIManager {
   }
 
   _closePileViewer() {
+    if (this._isInputLocked()) return;
     const overlay = document.getElementById('pile-viewer-overlay');
     if (!overlay) return;
     overlay.classList.add('hidden');
@@ -739,6 +783,7 @@ export class UIManager {
    * @param {number} handIndex
    */
   _handlePlayCard(handIndex) {
+    if (this._isInputLocked()) return;
     const result = this.state.playCard(handIndex);
     if (!result.success) {
       if (result.reason === 'stunned_attack') {
@@ -804,6 +849,7 @@ export class UIManager {
    * Handles the end-of-turn sequence: discard, enemy attack animation, then start next turn.
    */
   _handleEndTurn() {
+    if (this._isInputLocked()) return;
     if (this.isAnimating || this.state.currentScreen !== 'battle') return;
     if (this.state.enemy.hp <= 0 || this.state.player.hp <= 0) return;
 
@@ -1242,6 +1288,7 @@ export class UIManager {
   }
 
   _handleRunSummaryReplay() {
+    if (this._isInputLocked()) return;
     this._hideOverlay('run-summary-overlay');
     this.audioManager.clearDefeatThemeLock();
     this.state.resetForNewRun(startingDeck);
@@ -1249,6 +1296,7 @@ export class UIManager {
     this.mapMessage = '';
     this._openMapOverlay();
     this.updateUI();
+    this._onActChange();
   }
 
   _handleRunSummaryExit() {
@@ -1402,6 +1450,7 @@ export class UIManager {
     const reachable = new Set(this.state.getReachableNodes());
     const canStartFirstFight = !this.state.hasStartedFirstBattle && this.state.currentLevel === 0;
     const revealAllMap = this.state.debugRevealAllMap;
+    const isLocked = this._isInputLocked();
     /** @type {HTMLElement[][]} */
     const nodeButtons = [];
 
@@ -1439,12 +1488,13 @@ export class UIManager {
 
         if (isCurrent) btn.classList.add('current');
         if (isDone) btn.classList.add('done');
-        if (isSelectable) {
+        if (isSelectable && !isLocked) {
           btn.classList.add('available');
           btn.addEventListener('click', () => this._handleMapNodeSelect(levelIndex, nodeIndex));
         } else {
           btn.classList.add('locked');
           btn.disabled = !isCurrent;
+          if (isLocked) btn.disabled = true;
         }
 
         const revealedEmoji =
@@ -1498,6 +1548,7 @@ export class UIManager {
     const isOnBoss = this.state.currentLevel === this.state.map.length - 1;
     continueBtn.textContent = isOnBoss ? 'Nowa perć' : 'Idź dalej';
     continueBtn.classList.toggle('hidden', !isOnBoss);
+    continueBtn.disabled = isLocked;
 
     requestAnimationFrame(() => this._drawMapConnections(nodeButtons));
   }
@@ -1564,6 +1615,7 @@ export class UIManager {
   }
 
   _handleMapNodeSelect(level, nodeIndex) {
+    if (this._isInputLocked()) return;
     const isInitialFight =
       !this.state.hasStartedFirstBattle &&
       level === 0 &&
@@ -1634,6 +1686,7 @@ export class UIManager {
   }
 
   _handleMapAdvance() {
+    if (this._isInputLocked()) return;
     const isOnBoss = this.state.currentLevel === this.state.map.length - 1;
     if (!isOnBoss) return;
 
@@ -1766,6 +1819,7 @@ export class UIManager {
    * @param {number} choiceIndex
    */
   _handleRandomEventChoice(choiceIndex) {
+    if (this._isInputLocked()) return;
     const result = this.state.applyActiveEventChoice(choiceIndex);
     const resultEl = document.getElementById('random-event-result');
     const continueBtn = document.getElementById('random-event-continue-btn');
@@ -1784,6 +1838,7 @@ export class UIManager {
   }
 
   _continueAfterRandomEvent() {
+    if (this._isInputLocked()) return;
     this._hideOverlay('random-event-overlay');
 
     const queuedEventBattle = this.state.consumeQueuedEventBattle();
@@ -1839,6 +1894,7 @@ export class UIManager {
   }
 
   _openShop() {
+    if (this._isInputLocked()) return;
     this._hideOverlay('map-overlay');
     const overlay = document.getElementById('shop-overlay');
     overlay.classList.remove('hidden');
@@ -1849,6 +1905,7 @@ export class UIManager {
   }
 
   _closeShop() {
+    if (this._isInputLocked()) return;
     this._hideOverlay('shop-overlay');
     this.audioManager.stopShopMusic();
     this._openMapOverlay();
@@ -1903,6 +1960,7 @@ export class UIManager {
       btn.setAttribute('aria-label', `Kup kartę ${card.name}. ${cardDesc}`);
       btn.disabled = this.state.dutki < cardShopPrice;
       btn.addEventListener('click', () => {
+        if (this._isInputLocked()) return;
         const cardWithPrice = { ...card, price: cardShopPrice };
         const result = this.state.buyItem(cardWithPrice, 'card');
         message.textContent = result.message;
@@ -1947,6 +2005,7 @@ export class UIManager {
         btn.setAttribute('aria-label', `Kup pamiątkę ${relic.name}. ${relic.desc}`);
         btn.disabled = this.state.dutki < relic.price;
         btn.addEventListener('click', () => {
+          if (this._isInputLocked()) return;
           const result = this.state.buyItem(relic, 'relic');
           message.textContent = result.message;
           this._renderShopOffers();
@@ -1981,6 +2040,7 @@ export class UIManager {
   }
 
   _buyShopHeal() {
+    if (this._isInputLocked()) return;
     const message = document.getElementById('shop-message');
     if (!this.state.spendDutki(75)) {
       message.textContent = 'Ni mos tela dutków, synek!';
@@ -1993,6 +2053,7 @@ export class UIManager {
   }
 
   _buyCardRemoval() {
+    if (this._isInputLocked()) return;
     const select = document.getElementById('shop-remove-select');
     const message = document.getElementById('shop-message');
     const cardId = select.value;
@@ -2031,6 +2092,7 @@ export class UIManager {
   }
 
   _openCampfire() {
+    if (this._isInputLocked()) return;
     this.campfireUsed = false;
     this._hideOverlay('map-overlay');
     const overlay = document.getElementById('campfire-overlay');
@@ -2057,6 +2119,7 @@ export class UIManager {
   }
 
   _openLibraryOverlay() {
+    if (this._isInputLocked()) return;
     this.libraryTab = 'cards';
     this.libraryRarityFilter = 'all';
     this._renderLibrary();
@@ -2066,6 +2129,7 @@ export class UIManager {
   }
 
   _closeLibraryOverlay() {
+    if (this._isInputLocked()) return;
     this._hideOverlay('library-overlay');
     this._syncScreenState();
   }
@@ -2074,6 +2138,7 @@ export class UIManager {
    * @param {'cards' | 'relics'} tab
    */
   _setLibraryTab(tab) {
+    if (this._isInputLocked()) return;
     this.libraryTab = tab;
     this._renderLibrary();
   }
@@ -2082,6 +2147,7 @@ export class UIManager {
    * @param {'all' | 'common' | 'uncommon' | 'rare'} rarity
    */
   _setLibraryFilter(rarity) {
+    if (this._isInputLocked()) return;
     this.libraryRarityFilter = rarity;
     this._renderLibrary();
   }
@@ -2173,6 +2239,7 @@ export class UIManager {
   }
 
   _closeCampfire() {
+    if (this._isInputLocked()) return;
     this._hideOverlay('campfire-overlay');
     this.audioManager.stopCampfireMusic();
     this._openMapOverlay();
@@ -2180,6 +2247,7 @@ export class UIManager {
   }
 
   _useCampfireHeal() {
+    if (this._isInputLocked()) return;
     if (this.campfireUsed) return;
     const healAmount = Math.max(1, Math.floor(this.state.player.maxHp * 0.2));
     this.state.healPlayer(healAmount);
@@ -2188,6 +2256,7 @@ export class UIManager {
   }
 
   _useCampfireUpgrade() {
+    if (this._isInputLocked()) return;
     if (this.campfireUsed) return;
     const select = document.getElementById('camp-card-select');
     const cardId = select.value;
@@ -2325,6 +2394,7 @@ export class UIManager {
    * @param {EventTarget | null} target
    */
   _toggleWeatherTooltip(target) {
+    if (this._isInputLocked()) return;
     if (!(target instanceof Element)) return;
     const trigger = target.closest('.weather-hint-trigger');
     if (!trigger) return;
@@ -2394,5 +2464,51 @@ export class UIManager {
     wrapper.style.zoom = '';
     const scale = Math.min(1, window.innerHeight / wrapper.offsetHeight);
     if (scale < 1) wrapper.style.zoom = scale;
+  }
+
+  _isInputLocked() {
+    return Boolean(this.state.isInputLocked);
+  }
+
+  async _onActChange() {
+    if (this.isActIntroPlaying) return;
+    // Skip the Act Intro Overlay when the player has disabled intros.
+    if (getSkipIntro()) {
+      this.refreshMapOverlay();
+      return;
+    }
+    this.isActIntroPlaying = true;
+    this.state.isInputLocked = true;
+    this.updateUI();
+
+    try {
+      await this.playActIntro(this._getActIntroData());
+    } finally {
+      this.state.isInputLocked = false;
+      this.isActIntroPlaying = false;
+      this.updateUI();
+      this.refreshMapOverlay();
+    }
+  }
+
+  /**
+   * @param {{ partLabel: string, actLabel: string, title: string }} actData
+   */
+  playActIntro(actData) {
+    return this.actIntroOverlay.play(actData);
+  }
+
+  _getActIntroData() {
+    const actNumber = Number.isFinite(this.state.currentAct)
+      ? Math.max(1, this.state.currentAct)
+      : 1;
+    const ordinals = ['PIERWSZA', 'DRUGA', 'TRZECIA', 'CZWARTA', 'PIĄTA'];
+    const ordinal = ordinals[actNumber - 1] ?? `${actNumber}.`;
+
+    return {
+      partLabel: `CZĘŚĆ ${ordinal}`,
+      actLabel: '',
+      title: this.state.currentActName || 'NIEZNANY SZLAK',
+    };
   }
 }

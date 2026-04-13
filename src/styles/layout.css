@@ -1387,6 +1387,124 @@ h1 {
   display: none !important;
 }
 
+.motion-comic-intro {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  background: #000;
+  overflow: hidden;
+  z-index: 5000;
+}
+
+.motion-comic-viewport {
+  position: absolute;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: #000;
+}
+
+.motion-comic-track {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 300vw;
+  height: 200vh;
+  max-width: none;
+  max-height: none;
+  transform-origin: top left;
+  object-fit: fill;
+  will-change: transform;
+}
+
+.motion-comic-skip {
+  position: absolute;
+  right: 16px;
+  bottom: 14px;
+  z-index: 2;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+  background: rgba(0, 0, 0, 0.36);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 999px;
+  padding: 6px 10px;
+  pointer-events: none;
+}
+
+.motion-comic-track--animate {
+  animation: motionComicPan 18s ease-in-out forwards;
+}
+
+.act-intro-overlay {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 4200;
+  display: grid;
+  place-items: center;
+  pointer-events: auto;
+}
+
+.act-intro-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.act-intro-panel {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  padding: 24px 22px;
+  color: #fff7df;
+  text-shadow:
+    0 2px 0 rgba(28, 15, 7, 0.95),
+    0 10px 24px rgba(0, 0, 0, 0.55);
+  opacity: 0;
+}
+
+.act-intro-motif {
+  width: min(340px, 78vw);
+  color: #e9c16a;
+  margin: 0 auto 12px;
+}
+
+.act-intro-part {
+  margin: 0;
+  font-family: 'Palatino Linotype', 'Book Antiqua', Palatino, serif;
+  font-size: clamp(0.85rem, 2.7vw, 1.18rem);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #f2ddaa;
+}
+
+.act-intro-act {
+  margin: 8px 0 0;
+  font-family: 'Palatino Linotype', 'Book Antiqua', Palatino, serif;
+  font-size: clamp(1rem, 3.3vw, 1.45rem);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #f5e4bc;
+}
+
+.act-intro-title {
+  margin: 8px 0 0;
+  font-family: 'Palatino Linotype', 'Book Antiqua', Palatino, serif;
+  font-size: clamp(2.1rem, 8.5vw, 5rem);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #f7cd73;
+}
+
+.act-intro-panel--animate {
+  animation: actIntroReveal 3.5s ease forwards;
+}
+
 .map-tree {
   position: relative;
   width: min(620px, 100%);

@@ -5,6 +5,15 @@
 /** @type {ReleaseNoteEntry[]} */
 export const releaseNotesData = [
   {
+    version: 'v1.2.4 - Intro i grafika pierwszej części na mapie',
+    date: 'Kwiecień 2026',
+    changes: [
+      '🎬 NOWE INTRO: Dodano komiksowe Intro uruchamiane przed główną pętlą gry, z możliwością pominięcia klawiszem ESC lub kliknięciem. Można je również wyłączyć w ustawieniach.',
+      '🖼️ NOWA GRAFIKA PRZYGODY: Dodano grafikę pierwszej części przygód Jędrka wykorzystywaną na mapie.',
+      '🎵 NOWY UTWÓR W MENU: Dodano nowy utwór muzyczny w głównym menu gry.',
+    ],
+  },
+  {
     version: 'v1.2.3 - Podgląd Stosów Kart',
     date: 'Kwiecień 2026',
     changes: [
