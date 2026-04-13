@@ -259,18 +259,136 @@
           Oscypki: <span id="energy">3</span>/3
           <span class="currency">Dutki: <span id="dutki">50</span> 💰</span>
         </div>
+
+        <div class="piles" id="pile-controls" aria-label="Stosy kart">
+          <button id="draw-pile-btn" class="pile-btn" type="button" aria-label="Talia dociągu">
+            <span class="pile-icon" aria-hidden="true">
+              <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+                <rect
+                  x="14"
+                  y="18"
+                  width="30"
+                  height="40"
+                  rx="4"
+                  fill="#f0dfc4"
+                  stroke="#5f4122"
+                  stroke-width="2"
+                />
+                <rect
+                  x="18"
+                  y="14"
+                  width="30"
+                  height="40"
+                  rx="4"
+                  fill="#e5d1b2"
+                  stroke="#5f4122"
+                  stroke-width="2"
+                />
+                <rect
+                  x="22"
+                  y="10"
+                  width="30"
+                  height="40"
+                  rx="4"
+                  fill="#704f2b"
+                  stroke="#402711"
+                  stroke-width="2"
+                />
+              </svg>
+            </span>
+            <span class="pile-count" id="draw-pile-count">0</span>
+          </button>
+
+          <button id="discard-pile-btn" class="pile-btn" type="button" aria-label="Karty odrzucone">
+            <span class="pile-icon" aria-hidden="true">
+              <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+                <rect
+                  x="10"
+                  y="22"
+                  width="28"
+                  height="34"
+                  rx="4"
+                  transform="rotate(-10 24 39)"
+                  fill="#f5e9d5"
+                  stroke="#694622"
+                  stroke-width="2"
+                />
+                <rect
+                  x="24"
+                  y="18"
+                  width="30"
+                  height="38"
+                  rx="4"
+                  transform="rotate(8 39 37)"
+                  fill="#ecd8bb"
+                  stroke="#694622"
+                  stroke-width="2"
+                />
+                <rect
+                  x="20"
+                  y="12"
+                  width="30"
+                  height="38"
+                  rx="4"
+                  fill="#f9f0e0"
+                  stroke="#694622"
+                  stroke-width="2"
+                />
+                <line x1="26" y1="22" x2="44" y2="22" stroke="#8f6a3f" stroke-width="2" />
+                <line x1="26" y1="28" x2="44" y2="28" stroke="#8f6a3f" stroke-width="2" />
+              </svg>
+            </span>
+            <span class="pile-count" id="discard-pile-count">0</span>
+          </button>
+
+          <button id="exhaust-pile-btn" class="pile-btn" type="button" aria-label="Karty przepadłe">
+            <span class="pile-icon" aria-hidden="true">
+              <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+                <rect
+                  x="18"
+                  y="12"
+                  width="30"
+                  height="40"
+                  rx="4"
+                  fill="#5d5d5d"
+                  stroke="#2e2e2e"
+                  stroke-width="2"
+                />
+                <path
+                  d="M32 54 C26 48 24 44 26 39 C28 34 34 32 34 26 C38 30 44 34 42 42 C41 48 37 51 32 54 Z"
+                  fill="#ff8a2a"
+                />
+                <path
+                  d="M32 49 C29 45 29 43 30 40 C31 37 34 36 34 33 C36 36 39 38 38 42 C37 45 35 47 32 49 Z"
+                  fill="#ffd15a"
+                />
+              </svg>
+            </span>
+            <span class="pile-count" id="exhaust-pile-count">0</span>
+          </button>
+        </div>
+
         <button class="btn" id="end-turn-btn">Koniec Tury</button>
       </div>
 
       <div class="hand" id="hand"></div>
-
-      <div class="piles">
-        <div>Talia: <span id="draw-pile-count">0</span></div>
-        <div>Odrzucone: <span id="discard-pile-count">0</span></div>
-        <div>🔥 Przepadło: <span id="exhaust-pile-count">0</span></div>
-      </div>
     </div>
     <!-- #game-wrapper -->
+
+    <div id="pile-viewer-overlay" class="pile-viewer-overlay hidden" aria-hidden="true">
+      <div
+        class="pile-viewer-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="pile-viewer-title"
+      >
+        <div class="pile-viewer-header">
+          <h2 id="pile-viewer-title" class="pile-viewer-title">Podgląd stosu</h2>
+          <button id="pile-viewer-close" class="pile-viewer-close" type="button">Zamknij</button>
+        </div>
+        <div id="pile-viewer-grid" class="pile-viewer-grid"></div>
+      </div>
+    </div>
 
     <div id="relic-reward-screen" class="victory-overlay hidden" aria-hidden="true">
       <div class="victory-panel relic-reward-panel">

@@ -5,6 +5,15 @@
 /** @type {ReleaseNoteEntry[]} */
 export const releaseNotesData = [
   {
+    version: 'v1.2.3 - Podgląd Stosów Kart',
+    date: 'Kwiecień 2026',
+    changes: [
+      '🃏 NOWY PODGLĄD STOSÓW W WALCE: W trakcie starcia możesz kliknąć ikonki Talii, Odrzuconych i Przepadłych, aby podejrzeć dokładnie jakie karty są w każdym stosie.',
+      '👀 CZYTELNIEJSZE DECYZJE TAKTYCZNE: Podgląd działa w wygodnym oknie z siatką kart, więc łatwiej planować kolejne ruchy i zarządzać tempem walki.',
+      '📱 LEPSZA ERGONOMIA UI: Ikony stosów są stale widoczne w górnym panelu i nie zasłaniają już kart na ręce, także na mniejszych ekranach.',
+    ],
+  },
+  {
     version: 'v1.2.2 - Hazard na Krupówkach',
     date: 'Kwiecień 2026',
     changes: [

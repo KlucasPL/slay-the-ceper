@@ -555,9 +555,10 @@ h1 {
   width: 95%;
   max-width: 800px;
   box-sizing: border-box;
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
   align-items: center;
+  gap: 12px;
   margin-bottom: 20px;
 }
 
@@ -1812,14 +1813,140 @@ h1 {
 
 .piles {
   display: flex;
-  justify-content: space-around;
-  width: 95%;
-  max-width: 800px;
-  box-sizing: border-box;
-  margin-top: 10px;
-  font-size: 1em;
-  color: #ccc;
+  gap: 8px;
+  width: 100%;
+  justify-content: center;
+  align-items: center;
+}
+
+.pile-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  width: 52px;
+  height: 52px;
+  position: relative;
+  border-radius: 14px;
+  border: 2px solid #b88a53;
+  background: linear-gradient(180deg, rgba(73, 44, 24, 0.94), rgba(47, 28, 15, 0.98));
+  color: #f4dfbf;
+  font-weight: 800;
+  padding: 0;
+  cursor: pointer;
+  box-shadow:
+    0 8px 16px rgba(0, 0, 0, 0.38),
+    0 0 0 1px rgba(0, 0, 0, 0.2) inset;
+  transition:
+    transform 0.16s ease,
+    filter 0.16s ease;
+}
+
+.pile-btn:hover,
+.pile-btn:focus-visible {
+  transform: translateY(-1px);
+  filter: brightness(1.08);
+}
+
+.pile-icon {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+}
+
+.pile-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.pile-count {
+  min-width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(40, 22, 10, 0.86);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  position: absolute;
+  right: -6px;
+  top: -6px;
+}
+
+.pile-viewer-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+  z-index: 4600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+}
+
+.pile-viewer-overlay.hidden {
+  display: none;
+}
+
+.pile-viewer-modal {
+  width: min(1180px, 96vw);
+  max-height: calc(100dvh - 36px);
+  background: linear-gradient(180deg, #6a4222 0%, #4b2d17 100%);
+  border: 10px solid #7c4a1f;
+  box-shadow:
+    0 0 0 4px #3a210f,
+    0 12px 40px rgba(0, 0, 0, 0.65);
+  border-radius: 18px;
+  padding: 18px;
+  overflow: auto;
+}
+
+.pile-viewer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.pile-viewer-title {
+  margin: 0;
+  color: #ffd45e;
+  letter-spacing: 0.04em;
+}
+
+.pile-viewer-close {
+  border: 2px solid #ffdc72;
+  background: linear-gradient(180deg, #8f6130 0%, #6d4521 100%);
+  color: #fff3d6;
+  font-size: 0.95rem;
   font-weight: bold;
+  border-radius: 999px;
+  padding: 8px 14px;
+  cursor: pointer;
+}
+
+.pile-viewer-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 14px;
+}
+
+.pile-viewer-card {
+  width: 100%;
+  height: 210px;
+  cursor: default;
+}
+
+.pile-viewer-card:hover {
+  transform: none;
+}
+
+.pile-viewer-empty {
+  margin: 10px 0;
+  color: #f6e8ca;
+  font-weight: 700;
 }
 
 /* --- Portrait mobile (narrow screens) --- */
@@ -1886,6 +2013,58 @@ h1 {
   .title-start-btn {
     width: 100%;
     max-width: 320px;
+  }
+
+  .ui-bar {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .btn#end-turn-btn {
+    width: 100%;
+  }
+
+  .piles {
+    order: 2;
+    gap: 6px;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .pile-btn {
+    width: 48px;
+    height: 48px;
+  }
+
+  .pile-icon {
+    width: 24px;
+    height: 24px;
+  }
+
+  .pile-count {
+    min-width: 20px;
+    height: 20px;
+    font-size: 0.7rem;
+  }
+
+  .pile-viewer-overlay {
+    padding: 8px;
+  }
+
+  .pile-viewer-modal {
+    width: 100%;
+    max-height: 95dvh;
+    border-width: 6px;
+    padding: 12px;
+  }
+
+  .pile-viewer-grid {
+    grid-template-columns: repeat(auto-fill, minmax(138px, 1fr));
+    gap: 10px;
+  }
+
+  .pile-viewer-card {
+    height: 190px;
   }
 
   .event-overlay {
@@ -2014,6 +2193,8 @@ h1 {
     width: auto;
     max-width: none;
     margin-bottom: 0;
+    grid-template-columns: 1fr;
+    gap: 6px;
   }
   .energy {
     font-size: 0.95em;
@@ -2070,14 +2251,19 @@ h1 {
   }
 
   .piles {
-    grid-area: piles;
     width: auto;
     max-width: none;
-    flex-direction: column;
-    justify-content: center;
+    flex-direction: row;
+    justify-content: flex-start;
     align-items: center;
+    order: 2;
     margin-top: 0;
-    font-size: 0.8em;
-    gap: 3px;
+    font-size: 0.75em;
+    gap: 5px;
+  }
+
+  .pile-btn {
+    width: 42px;
+    height: 42px;
   }
 }

@@ -27,6 +27,10 @@ export class UIManager {
     this.libraryRarityFilter = 'all';
     /** @type {string | null} */
     this.pendingEventFallbackEnemyId = null;
+    /** @type {boolean} */
+    this.isPileViewerOpen = false;
+    /** @type {'draw' | 'discard' | 'exhaust' | null} */
+    this.activePileViewer = null;
   }
 
   /**
@@ -143,6 +147,23 @@ export class UIManager {
     document
       .getElementById('weather-indicator')
       .addEventListener('click', (event) => this._toggleWeatherTooltip(event.currentTarget));
+    document.getElementById('draw-pile-btn')?.addEventListener('click', () => {
+      this._openPileViewer('draw');
+    });
+    document.getElementById('discard-pile-btn')?.addEventListener('click', () => {
+      this._openPileViewer('discard');
+    });
+    document.getElementById('exhaust-pile-btn')?.addEventListener('click', () => {
+      this._openPileViewer('exhaust');
+    });
+    document.getElementById('pile-viewer-close')?.addEventListener('click', () => {
+      this._closePileViewer();
+    });
+    document.getElementById('pile-viewer-overlay')?.addEventListener('click', (event) => {
+      if (event.target === event.currentTarget) {
+        this._closePileViewer();
+      }
+    });
     document.addEventListener('click', (event) => {
       const target = event.target;
       if (
@@ -151,6 +172,11 @@ export class UIManager {
       ) {
         this._closeStatusTooltips();
         this._closeWeatherTooltips();
+      }
+    });
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && this.isPileViewerOpen) {
+        this._closePileViewer();
       }
     });
     window.addEventListener('resize', () => this._scaleGame());
@@ -213,6 +239,13 @@ export class UIManager {
     this._renderStatuses('p-statuses', player.status);
     this._renderStatuses('e-statuses', enemy.status);
     this._renderHand();
+    const pileControls = document.getElementById('pile-controls');
+    if (pileControls) {
+      pileControls.classList.toggle('hidden', this.state.currentScreen !== 'battle');
+    }
+    if (this.state.currentScreen !== 'battle' && this.isPileViewerOpen) {
+      this._closePileViewer();
+    }
     this._syncEndTurnButtonState();
     this._syncScreenState();
     this._renderCornerOptionsButton();
@@ -351,7 +384,135 @@ export class UIManager {
     if (!endTurnBtn) return;
 
     const inBattle = this.state.currentScreen === 'battle';
-    endTurnBtn.disabled = this.isAnimating || !inBattle;
+    endTurnBtn.disabled = this.isAnimating || this.isPileViewerOpen || !inBattle;
+  }
+
+  /**
+   * @param {'draw' | 'discard' | 'exhaust'} pileType
+   */
+  _openPileViewer(pileType) {
+    if (this.state.currentScreen !== 'battle') return;
+    this.isPileViewerOpen = true;
+    this.activePileViewer = pileType;
+    this._renderPileViewer();
+    this._syncEndTurnButtonState();
+  }
+
+  _closePileViewer() {
+    const overlay = document.getElementById('pile-viewer-overlay');
+    if (!overlay) return;
+    overlay.classList.add('hidden');
+    overlay.setAttribute('aria-hidden', 'true');
+    this.isPileViewerOpen = false;
+    this.activePileViewer = null;
+    this._syncEndTurnButtonState();
+  }
+
+  _renderPileViewer() {
+    const overlay = document.getElementById('pile-viewer-overlay');
+    const title = document.getElementById('pile-viewer-title');
+    const grid = document.getElementById('pile-viewer-grid');
+    if (!overlay || !title || !grid || !this.activePileViewer) return;
+
+    /** @type {{ title: string, ids: string[] }} */
+    const view = this._buildPileViewerData(this.activePileViewer);
+    title.textContent = view.title;
+    grid.innerHTML = '';
+
+    if (view.ids.length === 0) {
+      const empty = document.createElement('p');
+      empty.className = 'pile-viewer-empty';
+      empty.textContent = 'Brak kart w tym stosie.';
+      grid.appendChild(empty);
+    } else {
+      view.ids.forEach((cardId) => {
+        const card = cardLibrary[cardId];
+        if (!card) return;
+
+        const cardEl = document.createElement('article');
+        cardEl.className = `card pile-viewer-card ${this._rarityClass(card.rarity)} card-${card.type}`;
+
+        const costEl = document.createElement('div');
+        costEl.className = 'card-cost';
+        costEl.textContent = String(card.cost);
+
+        const titleEl = document.createElement('div');
+        titleEl.className = 'card-title';
+        titleEl.textContent = card.name;
+
+        const rarityEl = document.createElement('div');
+        rarityEl.className = 'card-rarity';
+        rarityEl.textContent = this._rarityLabel(card.rarity, 'card');
+
+        const imgEl = document.createElement('div');
+        imgEl.className = 'card-img';
+        imgEl.textContent = card.emoji;
+
+        const descEl = document.createElement('div');
+        descEl.className = 'card-desc';
+        descEl.textContent = this._getCardDescription(card);
+
+        cardEl.append(costEl, titleEl, rarityEl, imgEl, descEl);
+
+        if (card.exhaust) {
+          cardEl.classList.add('card-exhaust');
+          cardEl.appendChild(this._createExhaustBadge());
+        }
+
+        grid.appendChild(cardEl);
+      });
+    }
+
+    overlay.classList.remove('hidden');
+    overlay.setAttribute('aria-hidden', 'false');
+  }
+
+  /**
+   * @param {'draw' | 'discard' | 'exhaust'} pileType
+   * @returns {{ title: string, ids: string[] }}
+   */
+  _buildPileViewerData(pileType) {
+    const drawSource =
+      this.state?.combatState?.drawPile ?? this.state.deck ?? this.state.drawPile ?? [];
+    const discardSource =
+      this.state?.combatState?.discardPile ?? this.state.discard ?? this.state.discardPile ?? [];
+    const exhaustSource =
+      this.state?.combatState?.exhaustPile ?? this.state.exhaust ?? this.state.exhaustPile ?? [];
+
+    const toIds = (source) => {
+      if (!Array.isArray(source)) return [];
+      return source
+        .map((entry) => {
+          if (typeof entry === 'string') return entry;
+          if (entry && typeof entry === 'object' && typeof entry.id === 'string') return entry.id;
+          return null;
+        })
+        .filter((id) => typeof id === 'string');
+    };
+
+    const drawIds = toIds(drawSource)
+      .filter((id) => Boolean(cardLibrary[id]))
+      .sort((a, b) => {
+        const cardA = cardLibrary[a];
+        const cardB = cardLibrary[b];
+        return cardA.cost - cardB.cost || cardA.name.localeCompare(cardB.name, 'pl');
+      });
+
+    const discardIds = toIds(discardSource)
+      .filter((id) => Boolean(cardLibrary[id]))
+      .reverse();
+
+    const exhaustIds = toIds(exhaustSource)
+      .filter((id) => Boolean(cardLibrary[id]))
+      .reverse();
+
+    if (pileType === 'draw') {
+      return { title: 'Talia Dociągu', ids: drawIds };
+    }
+    if (pileType === 'discard') {
+      return { title: 'Karty Odrzucone', ids: discardIds };
+    }
+    return { title: 'Przepadło', ids: exhaustIds };
   }
 
   /**
