@@ -12,6 +12,7 @@ body {
   height: 100vh;
   height: 100dvh;
   overflow: hidden;
+  overflow-x: hidden;
 }
 
 :root {
@@ -121,74 +122,54 @@ body {
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
 }
 
+.title-menu-nav {
+  width: 100%;
+  max-width: 100vw;
+  padding: 20px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.title-menu-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+}
+
+.title-menu-item {
+  width: 100%;
+  max-width: 100%;
+  text-align: center;
+}
+
 .title-start-btn {
-  border: 2px solid #d7a84d;
-  border-radius: 14px;
-  padding: 16px 30px;
-  font-size: clamp(1.05rem, 2.6vw, 1.35rem);
+  border: 0;
+  background: transparent;
+  padding: 0.1rem 0.2rem;
+  width: 100%;
+  max-width: 100%;
+  font-size: clamp(1.2rem, 5vw, 2.5rem);
   font-weight: 800;
-  letter-spacing: 0.08em;
-  color: #ffd978;
-  background:
-    linear-gradient(180deg, rgba(164, 106, 48, 0.96), rgba(104, 61, 27, 0.98)),
-    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.06) 0 8px, rgba(0, 0, 0, 0.06) 8px 16px);
-  box-shadow:
-    0 0 0 2px rgba(73, 42, 18, 0.7) inset,
-    0 10px 26px rgba(0, 0, 0, 0.35);
+  letter-spacing: 0.03em;
+  color: #f1e6d0;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
   cursor: pointer;
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease,
-    filter 0.2s ease;
+  transition: all 0.2s ease-in-out;
 }
 
 .title-start-btn:hover,
 .title-start-btn:focus-visible {
-  transform: scale(1.04);
-  filter: brightness(1.07);
-  box-shadow:
-    0 0 0 2px rgba(73, 42, 18, 0.7) inset,
-    0 0 22px rgba(255, 215, 112, 0.28),
-    0 10px 26px rgba(0, 0, 0, 0.4);
-}
-
-.title-start-btn--hard {
-  border-color: #c0392b;
-  color: #ff9f9f;
-  background:
-    linear-gradient(180deg, rgba(130, 30, 20, 0.96), rgba(80, 15, 10, 0.98)),
-    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.06) 0 8px, rgba(0, 0, 0, 0.06) 8px 16px);
-  box-shadow:
-    0 0 0 2px rgba(100, 20, 15, 0.7) inset,
-    0 10px 26px rgba(0, 0, 0, 0.35);
-}
-
-.title-start-btn--hard:hover,
-.title-start-btn--hard:focus-visible {
-  box-shadow:
-    0 0 0 2px rgba(100, 20, 15, 0.7) inset,
-    0 0 22px rgba(255, 80, 60, 0.35),
-    0 10px 26px rgba(0, 0, 0, 0.4);
-}
-
-.title-start-btn--library {
-  border-color: #b78f5a;
-  color: #ffe8b7;
-  background:
-    linear-gradient(180deg, rgba(112, 78, 43, 0.96), rgba(84, 56, 30, 0.98)),
-    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.06) 0 8px, rgba(0, 0, 0, 0.06) 8px 16px);
-}
-
-.title-start-btn--library:hover,
-.title-start-btn--library:focus-visible {
-  box-shadow:
-    0 0 0 2px rgba(73, 42, 18, 0.7) inset,
-    0 0 18px rgba(216, 184, 124, 0.32),
-    0 10px 26px rgba(0, 0, 0, 0.4);
-}
-
-.menu-btn {
-  min-width: 220px;
+  color: #ffd27a;
+  transform: scale(1.1);
 }
 
 .modal {
@@ -298,10 +279,7 @@ body {
 }
 
 .title-btn-row {
-  display: flex;
-  justify-content: center;
-  gap: 20px;
-  flex-wrap: wrap;
+  display: none;
 }
 
 .title-difficulty-hint {
@@ -1387,6 +1365,228 @@ h1 {
   display: none !important;
 }
 
+.tutorial-exit-btn {
+  position: fixed;
+  top: 14px;
+  left: 16px;
+  z-index: 4565;
+  border: 2px solid #ffd27a;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #8f6130 0%, #69401f 100%);
+  color: #fff3d6;
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.tutorial-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 4550;
+  pointer-events: none;
+}
+
+.tutorial-dim {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+}
+
+.tutorial-highlight-layer {
+  position: absolute;
+  inset: 0;
+}
+
+.tutorial-highlight {
+  position: fixed;
+  border: 3px solid #ffd66e;
+  border-radius: 12px;
+  box-shadow: 0 0 0 2px rgba(80, 45, 18, 0.75) inset;
+}
+
+.tutorial-focus-target {
+  position: relative;
+  z-index: 4560;
+}
+
+.tutorial-bubble {
+  --tutorial-tail-left: 44px;
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 20px;
+  width: min(44ch, calc(100vw - 32px));
+  max-width: calc(100vw - 32px);
+  max-height: min(40dvh, 320px);
+  background: #fff6e7;
+  color: #2c1e16;
+  border: 3px solid #5b3418;
+  border-radius: 18px;
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.45);
+  padding: 12px 13px 10px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  pointer-events: auto;
+}
+
+.tutorial-bubble::before {
+  content: '';
+  position: absolute;
+  left: calc(var(--tutorial-tail-left) - 1px);
+  bottom: -20px;
+  border-width: 20px 16px 0 0;
+  border-style: solid;
+  border-color: #5b3418 transparent transparent transparent;
+}
+
+.tutorial-bubble::after {
+  content: '';
+  position: absolute;
+  left: var(--tutorial-tail-left);
+  bottom: -15px;
+  border-width: 15px 13px 0 0;
+  border-style: solid;
+  border-color: #fff6e7 transparent transparent transparent;
+}
+
+.tutorial-bubble--player {
+  border-color: #6a3d20;
+  background: #fff2de;
+  box-shadow:
+    0 16px 34px rgba(0, 0, 0, 0.42),
+    0 0 0 2px rgba(106, 61, 32, 0.16) inset;
+}
+
+.tutorial-bubble-title {
+  margin: 0 0 6px;
+  font-size: clamp(0.88rem, 1.95vw, 1rem);
+  color: #6f3f1a;
+}
+
+.tutorial-bubble-title::before {
+  content: '🧔‍♂️ ';
+}
+
+.tutorial-bubble-text {
+  margin: 0;
+  white-space: pre-line;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  font-size: clamp(0.82rem, 2.1vw, 0.95rem);
+  line-height: 1.32;
+}
+
+.tutorial-ack-btn {
+  margin-top: 8px;
+  border: 2px solid #8a5a2a;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #d8a25b 0%, #bb7d35 100%);
+  color: #2b1a0f;
+  font-weight: 800;
+  padding: 6px 10px;
+  font-size: clamp(0.74rem, 1.9vw, 0.88rem);
+  cursor: pointer;
+}
+
+.tutorial-conclude-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.tutorial-conclude-btns.hidden {
+  display: none;
+}
+
+.tutorial-conclude-btn {
+  border-radius: 999px;
+  font-weight: 800;
+  padding: 6px 10px;
+  cursor: pointer;
+  font-size: clamp(0.72rem, 1.9vw, 0.84rem);
+}
+
+#map-overlay.map-overlay--tutorial {
+  align-items: center;
+}
+
+#map-overlay.map-overlay--tutorial .map-panel--tutorial {
+  width: min(440px, calc(100vw - 20px));
+  max-height: min(88dvh, 760px);
+  border-width: 4px;
+  padding: 12px;
+  background: linear-gradient(180deg, #5b3720 0%, #472b19 100%);
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.4);
+}
+
+#map-overlay.map-overlay--tutorial .map-resource-strip,
+#map-overlay.map-overlay--tutorial #map-message,
+#map-overlay.map-overlay--tutorial #map-continue-btn {
+  display: none;
+}
+
+.map-tree.map-tree--tutorial {
+  width: min(250px, 100%);
+  max-height: 68dvh;
+  margin: 8px auto;
+  padding: 2px;
+}
+
+.map-tree.map-tree--tutorial .map-levels {
+  gap: 10px;
+}
+
+.map-tree.map-tree--tutorial .map-level {
+  grid-template-columns: 1fr;
+  gap: 0;
+  justify-items: center;
+}
+
+.map-tree.map-tree--tutorial .map-node-placeholder {
+  display: none;
+}
+
+.map-tree.map-tree--tutorial .map-node-wrap {
+  min-height: 50px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.map-tree.map-tree--tutorial .map-node-btn {
+  width: min(210px, 100%);
+  min-height: 50px;
+}
+
+.map-tree.map-tree--tutorial .map-lines {
+  opacity: 0.6;
+}
+
+.tutorial-conclude-btn--repeat {
+  border: 2px solid #8a5a2a;
+  background: linear-gradient(180deg, #d8a25b 0%, #bb7d35 100%);
+  color: #2b1a0f;
+}
+
+.tutorial-conclude-btn--finish {
+  border: 2px solid #3a6a1f;
+  background: linear-gradient(180deg, #5aab2a 0%, #3a7a18 100%);
+  color: #f0ffe8;
+}
+
+.tutorial-bubble.tutorial-bubble--map-explain {
+  bottom: 8px;
+}
+
+.tutorial-overlay.tutorial-overlay--map-explain
+  #map-overlay.map-overlay--tutorial
+  .map-tree.map-tree--tutorial {
+  max-height: min(52dvh, 390px);
+}
+
 .motion-comic-intro {
   position: fixed;
   inset: 0;
@@ -2069,6 +2269,78 @@ h1 {
 
 /* --- Portrait mobile (narrow screens) --- */
 @media (max-width: 600px) {
+  .title-screen {
+    align-items: flex-start;
+    justify-content: center;
+    padding: 10px 10px 14px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .tutorial-exit-btn {
+    top: 8px;
+    left: 8px;
+    font-size: 0.82rem;
+    padding: 6px 10px;
+  }
+
+  .tutorial-bubble {
+    left: 50%;
+    transform: translateX(-50%);
+    right: auto;
+    bottom: 8px;
+    width: min(36ch, calc(100vw - 20px));
+    max-width: calc(100vw - 20px);
+    max-height: min(35dvh, 240px);
+    padding: 9px 10px 8px;
+    border-width: 2px;
+    border-radius: 14px;
+  }
+
+  .tutorial-bubble.tutorial-bubble--conclude {
+    width: min(360px, calc(100vw - 24px));
+    max-width: calc(100vw - 24px);
+    max-height: min(34dvh, 230px);
+  }
+
+  .tutorial-bubble.tutorial-bubble--map-explain {
+    width: min(35ch, calc(100vw - 24px));
+    max-width: calc(100vw - 24px);
+    max-height: min(30dvh, 190px);
+  }
+
+  .tutorial-overlay.tutorial-overlay--map-explain
+    #map-overlay.map-overlay--tutorial
+    .map-tree.map-tree--tutorial {
+    max-height: min(44dvh, 300px);
+  }
+
+  .tutorial-bubble::before {
+    bottom: -14px;
+    border-width: 14px 12px 0 0;
+  }
+
+  .tutorial-bubble::after {
+    bottom: -10px;
+    border-width: 10px 9px 0 0;
+  }
+
+  .tutorial-bubble-title {
+    margin-bottom: 4px;
+    font-size: clamp(0.8rem, 2vw, 0.92rem);
+  }
+
+  .tutorial-bubble-text {
+    font-size: clamp(0.72rem, 1.95vw, 0.84rem);
+    line-height: 1.28;
+  }
+
+  .tutorial-ack-btn,
+  .tutorial-conclude-btn {
+    font-size: clamp(0.68rem, 1.8vw, 0.8rem);
+    padding: 5px 9px;
+  }
+
   .corner-options-btn {
     top: 8px;
     right: 8px;
@@ -2127,21 +2399,44 @@ h1 {
   }
 
   .title-panel {
-    padding: 20px 10px;
+    width: min(640px, 100%);
+    padding: 10px 8px 14px;
   }
 
   .title-kicker {
-    font-size: 0.76rem;
-    letter-spacing: 0.16em;
+    margin-bottom: 8px;
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+  }
+
+  .title-main {
+    font-size: clamp(1.85rem, 10.2vw, 3rem);
+    line-height: 1.02;
+    letter-spacing: 0.02em;
   }
 
   .title-subtitle {
-    margin-bottom: 22px;
+    margin: 10px auto 14px;
+    font-size: clamp(0.95rem, 4vw, 1.15rem);
+  }
+
+  .title-menu-nav {
+    padding: 8px;
+  }
+
+  .title-menu-list {
+    gap: 0.95rem;
   }
 
   .title-start-btn {
-    width: 100%;
-    max-width: 320px;
+    font-size: clamp(1rem, 5.6vw, 1.55rem);
+    line-height: 1.12;
+    text-wrap: balance;
+  }
+
+  .title-difficulty-hint {
+    margin-top: 8px;
+    font-size: clamp(0.74rem, 3.4vw, 0.86rem);
   }
 
   .ui-bar {
@@ -2211,6 +2506,11 @@ h1 {
     width: 100%;
   }
 
+  .map-tree.map-tree--tutorial {
+    width: min(230px, 100%);
+    max-height: 64dvh;
+  }
+
   .map-level {
     gap: 8px;
   }
@@ -2262,6 +2562,60 @@ h1 {
   }
   .card-img {
     font-size: 3em;
+  }
+}
+
+@media (max-width: 480px) {
+  .tutorial-bubble {
+    width: min(33ch, calc(100vw - 20px));
+    max-width: calc(100vw - 20px);
+    max-height: min(32dvh, 200px);
+    padding: 8px 9px 7px;
+  }
+
+  .tutorial-bubble-title {
+    font-size: clamp(0.74rem, 1.95vw, 0.84rem);
+  }
+
+  .tutorial-bubble-text {
+    font-size: clamp(0.66rem, 1.8vw, 0.76rem);
+    line-height: 1.22;
+  }
+
+  .tutorial-ack-btn,
+  .tutorial-conclude-btn {
+    font-size: clamp(0.62rem, 1.7vw, 0.72rem);
+    padding: 4px 8px;
+  }
+
+  .tutorial-bubble.tutorial-bubble--conclude {
+    width: min(320px, calc(100vw - 18px));
+    max-width: calc(100vw - 18px);
+    max-height: min(32dvh, 200px);
+  }
+
+  .tutorial-bubble.tutorial-bubble--map-explain {
+    width: min(31ch, calc(100vw - 18px));
+    max-width: calc(100vw - 18px);
+    max-height: min(27dvh, 160px);
+  }
+
+  .tutorial-overlay.tutorial-overlay--map-explain
+    #map-overlay.map-overlay--tutorial
+    .map-tree.map-tree--tutorial {
+    max-height: min(40dvh, 250px);
+  }
+
+  .title-menu-list {
+    gap: 0.72rem;
+  }
+
+  .title-start-btn {
+    font-size: clamp(0.95rem, 5.2vw, 1.3rem);
+  }
+
+  .title-main {
+    font-size: clamp(1.65rem, 9.4vw, 2.4rem);
   }
 }
 

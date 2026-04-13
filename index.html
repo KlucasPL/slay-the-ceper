@@ -52,21 +52,38 @@
         <p class="title-kicker">Góralska przygoda dla cierpliwych</p>
         <h1 class="title-main">USIEC CEPRA: WYPRAWA NA GIEWONT</h1>
         <p class="title-subtitle">Pomóż Jędrkowi odzyskać spokój na perci!</p>
-        <div class="title-btn-row">
-          <button id="title-btn-normal" class="title-start-btn">Tryb Podstawowy</button>
-          <button id="title-btn-hard" class="title-start-btn title-start-btn--hard">
-            Tryb Dla Marka 🌶️
-          </button>
-          <button id="title-btn-options" class="title-start-btn title-start-btn--library">
-            OPCJE
-          </button>
-          <button id="title-btn-library" class="title-start-btn title-start-btn--library">
-            Biblioteka
-          </button>
-          <button id="btn-release-notes" class="menu-btn title-start-btn title-start-btn--library">
-            📜 Co nowego?
-          </button>
-        </div>
+        <nav class="title-menu-nav" aria-label="Menu główne">
+          <ul class="title-menu-list">
+            <li class="title-menu-item">
+              <button id="title-btn-normal" class="title-start-btn" type="button">
+                Tryb Podstawowy (Nowa Gra)
+              </button>
+            </li>
+            <li class="title-menu-item">
+              <button id="title-btn-tutorial" class="title-start-btn" type="button">
+                Samouczek
+              </button>
+            </li>
+            <li class="title-menu-item">
+              <button id="title-btn-hard" class="title-start-btn" type="button">
+                Tryb Dla Marka 🌶️
+              </button>
+            </li>
+            <li class="title-menu-item">
+              <button id="title-btn-options" class="title-start-btn" type="button">Opcje</button>
+            </li>
+            <li class="title-menu-item">
+              <button id="title-btn-library" class="title-start-btn" type="button">
+                Biblioteka
+              </button>
+            </li>
+            <li class="title-menu-item">
+              <button id="btn-release-notes" class="title-start-btn" type="button">
+                Co nowego? (v1.2.4)
+              </button>
+            </li>
+          </ul>
+        </nav>
         <p class="title-difficulty-hint">
           W trybie Dla Marka przeciwnicy stają się silniejsi z każdą walką!
         </p>
@@ -398,6 +415,34 @@
           <button id="pile-viewer-close" class="pile-viewer-close" type="button">Zamknij</button>
         </div>
         <div id="pile-viewer-grid" class="pile-viewer-grid"></div>
+      </div>
+    </div>
+
+    <button id="tutorial-exit-btn" class="tutorial-exit-btn hidden" type="button">Wyjdź</button>
+
+    <div id="tutorial-overlay" class="tutorial-overlay hidden" aria-hidden="true">
+      <div class="tutorial-dim"></div>
+      <div id="tutorial-highlight-layer" class="tutorial-highlight-layer"></div>
+      <div class="tutorial-bubble" role="dialog" aria-live="polite" aria-modal="false">
+        <h3 class="tutorial-bubble-title">Jędrek mówi</h3>
+        <p id="tutorial-text" class="tutorial-bubble-text"></p>
+        <button id="tutorial-ack-btn" class="tutorial-ack-btn" type="button">Zrozumiałem</button>
+        <div id="tutorial-conclude-btns" class="tutorial-conclude-btns hidden">
+          <button
+            id="tutorial-repeat-btn"
+            class="tutorial-conclude-btn tutorial-conclude-btn--repeat"
+            type="button"
+          >
+            POWTÓRZ OD POCZĄTKU
+          </button>
+          <button
+            id="tutorial-finish-btn"
+            class="tutorial-conclude-btn tutorial-conclude-btn--finish"
+            type="button"
+          >
+            NIE, JEDZIEMY Z TYM KOKSEM!
+          </button>
+        </div>
       </div>
     </div>
 

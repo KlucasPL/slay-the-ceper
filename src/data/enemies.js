@@ -156,7 +156,7 @@ const ceprzyca_vipSprite = `
 
 /**
  * @typedef {{ type: 'attack', name: string, damage: number, hits?: number, applyWeak?: number, applyFrail?: number, applyVulnerable?: number, damagePerCardInHand?: boolean, gainPed?: number, usePed?: boolean, stealDutki?: number } | { type: 'block', name: string, block: number, heal?: number, gainEvasion?: number } | { type: 'buff', name: string, strengthGain?: number, block?: number } | { type: 'status', name: string, addStatusCard?: string, amount?: number, applyStun?: number }} EnemyMoveDef
- * @typedef {{ id: string, name: string, emoji: string, hp: number, maxHp: number, block: number, baseAttack?: number, passive?: string, spriteSvg: string, phase2SpriteSvg?: string, patternType: 'random'|'loop', pattern?: EnemyMoveDef[], phaseTwoPattern?: EnemyMoveDef[], elite?: boolean, isBoss?: boolean, eventOnly?: boolean }} EnemyDef
+ * @typedef {{ id: string, name: string, emoji: string, hp: number, maxHp: number, block: number, baseAttack?: number, passive?: string, spriteSvg: string, phase2SpriteSvg?: string, patternType: 'random'|'loop', pattern?: EnemyMoveDef[], phaseTwoPattern?: EnemyMoveDef[], elite?: boolean, isBoss?: boolean, eventOnly?: boolean, tutorialOnly?: boolean }} EnemyDef
  */
 
 const ceprSprite = `
@@ -533,6 +533,19 @@ export const enemyLibrary = {
       { type: 'status', name: 'Pytanie o drogę', addStatusCard: 'ulotka', amount: 2 },
       { type: 'attack', name: 'Złość turysty', damage: 10, hits: 1 },
     ],
+  },
+  zagubiony_ceper: {
+    id: 'zagubiony_ceper',
+    name: 'Zagubiony Ceper',
+    emoji: '🧭',
+    tutorialOnly: true,
+    hp: 30,
+    maxHp: 30,
+    block: 0,
+    baseAttack: 0,
+    spriteSvg: ceprSprite,
+    patternType: 'loop',
+    pattern: [{ type: 'attack', name: 'Niezdarny Cios', damage: 5, hits: 1 }],
   },
   busiarz: {
     id: 'busiarz',

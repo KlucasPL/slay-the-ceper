@@ -142,7 +142,7 @@ export class GameState {
     this.lastVictoryMessage = '';
     /** @type {'title' | 'map' | 'battle' | 'event'} */
     this.currentScreen = 'title';
-    /** @type {'map' | 'event' | 'debug'} */
+    /** @type {'map' | 'event' | 'debug' | 'tutorial'} */
     this.battleContext = 'map';
     /** @type {string | null} Last regular enemy ID picked for random encounters */
     this.lastRegularEnemyId =
@@ -292,6 +292,23 @@ export class GameState {
       node.eventOutcome = this.rollEventNodeOutcome();
     }
     return node;
+  }
+
+  /**
+   * @param {MapNodeType} type
+   * @returns {{ label: string, emoji: string }}
+   */
+  getMapNodeMeta(type) {
+    const meta = {
+      fight: { label: 'Bitka', emoji: '⚔️' },
+      elite: { label: 'Elita', emoji: '🗡️' },
+      shop: { label: 'Jarmark', emoji: '🛖' },
+      treasure: { label: 'Skarb', emoji: '🎁' },
+      event: { label: 'Wydarzenie', emoji: '❓' },
+      campfire: { label: 'Watra', emoji: '🔥' },
+      boss: { label: 'Boss', emoji: '👑' },
+    };
+    return meta[type] ?? { label: 'Pole', emoji: '•' };
   }
 
   /** @returns {MapNodeType} */
@@ -994,6 +1011,8 @@ export class GameState {
    * @param {string | null} [victoryRelicId]
    */
   queueEventBattle(enemyId, victoryRelicId = null) {
+    const enemyDef = enemyLibrary[enemyId];
+    if (!enemyDef || enemyDef.tutorialOnly) return;
     this.pendingEventBattleEnemyId = enemyId;
     this.pendingEventVictoryRelicId = victoryRelicId;
   }
@@ -1147,7 +1166,8 @@ export class GameState {
    */
   generateCardRewardChoices(count) {
     const pool = Object.keys(cardLibrary).filter(
-      (id) => !cardLibrary[id]?.isStarter && !cardLibrary[id]?.eventOnly
+      (id) =>
+        !cardLibrary[id]?.isStarter && !cardLibrary[id]?.eventOnly && !cardLibrary[id]?.tutorialOnly
     );
     return this._pickUniqueItems(pool, cardLibrary, count, CARD_REWARD_RARITY_WEIGHTS);
   }
@@ -1160,7 +1180,8 @@ export class GameState {
       (id) =>
         !this.relics.includes(id) &&
         !this.seenRelicOffers.includes(id) &&
-        !relicLibrary[id]?.eventOnly
+        !relicLibrary[id]?.eventOnly &&
+        !relicLibrary[id]?.tutorialOnly
     );
   }
 
@@ -1264,10 +1285,13 @@ export class GameState {
     }
 
     const cardPool = Object.keys(cardLibrary).filter(
-      (id) => !cardLibrary[id]?.isStarter && !cardLibrary[id]?.eventOnly
+      (id) =>
+        !cardLibrary[id]?.isStarter && !cardLibrary[id]?.eventOnly && !cardLibrary[id]?.tutorialOnly
     );
 
-    const relicPool = this._buildAvailableRelicPool().filter((id) => !relicLibrary[id]?.eventOnly);
+    const relicPool = this._buildAvailableRelicPool().filter(
+      (id) => !relicLibrary[id]?.eventOnly && !relicLibrary[id]?.tutorialOnly
+    );
     let relicId = null;
     const shouldForceHardPapryczka = this.difficulty === 'hard' && !this.hardFirstShopRolled;
 
@@ -1652,7 +1676,8 @@ export class GameState {
         id !== 'boss' &&
         id !== 'fiakier' &&
         id !== 'pomocnik_fiakra' &&
-        !enemyLibrary[id]?.eventOnly
+        !enemyLibrary[id]?.eventOnly &&
+        !enemyLibrary[id]?.tutorialOnly
     );
 
     enemyIds = enemyIds.filter((id) => Boolean(enemyLibrary[id]?.elite) === isElite);
@@ -1664,6 +1689,7 @@ export class GameState {
           id !== 'fiakier' &&
           id !== 'pomocnik_fiakra' &&
           !enemyLibrary[id]?.eventOnly &&
+          !enemyLibrary[id]?.tutorialOnly &&
           Boolean(enemyLibrary[id]?.elite) !== isElite
       );
     }
@@ -2650,7 +2676,7 @@ export class GameState {
    * Starts a fresh battle against a specific enemy ID without entering the random encounter pool.
    * Intended for scripted transitions (e.g., event fallback fights).
    * @param {string} enemyId
-   * @param {{ battleContext?: 'map' | 'event' | 'debug', rewardRelicId?: string | null }} [options]
+   * @param {{ battleContext?: 'map' | 'event' | 'debug' | 'tutorial', rewardRelicId?: string | null }} [options]
    * @returns {boolean}
    */
   startBattleWithEnemyId(enemyId, options = {}) {
@@ -2658,6 +2684,12 @@ export class GameState {
     if (!enemyDef) return false;
 
     const { battleContext = 'map', rewardRelicId = null } = options;
+    if (enemyDef.tutorialOnly && battleContext !== 'tutorial') {
+      return false;
+    }
+    if (enemyDef.eventOnly && battleContext !== 'event' && battleContext !== 'tutorial') {
+      return false;
+    }
 
     this.player.block = 0;
     this.attackCardsPlayedThisBattle = 0;
