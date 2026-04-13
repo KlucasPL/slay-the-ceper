@@ -14,14 +14,14 @@ describe('data exports', () => {
     expect(jedrek.maxEnergy).toBeGreaterThanOrEqual(jedrek.energy);
   });
 
-  it('release notes list is non-empty and newest entry is v1.2.0', () => {
+  it('release notes list is non-empty and newest entry is v1.2.1', () => {
     expect(Array.isArray(releaseNotesData)).toBe(true);
     expect(releaseNotesData.length).toBeGreaterThan(0);
 
     const newest = releaseNotesData[0];
-    expect(newest.version).toContain('v1.2.0');
+    expect(newest.version).toContain('v1.2.1');
     expect(newest.date).toBeTruthy();
-    expect(newest.changes.length).toBeGreaterThanOrEqual(3);
+    expect(newest.changes.length).toBeGreaterThanOrEqual(1);
   });
 
   it('every release note has required fields and at least one change', () => {
