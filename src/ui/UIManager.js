@@ -404,7 +404,8 @@ export class UIManager {
     const styles = getComputedStyle(descNode);
     const baseFontPx = parseFloat(styles.fontSize) || 14;
     const minFromCss = parseFloat(styles.getPropertyValue('--card-desc-min-size'));
-    const minFontPx = Number.isFinite(minFromCss) && minFromCss > 0 ? minFromCss * 16 : 9;
+    const rootFontPx = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+    const minFontPx = Number.isFinite(minFromCss) && minFromCss > 0 ? minFromCss * rootFontPx : 9;
 
     let currentFontPx = baseFontPx;
     const step = 0.5;
