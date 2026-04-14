@@ -399,13 +399,17 @@ export class UIManager {
     if (!(descNode instanceof HTMLElement)) return;
 
     descNode.classList.remove('card-desc--autoscaled');
+    descNode.classList.remove('card-desc--tight');
     descNode.style.removeProperty('font-size');
 
     const styles = getComputedStyle(descNode);
     const baseFontPx = parseFloat(styles.fontSize) || 14;
     const minFromCss = parseFloat(styles.getPropertyValue('--card-desc-min-size'));
+    const hardMinFromCss = parseFloat(styles.getPropertyValue('--card-desc-hard-min-size'));
     const rootFontPx = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
     const minFontPx = Number.isFinite(minFromCss) && minFromCss > 0 ? minFromCss * rootFontPx : 9;
+    const hardMinFontPx =
+      Number.isFinite(hardMinFromCss) && hardMinFromCss > 0 ? hardMinFromCss * rootFontPx : 8;
 
     let currentFontPx = baseFontPx;
     const step = 0.5;
@@ -416,6 +420,14 @@ export class UIManager {
     while (currentFontPx > minFontPx && hasOverflow()) {
       currentFontPx = Math.max(minFontPx, currentFontPx - step);
       descNode.style.fontSize = `${currentFontPx}px`;
+    }
+
+    if (hasOverflow()) {
+      descNode.classList.add('card-desc--tight');
+      while (currentFontPx > hardMinFontPx && hasOverflow()) {
+        currentFontPx = Math.max(hardMinFontPx, currentFontPx - 0.25);
+        descNode.style.fontSize = `${currentFontPx}px`;
+      }
     }
 
     if (currentFontPx < baseFontPx) {
