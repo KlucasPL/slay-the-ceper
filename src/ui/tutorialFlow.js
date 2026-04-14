@@ -107,7 +107,7 @@ export function buildTutorialMapExplanationText(getMapNodeMeta) {
  */
 export function buildTutorialFinaleText(getMapNodeMeta) {
   const bossIcon = getMapNodeMeta('boss').emoji;
-  return `I tak ma być! No, leć uczyć ich kultury! Ino uwazuj na końcu... tam się czai zajwiększa zmora całych Krupówek ${bossIcon}... trza być silnym coby go ubić!`;
+  return `I tak ma być! No, leć uczyć ich kultury! Ino uwazuj na końcu... tam się czai największa zmora całych Krupówek ${bossIcon}... trza być silnym coby go ubić!`;
 }
 
 /**

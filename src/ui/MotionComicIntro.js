@@ -1,6 +1,9 @@
 /**
  * Full-screen motion-comic intro shown before the main game UI is initialized.
  */
+const MOTION_COMIC_DURATION_MS = 30000;
+const MOTION_COMIC_FALLBACK_BUFFER_MS = 100;
+
 export class MotionComicIntro {
   constructor() {
     /** @type {HTMLElement | null} */
@@ -25,6 +28,7 @@ export class MotionComicIntro {
     this.isActive = true;
     this.root.classList.remove('hidden');
     this.root.setAttribute('aria-hidden', 'false');
+    this.root.style.setProperty('--motion-comic-duration', `${MOTION_COMIC_DURATION_MS}ms`);
 
     this.track.classList.remove('motion-comic-track--animate');
     void this.track.offsetWidth;
@@ -75,7 +79,10 @@ export class MotionComicIntro {
       };
 
       this.track.addEventListener('animationend', onAnimationEnd);
-      this.fallbackTimer = window.setTimeout(finish, 30100);
+      this.fallbackTimer = window.setTimeout(
+        finish,
+        MOTION_COMIC_DURATION_MS + MOTION_COMIC_FALLBACK_BUFFER_MS
+      );
     });
   }
 
