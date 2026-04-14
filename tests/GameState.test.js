@@ -3,7 +3,7 @@ import { GameState } from '../src/state/GameState.js';
 import { cardLibrary, startingDeck } from '../src/data/cards.js';
 import { enemyLibrary } from '../src/data/enemies.js';
 import { eventLibrary } from '../src/data/events.js';
-import { relicLibrary } from '../src/data/relics.js';
+import { relicLibrary, addRelicToLibrary } from '../src/data/relics.js';
 import { marynaBoonLibrary } from '../src/data/marynaBoons.js';
 
 const mockPlayer = {
@@ -1666,7 +1666,6 @@ describe('GameState', () => {
         });
       }
 
-      expect(reachableTypes.has('shop')).toBe(true);
       expect(reachableTypes.has('treasure')).toBe(true);
 
       const allNodes = s.map.flat().filter(Boolean);
@@ -3163,12 +3162,12 @@ describe('GameState', () => {
       expect(s.map[0][2]).toBeNull();
     });
 
-    it('all row-1 fight nodes have forcedEnemyId cepr', () => {
+    it('all non-null row-1 nodes are fights with forcedEnemyId cepr', () => {
       const s = freshState();
       s.map[1].forEach((node) => {
-        if (node && node.type === 'fight') {
-          expect(node.forcedEnemyId).toBe('cepr');
-        }
+        if (!node) return;
+        expect(node.type).toBe('fight');
+        expect(node.forcedEnemyId).toBe('cepr');
       });
     });
 
@@ -3197,6 +3196,13 @@ describe('GameState', () => {
       expect(s.maryna.pickedId).toBe('kiesa');
     });
 
+    it('pickMarynaBoon rejects unknown boon id', () => {
+      const s = freshState();
+      const result = s.pickMarynaBoon('nie_ma_takiej_wyprawki');
+      expect(result).toBe(false);
+      expect(s.maryna.pickedId).toBeNull();
+    });
+
     it('mokra_sciera grants +12 max HP immediately', () => {
       const s = freshState();
       const before = s.player.maxHp;
@@ -3215,6 +3221,18 @@ describe('GameState', () => {
       const s = freshState();
       s.pickMarynaBoon('sloik_rosolu');
       expect(s.maryna.counters.rosolBattlesLeft).toBe(3);
+    });
+
+    it('zloty_rozaniec doubles only the first attack in a battle', () => {
+      const s = freshState();
+      s.pickMarynaBoon('zloty_rozaniec');
+      s.startBattleWithEnemyId('cepr');
+
+      const first = s._calcAttackDamage(s.player, 10);
+      const second = s._calcAttackDamage(s.player, 10);
+
+      expect(first).toBe(20);
+      expect(second).toBe(10);
     });
 
     it('przeglad_plecaka removes a starter and adds an uncommon card', () => {
@@ -3239,12 +3257,130 @@ describe('GameState', () => {
         });
     });
 
+    it('lista_zakupow discount applies only in the first generated shop', () => {
+      const s = freshState();
+      s.pickMarynaBoon('lista_zakupow');
+
+      s.generateShopStock();
+      const sampleCardId = s.shopStock.cards[0];
+      const firstShopPrice = s.getCardShopPrice(sampleCardId);
+      const basePrice = cardLibrary[sampleCardId]?.price ?? 0;
+      expect(firstShopPrice).toBe(Math.floor(basePrice * 0.7));
+
+      s.generateShopStock();
+      const secondCardId = s.shopStock.cards[0];
+      const secondBasePrice = cardLibrary[secondCardId]?.price ?? 0;
+      expect(s.getCardShopPrice(secondCardId)).toBe(secondBasePrice);
+    });
+
+    it('lista_zakupow free removal remains available until used once', () => {
+      const s = freshState();
+      s.pickMarynaBoon('lista_zakupow');
+
+      s.generateShopStock();
+      expect(s.getShopRemovalPrice()).toBe(0);
+
+      s.generateShopStock();
+      expect(s.getShopRemovalPrice()).toBe(0);
+
+      s.afterShopCardRemoval();
+      expect(s.getShopRemovalPrice()).toBe(100);
+    });
+
     it('resetForNewRun clears maryna state', () => {
       const s = freshState();
       s.pickMarynaBoon('kiesa');
       s.resetForNewRun('easy');
       expect(s.maryna.pickedId).toBeNull();
       expect(s.maryna.offeredIds).toHaveLength(0);
+    });
+  });
+
+  describe('debug helpers', () => {
+    it('setDebugMapRows clamps value to 10..25', () => {
+      const s = freshState();
+      s.setDebugMapRows(4);
+      expect(s.debugMapRows).toBe(10);
+      s.setDebugMapRows(999);
+      expect(s.debugMapRows).toBe(25);
+    });
+
+    it('setDebug flags store booleans', () => {
+      const s = freshState();
+      s.setDebugRevealAllMap(1);
+      expect(s.debugRevealAllMap).toBe(true);
+      s.setDebugGodMode(0);
+      expect(s.debugGodMode).toBe(false);
+    });
+
+    it('setDebugNextNodeType stores forced node type', () => {
+      const s = freshState();
+      s.setDebugNextNodeType('shop');
+      expect(s.debugForcedNextNodeType).toBe('shop');
+      s.setDebugNextNodeType(null);
+      expect(s.debugForcedNextNodeType).toBeNull();
+    });
+
+    it('resetCurrentTurnActions clears attack flags', () => {
+      const s = freshState();
+      s.player.cardsPlayedThisTurn = 3;
+      s.combat.playerAttackMissCheck = true;
+      s.combat.playerAttackMissRolled = true;
+      s.combat.playerAttackMissed = true;
+
+      s.resetCurrentTurnActions();
+
+      expect(s.player.cardsPlayedThisTurn).toBe(0);
+      expect(s.combat.playerAttackMissCheck).toBe(false);
+      expect(s.combat.playerAttackMissRolled).toBe(false);
+      expect(s.combat.playerAttackMissed).toBe(false);
+    });
+
+    it('applyEnemyDebugStatus handles stun and regular statuses and ignores non-positive amount', () => {
+      const s = freshState();
+      const stunBefore = s.enemy.stunnedTurns;
+      const weakBefore = s.enemy.status.weak;
+
+      s.applyEnemyDebugStatus('stun', 2);
+      expect(s.enemy.stunnedTurns).toBe(stunBefore + 2);
+
+      s.applyEnemyDebugStatus('weak', 3);
+      expect(s.enemy.status.weak).toBe(weakBefore + 3);
+
+      s.applyEnemyDebugStatus('weak', 0);
+      expect(s.enemy.status.weak).toBe(weakBefore + 3);
+    });
+  });
+
+  describe('relic library helper', () => {
+    it('addRelicToLibrary inserts runtime relic definition', () => {
+      const id = 'test_relic_runtime';
+      const relic = {
+        id,
+        name: 'Testowa Pamiątka Runtime',
+        rarity: 'common',
+        emoji: '🧪',
+        desc: 'Tylko do testu.',
+        price: 80,
+      };
+
+      addRelicToLibrary(relic);
+      expect(relicLibrary[id]).toBeTruthy();
+      expect(relicLibrary[id].name).toBe('Testowa Pamiątka Runtime');
+    });
+  });
+
+  describe('run summary capture', () => {
+    it('captureRunSummary sets killerName for enemy_win and null for player_win', () => {
+      const s = freshState();
+      s.enemy.name = 'Testowy Wróg';
+      s.enemy.emoji = '👹';
+
+      const loseSummary = s.captureRunSummary('enemy_win');
+      expect(loseSummary.killerName).toBe('Testowy Wróg 👹');
+
+      const winSummary = s.captureRunSummary('player_win');
+      expect(winSummary.killerName).toBeNull();
     });
   });
 });

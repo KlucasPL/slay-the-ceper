@@ -16,7 +16,7 @@ export const marynaBoonLibrary = {
     relicId: 'relic_boon_mokra_sciera',
     name: 'Mokra Ściera Maryny',
     flavor: 'Wstawaj. Najpierw zimny okład, potem wielkie czyny.',
-    effectDesc: '+12 max Krzepy i +12 Krzepy (do nowego limitu).',
+    effectDesc: '+12 maks. Krzepy i +12 Krzepy (do nowego limitu).',
     emoji: '🧹',
   },
   kiesa: {
@@ -32,7 +32,7 @@ export const marynaBoonLibrary = {
     relicId: 'relic_boon_przeglad_plecaka',
     name: 'Przegląd Plecaka Maryny',
     flavor: 'Ten złom wyrzuć, to ci zostawiam.',
-    effectDesc: 'Usuń 1 losową kartę starter z talii; dodaj 1 losową kartę Uncommon.',
+    effectDesc: 'Usuń 1 losową kartę startową z talii; dodaj 1 losową kartę niepowszechną.',
     emoji: '🎒',
   },
   sloik_rosolu: {
@@ -48,7 +48,7 @@ export const marynaBoonLibrary = {
     relicId: 'relic_boon_zloty_rozaniec',
     name: 'Złoty Różaniec Maryny',
     flavor: 'Pomódl się i bij dwa razy mocniej!',
-    effectDesc: 'Na starcie każdej walki: następny atak zadaje podwójne obrażenia.',
+    effectDesc: 'Na starcie każdej walki: pierwsze trafienie atakiem zadaje podwójne obrażenia.',
     emoji: '📿',
   },
   lista_zakupow: {
@@ -56,7 +56,7 @@ export const marynaBoonLibrary = {
     relicId: 'relic_boon_lista_zakupow',
     name: 'Lista Zakupów',
     flavor: 'Kup mądrze, nie jak ceper na Krupówkach.',
-    effectDesc: 'Pierwszy sklep: karty -30%. Pierwsze usunięcie karty w runie za 0 Dutków.',
+    effectDesc: 'Pierwszy sklep: karty -30%. Pierwsze usunięcie karty w wyprawie za 0 Dutków.',
     emoji: '📜',
   },
   tajny_skladnik: {

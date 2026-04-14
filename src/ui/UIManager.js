@@ -194,6 +194,9 @@ export class UIManager {
     document
       .getElementById('library-tab-relics')
       .addEventListener('click', () => this._setLibraryTab('relics'));
+    document
+      .getElementById('library-tab-maryna')
+      .addEventListener('click', () => this._setLibraryTab('maryna'));
     document.querySelectorAll('.library-filter').forEach((filterBtn) => {
       filterBtn.addEventListener('click', () => {
         const rarity = filterBtn.dataset.rarity;
@@ -2070,7 +2073,7 @@ export class UIManager {
     if (mapTitle) {
       const isHard = this.state.difficulty === 'hard';
       mapTitle.innerHTML = isHard
-        ? `Perć przez Tatry <span class="hard-badge">🌶️ HARD</span>`
+        ? `Perć przez Tatry <span class="hard-badge">🌶️ TRUDNY</span>`
         : 'Perć przez Tatry';
     }
 
@@ -2340,10 +2343,15 @@ export class UIManager {
       const card = document.createElement('button');
       card.type = 'button';
       card.className = 'maryna-boon-card';
+      card.setAttribute('aria-label', `${boon.name}. ${boon.effectDesc}`);
       card.innerHTML = `
-        <span class="maryna-boon-emoji">${boon.emoji}</span>
-        <strong class="maryna-boon-name">${boon.name}</strong>
-        <em class="maryna-boon-flavor">${boon.flavor}</em>
+        <span class="maryna-boon-header">
+          <span class="maryna-boon-emoji">${boon.emoji}</span>
+          <span class="maryna-boon-title-wrap">
+            <strong class="maryna-boon-name">${boon.name}</strong>
+            <em class="maryna-boon-flavor">${boon.flavor}</em>
+          </span>
+        </span>
         <span class="maryna-boon-effect">${boon.effectDesc}</span>
       `;
 
@@ -2624,6 +2632,11 @@ export class UIManager {
       rarity.className = 'shop-item-rarity';
       rarity.textContent = this.getFullCardType(card.rarity, card.type);
 
+      const energyCost = document.createElement('div');
+      energyCost.className = 'shop-item-energy';
+      energyCost.textContent = `${card.cost} Osc.`;
+      energyCost.setAttribute('aria-label', `Koszt zagrania: ${card.cost} Oscypków`);
+
       const price = document.createElement('div');
       price.className = 'shop-item-price';
       const cardShopPrice = this.state.getCardShopPrice(cardId);
@@ -2645,7 +2658,7 @@ export class UIManager {
         this.updateUI();
       });
 
-      cardBox.append(title, rarity, desc, price, btn);
+      cardBox.append(title, rarity, energyCost, desc, price, btn);
       cardContainer.appendChild(cardBox);
     });
 
@@ -2813,7 +2826,7 @@ export class UIManager {
   }
 
   /**
-   * @param {'cards' | 'relics'} tab
+   * @param {'cards' | 'relics' | 'maryna'} tab
    */
   _setLibraryTab(tab) {
     if (this._isInputLocked()) return;
@@ -2834,12 +2847,15 @@ export class UIManager {
     const grid = document.getElementById('library-grid');
     const cardsTabBtn = document.getElementById('library-tab-cards');
     const relicsTabBtn = document.getElementById('library-tab-relics');
-    if (!grid || !cardsTabBtn || !relicsTabBtn) return;
+    const marynaTabBtn = document.getElementById('library-tab-maryna');
+    if (!grid || !cardsTabBtn || !relicsTabBtn || !marynaTabBtn) return;
 
     cardsTabBtn.classList.toggle('is-active', this.libraryTab === 'cards');
     cardsTabBtn.setAttribute('aria-selected', String(this.libraryTab === 'cards'));
     relicsTabBtn.classList.toggle('is-active', this.libraryTab === 'relics');
     relicsTabBtn.setAttribute('aria-selected', String(this.libraryTab === 'relics'));
+    marynaTabBtn.classList.toggle('is-active', this.libraryTab === 'maryna');
+    marynaTabBtn.setAttribute('aria-selected', String(this.libraryTab === 'maryna'));
 
     document.querySelectorAll('.library-filter').forEach((btn) => {
       if (!(btn instanceof HTMLButtonElement)) return;
@@ -2857,11 +2873,23 @@ export class UIManager {
               this.libraryRarityFilter === 'all' ? true : card.rarity === this.libraryRarityFilter
             )
             .sort((a, b) => a.cost - b.cost || a.name.localeCompare(b.name, 'pl'))
-        : Object.values(relicLibrary)
-            .filter((relic) =>
-              this.libraryRarityFilter === 'all' ? true : relic.rarity === this.libraryRarityFilter
-            )
-            .sort((a, b) => a.name.localeCompare(b.name, 'pl'));
+        : this.libraryTab === 'maryna'
+          ? Object.values(relicLibrary)
+              .filter((relic) => relic.marynaOnly)
+              .filter((relic) =>
+                this.libraryRarityFilter === 'all'
+                  ? true
+                  : relic.rarity === this.libraryRarityFilter
+              )
+              .sort((a, b) => a.name.localeCompare(b.name, 'pl'))
+          : Object.values(relicLibrary)
+              .filter((relic) => !relic.marynaOnly)
+              .filter((relic) =>
+                this.libraryRarityFilter === 'all'
+                  ? true
+                  : relic.rarity === this.libraryRarityFilter
+              )
+              .sort((a, b) => a.name.localeCompare(b.name, 'pl'));
 
     entries.forEach((item) => {
       const card = document.createElement('article');

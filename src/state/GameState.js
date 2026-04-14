@@ -264,7 +264,7 @@ export class GameState {
     this._enforceSpecialNodeLimits(generated);
     this._ensureReachableElite(generated);
     this._ensureReachableTrueEvent(generated);
-    this._markRow1ForcedCepr(generated);
+    this._forceRow1CeprFights(generated);
 
     this.map = generated;
     this.currentLevel = 0;
@@ -288,7 +288,7 @@ export class GameState {
       treasure: { label: 'Skarb', emoji: '🎁' },
       event: { label: 'Wydarzenie', emoji: '❓' },
       campfire: { label: 'Watra', emoji: '🔥' },
-      boss: { label: 'Boss', emoji: '👑' },
+      boss: { label: 'Herszt', emoji: '👑' },
       maryna: { label: 'Maryna', emoji: '👵' },
     };
     const weather = this._rollNodeWeather(type);
@@ -300,15 +300,15 @@ export class GameState {
   }
 
   /**
-   * After map generation, mark all row-1 fight nodes with forcedEnemyId: 'cepr'
-   * so the first battle after Maryna is always against Cepr.
+   * Force all row-1 nodes to be Cepr fights after Maryna.
    * @param {(import('./GameState.js').MapNode | null)[][]} map
    */
-  _markRow1ForcedCepr(map) {
-    map[1].forEach((node) => {
-      if (node && node.type === 'fight') {
-        node.forcedEnemyId = 'cepr';
-      }
+  _forceRow1CeprFights(map) {
+    const row = map[1] ?? [];
+    row.forEach((node) => {
+      if (!node) return;
+      this._setNodeType(node, 'fight');
+      node.forcedEnemyId = 'cepr';
     });
   }
 
@@ -331,6 +331,7 @@ export class GameState {
   pickMarynaBoon(boonId) {
     if (this.maryna.pickedId) return false;
     const boon = marynaBoonLibrary[boonId];
+    if (!boon) return false;
 
     this.maryna.pickedId = boonId;
     this.addRelic(boon.relicId);
@@ -383,7 +384,7 @@ export class GameState {
       treasure: { label: 'Skarb', emoji: '🎁' },
       event: { label: 'Wydarzenie', emoji: '❓' },
       campfire: { label: 'Watra', emoji: '🔥' },
-      boss: { label: 'Boss', emoji: '👑' },
+      boss: { label: 'Herszt', emoji: '👑' },
       maryna: { label: 'Maryna', emoji: '👵' },
     };
     return meta[type] ?? { label: 'Pole', emoji: '•' };
@@ -771,7 +772,7 @@ export class GameState {
       treasure: { label: 'Skarb', emoji: '🎁' },
       event: { label: 'Wydarzenie', emoji: '❓' },
       campfire: { label: 'Watra', emoji: '🔥' },
-      boss: { label: 'Boss', emoji: '👑' },
+      boss: { label: 'Herszt', emoji: '👑' },
       maryna: { label: 'Maryna', emoji: '👵' },
     };
     node.type = type;
@@ -1365,13 +1366,17 @@ export class GameState {
     if (this.hasRelic('certyfikowany_oscypek') && this.certyfikowanyOscypekShopProcs < 3) {
       this.gainMaxHp(2);
       this.certyfikowanyOscypekShopProcs += 1;
+    }
 
-      // Lista Zakupów: activate 30% discount + free removal on first shop visit
-      if (this.hasRelic('relic_boon_lista_zakupow') && !this.maryna.flags.listaFirstShopUsed) {
-        this.maryna.flags.listaFirstShopUsed = true;
-        this.maryna.flags.listaDiscountActive = true;
-        this.maryna.flags.listaFreeRemovalAvailable = true;
-      }
+    // Lista Zakupów: first shop only gets card discount, free removal stays until consumed.
+    const isListaFirstShopVisit =
+      this.hasRelic('relic_boon_lista_zakupow') && !this.maryna.flags.listaFirstShopUsed;
+    if (isListaFirstShopVisit) {
+      this.maryna.flags.listaFirstShopUsed = true;
+      this.maryna.flags.listaDiscountActive = true;
+      this.maryna.flags.listaFreeRemovalAvailable = true;
+    } else {
+      this.maryna.flags.listaDiscountActive = false;
     }
 
     const cardPool = Object.keys(cardLibrary).filter(

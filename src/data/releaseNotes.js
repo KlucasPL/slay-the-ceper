@@ -9,18 +9,8 @@ export const releaseNotesData = [
     date: 'Czerwiec 2026',
     changes: [
       '👵 MARYNA: Przed pierwszą walką spotykasz Marynę – starą góralką, która wręcza Ci jeden z trzech specjalnych darów na drogę. Wybierz mądrze!',
-      '🎁 7 PAMIĄTEK MARYNY: Mokra ściora (+12 Max Krzepa), Kiesa (+80 Dutki + bonus po pierwszej walce), Przegląd Plecaka (wymień kartę startową na niepospolita), Słoik Rosołu (przez 3 walki: +6 Gardy i +1 Siły na start), Złoty Różaniec (podwajaj pierwszy atak każdej walki), Lista Zakupów (pierwsza wizyta w sklepie: 30% rabat na karty + darmowe usunięcie), Tajny Składnik (każda walka: Cepr zaczyna z -1 Słabości i -1 Kruchości).',
-      '⚔️ GWARANTOWANY CEPR: Po wyborze daru od Maryny, pierwszy prawdziwy przeciwnik to zawsze Cepr – żeby na spokojnie przetestować boon.',
-      '🏠 MAPA POPRAWIONA: Węzeł startowy mapy to teraz "Maryna" zamiast losowej walki – rysunek Maryny pojawia się w dedykowanym okienku wyboru.',
-    ],
-  },
-  {
-    version: 'v1.3.0 - Wyprawka od Maryny',
-    date: 'Czerwiec 2026',
-    changes: [
-      '👵 MARYNA: Przed pierwszą walką spotykasz Marynę – starą góralką, która wręcza Ci jeden z trzech specjalnych darów na drogę. Wybierz mądrze!',
-      '🎁 7 PAMIĄTEK MARYNY: Mokra ściora (+12 Max Krzepa), Kiesa (+80 Dutki + bonus po pierwszej walce), Przegląd Plecaka (wymień kartę startową na niepospolita), Słoik Rosołu (przez 3 walki: +6 Gardy i +1 Siły na start), Złoty Różaniec (podwajaj pierwszy atak każdej walki), Lista Zakupów (pierwsza wizyta w sklepie: 30% rabat na karty + darmowe usunięcie), Tajny Składnik (każda walka: Cepr zaczyna z -1 Słabości i -1 Kruchości).',
-      '⚔️ GWARANTOWANY CEPR: Po wyborze daru od Maryny, pierwszy prawdziwy przeciwnik to zawsze Cepr – żeby na spokojnie przetestować boon.',
+      '🎁 7 PAMIĄTEK MARYNY: Mokra ściora (+12 Max Krzepa), Kiesa (+80 Dutki + bonus po pierwszej walce), Przegląd Plecaka (wymień kartę startową na niepospolitą), Słoik Rosołu (przez 3 walki: +6 Gardy i +1 Siły na start), Złoty Różaniec (podwajaj pierwsze trafienie atakiem w każdej walce), Lista Zakupów (pierwsza wizyta w sklepie: 30% rabat na karty + darmowe usunięcie), Tajny Składnik (każda walka: Cepr zaczyna z -1 Słabości i -1 Kruchości).',
+      '⚔️ GWARANTOWANY CEPR: Po wyborze daru od Maryny, pierwszy prawdziwy przeciwnik to zawsze Cepr – żeby na spokojnie przetestować dar.',
       '🏠 MAPA POPRAWIONA: Węzeł startowy mapy to teraz "Maryna" zamiast losowej walki – rysunek Maryny pojawia się w dedykowanym okienku wyboru.',
     ],
   },
@@ -66,7 +56,7 @@ export const releaseNotesData = [
     version: 'v1.2.2 - Hazard na Krupówkach',
     date: 'Kwiecień 2026',
     changes: [
-      '🎲 NOWE WYDARZENIE: Na trasie możesz trafić na Hazard na Kartonie z kilkoma różnymi wyborami i konsekwencjami, które zmieniają przebieg runa.',
+      '🎲 NOWE WYDARZENIE: Na trasie możesz trafić na Hazard na Kartonie z kilkoma różnymi wyborami i konsekwencjami, które zmieniają przebieg wyprawy.',
       '🎨 DRUGIE NOWE WYDARZENIE: Do puli doszedł też Uliczny Karykaturzysta, czyli kolejne spotkanie z własnymi wyborami i nagrodami wpływającymi na build.',
       '⚔️ NOWE STARCIE SPECJALNE: W ramach wydarzenia pojawia się unikalna walka z Naganiaczami oraz dedykowana nagroda powiązana z tym spotkaniem.',
       '🎁 CZYTELNIEJSZE NAGRODY: Po elitach i wybranych starciach nagrody układają się bardziej przewidywalnie, dzięki czemu łatwiej planować dalsze decyzje.',
@@ -82,15 +72,15 @@ export const releaseNotesData = [
     ],
   },
   {
-    version: 'v1.2.0 - Struktura Runa i Prawdziwe Elity',
+    version: 'v1.2.0 - Struktura Wyprawy i Prawdziwe Elity',
     date: 'Kwiecień 2026',
     changes: [
       '🗺️ STRUKTURA RUNA: Wyprawa ma teraz 15 poziomów, gwarantowaną Watrę w połowie trasy oraz końcową Watrę przed bossem, co stabilizuje tempo przygotowania do finału.',
-      '🎁 SKARB I ŚCIEŻKI: Każdy run zawiera dokładnie jeden gwarantowany węzeł skarbu we wczesnym-midgame, a połączenia na mapie są czytelniejsze i nie przecinają się lokalnie.',
+      '🎁 SKARB I ŚCIEŻKI: Każda wyprawa zawiera dokładnie jeden gwarantowany węzeł skarbu we wczesnym-midgame, a połączenia na mapie są czytelniejsze i nie przecinają się lokalnie.',
       '👹 PRAWDZIWE ELITY: Węzły elitarne korzystają z osobnej puli przeciwników, pojawiają się najwcześniej od y=4 i dają dedykowaną nagrodę 1 z 3 pamiątek (z fallbackiem do kart rare).',
       '👑 NOWE ELITY: Elitarne starcia zyskały nową pulę przeciwników z wyraźnie różnymi stylami walki, więc każda walka elitarna ma własny charakter i tempo.',
-      '⚖️ LEPSZY BALANS ELIT: Dopracowano siłę wybranych elit, żeby nadal były wymagające, ale rzadziej kończyły run przez pojedynczy zbyt mocny spike.',
-      '🧭 CZYTELNIEJ W TRAKCIE RUNA: Na mapie widzisz teraz od razu aktualną Krzepę i Dutki, więc łatwiej planować ryzyko kolejnych węzłów.',
+      '⚖️ LEPSZY BALANS ELIT: Dopracowano siłę wybranych elit, żeby nadal były wymagające, ale rzadziej kończyły wyprawę przez pojedynczy zbyt mocny spike.',
+      '🧭 CZYTELNIEJ W TRAKCIE WYPRAWY: Na mapie widzisz teraz od razu aktualną Krzepę i Dutki, więc łatwiej planować ryzyko kolejnych węzłów.',
       '💰 JAŚNIEJSZE EFEKTY WALKI: Efekty związane z utratą Dutków (np. interakcje z LANS-em) są lepiej sygnalizowane podczas starcia.',
     ],
   },
@@ -107,7 +97,7 @@ export const releaseNotesData = [
     version: 'v1.1.2 - Nowe ekrany i muzyka',
     date: 'Kwiecień 2026',
     changes: [
-      '🆕 NOWE EKRANY: Dodano ekran opcji oraz podsumowanie runa, dzięki czemu łatwiej śledzić postępy i wrócić do kolejnej wyprawy.',
+      '🆕 NOWE EKRANY: Dodano ekran opcji oraz podsumowanie wyprawy, dzięki czemu łatwiej śledzić postępy i wrócić do kolejnej wyprawy.',
       '🎵 MUZYKA: Gra dostała nowe utwory i bardziej filmowe przejścia między najważniejszymi momentami rozgrywki.',
       '⚙️ WYGODA: Opcje są teraz dostępne także podczas gry, bez potrzeby wracania do menu głównego.',
     ],
@@ -117,7 +107,7 @@ export const releaseNotesData = [
     date: 'Kwiecień 2026',
     changes: [
       '🎒 PAMIĄTKI: Uporządkowano rzadkości części pamiątek, żeby nagrody i wybory w sklepie były bardziej intuicyjne.',
-      '⚖️ BALANS: Rozkład mocy między pamiątkami jest teraz równiejszy, więc łatwiej ocenić wartość łupu w trakcie runa.',
+      '⚖️ BALANS: Rozkład mocy między pamiątkami jest teraz równiejszy, więc łatwiej ocenić wartość łupu w trakcie wyprawy.',
       '🛖 JARMARK: Dostosowano ceny wybranych pamiątek, żeby lepiej pasowały do ich nowej roli w rozgrywce.',
     ],
   },
@@ -127,7 +117,7 @@ export const releaseNotesData = [
     changes: [
       '🆕 NOWOŚCI: Rozszerzono grę o nowe karty, nowych przeciwników i nowe pamiątki.',
       '⚖️ REBALANS RUNA: Tempo walk, ekonomia i siła buildów zostały lepiej zestrojone, żeby decyzje w trakcie wyprawy miały większe znaczenie.',
-      '🌄 PRZEBIEG WYPRAWY: Wczesne i środkowe etapy runa płynniej prowadzą do finału, a bossowie są bliżej siebie poziomem wyzwania.',
+      '🌄 PRZEBIEG WYPRAWY: Wczesne i środkowe etapy wyprawy płynniej prowadzą do finału, a bossowie są bliżej siebie poziomem wyzwania.',
       '🗺️ MAPA I JARMARK: Zdarzenia, nagrody i zakupy zostały odświeżone, żeby każda ścieżka dawała ciekawsze wybory.',
     ],
   },
@@ -137,14 +127,14 @@ export const releaseNotesData = [
     changes: [
       '👹 FINAŁ RUNA: Osłabiono końcowych bossów, żeby finał wyprawy był wymagający, ale mniej frustrujący dla szerszej gamy buildów.',
       '🎴 NAGRODY: Łatwiej trafić na mocniejsze karty po walce, więc składanie talii pod konkretny plan stało się przyjemniejsze.',
-      '🗺️ ŚCIEŻKA WYPRAWY: Środkowa część mapy częściej prowadzi przez walki i sklepy, a rzadziej przez przypadkowe odskoki od głównego tempa runa.',
+      '🗺️ ŚCIEŻKA WYPRAWY: Środkowa część mapy częściej prowadzi przez walki i sklepy, a rzadziej przez przypadkowe odskoki od głównego tempa wyprawy.',
     ],
   },
   {
     version: 'v1.0.1 - Balans Krupówek',
     date: 'Kwiecień 2026',
     changes: [
-      '⚖️ BALANS WROGÓW: Uspokojono trudność niektórych starć, żeby początek i środek runa były bardziej fair.',
+      '⚖️ BALANS WROGÓW: Uspokojono trudność niektórych starć, żeby początek i środek wyprawy były bardziej fair.',
       '❓ WYDARZENIA LOSOWE: Na mapie pojawiły się specjalne wydarzenia z własnymi wyborami i skutkami dla dalszej wyprawy.',
     ],
   },
@@ -159,7 +149,7 @@ export const releaseNotesData = [
       '🗺️ PERĆ I WYDARZENIA: Mapa prowadzi przez bitki, Jarmark, Watrę, skarby i finałowe starcie z bossem.',
       '⚖️ WROGOWIE: Każdy przeciwnik ma własny styl walki i wymusza inne podejście do rozgrywki.',
       '👺 GALERIA PRZECIWNIKÓW: Wrogowie mają unikalne pasywki i wzorce ruchów, które zmuszają do zmiany taktyki między walkami.',
-      '👹 FINAŁ WYPRAWY: Na końcu perci czeka losowy boss i wymagające starcie domykające run.',
+      '👹 FINAŁ WYPRAWY: Na końcu perci czeka losowy boss i wymagające starcie domykające wyprawę.',
     ],
   },
 ];
