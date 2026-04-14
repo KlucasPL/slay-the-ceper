@@ -58,6 +58,10 @@ export class UIManager {
     this.tutorialStepIndex = 0;
     /** @type {Element[]} */
     this.tutorialFocusedElements = [];
+    /** @type {ResizeObserver | null} */
+    this.cardDescResizeObserver = null;
+    /** @type {number | null} */
+    this.cardDescFitRaf = null;
   }
 
   /**
@@ -102,6 +106,23 @@ export class UIManager {
     document
       .getElementById('title-btn-options')
       .addEventListener('click', () => this._openOptionsModal());
+    const titleDisclaimerBtn = document.getElementById('title-disclaimer-btn');
+    const titleDisclaimerPanel = document.getElementById('title-disclaimer-panel');
+    titleDisclaimerBtn?.addEventListener('click', (event) => {
+      event.stopPropagation();
+      if (!titleDisclaimerPanel) return;
+      const isHidden = titleDisclaimerPanel.classList.contains('hidden');
+      titleDisclaimerPanel.classList.toggle('hidden', !isHidden);
+      titleDisclaimerBtn.setAttribute('aria-expanded', String(isHidden));
+    });
+    document.addEventListener('click', (event) => {
+      if (!titleDisclaimerPanel || !titleDisclaimerBtn) return;
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      if (target.closest('.title-disclaimer-widget')) return;
+      titleDisclaimerPanel.classList.add('hidden');
+      titleDisclaimerBtn.setAttribute('aria-expanded', 'false');
+    });
     document
       .querySelector('#release-notes-modal .close-btn')
       .addEventListener('click', () => this._closeReleaseNotesModal());
@@ -258,7 +279,9 @@ export class UIManager {
     );
     window.addEventListener('resize', () => this._scaleGame());
     window.addEventListener('resize', () => this._renderTutorialOverlay());
+    window.addEventListener('resize', () => this._queueCardDescFit());
     this._scaleGame();
+    this._setupCardDescriptionAutoFit();
     this._renderReleaseNotesButtonLabel();
     this._renderReleaseNotes();
     this._renderAudioOptions();
@@ -333,6 +356,70 @@ export class UIManager {
     }
     this._syncTutorialExitButton();
     this._renderTutorialOverlay();
+    this._queueCardDescFit();
+  }
+
+  _setupCardDescriptionAutoFit() {
+    if (!('ResizeObserver' in window)) return;
+    this.cardDescResizeObserver = new ResizeObserver(() => {
+      this._queueCardDescFit();
+    });
+
+    const hand = document.getElementById('hand');
+    const pileGrid = document.getElementById('pile-viewer-grid');
+    const gameWrapper = document.getElementById('game-wrapper');
+
+    if (hand) this.cardDescResizeObserver.observe(hand);
+    if (pileGrid) this.cardDescResizeObserver.observe(pileGrid);
+    if (gameWrapper) this.cardDescResizeObserver.observe(gameWrapper);
+  }
+
+  _queueCardDescFit() {
+    if (this.cardDescFitRaf !== null) {
+      cancelAnimationFrame(this.cardDescFitRaf);
+    }
+
+    this.cardDescFitRaf = requestAnimationFrame(() => {
+      this.cardDescFitRaf = null;
+      this._fitCardDescriptions();
+    });
+  }
+
+  _fitCardDescriptions() {
+    const descNodes = document.querySelectorAll('.card .card-desc');
+    descNodes.forEach((descEl) => {
+      this._fitSingleCardDescription(descEl);
+    });
+  }
+
+  /**
+   * @param {Element} descNode
+   */
+  _fitSingleCardDescription(descNode) {
+    if (!(descNode instanceof HTMLElement)) return;
+
+    descNode.classList.remove('card-desc--autoscaled');
+    descNode.style.removeProperty('font-size');
+
+    const styles = getComputedStyle(descNode);
+    const baseFontPx = parseFloat(styles.fontSize) || 14;
+    const minFromCss = parseFloat(styles.getPropertyValue('--card-desc-min-size'));
+    const minFontPx = Number.isFinite(minFromCss) && minFromCss > 0 ? minFromCss * 16 : 9;
+
+    let currentFontPx = baseFontPx;
+    const step = 0.5;
+    const hasOverflow = () =>
+      descNode.scrollHeight > descNode.clientHeight + 1 ||
+      descNode.scrollWidth > descNode.clientWidth + 1;
+
+    while (currentFontPx > minFontPx && hasOverflow()) {
+      currentFontPx = Math.max(minFontPx, currentFontPx - step);
+      descNode.style.fontSize = `${currentFontPx}px`;
+    }
+
+    if (currentFontPx < baseFontPx) {
+      descNode.classList.add('card-desc--autoscaled');
+    }
   }
 
   /**
@@ -556,11 +643,14 @@ export class UIManager {
 
         const rarityEl = document.createElement('div');
         rarityEl.className = 'card-rarity';
-        rarityEl.textContent = this._rarityLabel(card.rarity, 'card');
+        rarityEl.textContent = this.getFullCardType(card.rarity, card.type);
 
         const imgEl = document.createElement('div');
         imgEl.className = 'card-img';
-        imgEl.textContent = card.emoji;
+        const iconEl = document.createElement('span');
+        iconEl.className = 'card-icon';
+        iconEl.textContent = card.emoji;
+        imgEl.appendChild(iconEl);
 
         const descEl = document.createElement('div');
         descEl.className = 'card-desc';
@@ -822,10 +912,13 @@ export class UIManager {
       titleEl.textContent = card.name;
       const rarityEl = document.createElement('div');
       rarityEl.className = 'card-rarity';
-      rarityEl.textContent = this._rarityLabel(card.rarity, 'card');
+      rarityEl.textContent = this.getFullCardType(card.rarity, card.type);
       const imgEl = document.createElement('div');
       imgEl.className = 'card-img';
-      imgEl.textContent = card.emoji;
+      const iconEl = document.createElement('span');
+      iconEl.className = 'card-icon';
+      iconEl.textContent = card.emoji;
+      imgEl.appendChild(iconEl);
       const descEl = document.createElement('div');
       descEl.className = 'card-desc';
       descEl.textContent = this._getCardDescription(card);
@@ -1231,7 +1324,7 @@ export class UIManager {
         <div class="reward-cost">${card.cost} Osc.</div>
         <div class="reward-emoji">${card.emoji}</div>
         <div class="reward-name">${card.name}</div>
-        <div class="reward-rarity">${this._rarityLabel(card.rarity, 'card')}</div>
+        <div class="reward-rarity">${this.getFullCardType(card.rarity, card.type)}</div>
         <div class="reward-desc">${cardDesc}</div>
       `;
       if (card.exhaust) {
@@ -2468,7 +2561,7 @@ export class UIManager {
 
       const rarity = document.createElement('div');
       rarity.className = 'shop-item-rarity';
-      rarity.textContent = this._rarityLabel(card.rarity, 'card');
+      rarity.textContent = this.getFullCardType(card.rarity, card.type);
 
       const price = document.createElement('div');
       price.className = 'shop-item-price';
@@ -2726,11 +2819,14 @@ export class UIManager {
 
         const rarity = document.createElement('div');
         rarity.className = 'card-rarity';
-        rarity.textContent = this._rarityLabel(cardDef.rarity, 'card');
+        rarity.textContent = this.getFullCardType(cardDef.rarity, cardDef.type);
 
         const emoji = document.createElement('div');
         emoji.className = 'card-img';
-        emoji.textContent = cardDef.emoji;
+        const iconEl = document.createElement('span');
+        iconEl.className = 'card-icon';
+        iconEl.textContent = cardDef.emoji;
+        emoji.appendChild(iconEl);
 
         const desc = document.createElement('div');
         desc.className = 'card-desc';
@@ -2905,6 +3001,29 @@ export class UIManager {
       rare: type === 'card' ? 'Rzadka karta' : 'Rzadka pamiątka',
     };
     return labels[rarity ?? 'common'];
+  }
+
+  /**
+   * @param {'common' | 'uncommon' | 'rare' | undefined} rarity
+   * @param {'attack' | 'skill' | 'status' | 'power'} type
+   * @returns {string}
+   */
+  getFullCardType(rarity, type) {
+    const typeLabelMap = {
+      attack: { label: 'Atak', gender: 'm' },
+      status: { label: 'Stan', gender: 'm' },
+      skill: { label: 'Umiejętność', gender: 'f' },
+      power: { label: 'Moc', gender: 'f' },
+    };
+
+    const selectedType = typeLabelMap[type] ?? typeLabelMap.attack;
+    const rarityByGender = {
+      common: selectedType.gender === 'f' ? 'Powszechna' : 'Powszechny',
+      uncommon: selectedType.gender === 'f' ? 'Niepowszechna' : 'Niepowszechny',
+      rare: selectedType.gender === 'f' ? 'Rzadka' : 'Rzadki',
+    };
+
+    return `${rarityByGender[rarity ?? 'common']} ${selectedType.label}`;
   }
 
   _closeStatusTooltips() {

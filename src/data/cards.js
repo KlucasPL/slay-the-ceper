@@ -194,7 +194,7 @@ export const cardLibrary = {
     cost: 1,
     price: 85,
     emoji: '🥽',
-    desc: 'Zyskaj status Lans. Otrzymujesz obrażenia w dutkach zamiast Krzepy.',
+    desc: 'Zyskaj status Lans (obrażenia najpierw w dutki, potem w Krzepę).',
     exhaust: true,
     effect(state) {
       state.player.status.lans = 1;

@@ -5,12 +5,22 @@
 /** @type {ReleaseNoteEntry[]} */
 export const releaseNotesData = [
   {
+    version: 'v1.2.6 - Wielkie szlify i czytelne karty',
+    date: 'Kwiecień 2026',
+    changes: [
+      '🃏 PERFEKCYJNE KARTY: Gruntowny remont wyglądu kart! Teksty i ikony inteligentnie robią sobie nawzajem miejsce, opisy są większe i czytelniejsze, a rogi z kosztami już się nie ucinają na telefonach. Dodatkowo karty jasno wyświetlają swój pełny rodzaj (np. "Powszechny Atak", "Niepowszechna Umiejętność").',
+      '📱 ELASTYCZNY INTERFEJS: Koniec z uciętymi widokami! Nieważne, czy grasz na małym smartfonie, czy na laptopie (jak Mac Air) – Menu Główne i Biblioteka Tatrzańska idealnie dopasują się do Twojego wyświetlacza bez chowania przycisków na dole.',
+      '📖 LEPSZE TEMPO INTRO: Wydłużyliśmy czas wyświetlania paneli w komiksie startowym, żeby każdy mógł na spokojnie zapoznać się z historią Jędrka.',
+      '🎓 POPRAWKA W SAMOUCZKU: Przesunęliśmy dymek Jędrka, który wcześniej niegrzecznie zasłaniał przycisk "Wyjdź".',
+      '⚖️ FORMALNOŚCI: Na dole menu dodaliśmy dyskretną informację przypominającą, że nasza góraleskowa gra jest po prostu humorystyczną parodią Slay the Spire.',
+    ],
+  },
+  {
     version: 'v1.2.5 - Samouczek i wygoda na telefonach',
     date: 'Kwiecień 2026',
     changes: [
       '🧭 NOWY SAMOUCZEK OD JĘDRKA: Dodano pełny tryb Samouczek, który krok po kroku tłumaczy walkę, nagrody i poruszanie się po mapie.',
-      '🎯 CZYTELNIEJSZE PROWADZENIE: Wskazówki w tutorialu lepiej prowadzą przez najważniejsze decyzje, dzięki czemu łatwiej wejść w rytm rozgrywki już od pierwszego starcia.',
-      '📱 LEPSZA CZYTELNOŚĆ NA TELEFONACH: Uporządkowano układ menu głównego i dymków, żeby nic się nie ucinało i żeby treści były czytelne na mniejszych ekranach.',
+      '📱 LEPSZA CZYTELNOŚĆ NA TELEFONACH: Uporządkowano układ menu głównego, żeby nic się nie ucinało i żeby treści były czytelne na mniejszych ekranach.',
     ],
   },
   {

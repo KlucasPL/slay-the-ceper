@@ -521,10 +521,8 @@ export class GameState {
     const rewardCandidates = reachableNodes.filter(
       (node) => node.y <= map.length - 3 && node.y !== this.guaranteedTreasureRow
     );
-    if (!shopNode) {
-      const target = rewardCandidates[0];
-      if (target) this._setNodeType(target, 'shop');
-    }
+    const target = rewardCandidates[0];
+    if (target) this._setNodeType(target, 'shop');
   }
 
   /**
@@ -2441,8 +2439,8 @@ export class GameState {
 
     const effect = card.effect(this);
 
-    // Pocztówka z Giewontem: first card in battle fires twice
-    if (isFirstCardThisBattle) {
+    // Pocztówka z Giewontem: first card in battle fires twice (skip if enemy already dead)
+    if (isFirstCardThisBattle && this.enemy.hp > 0) {
       card.effect(this);
     }
 
@@ -2600,7 +2598,11 @@ export class GameState {
     }
 
     if (this.enemy.patternType === 'loop') {
-      this.enemy.patternIndex = (this.enemy.patternIndex + 1) % this.enemy.pattern.length;
+      const activePattern =
+        this.enemy.phaseTwoTriggered && this.enemy.phaseTwoPattern.length > 0
+          ? this.enemy.phaseTwoPattern
+          : this.enemy.pattern;
+      this.enemy.patternIndex = (this.enemy.patternIndex + 1) % activePattern.length;
     }
     this._refreshEnemyIntent();
 
@@ -2636,6 +2638,7 @@ export class GameState {
     this.enemyBankruptcyPending = false;
     this.enemyBankruptcyBonus = 0;
     this.lansBreakEvent = false;
+    this.lansDutkiSpentEvent = 0;
     this.rachunekResistEvent = false;
     this.dumaPodhalaActive = false;
     this._resetBattleScopedFlags();
@@ -2704,6 +2707,7 @@ export class GameState {
     this.enemyBankruptcyPending = false;
     this.enemyBankruptcyBonus = 0;
     this.lansBreakEvent = false;
+    this.lansDutkiSpentEvent = 0;
     this.rachunekResistEvent = false;
     this.dumaPodhalaActive = false;
     this._resetBattleScopedFlags();
@@ -2843,6 +2847,7 @@ export class GameState {
     this.enemyBankruptcyPending = false;
     this.enemyBankruptcyBonus = 0;
     this.lansBreakEvent = false;
+    this.lansDutkiSpentEvent = 0;
     this.rachunekResistEvent = false;
     this.hasStartedFirstBattle = false;
     this.dumaPodhalaActive = false;
