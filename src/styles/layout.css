@@ -712,6 +712,18 @@ h1 {
   opacity: 0.95;
 }
 
+.shop-item-energy {
+  align-self: flex-start;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 220, 133, 0.45);
+  background: rgba(45, 28, 15, 0.72);
+  color: #ffe3ac;
+  font-weight: 700;
+  font-size: 0.74rem;
+  line-height: 1.1;
+}
+
 .card-rarity {
   margin-top: 2px;
   margin-bottom: 2px;
@@ -3021,5 +3033,144 @@ h1 {
   .pile-btn {
     width: 42px;
     height: 42px;
+  }
+}
+
+/* ── Maryna Boon Overlay ───────────────────────────────────────────── */
+
+.maryna-boon-panel {
+  width: min(860px, 95vw);
+  background:
+    radial-gradient(circle at 14% 12%, rgba(255, 223, 150, 0.14), transparent 34%),
+    radial-gradient(circle at 86% 78%, rgba(176, 114, 62, 0.18), transparent 38%),
+    linear-gradient(180deg, #6f4525 0%, #4f3018 100%);
+}
+
+#maryna-boon-image {
+  max-width: min(760px, 100%);
+}
+
+#maryna-boon-image svg {
+  max-width: min(380px, 100%);
+  height: auto;
+}
+
+.maryna-boon-choices {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.maryna-boon-card {
+  appearance: none;
+  border: 1px solid rgba(255, 219, 143, 0.45);
+  border-radius: 14px;
+  background:
+    linear-gradient(180deg, rgba(89, 53, 28, 0.96) 0%, rgba(53, 32, 16, 0.96) 100%),
+    rgba(47, 28, 14, 0.9);
+  color: #f7ebd4;
+  min-height: 178px;
+  padding: 11px 12px;
+  cursor: pointer;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 236, 187, 0.12),
+    0 6px 18px rgba(0, 0, 0, 0.28);
+  transition:
+    transform 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    filter 0.18s ease;
+}
+
+.maryna-boon-card:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.05);
+  border-color: rgba(255, 219, 143, 0.86);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 236, 187, 0.2),
+    0 10px 24px rgba(0, 0, 0, 0.34);
+}
+
+.maryna-boon-card:focus-visible {
+  outline: 2px solid #ffd45e;
+  outline-offset: 2px;
+}
+
+.maryna-boon-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.maryna-boon-emoji {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  background: rgba(255, 221, 150, 0.12);
+  border: 1px solid rgba(255, 221, 150, 0.3);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.maryna-boon-title-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.maryna-boon-name {
+  font-size: 1rem;
+  color: #ffd98f;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.maryna-boon-flavor {
+  font-size: 0.82rem;
+  color: #d9c6a5;
+  font-style: italic;
+  line-height: 1.25;
+}
+
+.maryna-boon-effect {
+  margin-top: auto;
+  font-size: 0.89rem;
+  color: #efe1c4;
+  line-height: 1.28;
+}
+
+@media (max-width: 900px) {
+  .maryna-boon-choices {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 620px) {
+  .maryna-boon-choices {
+    grid-template-columns: 1fr;
+  }
+
+  .maryna-boon-card {
+    min-height: 138px;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 560px) {
+  .maryna-boon-card {
+    min-height: 124px;
+    padding: 9px 10px;
+  }
+
+  .maryna-boon-effect {
+    font-size: 0.82rem;
   }
 }

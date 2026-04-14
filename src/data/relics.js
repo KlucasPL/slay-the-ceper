@@ -1,6 +1,6 @@
 /**
  * @typedef {'common' | 'uncommon' | 'rare'} RarityDef
- * @typedef {{ id: string, name: string, rarity: RarityDef, emoji: string, desc: string, price: number, eventOnly?: boolean }} RelicDef
+ * @typedef {{ id: string, name: string, rarity: RarityDef, emoji: string, desc: string, price: number, eventOnly?: boolean, tutorialOnly?: boolean, marynaOnly?: boolean }} RelicDef
  */
 
 /** @type {Record<string, RelicDef>} */
@@ -186,7 +186,7 @@ export const relicLibrary = {
     name: 'Certyfikowany Oscypek',
     rarity: 'uncommon',
     emoji: '🧀',
-    desc: 'Za wejście do sklepu: +2 do maksymalnej Krzepy (maks. 3 razy na run).',
+    desc: 'Za wejście do sklepu: +2 do maksymalnej Krzepy (maks. 3 razy na wyprawę).',
     price: 190,
   },
   krzywy_portret: {
@@ -206,6 +206,70 @@ export const relicLibrary = {
     emoji: '💰',
     desc: 'Po zwycięstwie w walce nie-eventowej: +6 dutków.',
     price: 175,
+  },
+  // ---- Wyprawki Maryny (marynaOnly — excluded from all reward/shop/tutorial pools) ----
+  relic_boon_mokra_sciera: {
+    id: 'relic_boon_mokra_sciera',
+    name: 'Mokra Ściera Maryny',
+    rarity: 'rare',
+    emoji: '🧹',
+    desc: '+12 max Krzepy i +12 Krzepy (do nowego limitu).',
+    price: 0,
+    marynaOnly: true,
+  },
+  relic_boon_kiesa: {
+    id: 'relic_boon_kiesa',
+    name: 'Kiesa na Pierwszy Dzień',
+    rarity: 'rare',
+    emoji: '💰',
+    desc: '+80 Dutków od razu; +20 Dutków po pierwszym zwycięstwie (jednorazowo).',
+    price: 0,
+    marynaOnly: true,
+  },
+  relic_boon_przeglad_plecaka: {
+    id: 'relic_boon_przeglad_plecaka',
+    name: 'Przegląd Plecaka Maryny',
+    rarity: 'rare',
+    emoji: '🎒',
+    desc: 'Usuń 1 losową kartę startową z talii; dodaj 1 losową kartę niepowszechną.',
+    price: 0,
+    marynaOnly: true,
+  },
+  relic_boon_sloik_rosolu: {
+    id: 'relic_boon_sloik_rosolu',
+    name: 'Słoik Rosołu na Drogę',
+    rarity: 'rare',
+    emoji: '🍲',
+    desc: 'Przez pierwsze 3 walki na starcie: +6 Gardy i +1 Siły.',
+    price: 0,
+    marynaOnly: true,
+  },
+  relic_boon_zloty_rozaniec: {
+    id: 'relic_boon_zloty_rozaniec',
+    name: 'Złoty Różaniec Maryny',
+    rarity: 'rare',
+    emoji: '📿',
+    desc: 'Na starcie każdej walki: pierwsze trafienie atakiem zadaje podwójne obrażenia.',
+    price: 0,
+    marynaOnly: true,
+  },
+  relic_boon_lista_zakupow: {
+    id: 'relic_boon_lista_zakupow',
+    name: 'Lista Zakupów',
+    rarity: 'rare',
+    emoji: '📜',
+    desc: 'Pierwszy sklep: karty -30%. Pierwsze usunięcie karty w wyprawie za 0 Dutków.',
+    price: 0,
+    marynaOnly: true,
+  },
+  relic_boon_tajny_skladnik: {
+    id: 'relic_boon_tajny_skladnik',
+    name: 'Tajny Składnik Maryny',
+    rarity: 'rare',
+    emoji: '🌿',
+    desc: 'Na starcie każdej walki wróg dostaje 1 Słaby i 1 Kruchy.',
+    price: 0,
+    marynaOnly: true,
   },
 };
 
