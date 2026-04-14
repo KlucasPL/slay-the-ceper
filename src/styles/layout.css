@@ -325,6 +325,54 @@ body {
   filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.35));
 }
 
+.title-disclaimer-widget {
+  position: fixed;
+  right: 14px;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 14px);
+  z-index: 3200;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  width: auto;
+  max-width: min(92vw, 420px);
+  box-sizing: border-box;
+}
+
+.title-disclaimer-btn {
+  border: 1px solid rgba(255, 220, 122, 0.8);
+  background: rgba(34, 20, 10, 0.9);
+  color: #ffe8ba;
+  border-radius: 999px;
+  padding: 7px 11px;
+  font-size: 0.76rem;
+  line-height: 1;
+  letter-spacing: 0.03em;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+}
+
+.title-disclaimer-btn:hover,
+.title-disclaimer-btn:focus-visible {
+  filter: brightness(1.12);
+}
+
+.title-disclaimer-panel {
+  margin: 0;
+  width: min(92vw, 420px);
+  box-sizing: border-box;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  background: rgba(18, 11, 7, 0.88);
+  color: #f6e8ca;
+  font-size: 0.72rem;
+  line-height: 1.3;
+  opacity: 0.88;
+  text-align: left;
+  pointer-events: none;
+}
+
 #game-wrapper {
   display: flex;
   flex-direction: column;
@@ -2784,6 +2832,23 @@ h1 {
 
   .title-main {
     font-size: clamp(1.65rem, 9.4vw, 2.4rem);
+  }
+
+  .title-disclaimer-widget {
+    right: 8px;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 8px);
+    max-width: min(94vw, 360px);
+  }
+
+  .title-disclaimer-btn {
+    font-size: 0.68rem;
+    padding: 5px 9px;
+  }
+
+  .title-disclaimer-panel {
+    width: min(94vw, 360px);
+    font-size: 0.68rem;
+    padding: 7px 9px;
   }
 }
 

@@ -106,6 +106,23 @@ export class UIManager {
     document
       .getElementById('title-btn-options')
       .addEventListener('click', () => this._openOptionsModal());
+    const titleDisclaimerBtn = document.getElementById('title-disclaimer-btn');
+    const titleDisclaimerPanel = document.getElementById('title-disclaimer-panel');
+    titleDisclaimerBtn?.addEventListener('click', (event) => {
+      event.stopPropagation();
+      if (!titleDisclaimerPanel) return;
+      const isHidden = titleDisclaimerPanel.classList.contains('hidden');
+      titleDisclaimerPanel.classList.toggle('hidden', !isHidden);
+      titleDisclaimerBtn.setAttribute('aria-expanded', String(isHidden));
+    });
+    document.addEventListener('click', (event) => {
+      if (!titleDisclaimerPanel || !titleDisclaimerBtn) return;
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      if (target.closest('.title-disclaimer-widget')) return;
+      titleDisclaimerPanel.classList.add('hidden');
+      titleDisclaimerBtn.setAttribute('aria-expanded', 'false');
+    });
     document
       .querySelector('#release-notes-modal .close-btn')
       .addEventListener('click', () => this._closeReleaseNotesModal());
