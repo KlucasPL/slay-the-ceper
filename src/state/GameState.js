@@ -151,8 +151,8 @@ export class GameState {
         : null;
     /** @type {string | null} */
     this.activeEventId = null;
-    /** @type {string | null} Last randomly selected event ID to avoid immediate repeats */
-    this.lastRandomEventId = null;
+    /** @type {string[]} Recently selected event IDs (up to pool-size − 1) to prevent repeated picks */
+    this.recentEventIds = [];
     /** @type {string | null} */
     this.pendingEventBattleEnemyId = null;
     /** @type {string | null} */
@@ -824,18 +824,22 @@ export class GameState {
   /** @returns {GameEventDef | null} */
   pickRandomEventDef() {
     const currentAct = this._getCurrentAct();
-    let eventIds = Object.keys(eventLibrary).filter((id) => {
+    const allEventIds = Object.keys(eventLibrary).filter((id) => {
       const eventDef = eventLibrary[id];
       return !eventDef?.act || eventDef.act === currentAct;
     });
-    if (eventIds.length === 0) return null;
+    if (allEventIds.length === 0) return null;
 
-    if (this.lastRandomEventId && eventIds.length > 1) {
-      eventIds = eventIds.filter((id) => id !== this.lastRandomEventId);
+    const historyWindow = Math.max(0, allEventIds.length - 1);
+    const recentSlice = this.recentEventIds.slice(-historyWindow);
+    const filtered = allEventIds.filter((id) => !recentSlice.includes(id));
+    const pool = filtered.length > 0 ? filtered : allEventIds;
+
+    const eventId = pool[Math.floor(Math.random() * pool.length)];
+    this.recentEventIds.push(eventId);
+    if (this.recentEventIds.length > historyWindow) {
+      this.recentEventIds = this.recentEventIds.slice(-historyWindow);
     }
-
-    const eventId = eventIds[Math.floor(Math.random() * eventIds.length)];
-    this.lastRandomEventId = eventId;
     return eventLibrary[eventId] ?? null;
   }
 
@@ -2831,7 +2835,7 @@ export class GameState {
     this.currentScreen = 'map';
     this.lastRegularEnemyId = 'cepr';
     this.activeEventId = null;
-    this.lastRandomEventId = null;
+    this.recentEventIds = [];
     this.jumpToBoss = false;
     this.forceMainBossNextBattle = false;
     this.currentWeather = 'clear';

@@ -1501,7 +1501,7 @@ describe('GameState', () => {
       it('does not repeat the same event twice in a row when alternatives exist', () => {
         const s = freshState();
         s.currentLevel = 0;
-        s.lastRandomEventId = 'fiakier_event';
+        s.recentEventIds = ['fiakier_event'];
         vi.spyOn(Math, 'random').mockReturnValue(0);
 
         const next = s.pickRandomEventDef();
@@ -1510,7 +1510,7 @@ describe('GameState', () => {
         expect(next?.id).not.toBe('fiakier_event');
       });
 
-      it('stores selected event id as lastRandomEventId', () => {
+      it('stores selected event id in recentEventIds', () => {
         const s = freshState();
         s.currentLevel = 0;
         vi.spyOn(Math, 'random').mockReturnValue(0);
@@ -1518,7 +1518,20 @@ describe('GameState', () => {
         const next = s.pickRandomEventDef();
 
         expect(next).not.toBeNull();
-        expect(s.lastRandomEventId).toBe(next?.id ?? null);
+        expect(s.recentEventIds).toContain(next?.id);
+      });
+
+      it('does not repeat the last N-1 events so each event is seen before any repeats', () => {
+        const s = freshState();
+        s.currentLevel = 0;
+        // With 3 act-I events, window = 2; seed recentEventIds with 2 known picks
+        s.recentEventIds = ['fiakier_event', 'event_karykaturzysta'];
+
+        const next = s.pickRandomEventDef();
+
+        expect(next).not.toBeNull();
+        expect(next?.id).not.toBe('fiakier_event');
+        expect(next?.id).not.toBe('event_karykaturzysta');
       });
     });
 

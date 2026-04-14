@@ -18,10 +18,14 @@ W zakresie 1.3.0:
 
 - nowy modul danych wyprawek Maryny
 - stan runa rozszerzony o wybory i flagi Maryny
-- nowy flow startu runa: losowanie 3 z 7, wybor 1, dopiero potem start mapy
+- nowy typ noda mapy: `'maryna'` — unikalny, pojawia sie zawsze w rzedzie 0 jako jedyny nod startowy
+- nod Maryny korzysta z istniejacego formatu eventu: SVG + tekst + 3 kafelki wyprawek do klikniecia
+- po nodzie Maryny wszystkie wezly w rzedzie 1 sa walkami z Ceprem (gwarantowane)
 - hooki efektow wyprawki w istniejacym cyklu (start walki, zwyciestwo, sklep)
-- nowy ekran/overlay wyboru (UI + wiring)
+- nowy nod-handler w UIManager korzystajacy z formatu overlay eventu
 - testy logiki wyboru, aplikacji i wygaszania efektow
+- twarda blokada zrodel dropu: wyprawki Maryny nie moga pojawiac sie w sklepie, rewardach po walce (zwyklej, elitarnej, boss), ani w tutorialu
+- wyprawki Maryny sa technicznie implementowane jako pamiatki (relics), ale z dedykowanym znacznikiem wykluczajacym je z normalnych pul nagrod
 
 Poza zakresem 1.3.0:
 
@@ -30,9 +34,9 @@ Poza zakresem 1.3.0:
 
 ## Finalna pula 7 wyprawek (po nerfach)
 
-1. Mokra Sciera Maryny
+1. Mokra Ściera Maryny
 
-- flavor: "Wstawaj. Najpierw zimny oklad, potem wielkie czyny."
+- flavor: "Wstawaj. Najpierw zimny okład, potem wielkie czyny."
 - efekt: +12 max Krzepy i +12 Krzepy (do nowego limitu)
 
 2. Kiesa na Pierwszy Dzien
@@ -40,29 +44,29 @@ Poza zakresem 1.3.0:
 - flavor: "Masz, ale nie przewal wszystkiego na jarmarku."
 - efekt: +80 Dutkow od razu; po pierwszym zwyciestwie nie-eventowym +20 Dutkow (jednorazowo)
 
-3. Przeglad Plecaka Maryny
+3. Przegląd Plecaka Maryny
 
-- flavor: "Ten zlom wyrzuc, to ci zostawiam."
+- flavor: "Ten złom wyrzuc, to ci zostawiam."
 - efekt: usun 1 losowa karte starter z talii; dodaj 1 losowa karte uncommon (bez eventOnly/tutorialOnly)
 
-4. Sloik Rosolu na Droge
+4. Słoik Rosołu na Drogę
 
-- flavor: "Na trzy pierwsze bitki starczy ci mocy i ciepla."
+- flavor: "Na trzy pierwsze bitki starczy ci mocy i ciepła."
 - efekt: przez pierwsze 3 walki na start: +6 Garda i +1 Sila
 
-5. Zloty Rozaniec Maryny
+5. Złoty Różaniec Maryny
 
 - flavor: "Pomódl się i bij dwa razy mocniej!"
 - efekt: na starcie kazdej walki ustaw next_double = true
 
-6. Lista Zakupow
+6. Lista Zakupów
 
-- flavor: "Kup madrze, nie jak ceper na Krupowkach."
+- flavor: "Kup mądrze, nie jak ceper na Krupówkach."
 - efekt: pierwszy sklep: karty -30%; pierwsze usuniecie karty w runie za 0 Dutkow (jednorazowo)
 
 7. Tajny Składnik Maryny
 
-- flavor: "Najpierw ich oslabi, potem dobij."
+- flavor: "Najpierw ich osłabi, potem ich dobij."
 - efekt: na starcie kazdej walki wrog dostaje 1 Weak i 1 Fragile
 
 ## Ocena balansu po nerfach
@@ -96,6 +100,11 @@ Zawartosc:
 - `marynaBoonLibrary` (7 wpisow)
 - helper wyboru losowych 3 unikalnych wyprawek
 
+Model techniczny:
+
+- kazda wyprawka ma odpowiadajacy wpis pamiatki (`relic`) z flaga np. `marynaOnly: true`
+- pamiatki Maryny nie moga wejsc do `_buildAvailableRelicPool()` i zadnego flow reward/shop/tutorial
+
 Zasady:
 
 - same dane i lekkie helpery (bez DOM)
@@ -124,34 +133,41 @@ Wymagania kompatybilnosci:
 
 - nie lamac tutorial flow
 - nie lamac debug/new run flow
+- wyprawki Maryny sa dostepne wylacznie przez nod `'maryna'` na mapie (nie sa elementem card/relic reward pool)
+- aktywna wyprawka jest przechowywana w `state.relics` jako pamiatka Maryny, ale nie podlega standardowemu dropowi pamiatek
 
-### C. Integracja flow startu runa (src/ui/UIManager.js) - TODO
+### C. Integracja flow — nod Maryny na mapie (GameState + UIManager.js) - TODO
 
-Obecny flow:
+Nod Maryny zastepuje dotychczasowy startowy nod walki w rzedzie 0 mapy. Flow pozostaje niezmieniony pod wzgledem tytul -> start -> mapa — Maryna jest odkrywana po wejsciu na jej nod jak kazdy event.
 
-- title start -> resetForNewRun -> mapa
+Zmiany generacji mapy (GameState._generateMap / _createMapNode):
 
-Nowy flow:
+- rzad 0 zawsze ma jeden nod typu `'maryna'` w centrum (pozycja [0][1])
+- rzad 1: wszystkie wygenerowane nody walki (`fight`) w tym rzedzie sa oznaczone jako `forcedEnemyId: 'cepr'` — przy starcie walki z takiego noda GameState laduje cepr zamiast losowego wroga
+- nod `'maryna'` nie ma `eventOutcome` ani `forcedEnemyId`; ma natomiast wlasnosci: `type: 'maryna'`, `completed: false`
 
-- title start -> resetForNewRun -> ekran Maryny -> wybor 1 z 3 -> mapa
+Zmiany obslugi klikniecia noda (UIManager):
 
-Wymagane kroki:
-
-- po `_handleTitleStart()` wywolac losowanie wyprawek
-- pokazac overlay wyboru
-- po kliknieciu wyprawki:
-  - zapis wyboru w stanie
+- klikniecie noda `'maryna'` otwiera overlay Maryny (ten sam format co `_openRandomEvent`, lecz z kontent em boonow i dedykowanym SVG Maryny)
+- po kliknieciu jednego z 3 kafelkow wyprawki:
+  - zapis wyboru w stanie (`pickMarynaBoon(id)`)
   - aplikacja efektow natychmiastowych
+  - `node.completed = true`
   - zamkniecie overlay
-  - przejscie do mapy
+  - aktualizacja mapy i przejscie do kolejnego levelu
 
-### D. UI ekranu wyboru (index.html + src/styles/layout.css + UIManager wiring) - TODO
+Nod `'maryna'` jest zawsze traktowany jako ukonczona progresja (nie uruchamia walki ani sklepu).
+
+### D. UI noda Maryny (index.html + src/styles/layout.css + UIManager wiring) - TODO
+
+Format: ten sam overlay co eventy (`#random-event-overlay`), z innym zestawem tresci.
+Alternatywa: dedykowany `#maryna-boon-overlay` jesli layout eventow nie pasuje do 3 kafelkow — do oceny przy implementacji.
 
 Elementy:
 
-- osobny overlay (jak pozostale ekrany)
-- naglowek narracyjny Maryny
-- 3 karty wyboru (name + flavor + efekt mechaniczny)
+- SVG Maryny (patrz nizej)
+- naglowek: imie i krotki tekst narracyjny Maryny
+- 3 kafelki wyboru (name + flavor + efekt mechaniczny)
 - brak opcji skip
 
 Wymogi UX:
@@ -159,6 +175,19 @@ Wymogi UX:
 - czytelne na mobile
 - obsluga klawiatury i focus
 - blokada klikow poza overlay podczas wyboru
+
+### D1. SVG Maryny — opis projektu - TODO
+
+Maryna to starsza goralka: pomarszczona twarz, biala chusta zawiazana pod brodą, haftowana gorsetka na bialej koszuli, ciemna dluga spodnica. Trzyma w rekach Slazyk (maly bukiet ziól / tlumoczek) i wyciaga go w strone gracza — jakby dawala wyprawke na droge. Tlo moze sugerowac progi chaty lub gory w oddali.
+
+Paleta kolorow zgodna z reszta SVG w evenatch:
+
+- skora: #f0c39b / #e1b48e
+- tkanina: biale, kremowe, czerwone hafty
+- tlo: cieply brazowy / szarobezkitowy jak niebo w gorach
+- accent: zielone ziolka lub czerwona nitka haftu
+
+Rozmiar: `viewBox="0 0 240 140" width="220" height="130"` (standard SVG eventow w grze).
 
 ### E. Rozszerzenie release notes (src/data/releaseNotes.js) - TODO
 
@@ -170,13 +199,16 @@ Dodac wpis 1.3.0 z najwazniejszymi zmianami:
 
 ## Kryteria akceptacji
 
-1. Start nowego runa zawsze pokazuje wybor 3 unikalnych wyprawek z puli 7.
-2. Gracz musi wybrac 1 wyprawke (brak skip), po czym run przechodzi dalej.
-3. Efekty natychmiastowe dzialaja od razu po wyborze.
-4. Efekty czasowe i jednorazowe dzialaja we wlasciwych hookach i wygaszaja sie poprawnie.
-5. Reset runa czyści stan Maryny i nie przenosi flag do kolejnego runa.
-6. Tutorial nie uruchamia ekranu wyboru Maryny.
-7. Lint, testy i build przechodza bez regresji.
+1. Rzad 0 mapy zawsze zawiera dokladnie jeden nod `'maryna'`; klikniecie go otwiera overlay z wyborem 3 unikalnych wyprawek z puli 7.
+2. Rzad 1 mapy po nodzie Maryny zawiera wylacznie walki z Ceprem (`forcedEnemyId: 'cepr'`).
+3. Gracz musi wybrac 1 wyprawke (brak skip), po czym overlay sie zamyka i gracz wraca do mapy.
+4. Efekty natychmiastowe dzialaja od razu po wyborze, przed pierwsza walka.
+5. Efekty czasowe i jednorazowe dzialaja we wlasciwych hookach i wygaszaja sie poprawnie.
+6. Reset runa czyści stan Maryny i nie przenosi flag do kolejnego runa.
+7. Tutorial nie zawiera noda Maryny (pomija rzad 0 / mapa tutorialu nie ma noda `'maryna'`).
+8. Lint, testy i build przechodza bez regresji.
+9. Wyprawki Maryny nigdy nie pojawiaja sie jako oferta sklepu ani reward po walce (normalnej, elitarnej i boss), oraz nigdy nie pojawiaja sie w tutorialu.
+10. Wyprawki Maryny sa technicznie pamiatkami i trafiaja do `state.relics`, ale sa oznaczone jako `marynaOnly` i wykluczone z normalnych pul relicow.
 
 ## Plan testow
 
@@ -192,12 +224,22 @@ Dodac wpis 1.3.0 z najwazniejszymi zmianami:
 - Slubowanie: debuffy enemy na starcie walki
 - Lista Zakupow: rabat tylko w pierwszym sklepie; free removal tylko raz
 - resetForNewRun czyści caly stan Maryny
+- brak wyciekow puli: boony Maryny nie trafiaja do sklepu i rewardow po walce (normal/elite/boss)
+- wpis pamiatki Maryny po wyborze trafia do `state.relics` i jednoczesnie nigdy nie jest losowany przez standardowy system relic rewards
+
+### Testy jednostkowe mapy (GameState)
+
+- rzad 0 zawsze ma typ `'maryna'`
+- rzad 1 ma wylacznie nody `fight` z `forcedEnemyId === 'cepr'`
+- nod `'maryna'` nie pojawia sie w zadnym innym rzedzie
+- mapa tutorialu nie zawiera noda `'maryna'`
 
 ### Testy integracyjne flow (UIManager)
 
-- title start otwiera overlay Maryny przed mapa
-- wybor karty zamyka overlay i odpala mape
-- tutorial start pomija overlay Maryny
+- klikniecie noda `'maryna'` otwiera overlay wyprawek Maryny
+- wybor wyprawki zamyka overlay i aktualizuje mape
+- tutorial start pomija nod Maryny i nie otwiera overlay
+- reward flow po walce (normal/elite/boss) nigdy nie renderuje wyprawek Maryny
 
 ## Kolejnosc wdrozenia (obowiazkowa)
 
