@@ -1716,7 +1716,7 @@ h1 {
 }
 
 .motion-comic-track--animate {
-  animation: motionComicPan 18s ease-in-out forwards;
+  animation: motionComicPan 30s ease-in-out forwards;
 }
 
 .act-intro-overlay {

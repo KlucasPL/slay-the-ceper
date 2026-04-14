@@ -75,7 +75,7 @@ export class MotionComicIntro {
       };
 
       this.track.addEventListener('animationend', onAnimationEnd);
-      this.fallbackTimer = window.setTimeout(finish, 18100);
+      this.fallbackTimer = window.setTimeout(finish, 30100);
     });
   }
 

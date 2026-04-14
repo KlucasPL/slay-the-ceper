@@ -250,25 +250,40 @@
 
 @keyframes motionComicPan {
   0%,
-  13.8889% {
+  6.6667% {
     transform: translate3d(0, 0, 0) scale(1);
   }
-  27.7778% {
+  15% {
     transform: translate3d(-100vw, 0, 0) scale(1);
   }
-  41.6667% {
+  21.6667% {
+    transform: translate3d(-100vw, 0, 0) scale(1);
+  }
+  30% {
     transform: translate3d(-200vw, 0, 0) scale(1);
   }
-  55.5556% {
+  36.6667% {
+    transform: translate3d(-200vw, 0, 0) scale(1);
+  }
+  45% {
     transform: translate3d(0, -100vh, 0) scale(1);
   }
-  69.4444% {
+  51.6667% {
+    transform: translate3d(0, -100vh, 0) scale(1);
+  }
+  60% {
     transform: translate3d(-100vw, -100vh, 0) scale(1);
   }
-  83.3333% {
+  66.6667% {
+    transform: translate3d(-100vw, -100vh, 0) scale(1);
+  }
+  75% {
     transform: translate3d(-200vw, -100vh, 0) scale(1);
   }
-  91.6667% {
+  81.6667% {
+    transform: translate3d(-200vw, -100vh, 0) scale(1);
+  }
+  86.6667% {
     transform: translate3d(0, 16.6667vh, 0) scale(0.333333);
   }
   100% {
