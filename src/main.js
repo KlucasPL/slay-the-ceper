@@ -5,7 +5,7 @@ import { AudioManager } from './logic/AudioManager.js';
 import { getSkipIntro } from './logic/settings.js';
 import { GameState } from './state/GameState.js';
 import { UIManager } from './ui/UIManager.js';
-import { MotionComicIntro } from './ui/MotionComicIntro.js';
+import { MotionComicIntro } from './ui/intro/MotionComicIntro.js';
 import { characters } from './data/characters.js';
 import { enemyLibrary } from './data/enemies.js';
 import { startingDeck } from './data/cards.js';
@@ -75,7 +75,7 @@ async function bootstrap() {
 
   const isDevEnvironment = import.meta.env.DEV;
   if (isDevEnvironment) {
-    const { DebugOverlay } = await import('./ui/DebugOverlay.js');
+    const { DebugOverlay } = await import('./ui/debug/DebugOverlay.js');
     const debugOverlay = new DebugOverlay({ state, ui });
     debugOverlay.mount();
   }

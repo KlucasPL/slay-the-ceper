@@ -347,17 +347,17 @@ Extract modules in dependency order (leaves first, orchestrator last):
 11. `DONE` `CombatEngine.js` — depends on PlayerState, EnemyState, RelicSystem, ShopSystem
 12. `DONE` `BattleLifecycle.js` — depends on CombatEngine, DeckManager, RelicSystem
 13. `DONE` `GameState.js` (façade) — orchestrates all of the above
-14. `UIHelpers.js` — pure helpers, no state deps
-15. `CardRenderer.js` — depends on UIHelpers
-16. `StatusRenderer.js` — depends on UIHelpers
-17. `PileViewerRenderer.js` — depends on CardRenderer
-18. `MapRenderer.js` — depends on UIHelpers
-19. `ShopRenderer.js` — depends on CardRenderer, UIHelpers
-20. `RewardRenderer.js` — depends on CardRenderer, UIHelpers
-21. `EventRenderer.js` — depends on UIHelpers
-22. `LibraryRenderer.js` — depends on CardRenderer, UIHelpers
-23. `CampfireOverlay.js` — depends on UIHelpers
-24. `MarynaOverlay.js` — depends on UIHelpers
-25. `CombatUI.js` — depends on UIHelpers, CardRenderer
-26. `TutorialUI.js` — depends on CombatUI, RewardRenderer, UIHelpers
-27. `UIManager.js` (façade) — orchestrates all of the above
+14. `DONE` `UIHelpers.js` — pure helpers, no state deps
+15. `DONE` `CardRenderer.js` — depends on UIHelpers
+16. `DONE` `StatusRenderer.js` — depends on UIHelpers
+17. `DONE` `PileViewerRenderer.js` — depends on CardRenderer
+18. `DONE` `MapRenderer.js` — depends on UIHelpers
+19. `DONE` `ShopRenderer.js` — depends on CardRenderer, UIHelpers
+20. `DONE` `RewardRenderer.js` — depends on CardRenderer, UIHelpers
+21. `DONE` `EventRenderer.js` — depends on UIHelpers
+22. `DONE` `LibraryRenderer.js` — depends on CardRenderer, UIHelpers
+23. `DONE` `CampfireOverlay.js` — depends on UIHelpers
+24. `DONE` `MarynaOverlay.js` — depends on UIHelpers
+25. `DONE` `CombatUI.js` — depends on UIHelpers, CardRenderer
+26. `DONE` `TutorialUI.js` — depends on CombatUI, RewardRenderer, UIHelpers
+27. `DONE` `UIManager.js` (façade) — orchestrates all of the above (plus final UI file relocation cleanup)

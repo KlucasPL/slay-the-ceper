@@ -1,12 +1,12 @@
-import { enemyLibrary } from '../data/enemies.js';
-import { eventLibrary } from '../data/events.js';
-import { relicLibrary } from '../data/relics.js';
+import { enemyLibrary } from '../../data/enemies.js';
+import { eventLibrary } from '../../data/events.js';
+import { relicLibrary } from '../../data/relics.js';
 
 const STYLE_ID = 'debug-overlay-style';
 
 export class DebugOverlay {
   /**
-   * @param {{ state: import('../state/GameState.js').GameState, ui: import('./UIManager.js').UIManager }} options
+   * @param {{ state: import('../../state/GameState.js').GameState, ui: import('../UIManager.js').UIManager }} options
    */
   constructor({ state, ui }) {
     this.state = state;
