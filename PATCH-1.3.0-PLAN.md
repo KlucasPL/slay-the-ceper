@@ -140,7 +140,7 @@ Wymagania kompatybilnosci:
 
 Nod Maryny zastepuje dotychczasowy startowy nod walki w rzedzie 0 mapy. Flow pozostaje niezmieniony pod wzgledem tytul -> start -> mapa — Maryna jest odkrywana po wejsciu na jej nod jak kazdy event.
 
-Zmiany generacji mapy (GameState._generateMap / _createMapNode):
+Zmiany generacji mapy (GameState.\_generateMap / \_createMapNode):
 
 - rzad 0 zawsze ma jeden nod typu `'maryna'` w centrum (pozycja [0][1])
 - rzad 1: wszystkie wygenerowane nody walki (`fight`) w tym rzedzie sa oznaczone jako `forcedEnemyId: 'cepr'` — przy starcie walki z takiego noda GameState laduje cepr zamiast losowego wroga

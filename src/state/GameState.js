@@ -3,6 +3,7 @@ import { enemyLibrary } from '../data/enemies.js';
 import { eventLibrary } from '../data/events.js';
 import { relicLibrary } from '../data/relics.js';
 import { weatherLibrary } from '../data/weather.js';
+import { marynaBoonLibrary, rollMarynaChoices } from '../data/marynaBoons.js';
 
 const RARITY_WEIGHTS = {
   common: 0.7,
@@ -153,6 +154,8 @@ export class GameState {
     this.activeEventId = null;
     /** @type {string[]} Recently selected event IDs (up to pool-size − 1) to prevent repeated picks */
     this.recentEventIds = [];
+    /** @type {{ offeredIds: string[], pickedId: string | null, flags: Record<string, boolean>, counters: Record<string, number> }} */
+    this.maryna = { offeredIds: [], pickedId: null, flags: {}, counters: {} };
     /** @type {string | null} */
     this.pendingEventBattleEnemyId = null;
     /** @type {string | null} */
@@ -223,7 +226,7 @@ export class GameState {
     this.guaranteedTreasureRow = guaranteedTreasureRow;
     this.guaranteedTreasureColumn = 1;
 
-    generated[0][1] = this._createMapNode('fight', 1, 0);
+    generated[0][1] = this._createMapNode('maryna', 1, 0);
 
     const lastMidLevel = generated.length - 3;
     for (let y = 1; y <= lastMidLevel; y++) {
@@ -261,6 +264,7 @@ export class GameState {
     this._enforceSpecialNodeLimits(generated);
     this._ensureReachableElite(generated);
     this._ensureReachableTrueEvent(generated);
+    this._markRow1ForcedCepr(generated);
 
     this.map = generated;
     this.currentLevel = 0;
@@ -285,6 +289,7 @@ export class GameState {
       event: { label: 'Wydarzenie', emoji: '❓' },
       campfire: { label: 'Watra', emoji: '🔥' },
       boss: { label: 'Boss', emoji: '👑' },
+      maryna: { label: 'Maryna', emoji: '👵' },
     };
     const weather = this._rollNodeWeather(type);
     const node = { ...meta[type], x, y, type, weather, connections: [] };
@@ -292,6 +297,78 @@ export class GameState {
       node.eventOutcome = this.rollEventNodeOutcome();
     }
     return node;
+  }
+
+  /**
+   * After map generation, mark all row-1 fight nodes with forcedEnemyId: 'cepr'
+   * so the first battle after Maryna is always against Cepr.
+   * @param {(import('./GameState.js').MapNode | null)[][]} map
+   */
+  _markRow1ForcedCepr(map) {
+    map[1].forEach((node) => {
+      if (node && node.type === 'fight') {
+        node.forcedEnemyId = 'cepr';
+      }
+    });
+  }
+
+  /**
+   * Rolls 3 unique Maryna boon IDs and stores them in state.
+   * @param {number} [count]
+   * @returns {string[]}
+   */
+  rollMarynaChoices(count = 3) {
+    const ids = rollMarynaChoices(count);
+    this.maryna.offeredIds = ids;
+    return ids;
+  }
+
+  /**
+   * Pick a Maryna boon, store it, add corresponding relic, apply immediate effects.
+   * @param {string} boonId
+   * @returns {boolean}
+   */
+  pickMarynaBoon(boonId) {
+    if (this.maryna.pickedId) return false;
+    const boon = marynaBoonLibrary[boonId];
+
+    this.maryna.pickedId = boonId;
+    this.addRelic(boon.relicId);
+    this._applyMarynaBoonImmediateEffects(boonId);
+    return true;
+  }
+
+  /**
+   * Applies immediate (one-shot) effects for the chosen boon.
+   * @param {string} boonId
+   */
+  _applyMarynaBoonImmediateEffects(boonId) {
+    if (boonId === 'mokra_sciera') {
+      this.gainMaxHp(12);
+    } else if (boonId === 'kiesa') {
+      this.addDutki(80);
+    } else if (boonId === 'przeglad_plecaka') {
+      const starterIds = ['ciupaga', 'gasior', 'kierpce', 'hej'];
+      const startersInDeck = this.deck.filter((id) => starterIds.includes(id));
+      if (startersInDeck.length > 0) {
+        const toRemove = startersInDeck[Math.floor(Math.random() * startersInDeck.length)];
+        this.removeCardFromDeck(toRemove);
+      }
+      const uncommonPool = Object.keys(cardLibrary).filter(
+        (id) =>
+          cardLibrary[id]?.rarity === 'uncommon' &&
+          !cardLibrary[id]?.isStarter &&
+          !cardLibrary[id]?.eventOnly &&
+          !cardLibrary[id]?.tutorialOnly
+      );
+      if (uncommonPool.length > 0) {
+        const pick = uncommonPool[Math.floor(Math.random() * uncommonPool.length)];
+        this.deck.push(pick);
+      }
+    } else if (boonId === 'sloik_rosolu') {
+      this.maryna.counters.rosolBattlesLeft = 3;
+    }
+    // kiesa delayed bonus, zloty_rozaniec, lista_zakupow, tajny_skladnik: handled in hooks
   }
 
   /**
@@ -307,6 +384,7 @@ export class GameState {
       event: { label: 'Wydarzenie', emoji: '❓' },
       campfire: { label: 'Watra', emoji: '🔥' },
       boss: { label: 'Boss', emoji: '👑' },
+      maryna: { label: 'Maryna', emoji: '👵' },
     };
     return meta[type] ?? { label: 'Pole', emoji: '•' };
   }
@@ -328,6 +406,7 @@ export class GameState {
    */
   _rollNodeWeather(nodeType) {
     if (nodeType === 'boss') return 'halny';
+    if (nodeType === 'maryna') return 'clear';
     if (nodeType !== 'fight' && nodeType !== 'elite') return 'clear';
 
     const roll = Math.random();
@@ -693,6 +772,7 @@ export class GameState {
       event: { label: 'Wydarzenie', emoji: '❓' },
       campfire: { label: 'Watra', emoji: '🔥' },
       boss: { label: 'Boss', emoji: '👑' },
+      maryna: { label: 'Maryna', emoji: '👵' },
     };
     node.type = type;
     node.label = meta[type].label;
@@ -1183,7 +1263,8 @@ export class GameState {
         !this.relics.includes(id) &&
         !this.seenRelicOffers.includes(id) &&
         !relicLibrary[id]?.eventOnly &&
-        !relicLibrary[id]?.tutorialOnly
+        !relicLibrary[id]?.tutorialOnly &&
+        !relicLibrary[id]?.marynaOnly
     );
   }
 
@@ -1284,6 +1365,13 @@ export class GameState {
     if (this.hasRelic('certyfikowany_oscypek') && this.certyfikowanyOscypekShopProcs < 3) {
       this.gainMaxHp(2);
       this.certyfikowanyOscypekShopProcs += 1;
+
+      // Lista Zakupów: activate 30% discount + free removal on first shop visit
+      if (this.hasRelic('relic_boon_lista_zakupow') && !this.maryna.flags.listaFirstShopUsed) {
+        this.maryna.flags.listaFirstShopUsed = true;
+        this.maryna.flags.listaDiscountActive = true;
+        this.maryna.flags.listaFreeRemovalAvailable = true;
+      }
     }
 
     const cardPool = Object.keys(cardLibrary).filter(
@@ -1485,6 +1573,9 @@ export class GameState {
     if (this.hasRelic('zlota_karta_zakopianczyka')) {
       return Math.floor(base * 0.85);
     }
+    if (this.maryna.flags.listaDiscountActive) {
+      return Math.floor(base * 0.7);
+    }
     return base;
   }
 
@@ -1494,7 +1585,23 @@ export class GameState {
    */
   getShopRemovalPrice() {
     if (this.hasRelic('zlota_karta_zakopianczyka')) return 25;
+    if (this.maryna.flags.listaFreeRemovalAvailable && !this.maryna.flags.listaFreeRemovalUsed) {
+      return 0;
+    }
     return 100;
+  }
+
+  /**
+   * Marks a hand slot to be kept for next turn (smycz_zakopane).
+    /**
+     * Called after a card is removed in the shop.
+     * Marks lista_zakupow free removal as used and ends the discount.
+     */
+  afterShopCardRemoval() {
+    if (this.maryna.flags.listaFreeRemovalAvailable && !this.maryna.flags.listaFreeRemovalUsed) {
+      this.maryna.flags.listaFreeRemovalUsed = true;
+      this.maryna.flags.listaDiscountActive = false;
+    }
   }
 
   /**
@@ -1547,6 +1654,17 @@ export class GameState {
       }
     }
 
+    // Kiesa: +20 dutki on first non-event win
+    if (
+      this.hasRelic('relic_boon_kiesa') &&
+      !this.maryna.flags.kiesaFirstWinClaimed &&
+      this.battleContext !== 'event'
+    ) {
+      this.addDutki(20);
+      drop += 20;
+      this.maryna.flags.kiesaFirstWinClaimed = true;
+    }
+
     return drop;
   }
 
@@ -1576,6 +1694,25 @@ export class GameState {
     if (this.hasRelic('krzywy_portret')) {
       this.enemy.portraitShameTurns = 1;
       this._refreshEnemyIntent();
+    }
+
+    // ---- Maryna boon battle-start effects ----
+    if (this.hasRelic('relic_boon_zloty_rozaniec')) {
+      this.player.status.next_double = true;
+    }
+
+    if (this.hasRelic('relic_boon_tajny_skladnik')) {
+      this.applyEnemyDebuff('weak', 1);
+      this.applyEnemyDebuff('fragile', 1);
+    }
+
+    if (
+      this.hasRelic('relic_boon_sloik_rosolu') &&
+      (this.maryna.counters.rosolBattlesLeft ?? 3) > 0
+    ) {
+      this.maryna.counters.rosolBattlesLeft = (this.maryna.counters.rosolBattlesLeft ?? 3) - 1;
+      this.gainPlayerBlockFromCard(6);
+      this.player.status.strength += 1;
     }
   }
 
@@ -2662,11 +2799,15 @@ export class GameState {
     const currentNode = this.getCurrentMapNode();
     const isBossNode = currentNode?.type === 'boss';
     const isEliteNode = currentNode?.type === 'elite';
-    const nextEnemy = isBossNode
-      ? this.forceMainBossNextBattle
-        ? enemyLibrary.boss
-        : this._pickFinalBossDef()
-      : this._pickRandomEnemyDef(isEliteNode);
+    const forcedId = currentNode?.forcedEnemyId ?? null;
+    let nextEnemy;
+    if (forcedId && enemyLibrary[forcedId]) {
+      nextEnemy = enemyLibrary[forcedId];
+    } else if (isBossNode) {
+      nextEnemy = this.forceMainBossNextBattle ? enemyLibrary.boss : this._pickFinalBossDef();
+    } else {
+      nextEnemy = this._pickRandomEnemyDef(isEliteNode);
+    }
     if (isBossNode) {
       this.forceMainBossNextBattle = false;
     }
@@ -2836,6 +2977,7 @@ export class GameState {
     this.lastRegularEnemyId = 'cepr';
     this.activeEventId = null;
     this.recentEventIds = [];
+    this.maryna = { offeredIds: [], pickedId: null, flags: {}, counters: {} };
     this.jumpToBoss = false;
     this.forceMainBossNextBattle = false;
     this.currentWeather = 'clear';

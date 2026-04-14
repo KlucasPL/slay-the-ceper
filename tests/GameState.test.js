@@ -4,6 +4,7 @@ import { cardLibrary, startingDeck } from '../src/data/cards.js';
 import { enemyLibrary } from '../src/data/enemies.js';
 import { eventLibrary } from '../src/data/events.js';
 import { relicLibrary } from '../src/data/relics.js';
+import { marynaBoonLibrary } from '../src/data/marynaBoons.js';
 
 const mockPlayer = {
   name: 'Jędrek',
@@ -1581,10 +1582,10 @@ describe('GameState', () => {
       const startNodes = s.map[0].filter(Boolean);
       expect(startNodes).toHaveLength(1);
       expect(s.map[0][0]).toBeNull();
-      expect(s.map[0][1]?.type).toBe('fight');
+      expect(s.map[0][1]?.type).toBe('maryna');
       expect(s.map[0][2]).toBeNull();
       startNodes.forEach((node) => {
-        expect(node?.type).toBe('fight');
+        expect(node?.type).toBe('maryna');
         expect(node?.y).toBe(0);
         expect(node?.x).toBe(1);
       });
@@ -1847,10 +1848,12 @@ describe('GameState', () => {
     });
 
     it('all relics expose numeric shop price', () => {
-      Object.values(relicLibrary).forEach((relic) => {
-        expect(typeof relic.price).toBe('number');
-        expect(relic.price).toBeGreaterThan(0);
-      });
+      Object.values(relicLibrary)
+        .filter((relic) => !relic.marynaOnly)
+        .forEach((relic) => {
+          expect(typeof relic.price).toBe('number');
+          expect(relic.price).toBeGreaterThan(0);
+        });
     });
 
     it('all relics expose supported rarity values', () => {
@@ -1866,11 +1869,13 @@ describe('GameState', () => {
         rare: { min: 250, max: 350 },
       };
 
-      Object.values(relicLibrary).forEach((relic) => {
-        const range = ranges[relic.rarity];
-        expect(relic.price).toBeGreaterThanOrEqual(range.min);
-        expect(relic.price).toBeLessThanOrEqual(range.max);
-      });
+      Object.values(relicLibrary)
+        .filter((relic) => !relic.marynaOnly)
+        .forEach((relic) => {
+          const range = ranges[relic.rarity];
+          expect(relic.price).toBeGreaterThanOrEqual(range.min);
+          expect(relic.price).toBeLessThanOrEqual(range.max);
+        });
     });
 
     it('fiakier event heal choice costs 30 and heals up to max HP', () => {
@@ -3147,6 +3152,99 @@ describe('GameState', () => {
       const damageAfter = s.getEnemyIntentDamage();
       expect(s.enemy.hartDuchaTriggered).toBe(true);
       expect(damageAfter).toBeGreaterThan(damageBefore);
+    });
+  });
+
+  describe('Maryna boon system', () => {
+    it('map row 0 has a single maryna node at column 1', () => {
+      const s = freshState();
+      expect(s.map[0][0]).toBeNull();
+      expect(s.map[0][1]?.type).toBe('maryna');
+      expect(s.map[0][2]).toBeNull();
+    });
+
+    it('all row-1 fight nodes have forcedEnemyId cepr', () => {
+      const s = freshState();
+      s.map[1].forEach((node) => {
+        if (node && node.type === 'fight') {
+          expect(node.forcedEnemyId).toBe('cepr');
+        }
+      });
+    });
+
+    it('rollMarynaChoices returns 3 unique boon IDs', () => {
+      const s = freshState();
+      const ids = s.rollMarynaChoices(3);
+      expect(ids).toHaveLength(3);
+      expect(new Set(ids).size).toBe(3);
+      ids.forEach((id) => expect(marynaBoonLibrary[id]).toBeTruthy());
+    });
+
+    it('pickMarynaBoon stores pickedId and adds relic', () => {
+      const s = freshState();
+      const boonId = 'kiesa';
+      const result = s.pickMarynaBoon(boonId);
+      expect(result).toBe(true);
+      expect(s.maryna.pickedId).toBe(boonId);
+      expect(s.hasRelic('relic_boon_kiesa')).toBe(true);
+    });
+
+    it('pickMarynaBoon blocks a second pick', () => {
+      const s = freshState();
+      s.pickMarynaBoon('kiesa');
+      const second = s.pickMarynaBoon('mokra_sciera');
+      expect(second).toBe(false);
+      expect(s.maryna.pickedId).toBe('kiesa');
+    });
+
+    it('mokra_sciera grants +12 max HP immediately', () => {
+      const s = freshState();
+      const before = s.player.maxHp;
+      s.pickMarynaBoon('mokra_sciera');
+      expect(s.player.maxHp).toBe(before + 12);
+    });
+
+    it('kiesa grants +80 dutki immediately', () => {
+      const s = freshState();
+      s.dutki = 0;
+      s.pickMarynaBoon('kiesa');
+      expect(s.dutki).toBe(80);
+    });
+
+    it('sloik_rosolu sets rosolBattlesLeft to 3', () => {
+      const s = freshState();
+      s.pickMarynaBoon('sloik_rosolu');
+      expect(s.maryna.counters.rosolBattlesLeft).toBe(3);
+    });
+
+    it('przeglad_plecaka removes a starter and adds an uncommon card', () => {
+      const s = freshState();
+      s.deck = ['ciupaga', 'ciupaga', 'gasior'];
+      s.pickMarynaBoon('przeglad_plecaka');
+      const remainingStarters = s.deck.filter((id) =>
+        ['ciupaga', 'gasior', 'kierpce', 'hej'].includes(id)
+      );
+      expect(remainingStarters).toHaveLength(2);
+      const uncommons = s.deck.filter((id) => cardLibrary[id]?.rarity === 'uncommon');
+      expect(uncommons).toHaveLength(1);
+    });
+
+    it('marynaOnly relics are excluded from the available relic pool', () => {
+      const s = freshState();
+      const pool = s._buildAvailableRelicPool();
+      Object.keys(relicLibrary)
+        .filter((id) => relicLibrary[id]?.marynaOnly)
+        .forEach((id) => {
+          expect(pool).not.toContain(id);
+        });
+    });
+
+    it('resetForNewRun clears maryna state', () => {
+      const s = freshState();
+      s.pickMarynaBoon('kiesa');
+      s.resetForNewRun('easy');
+      expect(s.maryna.pickedId).toBeNull();
+      expect(s.maryna.offeredIds).toHaveLength(0);
     });
   });
 });

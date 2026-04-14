@@ -1,4 +1,5 @@
 import { cardLibrary, startingDeck } from '../data/cards.js';
+import { marynaBoonLibrary, marynaSvg } from '../data/marynaBoons.js';
 import { enemyLibrary } from '../data/enemies.js';
 import { relicLibrary } from '../data/relics.js';
 import {
@@ -2108,7 +2109,8 @@ export class UIManager {
         const isCurrent =
           levelIndex === this.state.currentLevel && nodeIndex === this.state.currentNodeIndex;
         const isDone = levelIndex < this.state.currentLevel;
-        const isInitialFight = canStartFirstFight && isCurrent && node.type === 'fight';
+        const isInitialFight =
+          canStartFirstFight && isCurrent && (node.type === 'fight' || node.type === 'maryna');
         const isSelectable =
           isInitialFight ||
           (this.state.hasStartedFirstBattle &&
@@ -2252,6 +2254,11 @@ export class UIManager {
       nodeIndex === this.state.currentNodeIndex;
 
     if (isInitialFight) {
+      const currentNode = this.state.map[this.state.currentLevel][this.state.currentNodeIndex];
+      if (currentNode?.type === 'maryna') {
+        this._openMarynaBoonOverlay();
+        return;
+      }
       this.state.hasStartedFirstBattle = true;
       this.state.currentScreen = 'battle';
       this._hideOverlay('map-overlay');
@@ -2312,6 +2319,47 @@ export class UIManager {
 
     this.state.currentScreen = 'map';
     this._openCampfire();
+  }
+
+  _openMarynaBoonOverlay() {
+    const overlay = document.getElementById('maryna-boon-overlay');
+    if (!overlay) return;
+
+    const imageEl = document.getElementById('maryna-boon-image');
+    if (imageEl) imageEl.innerHTML = marynaSvg;
+
+    const choiceIds = this.state.rollMarynaChoices(3);
+    const choicesEl = document.getElementById('maryna-boon-choices');
+    if (!choicesEl) return;
+    choicesEl.innerHTML = '';
+
+    choiceIds.forEach((boonId) => {
+      const boon = marynaBoonLibrary[boonId];
+      if (!boon) return;
+
+      const card = document.createElement('button');
+      card.type = 'button';
+      card.className = 'maryna-boon-card';
+      card.innerHTML = `
+        <span class="maryna-boon-emoji">${boon.emoji}</span>
+        <strong class="maryna-boon-name">${boon.name}</strong>
+        <em class="maryna-boon-flavor">${boon.flavor}</em>
+        <span class="maryna-boon-effect">${boon.effectDesc}</span>
+      `;
+
+      card.addEventListener('click', () => {
+        this.state.pickMarynaBoon(boonId);
+        this.state.hasStartedFirstBattle = true;
+        overlay.classList.add('hidden');
+        overlay.setAttribute('aria-hidden', 'true');
+        this._openMapOverlay();
+      });
+
+      choicesEl.appendChild(card);
+    });
+
+    overlay.classList.remove('hidden');
+    overlay.setAttribute('aria-hidden', 'false');
   }
 
   _handleMapAdvance() {
@@ -2698,6 +2746,7 @@ export class UIManager {
       return;
     }
     message.textContent = `Usunięto kartę: ${cardLibrary[cardId]?.name ?? cardId}`;
+    this.state.afterShopCardRemoval();
     this._renderShopOffers();
     this.updateUI();
   }

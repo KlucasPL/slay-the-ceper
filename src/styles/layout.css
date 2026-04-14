@@ -3021,5 +3021,65 @@ h1 {
   .pile-btn {
     width: 42px;
     height: 42px;
+
+    /* ── Maryna Boon Overlay ─────────────────────────────────────────── */
+
+    .maryna-boon-panel {
+      width: min(780px, 95vw);
+    }
+
+    .maryna-boon-choices {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 14px;
+      margin-top: 6px;
+    }
+
+    .maryna-boon-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      padding: 14px 12px;
+      border: 1px solid rgba(255, 220, 140, 0.4);
+      border-radius: 14px;
+      background: rgba(47, 28, 14, 0.88);
+      color: #f7ebd4;
+      cursor: pointer;
+      text-align: center;
+      transition:
+        transform 0.15s ease,
+        filter 0.15s ease,
+        border-color 0.15s ease;
+    }
+
+    .maryna-boon-card:hover {
+      transform: translateY(-2px);
+      filter: brightness(1.08);
+      border-color: rgba(255, 220, 140, 0.75);
+    }
+
+    .maryna-boon-emoji {
+      font-size: 2rem;
+      line-height: 1;
+    }
+
+    .maryna-boon-name {
+      font-size: 1rem;
+      color: #ffdd96;
+      font-weight: 700;
+    }
+
+    .maryna-boon-flavor {
+      font-size: 0.82rem;
+      color: #c8b89a;
+      font-style: italic;
+    }
+
+    .maryna-boon-effect {
+      font-size: 0.88rem;
+      color: #e8d9b8;
+      margin-top: 4px;
+    }
   }
 }

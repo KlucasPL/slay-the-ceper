@@ -5,6 +5,26 @@
 /** @type {ReleaseNoteEntry[]} */
 export const releaseNotesData = [
   {
+    version: 'v1.3.0 - Wyprawka od Maryny',
+    date: 'Czerwiec 2026',
+    changes: [
+      '👵 MARYNA: Przed pierwszą walką spotykasz Marynę – starą góralką, która wręcza Ci jeden z trzech specjalnych darów na drogę. Wybierz mądrze!',
+      '🎁 7 PAMIĄTEK MARYNY: Mokra ściora (+12 Max Krzepa), Kiesa (+80 Dutki + bonus po pierwszej walce), Przegląd Plecaka (wymień kartę startową na niepospolita), Słoik Rosołu (przez 3 walki: +6 Gardy i +1 Siły na start), Złoty Różaniec (podwajaj pierwszy atak każdej walki), Lista Zakupów (pierwsza wizyta w sklepie: 30% rabat na karty + darmowe usunięcie), Tajny Składnik (każda walka: Cepr zaczyna z -1 Słabości i -1 Kruchości).',
+      '⚔️ GWARANTOWANY CEPR: Po wyborze daru od Maryny, pierwszy prawdziwy przeciwnik to zawsze Cepr – żeby na spokojnie przetestować boon.',
+      '🏠 MAPA POPRAWIONA: Węzeł startowy mapy to teraz "Maryna" zamiast losowej walki – rysunek Maryny pojawia się w dedykowanym okienku wyboru.',
+    ],
+  },
+  {
+    version: 'v1.3.0 - Wyprawka od Maryny',
+    date: 'Czerwiec 2026',
+    changes: [
+      '👵 MARYNA: Przed pierwszą walką spotykasz Marynę – starą góralką, która wręcza Ci jeden z trzech specjalnych darów na drogę. Wybierz mądrze!',
+      '🎁 7 PAMIĄTEK MARYNY: Mokra ściora (+12 Max Krzepa), Kiesa (+80 Dutki + bonus po pierwszej walce), Przegląd Plecaka (wymień kartę startową na niepospolita), Słoik Rosołu (przez 3 walki: +6 Gardy i +1 Siły na start), Złoty Różaniec (podwajaj pierwszy atak każdej walki), Lista Zakupów (pierwsza wizyta w sklepie: 30% rabat na karty + darmowe usunięcie), Tajny Składnik (każda walka: Cepr zaczyna z -1 Słabości i -1 Kruchości).',
+      '⚔️ GWARANTOWANY CEPR: Po wyborze daru od Maryny, pierwszy prawdziwy przeciwnik to zawsze Cepr – żeby na spokojnie przetestować boon.',
+      '🏠 MAPA POPRAWIONA: Węzeł startowy mapy to teraz "Maryna" zamiast losowej walki – rysunek Maryny pojawia się w dedykowanym okienku wyboru.',
+    ],
+  },
+  {
     version: 'v1.2.6 - Wielkie szlify i czytelne karty',
     date: 'Kwiecień 2026',
     changes: [
