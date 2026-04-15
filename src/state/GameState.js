@@ -1765,7 +1765,7 @@ export class GameState {
           return { ...move, damage: Math.round(move.damage * scale * eliteDamageScale) };
         })
       : [];
-    const bossBaseHp = this.difficulty === 'hard' ? 330 : 230;
+    const bossBaseHp = this.difficulty === 'hard' ? 330 : 180;
     const baseMaxHp =
       this.difficulty === 'hard' && isFinalBossVariant
         ? bossBaseHp

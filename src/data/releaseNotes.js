@@ -5,6 +5,14 @@
 /** @type {ReleaseNoteEntry[]} */
 export const releaseNotesData = [
   {
+    version: 'v1.3.1 - Spokojniejszy finał wyprawy',
+    date: 'Czerwiec 2026',
+    changes: [
+      '👹 ŁAGODNIEJSI BOSSOWIE W TRYBIE PODSTAWOWYM: Fiakier spod Krupówek i Biały Misiek mają teraz po 50 Krzepy mniej w normalnej trudności, więc finał dalej boli, ale rzadziej kończy wyprawę jednym zbyt długim ścieraniem.',
+      '⚖️ CZYTELNIEJSZY PRÓG WYZWANIA: Tryb podstawowy lepiej oddziela się od hard mode, dzięki czemu łatwiej wejść w końcówkę runa bez poczucia, że oba poziomy trudności grają niemal tym samym finałem.',
+    ],
+  },
+  {
     version: 'v1.3.0 - Wyprawka od Maryny',
     date: 'Czerwiec 2026',
     changes: [
