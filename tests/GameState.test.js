@@ -2841,7 +2841,7 @@ describe('GameState', () => {
       s.resetBattle();
       expect(s.enemy.id).toBe('fiakier');
       expect(s.enemy.name).toBe('Fiakier spod Krupówek');
-      expect(s.enemy.maxHp).toBe(220);
+      expect(s.enemy.maxHp).toBe(180);
       expect(s.enemy.bossArtifact).toBe(0);
     });
 
