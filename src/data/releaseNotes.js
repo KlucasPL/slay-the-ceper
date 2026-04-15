@@ -6,15 +6,14 @@
 export const releaseNotesData = [
   {
     version: 'v1.3.1 - Spokojniejszy finał wyprawy',
-    date: 'Czerwiec 2026',
+    date: 'kwiecień 2026',
     changes: [
-      '👹 ŁAGODNIEJSI BOSSOWIE W TRYBIE PODSTAWOWYM: Fiakier spod Krupówek i Biały Misiek mają teraz po 50 Krzepy mniej w normalnej trudności, więc finał dalej boli, ale rzadziej kończy wyprawę jednym zbyt długim ścieraniem.',
-      '⚖️ CZYTELNIEJSZY PRÓG WYZWANIA: Tryb podstawowy lepiej oddziela się od hard mode, dzięki czemu łatwiej wejść w końcówkę runa bez poczucia, że oba poziomy trudności grają niemal tym samym finałem.',
+      '👹 ŁAGODNIEJSI BOSSOWIE: Fiakier spod Krupówek i Biały Misiek mają teraz po 50 Krzepy mniej, więc finał dalej boli, ale rzadziej kończy wyprawę jedną, zbyt długą walką.',
     ],
   },
   {
     version: 'v1.3.0 - Wyprawka od Maryny',
-    date: 'Czerwiec 2026',
+    date: 'kwiecień 2026',
     changes: [
       '👵 MARYNA: Przed pierwszą walką spotykasz Marynę – starą góralką, która wręcza Ci jeden z trzech specjalnych darów na drogę. Wybierz mądrze!',
       '🎁 7 PAMIĄTEK MARYNY: Mokra ściora (+12 Max Krzepa), Kiesa (+80 Dutki + bonus po pierwszej walce), Przegląd Plecaka (wymień kartę startową na niepospolitą), Słoik Rosołu (przez 3 walki: +6 Gardy i +1 Siły na start), Złoty Różaniec (podwajaj pierwsze trafienie atakiem w każdej walce), Lista Zakupów (pierwsza wizyta w sklepie: 30% rabat na karty + darmowe usunięcie), Tajny Składnik (każda walka: Cepr zaczyna z -1 Słabości i -1 Kruchości).',
