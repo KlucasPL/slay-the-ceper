@@ -114,8 +114,7 @@ export function renderStatuses(uiManager, containerId, status) {
 
   Object.entries(status).forEach(([key, rawValue]) => {
     const numericValue = typeof rawValue === 'boolean' ? (rawValue ? 1 : 0) : Number(rawValue ?? 0);
-    const shouldAlwaysShowPlayerLans = containerId === 'p-statuses' && key === 'lans';
-    if (numericValue <= 0 && !shouldAlwaysShowPlayerLans) return;
+    if (numericValue <= 0) return;
 
     const def = statusTooltipRegistry[key] ?? {
       icon: '🔹',
@@ -132,23 +131,9 @@ export function renderStatuses(uiManager, containerId, status) {
       } else {
         displayValue = numericValue;
       }
-    } else if (key === 'lans' && containerId === 'p-statuses') {
-      displayValue = numericValue > 0 ? 'ON' : 'OFF';
     }
 
-    const tooltipText =
-      key === 'lans' && containerId === 'p-statuses'
-        ? `${numericValue > 0 ? 'Teraz: AKTYWNY.' : 'Teraz: NIEAKTYWNY.'} ${def.tooltip}`
-        : def.tooltip;
-
-    tag(def.icon, def.label, displayValue, tooltipText);
-
-    if (key === 'lans' && containerId === 'p-statuses' && numericValue <= 0) {
-      const lastTag = el.lastElementChild;
-      if (lastTag instanceof HTMLElement) {
-        lastTag.classList.add('status-tag-inactive');
-      }
-    }
+    tag(def.icon, def.label, displayValue, def.tooltip);
   });
 
   // Sync sunglasses overlay visibility (skip if animation is in progress)
