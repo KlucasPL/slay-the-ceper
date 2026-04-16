@@ -411,7 +411,7 @@ export class UIManager {
       Number.isFinite(hardMinFromCss) && hardMinFromCss > 0 ? hardMinFromCss * rootFontPx : 8;
 
     let currentFontPx = baseFontPx;
-    const step = 0.5;
+    const step = 0.4;
     const hasOverflow = () =>
       descNode.scrollHeight > descNode.clientHeight + 1 ||
       descNode.scrollWidth > descNode.clientWidth + 1;
@@ -424,7 +424,7 @@ export class UIManager {
     if (hasOverflow()) {
       descNode.classList.add('card-desc--tight');
       while (currentFontPx > hardMinFontPx && hasOverflow()) {
-        currentFontPx = Math.max(hardMinFontPx, currentFontPx - 0.25);
+        currentFontPx = Math.max(hardMinFontPx, currentFontPx - 0.2);
         descNode.style.fontSize = `${currentFontPx}px`;
       }
     }
