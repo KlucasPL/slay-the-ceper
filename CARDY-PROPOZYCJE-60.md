@@ -34,7 +34,7 @@ Cel: po dodaniu tej puli laczna liczba dostepnych kart bez statusow ma wynosic 7
 4. ✓ **Tatrzanski Szpan** | attack | uncommon | koszt 2  
    Efekt: `Lans`: Zadaj 16 obrazen.
 
-5. **Ciupaga we Mgle** | attack | common | koszt 1  
+5. ✓ **Ciupaga we Mgle** | attack | common | koszt 1  
    Efekt: Zadaj 6 obrazen i naloz 1 `weak`. Jesli pogoda to `fog`, naloz tez 1 `fragile`.
 
 6. ✓ **Paradny Zwyrt** | attack | uncommon | koszt 1  
@@ -61,13 +61,13 @@ Cel: po dodaniu tej puli laczna liczba dostepnych kart bez statusow ma wynosic 7
 13. ✓ **Rachunek za Oddychanie** | attack | rare | koszt 2  
     Efekt: Zadaj 8 obrazen. Zwieksz aktualny Rachunek wroga o 25% (zaokraglajac w gore). Exhaust.
 
-14. **Przymusowe Morsowanie** | attack | common | koszt 1  
+14. ✓ **Przymusowe Morsowanie** | attack | common | koszt 1  
     Efekt: Zadaj 7 obrazen. Jesli pogoda to `frozen`, zadaj dodatkowe 7 i dobierz 1 karte.
 
 15. ✓ **Wepchniecie w Kolejke** | attack | common | koszt 1  
     Efekt: `Lans`: Naloz 1 `vulnerable` i dobierz 1 karte.
 
-16. **Lawina z Morskiego Oka** | attack | uncommon | koszt 2  
+16. ✓ **Lawina z Morskiego Oka** | attack | uncommon | koszt 2  
     Efekt: Zadaj 16 obrazen. Jesli pogoda to `frozen`, ta karta kosztuje 1.
 
 17. **Beczenie Redyku** | attack | common | koszt 1  
@@ -116,7 +116,7 @@ Cel: po dodaniu tej puli laczna liczba dostepnych kart bez statusow ma wynosic 7
 30. **Zamach znad Glodowki** | skill | uncommon | koszt 0  
     Efekt: Ustaw status `next_double` = true. Exhaust.
 
-31. **Punkt Widokowy** | skill | common | koszt 1  
+31. ✓ **Punkt Widokowy** | skill | common | koszt 1  
     Efekt: Dobierz 1 karte. Jesli pogoda to `clear`, dobierz jeszcze 1 karte.
 
 32. **Przymusowy Napiwek** | skill | uncommon | koszt 1  
@@ -125,7 +125,7 @@ Cel: po dodaniu tej puli laczna liczba dostepnych kart bez statusow ma wynosic 7
 33. **Wezwanie Przedsadowe** | skill | rare | koszt 2  
     Efekt: Zyskaj Garde rowna 1/3 aktualnego Rachunku wroga. Exhaust.
 
-34. **Zgubieni we Mgle** | skill | uncommon | koszt 1  
+34. ✓ **Zgubieni we Mgle** | skill | uncommon | koszt 1  
     Efekt: Jesli pogoda to `fog`, naloz 2 `weak`. W innym wypadku zyskaj 8 Gardy.
 
 35. **Przeliczanie Dutków** | skill | common | koszt 1  
@@ -162,10 +162,10 @@ Cel: po dodaniu tej puli laczna liczba dostepnych kart bez statusow ma wynosic 7
 44. **Goralska Goscinnosc** | power | rare | koszt 2  
     Efekt: Za kazda zagrana karte Ataku dodaj 2 do Rachunku wroga.
 
-45. **Znajomość Szlaku** | power | uncommon | koszt 1  
+45. ✓ **Znajomość Szlaku** | power | uncommon | koszt 1  
     Efekt: W pogodzie `fog` zyskujesz 5 Gardy na starcie swojej tury.
 
-46. **Kąpiel w Białce** | power | uncommon | koszt 1  
+46. ✓ **Kąpiel w Białce** | power | uncommon | koszt 1  
     Efekt: W pogodzie `frozen` naloz na wroga 1 `vulnerable` na starcie swojej tury.
 
 47. **Koncesja na Oscypki** | power | rare | koszt 2  

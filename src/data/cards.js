@@ -105,7 +105,7 @@ export const cardLibrary = {
     cost: 0,
     price: 50,
     emoji: '🍰',
-    desc: 'Zyskujesz 1 Oscypek. Przepado.',
+    desc: 'Zyskujesz 1 Oscypek.',
     exhaust: true,
     effect(state) {
       state.player.energy += 1;
@@ -178,7 +178,7 @@ export const cardLibrary = {
     cost: 3,
     price: 115,
     emoji: '🌍',
-    desc: 'Podwój obecny Rachunek wroga. PRZEPADO.',
+    desc: 'Podwój obecny Rachunek wroga.',
     exhaust: true,
     effect(state) {
       state.enemy.rachunek *= 2;
@@ -358,7 +358,7 @@ export const cardLibrary = {
     cost: 2,
     price: 130,
     emoji: '💪',
-    desc: 'Zadaje 10 obrażeń. Jeśli wróg pada: na stałe +2 do maksymalnej Krzepy. PRZEPADO.',
+    desc: 'Zadaje 10 obrażeń. Jeśli wróg pada: na stałe +2 do maksymalnej Krzepy.',
     exhaust: true,
     effect(state) {
       const dmg = state._calcAttackDamage(
@@ -440,7 +440,7 @@ export const cardLibrary = {
     cost: 2,
     price: 100,
     emoji: '🧊',
-    desc: 'Zadaje 8 obrażeń. Dodatkowo zadaje obrażenia równe połowie Twojej aktualnej Gardy. PRZEPADO.',
+    desc: 'Zadaje 8 obrażeń. Dodatkowo zadaje obrażenia równe połowie Twojej aktualnej Gardy.',
     exhaust: true,
     effect(state) {
       const bonus = Math.floor(state.player.block / 2);
@@ -521,7 +521,7 @@ export const cardLibrary = {
     cost: 0,
     price: 90,
     emoji: '😡',
-    desc: 'Do końca tury: +50% zadawanych obrażeń. Tracisz 3 Krzepy. PRZEPADO.',
+    desc: 'Do końca tury: +50% zadawanych obrażeń. Tracisz 3 Krzepy.',
     exhaust: true,
     effect(state) {
       state.player.status.furia_turysty = 1;
@@ -539,7 +539,7 @@ export const cardLibrary = {
     cost: 0,
     price: 135,
     emoji: '👁️',
-    desc: 'Dobierz 1. Jeśli to Atak, następny Atak w tej turze zadaje +2 obrażenia. PRZEPADO.',
+    desc: 'Dobierz 1. Jeśli to Atak, następny Atak w tej turze zadaje +2 obrażenia.',
     exhaust: true,
     effect(state) {
       const drawn = state._drawCards(1);
@@ -560,7 +560,7 @@ export const cardLibrary = {
     cost: 0,
     price: 1,
     emoji: '🩹',
-    desc: 'Dobierz 1. PRZEPADO.',
+    desc: 'Dobierz 1.',
     exhaust: true,
     effect(state) {
       state._drawCards(1);
@@ -579,7 +579,7 @@ export const cardLibrary = {
     exhaust: true,
     unplayable: true,
     emoji: '📄',
-    desc: 'Zapycha rękę. PRZEPADO.',
+    desc: 'Zapycha rękę.',
     effect(state) {
       void state;
       return { playerAnim: 'anim-block' };
@@ -687,7 +687,7 @@ export const cardLibrary = {
     cost: 2,
     price: 110,
     emoji: '💨',
-    desc: 'Zadaje 8 obrażeń. Zwiększa aktualny Rachunek wroga o 25% (zaokrąglając w górę). Przepada.',
+    desc: 'Zadaje 8 obrażeń. Zwiększa aktualny Rachunek wroga o 25% (zaokrąglając w górę).',
     tags: ['rachunek'],
     exhaust: true,
     effect(state) {
@@ -847,6 +847,164 @@ export const cardLibrary = {
       state.applyEnemyDebuff('vulnerable', 1);
       state._drawCards(1);
       return { playerAnim: 'anim-attack-p', enemyAnim: 'anim-block' };
+    },
+  },
+
+  ciupaga_we_mgle: {
+    id: 'ciupaga_we_mgle',
+    name: 'Ciupaga we Mgle',
+    type: 'attack',
+    rarity: 'common',
+    cost: 1,
+    price: 65,
+    emoji: '🌫️',
+    desc: 'Zadaje 6 obrażeń i nakłada 1 Słabość. Jeśli pogoda to mgła, nakłada też 1 Kruchość.',
+    tags: ['weather'],
+    effect(state) {
+      const dmg = state._calcAttackDamage(
+        state.player,
+        6 + state.getCardDamageBonus('ciupaga_we_mgle')
+      );
+      const damage = state._applyDamageToEnemy(dmg);
+      state.applyEnemyDebuff('weak', 1);
+      if (state.currentWeather === 'fog') {
+        state.applyEnemyDebuff('fragile', 1);
+      }
+      return {
+        playerAnim: 'anim-attack-p',
+        enemyAnim: damage.dealt > 0 ? 'anim-damage' : 'anim-block',
+        damage,
+      };
+    },
+  },
+
+  przymusowe_morsowanie: {
+    id: 'przymusowe_morsowanie',
+    name: 'Przymusowe Morsowanie',
+    type: 'attack',
+    rarity: 'common',
+    cost: 1,
+    price: 60,
+    emoji: '❄️',
+    desc: 'Zadaje 7 obrażeń. Jeśli pogoda to mróz, zadaje dodatkowo 7 obrażeń i dobiera 1 kartę.',
+    tags: ['weather'],
+    effect(state) {
+      const baseDmg = 7 + state.getCardDamageBonus('przymusowe_morsowanie');
+      let dmg = state._calcAttackDamage(state.player, baseDmg);
+      let damage = state._applyDamageToEnemy(dmg);
+
+      if (state.currentWeather === 'frozen') {
+        if (state.enemy.hp > 0) {
+          const dmg2 = state._calcAttackDamage(state.player, baseDmg);
+          const damage2 = state._applyDamageToEnemy(dmg2);
+          damage.dealt += damage2.dealt;
+          damage.blocked += damage2.blocked;
+          damage.raw += damage2.raw;
+        }
+        state._drawCards(1);
+      }
+      return {
+        playerAnim: 'anim-attack-p',
+        enemyAnim: damage.dealt > 0 ? 'anim-damage' : 'anim-block',
+        damage,
+      };
+    },
+  },
+
+  lawina_z_morskiego_oka: {
+    id: 'lawina_z_morskiego_oka',
+    name: 'Lawina z Morskiego Oka',
+    type: 'attack',
+    rarity: 'uncommon',
+    cost: 2,
+    price: 95,
+    emoji: '🏔️',
+    desc: 'Zadaje 16 obrażeń. Jeśli pogoda to mróz, karta kosztuje 1 Oscypek.',
+    tags: ['weather'],
+    effect(state) {
+      const dmg = state._calcAttackDamage(
+        state.player,
+        16 + state.getCardDamageBonus('lawina_z_morskiego_oka')
+      );
+      const damage = state._applyDamageToEnemy(dmg);
+      return {
+        playerAnim: 'anim-attack-p',
+        enemyAnim: damage.dealt > 0 ? 'anim-damage' : 'anim-block',
+        damage,
+      };
+    },
+  },
+
+  punkt_widokowy: {
+    id: 'punkt_widokowy',
+    name: 'Punkt Widokowy',
+    type: 'skill',
+    rarity: 'common',
+    cost: 1,
+    price: 50,
+    emoji: '👁️',
+    desc: 'Dobierz 1 kartę. Jeśli pogoda to słonecznie, dobierz jeszcze 1 kartę.',
+    tags: ['weather'],
+    effect(state) {
+      state._drawCards(1);
+      if (state.currentWeather === 'clear') {
+        state._drawCards(1);
+      }
+      return { playerAnim: 'anim-block' };
+    },
+  },
+
+  zgubieni_we_mgle: {
+    id: 'zgubieni_we_mgle',
+    name: 'Zgubieni we Mgle',
+    type: 'skill',
+    rarity: 'uncommon',
+    cost: 1,
+    price: 70,
+    emoji: '🌫️',
+    desc: 'Jeśli pogoda to mgła, nakłada na wroga 2 Słabości. W innym wypadku zyskujesz 8 Gardy.',
+    tags: ['weather'],
+    effect(state) {
+      if (state.currentWeather === 'fog') {
+        state.applyEnemyDebuff('weak', 2);
+      } else {
+        state.gainPlayerBlockFromCard(8);
+      }
+      return { playerAnim: 'anim-block' };
+    },
+  },
+
+  znajomosc_szlaku: {
+    id: 'znajomosc_szlaku',
+    name: 'Znajomość Szlaku',
+    type: 'power',
+    rarity: 'uncommon',
+    cost: 1,
+    price: 80,
+    emoji: '🗺️',
+    desc: 'W pogodzie mgły zyskujesz 5 Gardy na starcie swojej tury.',
+    tags: ['weather'],
+    exhaust: true,
+    effect(state) {
+      state.player.weather_fog_garda = true;
+      return { playerAnim: 'anim-block' };
+    },
+  },
+
+  kapiel_w_bialce: {
+    id: 'kapiel_w_bialce',
+    name: 'Kąpiel w Białce',
+    type: 'power',
+    rarity: 'uncommon',
+    cost: 1,
+    price: 80,
+    emoji: '🧊',
+    desc: 'W pogodzie mrozu nakładasz na wroga 1 Podatność na starcie swojej tury.',
+    tags: ['weather'],
+    exhaust: true,
+    effect(state) {
+      state.player.weather_frozen_vulnerable = true;
+      return { playerAnim: 'anim-block' };
     },
   },
 };

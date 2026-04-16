@@ -56,6 +56,9 @@ export function getCardCostInHand(state, cardId) {
   if (state.zegarekFreeSkillAvailable && card?.type === 'skill') {
     return 0;
   }
+  if (cardId === 'lawina_z_morskiego_oka' && state.currentWeather === 'frozen') {
+    return 1;
+  }
   return card?.cost ?? 0;
 }
 

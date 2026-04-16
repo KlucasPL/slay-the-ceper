@@ -3526,6 +3526,130 @@ describe('GameState', () => {
     });
   });
 
+  describe('new weather-based cards', () => {
+    it('ciupaga_we_mgle deals 6 damage + 1 weak, +1 fragile if fog', () => {
+      const s = freshState();
+      s.currentWeather = 'fog';
+      s.hand = ['ciupaga_we_mgle'];
+      const hpBefore = s.enemy.hp;
+      const weakBefore = s.enemy.status.weak;
+      s.playCard(0);
+      expect(s.enemy.status.weak).toBe(weakBefore + 1);
+      expect(s.enemy.hp).toBeLessThan(hpBefore);
+      expect(s.enemy.status.fragile).toBe(1);
+    });
+
+    it('ciupaga_we_mgle in clear weather applies only 1 weak (no fragile)', () => {
+      const s = freshState();
+      s.currentWeather = 'clear';
+      s.hand = ['ciupaga_we_mgle'];
+      const weakBefore = s.enemy.status.weak;
+      s.playCard(0);
+      expect(s.enemy.status.weak).toBe(weakBefore + 1);
+      expect(s.enemy.status.fragile).toBe(0);
+    });
+
+    it('przymusowe_morsowanie deals 7 damage, +7 + draw if frozen', () => {
+      const s = freshState();
+      s.currentWeather = 'frozen';
+      s.hand = ['przymusowe_morsowanie', 'ciupaga'];
+      const hpBefore = s.enemy.hp;
+      s.playCard(0);
+      expect(s.enemy.hp).toBeLessThan(hpBefore - 7);
+    });
+
+    it('przymusowe_morsowanie in clear weather deals only 7 damage', () => {
+      const s = freshState();
+      s.currentWeather = 'clear';
+      s.hand = ['przymusowe_morsowanie'];
+      const hpBefore = s.enemy.hp;
+      s.playCard(0);
+      expect(s.enemy.hp).toBe(hpBefore - 7);
+    });
+
+    it('lawina_z_morskiego_oka costs 2 normally', () => {
+      const s = freshState();
+      s.currentWeather = 'clear';
+      expect(s.getCardCostInHand('lawina_z_morskiego_oka')).toBe(2);
+    });
+
+    it('lawina_z_morskiego_oka costs 1 in frozen weather', () => {
+      const s = freshState();
+      s.currentWeather = 'frozen';
+      expect(s.getCardCostInHand('lawina_z_morskiego_oka')).toBe(1);
+    });
+
+    it('punkt_widokowy draws 1 card, +1 if clear', () => {
+      const s = freshState();
+      s.currentWeather = 'clear';
+      s.hand = ['punkt_widokowy', 'ciupaga'];
+      const handSizeBefore = s.hand.length;
+      s.playCard(0);
+      expect(s.hand.length).toBeGreaterThanOrEqual(handSizeBefore - 1 + 1);
+    });
+
+    it('punkt_widokowy draws only 1 in non-clear weather', () => {
+      const s = freshState();
+      s.currentWeather = 'fog';
+      s.hand = ['punkt_widokowy', 'ciupaga', 'gasior'];
+      const initialSize = s.hand.length;
+      s.playCard(0);
+      expect(s.hand.length).toBe(initialSize - 1 + 1);
+    });
+
+    it('zgubieni_we_mgle applies 2 weak in fog', () => {
+      const s = freshState();
+      s.currentWeather = 'fog';
+      s.hand = ['zgubieni_we_mgle'];
+      const weakBefore = s.enemy.status.weak;
+      s.playCard(0);
+      expect(s.enemy.status.weak).toBe(weakBefore + 2);
+    });
+
+    it('zgubieni_we_mgle grants 8 block in clear weather', () => {
+      const s = freshState();
+      s.currentWeather = 'clear';
+      s.hand = ['zgubieni_we_mgle'];
+      const blockBefore = s.player.block;
+      s.playCard(0);
+      expect(s.player.block).toBeGreaterThanOrEqual(blockBefore + 8);
+    });
+
+    it('znajomosc_szlaku sets weather_fog_garda flag', () => {
+      const s = freshState();
+      s.hand = ['znajomosc_szlaku'];
+      s.playCard(0);
+      expect(s.player.weather_fog_garda).toBe(true);
+      expect(s.exhaust).toContain('znajomosc_szlaku');
+    });
+
+    it('weather_fog_garda triggers at turn start in fog', () => {
+      const s = freshState();
+      s.player.weather_fog_garda = true;
+      s.currentWeather = 'fog';
+      const blockBefore = s.player.block;
+      s.startTurn();
+      expect(s.player.block).toBeGreaterThanOrEqual(blockBefore + 5);
+    });
+
+    it('kapiel_w_bialce sets weather_frozen_vulnerable flag', () => {
+      const s = freshState();
+      s.hand = ['kapiel_w_bialce'];
+      s.playCard(0);
+      expect(s.player.weather_frozen_vulnerable).toBe(true);
+      expect(s.exhaust).toContain('kapiel_w_bialce');
+    });
+
+    it('weather_frozen_vulnerable triggers at turn start in frozen', () => {
+      const s = freshState();
+      s.player.weather_frozen_vulnerable = true;
+      s.currentWeather = 'frozen';
+      const vulnBefore = s.enemy.status.vulnerable;
+      s.startTurn();
+      expect(s.enemy.status.vulnerable).toBe(vulnBefore + 1);
+    });
+  });
+
   describe('debug helpers', () => {
     it('setDebugMapRows clamps value to 10..25', () => {
       const s = freshState();

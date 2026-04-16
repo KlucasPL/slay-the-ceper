@@ -373,6 +373,14 @@ export function startTurn(state) {
   if (state.hasRelic('papryczka_marka')) {
     state.player.hp = Math.max(1, state.player.hp - 2);
   }
+
+  if (state.player.weather_fog_garda && state.currentWeather === 'fog') {
+    state.gainPlayerBlockFromCard(5);
+  }
+
+  if (state.player.weather_frozen_vulnerable && state.currentWeather === 'frozen') {
+    state.applyEnemyDebuff('vulnerable', 1);
+  }
 }
 
 /**
