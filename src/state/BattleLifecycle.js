@@ -50,6 +50,7 @@ export function resetBattle(state) {
   state.enemyBankruptcyPending = false;
   state.enemyBankruptcyBonus = 0;
   state.lansBreakEvent = false;
+  state.lansActivatedEvent = false;
   state.lansDutkiSpentEvent = 0;
   state.rachunekResistEvent = false;
   state.dumaPodhalaActive = false;
@@ -207,6 +208,7 @@ export function resetForNewRun(state, startingDeck) {
   state.enemyBankruptcyPending = false;
   state.enemyBankruptcyBonus = 0;
   state.lansBreakEvent = false;
+  state.lansActivatedEvent = false;
   state.lansDutkiSpentEvent = 0;
   state.rachunekResistEvent = false;
   state.hasStartedFirstBattle = false;

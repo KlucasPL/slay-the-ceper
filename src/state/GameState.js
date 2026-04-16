@@ -178,6 +178,8 @@ export class GameState {
     this.enemyBankruptcyBonus = 0;
     /** @type {boolean} */
     this.lansBreakEvent = false;
+    /** @type {boolean} One-shot flag for UI messaging when Lans becomes active */
+    this.lansActivatedEvent = false;
     /** @type {number} One-shot accumulator for Dutki consumed by active Lans */
     this.lansDutkiSpentEvent = 0;
     /** @type {boolean} One-shot flag for messaging when enemy resists rachunek win condition */
@@ -544,6 +546,13 @@ export class GameState {
     if (!this.lansBreakEvent) return null;
     this.lansBreakEvent = false;
     return 'BANKRUT!';
+  }
+
+  /** @returns {boolean} */
+  consumeLansActivatedEvent() {
+    if (!this.lansActivatedEvent) return false;
+    this.lansActivatedEvent = false;
+    return true;
   }
 
   /** @returns {number} */
@@ -1281,5 +1290,27 @@ export class GameState {
    */
   applyEnemyDebugStatus(status, amount) {
     enemyState.applyEnemyDebugStatus(this, status, amount);
+  }
+
+  /**
+   * @param {'strength' | 'weak' | 'fragile' | 'vulnerable' | 'next_double' | 'energy_next_turn' | 'lans' | 'duma_podhala' | 'furia_turysty'} status
+   * @param {number} amount
+   */
+  applyPlayerDebugStatus(status, amount) {
+    if (status === 'lans') {
+      const wasActive = this._isLansActive();
+      const willBeActive = amount > 0;
+      this._setLansActive(willBeActive);
+      if (!wasActive && willBeActive) this.lansActivatedEvent = true;
+      if (wasActive && !willBeActive) this.lansBreakEvent = true;
+      return;
+    }
+    if (status === 'next_double') {
+      this.player.status.next_double = amount > 0;
+      return;
+    }
+    if (Object.prototype.hasOwnProperty.call(this.player.status, status)) {
+      this.player.status[status] = Math.max(0, Number(amount));
+    }
   }
 }

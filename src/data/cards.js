@@ -2,7 +2,7 @@
  * @typedef {{ strength: number, weak: number, fragile: number, vulnerable: number, next_double: boolean, energy_next_turn: number, lans: number, duma_podhala: number, furia_turysty: number }} StatusDef
  * @typedef {{ playerAnim?: string, enemyAnim?: string, damage?: { raw: number, blocked: number, dealt: number } }} CardEffectResult
  * @typedef {'common' | 'uncommon' | 'rare'} RarityDef
- * @typedef {{ id: string, name: string, type: 'attack' | 'skill' | 'status' | 'power', cost: number, price: number, rarity: RarityDef, emoji: string, desc: string, isStarter?: boolean, eventOnly?: boolean, tutorialOnly?: boolean, exhaust?: boolean, unplayable?: boolean, effect: (state: import('../state/GameState.js').GameState) => CardEffectResult }} CardDef
+ * @typedef {{ id: string, name: string, type: 'attack' | 'skill' | 'status' | 'power', cost: number, price: number, rarity: RarityDef, emoji: string, desc: string, tags?: string[], isStarter?: boolean, eventOnly?: boolean, tutorialOnly?: boolean, exhaust?: boolean, unplayable?: boolean, effect: (state: import('../state/GameState.js').GameState) => CardEffectResult }} CardDef
  */
 
 /** @type {Record<string, CardDef>} */
@@ -197,7 +197,11 @@ export const cardLibrary = {
     desc: 'Zyskaj status Lans (obrażenia najpierw w dutki, potem w Krzepę).',
     exhaust: true,
     effect(state) {
-      state.player.status.lans = 1;
+      const wasActive = state.player.status.lans > 0;
+      state._setLansActive(true);
+      if (!wasActive) {
+        state.lansActivatedEvent = true;
+      }
       return { playerAnim: 'anim-block' };
     },
   },
@@ -206,6 +210,7 @@ export const cardLibrary = {
     name: 'Zdjęcie z Misiem',
     type: 'skill',
     rarity: 'uncommon',
+    tags: ['lans'],
     cost: 1,
     price: 80,
     emoji: '📸',

@@ -42,7 +42,8 @@ export const statusTooltipRegistry = {
   lans: {
     icon: '🕶️',
     label: 'Lans',
-    tooltip: 'LANS: Otrzymujesz obrażenia w Dutkach zamiast Krzepy. Szpan kosztuje!',
+    tooltip:
+      'LANS: Gdy aktywny, obrażenia trafiają najpierw w Dutki zamiast Krzepy. Karty z tagiem Lans: bez aktywnego Lansu tylko włączają Lans (pomijają efekt główny), z aktywnym Lansem działają normalnie.',
     showNumericValue: false,
   },
   stunned: {

@@ -1119,6 +1119,15 @@ export class UIManager {
     if (refreshMap) {
       this.refreshMapOverlay();
     }
+    if (this.state.consumeLansActivatedEvent()) {
+      combatUI.triggerLansOnAnimation();
+      combatUI.showFloatingText(this, 'sprite-player', 'JEST LANS!', 'floating-lans');
+    }
+    const lansBreakText = this.state.consumeLansBreakEvent();
+    if (lansBreakText) {
+      combatUI.triggerLansOffAnimation();
+      combatUI.showFloatingText(this, 'sprite-player', lansBreakText, 'floating-shame');
+    }
     this.updateUI();
     if (!checkWin) return;
     const win = this.state.checkWinCondition();

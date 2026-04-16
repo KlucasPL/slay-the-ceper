@@ -1,3 +1,43 @@
+/** Drops sunglasses onto player sprite and flashes the screen gold. */
+export function triggerLansOnAnimation() {
+  const el = document.getElementById('lans-sunglasses');
+  if (!el) return;
+  el.dataset.lansAnimating = 'on';
+  el.classList.remove('lans-falling');
+  el.classList.add('lans-dropping');
+  el.addEventListener(
+    'animationend',
+    () => {
+      el.classList.remove('lans-dropping');
+      el.classList.add('lans-active');
+      delete el.dataset.lansAnimating;
+    },
+    { once: true }
+  );
+
+  const flash = document.createElement('div');
+  flash.className = 'lans-screen-flash';
+  document.body.appendChild(flash);
+  flash.addEventListener('animationend', () => flash.remove(), { once: true });
+}
+
+/** Knocks sunglasses off the player sprite. */
+export function triggerLansOffAnimation() {
+  const el = document.getElementById('lans-sunglasses');
+  if (!el) return;
+  el.dataset.lansAnimating = 'off';
+  el.classList.remove('lans-dropping');
+  el.classList.add('lans-active', 'lans-falling');
+  el.addEventListener(
+    'animationend',
+    () => {
+      el.classList.remove('lans-falling', 'lans-active');
+      delete el.dataset.lansAnimating;
+    },
+    { once: true }
+  );
+}
+
 /**
  * @param {any} uiManager
  * @param {number} handIndex
@@ -31,6 +71,10 @@ export function handlePlayCard(uiManager, handIndex) {
 
   const { effect } = result;
   uiManager._handleTutorialCardPlayed(selectedCardId);
+  if (uiManager.state.consumeLansActivatedEvent()) {
+    triggerLansOnAnimation();
+    showFloatingText(uiManager, 'sprite-player', 'JEST LANS!', 'floating-lans');
+  }
   const missEvent = uiManager.state.consumeWeatherMissEvent();
   if (missEvent) {
     uiManager.audioManager.playMissSound();
@@ -122,6 +166,7 @@ export function handleEndTurn(uiManager) {
   }
   const lansBreakText = uiManager.state.consumeLansBreakEvent();
   if (lansBreakText) {
+    triggerLansOffAnimation();
     showFloatingText(uiManager, 'sprite-player', lansBreakText, 'floating-shame');
   }
   showLansDutkiSpentFeedback(uiManager);

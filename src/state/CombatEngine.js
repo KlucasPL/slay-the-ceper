@@ -383,6 +383,9 @@ export function startTurn(state) {
 export function playCard(state, handIndex) {
   const cardId = state.hand[handIndex];
   const card = cardLibrary[cardId];
+  const isLansTaggedCard = Array.isArray(card?.tags) && card.tags.includes('lans');
+  const lansWasActiveBeforePlay = state._isLansActive();
+  const activateLansOnly = isLansTaggedCard && !lansWasActiveBeforePlay;
   const actualCost = state.getCardCostInHand(cardId);
   if (!card || state.player.energy < actualCost) return { success: false };
   if (card.unplayable) return { success: false };
@@ -431,9 +434,16 @@ export function playCard(state, handIndex) {
     state.discard.push(cardId);
   }
 
-  const effect = card.effect(state);
+  let effect;
+  if (activateLansOnly) {
+    state._setLansActive(true);
+    state.lansActivatedEvent = true;
+    effect = { playerAnim: 'anim-block' };
+  } else {
+    effect = card.effect(state);
+  }
 
-  if (isFirstCardThisBattle && state.enemy.hp > 0) {
+  if (isFirstCardThisBattle && state.enemy.hp > 0 && !activateLansOnly) {
     card.effect(state);
   }
 
