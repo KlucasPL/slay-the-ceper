@@ -5,6 +5,16 @@
 /** @type {ReleaseNoteEntry[]} */
 export const releaseNotesData = [
   {
+    version: 'v1.5.0 - Nowa paczka kart',
+    date: 'kwiecień 2026',
+    changes: [
+      '🃏 NOWE KARTY: Dodano 35 kart łącznie (19 Ataków, 8 Skilli, 8 Mocy).',
+      '⚔️ ATAKI: Wydruk z Kasy, Rozpęd z Równi, Krzesany, Tatrzanski Szpan, Ciupaga we Mgle, Paradny Zwyrt, Nadplacony Bilet, Z Rozmachu, Eksmisja z Kwatery, Cios z Telemarkiem, Wymuszony Napiwek, Mlynek Ciupaga, Rachunek za Oddychanie, Przymusowe Morsowanie, Wepchniecie w Kolejke, Lawina z Morskiego Oka, Beczenie Redyku, Skrupulatne Wyliczenie, Paragon Grozy.',
+      '🛡️ SKILLE: Pogodzenie Sporów, Zapas Oscypków, Wdech Halnego, Punkt Widokowy, Przymusowy Napiwek, Zgubieni we Mgle, List od Maryny, Dutki na Stole.',
+      '✨ MOCE: Pan na Włościach, Czas na Fajkę, Zimna Krew, Góralska Gościnność, Znajomość Szlaku, Kąpiel w Białce, Koncesja na Oscypki, Baciarka Ciesy.',
+    ],
+  },
+  {
     version: 'v1.4.0 - Lans na pełnym gazie',
     date: 'kwiecień 2026',
     changes: [
