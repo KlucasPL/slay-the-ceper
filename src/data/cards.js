@@ -615,7 +615,10 @@ export const cardLibrary = {
     desc: 'Zadaje 6 obrażeń. Dodaje 4 do Rachunku wroga.',
     tags: ['rachunek'],
     effect(state) {
-      const dmg = state._calcAttackDamage(state.player, 6 + state.getCardDamageBonus('wydruk_z_kasy'));
+      const dmg = state._calcAttackDamage(
+        state.player,
+        6 + state.getCardDamageBonus('wydruk_z_kasy')
+      );
       const damage = state._applyDamageToEnemy(dmg);
       state.addEnemyRachunek(4);
       return {
@@ -660,7 +663,10 @@ export const cardLibrary = {
     desc: 'Zadaje 12 obrażeń. Jeśli wróg ma Słabość, dodaje 10 do Rachunku.',
     tags: ['rachunek'],
     effect(state) {
-      const dmg = state._calcAttackDamage(state.player, 12 + state.getCardDamageBonus('eksmisja_z_kwatery'));
+      const dmg = state._calcAttackDamage(
+        state.player,
+        12 + state.getCardDamageBonus('eksmisja_z_kwatery')
+      );
       const damage = state._applyDamageToEnemy(dmg);
       if (state.enemy.status.weak > 0) {
         state.addEnemyRachunek(10);
@@ -685,7 +691,10 @@ export const cardLibrary = {
     tags: ['rachunek'],
     exhaust: true,
     effect(state) {
-      const dmg = state._calcAttackDamage(state.player, 8 + state.getCardDamageBonus('rachunek_za_oddychanie'));
+      const dmg = state._calcAttackDamage(
+        state.player,
+        8 + state.getCardDamageBonus('rachunek_za_oddychanie')
+      );
       const damage = state._applyDamageToEnemy(dmg);
       const increase = Math.ceil(state.enemy.rachunek * 0.25);
       state.addEnemyRachunek(increase);
@@ -732,7 +741,10 @@ export const cardLibrary = {
     desc: 'LANS: Zadaje 16 obrażeń.',
     tags: ['lans'],
     effect(state) {
-      const dmg = state._calcAttackDamage(state.player, 16 + state.getCardDamageBonus('tatrzanski_szpan'));
+      const dmg = state._calcAttackDamage(
+        state.player,
+        16 + state.getCardDamageBonus('tatrzanski_szpan')
+      );
       const damage = state._applyDamageToEnemy(dmg);
       return {
         playerAnim: 'anim-attack-p',
@@ -753,7 +765,10 @@ export const cardLibrary = {
     desc: 'LANS: Zadaje 12 obrażeń, dobiera 1 kartę.',
     tags: ['lans'],
     effect(state) {
-      const dmg = state._calcAttackDamage(state.player, 12 + state.getCardDamageBonus('paradny_zwyrt'));
+      const dmg = state._calcAttackDamage(
+        state.player,
+        12 + state.getCardDamageBonus('paradny_zwyrt')
+      );
       const damage = state._applyDamageToEnemy(dmg);
       state._drawCards(1);
       return {
@@ -775,7 +790,10 @@ export const cardLibrary = {
     desc: 'LANS: Zadaje 9 obrażeń.',
     tags: ['lans'],
     effect(state) {
-      const dmg = state._calcAttackDamage(state.player, 9 + state.getCardDamageBonus('cios_z_telemarkiem'));
+      const dmg = state._calcAttackDamage(
+        state.player,
+        9 + state.getCardDamageBonus('cios_z_telemarkiem')
+      );
       const damage = state._applyDamageToEnemy(dmg);
       return {
         playerAnim: 'anim-attack-p',

@@ -3454,7 +3454,6 @@ describe('GameState', () => {
       s.player.status.lans = 1;
       s.hand = ['paradny_zwyrt', 'ciupaga', 'gasior'];
       const handSizeBefore = s.hand.length;
-      const deckSizeBefore = s.deck.length;
       const enemyHpBefore = s.enemy.hp;
       s.playCard(0);
       expect(s.enemy.hp).toBeLessThan(enemyHpBefore);
