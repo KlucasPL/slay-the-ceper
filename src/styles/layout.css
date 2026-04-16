@@ -702,6 +702,7 @@ h1 {
 .card-rarity,
 .reward-rarity,
 .shop-item-rarity {
+  --card-rarity-min-size: 0.5rem;
   text-align: center;
   font-size: 0.62rem;
   font-weight: 600;
@@ -753,11 +754,17 @@ h1 {
 }
 
 .card-title {
+  --card-title-min-size: 0.84rem;
+  --card-title-hard-min-size: 0.76rem;
   text-align: center;
   font-weight: bold;
   margin-top: 25px;
+  margin-bottom: 2px;
   border-bottom: 2px solid #ccc;
-  padding-bottom: 5px;
+  padding-bottom: 4px;
+  font-size: clamp(0.95rem, 5.8cqw, 1.18rem);
+  line-height: 1.08;
+  text-wrap: balance;
   flex: 0 0 auto;
 }
 .card-img {
@@ -784,6 +791,7 @@ h1 {
 }
 
 .card-icon {
+  --card-icon-min-size: 1.02rem;
   display: inline-block;
   max-width: 100%;
   width: auto;
@@ -795,7 +803,7 @@ h1 {
 .card-desc {
   --card-desc-base-size: clamp(0.72rem, 5.4cqw, 0.98rem);
   --card-desc-min-size: 0.62rem;
-  --card-desc-hard-min-size: 0.5rem;
+  --card-desc-hard-min-size: 0.46rem;
   font-size: var(--card-desc-base-size);
   font-weight: 700;
   line-height: 1.15;
