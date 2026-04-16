@@ -385,47 +385,125 @@ export class UIManager {
   }
 
   _fitCardDescriptions() {
-    const descNodes = document.querySelectorAll('.card .card-desc');
-    descNodes.forEach((descEl) => {
-      this._fitSingleCardDescription(descEl);
+    const cardNodes = document.querySelectorAll('.card');
+    cardNodes.forEach((cardEl) => {
+      this._fitSingleCardDescription(cardEl);
     });
   }
 
   /**
-   * @param {Element} descNode
+   * @param {Element} cardNode
    */
-  _fitSingleCardDescription(descNode) {
+  _fitSingleCardDescription(cardNode) {
+    if (!(cardNode instanceof HTMLElement)) return;
+
+    const descNode = cardNode.querySelector('.card-desc');
     if (!(descNode instanceof HTMLElement)) return;
+    const titleNode = cardNode.querySelector('.card-title');
+    const rarityNode = cardNode.querySelector('.card-rarity');
+    const iconNode = cardNode.querySelector('.card-icon');
 
     descNode.classList.remove('card-desc--autoscaled');
     descNode.classList.remove('card-desc--tight');
     descNode.style.removeProperty('font-size');
+    titleNode?.style.removeProperty('font-size');
+    rarityNode?.style.removeProperty('font-size');
+    iconNode?.style.removeProperty('font-size');
 
-    const styles = getComputedStyle(descNode);
-    const baseFontPx = parseFloat(styles.fontSize) || 14;
-    const minFromCss = parseFloat(styles.getPropertyValue('--card-desc-min-size'));
-    const hardMinFromCss = parseFloat(styles.getPropertyValue('--card-desc-hard-min-size'));
+    const descStyles = getComputedStyle(descNode);
+    const titleStyles = titleNode ? getComputedStyle(titleNode) : null;
+    const rarityStyles = rarityNode ? getComputedStyle(rarityNode) : null;
+    const iconStyles = iconNode ? getComputedStyle(iconNode) : null;
+
+    const baseFontPx = parseFloat(descStyles.fontSize) || 14;
+    const minFromCss = parseFloat(descStyles.getPropertyValue('--card-desc-min-size'));
+    const hardMinFromCss = parseFloat(descStyles.getPropertyValue('--card-desc-hard-min-size'));
     const rootFontPx = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+
     const minFontPx = Number.isFinite(minFromCss) && minFromCss > 0 ? minFromCss * rootFontPx : 9;
     const hardMinFontPx =
       Number.isFinite(hardMinFromCss) && hardMinFromCss > 0 ? hardMinFromCss * rootFontPx : 8;
 
+    const titleBasePx = titleStyles ? parseFloat(titleStyles.fontSize) || 16 : 0;
+    const titleMinRem = titleStyles
+      ? parseFloat(titleStyles.getPropertyValue('--card-title-min-size'))
+      : NaN;
+    const titleHardMinRem = titleStyles
+      ? parseFloat(titleStyles.getPropertyValue('--card-title-hard-min-size'))
+      : NaN;
+    const titleMinPx =
+      Number.isFinite(titleMinRem) && titleMinRem > 0 ? titleMinRem * rootFontPx : 12;
+    const titleHardMinPx =
+      Number.isFinite(titleHardMinRem) && titleHardMinRem > 0 ? titleHardMinRem * rootFontPx : 11;
+
+    const rarityBasePx = rarityStyles ? parseFloat(rarityStyles.fontSize) || 10 : 0;
+    const rarityMinRem = rarityStyles
+      ? parseFloat(rarityStyles.getPropertyValue('--card-rarity-min-size'))
+      : NaN;
+    const rarityMinPx =
+      Number.isFinite(rarityMinRem) && rarityMinRem > 0 ? rarityMinRem * rootFontPx : 8;
+
+    const iconBasePx = iconStyles ? parseFloat(iconStyles.fontSize) || 24 : 0;
+    const iconMinRem = iconStyles
+      ? parseFloat(iconStyles.getPropertyValue('--card-icon-min-size'))
+      : NaN;
+    const iconMinPx = Number.isFinite(iconMinRem) && iconMinRem > 0 ? iconMinRem * rootFontPx : 16;
+
     let currentFontPx = baseFontPx;
-    const step = 0.5;
+    let currentTitlePx = titleBasePx;
+    let currentRarityPx = rarityBasePx;
+    let currentIconPx = iconBasePx;
+
+    const step = 0.3;
+    const titleStep = 0.25;
+    const iconStep = 0.75;
+
     const hasOverflow = () =>
       descNode.scrollHeight > descNode.clientHeight + 1 ||
       descNode.scrollWidth > descNode.clientWidth + 1;
 
-    while (currentFontPx > minFontPx && hasOverflow()) {
+    const cardHasOverflow = () =>
+      cardNode.scrollHeight > cardNode.clientHeight + 1 ||
+      cardNode.scrollWidth > cardNode.clientWidth + 1 ||
+      hasOverflow();
+
+    while (currentFontPx > minFontPx && cardHasOverflow()) {
       currentFontPx = Math.max(minFontPx, currentFontPx - step);
       descNode.style.fontSize = `${currentFontPx}px`;
     }
 
-    if (hasOverflow()) {
+    if (cardHasOverflow()) {
       descNode.classList.add('card-desc--tight');
-      while (currentFontPx > hardMinFontPx && hasOverflow()) {
-        currentFontPx = Math.max(hardMinFontPx, currentFontPx - 0.25);
+
+      while (currentFontPx > hardMinFontPx && cardHasOverflow()) {
+        currentFontPx = Math.max(hardMinFontPx, currentFontPx - 0.2);
         descNode.style.fontSize = `${currentFontPx}px`;
+      }
+    }
+
+    if (titleNode) {
+      while (currentTitlePx > titleMinPx && cardHasOverflow()) {
+        currentTitlePx = Math.max(titleMinPx, currentTitlePx - titleStep);
+        titleNode.style.fontSize = `${currentTitlePx}px`;
+      }
+
+      while (currentTitlePx > titleHardMinPx && cardHasOverflow()) {
+        currentTitlePx = Math.max(titleHardMinPx, currentTitlePx - 0.2);
+        titleNode.style.fontSize = `${currentTitlePx}px`;
+      }
+    }
+
+    if (rarityNode) {
+      while (currentRarityPx > rarityMinPx && cardHasOverflow()) {
+        currentRarityPx = Math.max(rarityMinPx, currentRarityPx - 0.2);
+        rarityNode.style.fontSize = `${currentRarityPx}px`;
+      }
+    }
+
+    if (iconNode) {
+      while (currentIconPx > iconMinPx && cardHasOverflow()) {
+        currentIconPx = Math.max(iconMinPx, currentIconPx - iconStep);
+        iconNode.style.fontSize = `${currentIconPx}px`;
       }
     }
 

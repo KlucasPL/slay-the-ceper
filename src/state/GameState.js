@@ -783,7 +783,8 @@ export class GameState {
    * @param {number} amount
    */
   applyEnemyDebuff(key, amount) {
-    enemyState.applyEnemyDebuff(this, key, amount);
+    const bonus = key === 'weak' && this.player.zimna_krew ? 1 : 0;
+    enemyState.applyEnemyDebuff(this, key, amount + bonus);
   }
 
   /**

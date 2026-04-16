@@ -92,7 +92,7 @@ export function applyDamageToEnemy(state, dmg) {
   ) {
     if (!state.combat.playerAttackMissRolled) {
       state.combat.playerAttackMissRolled = true;
-      state.combat.playerAttackMissed = Math.random() < 0.5;
+      state.combat.playerAttackMissed = Math.random() < 0.25;
       if (state.combat.playerAttackMissed) {
         state._registerWeatherMiss('enemy');
       }
@@ -212,7 +212,7 @@ export function applyEnemyIntent(state) {
 
   if (!state.combat.firstAttackUsed) {
     state.combat.firstAttackUsed = true;
-    if (state.currentWeather === 'fog' && Math.random() < 0.5) {
+    if (state.currentWeather === 'fog' && Math.random() < 0.25) {
       state._registerWeatherMiss('player');
       return { raw: 0, blocked: 0, dealt: 0 };
     }
@@ -344,7 +344,6 @@ export function startTurn(state) {
   state.zegarekFreeSkillAvailable =
     state.hasRelic('goralski_zegarek') && state.battleTurnsElapsed % 2 === 0;
 
-  state._applyHalnyBlockDrain(state.player);
   state.player.energy = state.player.maxEnergy + state.player.status.energy_next_turn;
   state.player.status.energy_next_turn = 0;
   state.player.block = 0;
@@ -372,6 +371,19 @@ export function startTurn(state) {
 
   if (state.hasRelic('papryczka_marka')) {
     state.player.hp = Math.max(1, state.player.hp - 2);
+  }
+
+  if (state.player.koncesja_na_oscypki && state.enemy.rachunek >= 25) {
+    state.player.energy += 1;
+    state._drawCards(1);
+  }
+
+  if (state.player.weather_fog_garda && state.currentWeather === 'fog') {
+    state.gainPlayerBlockFromCard(5);
+  }
+
+  if (state.player.weather_frozen_vulnerable && state.currentWeather === 'frozen') {
+    state.applyEnemyDebuff('vulnerable', 1);
   }
 }
 
@@ -445,6 +457,10 @@ export function playCard(state, handIndex) {
 
   if (isFirstCardThisBattle && state.enemy.hp > 0 && !activateLansOnly) {
     card.effect(state);
+  }
+
+  if (card.type === 'attack' && state.player.goralska_goscinnosc) {
+    state.addEnemyRachunek(2);
   }
 
   if (state.hasRelic('ciupaga_dlugopis') && card.type === 'skill') {
@@ -532,6 +548,17 @@ export function endTurn(state) {
     }
   }
 
+  if (state.player.czas_na_fajke && state.player.block > 10) {
+    const hpBefore = state.player.hp;
+    state.healPlayer(2);
+    const healed = state.player.hp - hpBefore;
+    if (healed > 0 && !playerPassiveHeal) {
+      playerPassiveHeal = { amount: healed, text: `+${healed} Krzepy (Czas na Fajkę)` };
+    }
+  }
+
+  state._applyHalnyBlockDrain(state.player);
+
   /** @type {{ amount: number, text: string } | null} */
   let enemyPassiveHeal = null;
   if (state.enemy.id === 'baba' && !state.enemy.tookHpDamageThisTurn) {
@@ -558,7 +585,6 @@ export function endTurn(state) {
     };
   }
 
-  state._applyHalnyBlockDrain(state.enemy);
   state.enemy.block = 0;
 
   if (state.enemy.passive === 'parcie_na_szklo' && state._isLansActive()) {
@@ -595,6 +621,9 @@ export function endTurn(state) {
         : state.enemy.pattern;
     state.enemy.patternIndex = (state.enemy.patternIndex + 1) % activePattern.length;
   }
+
+  state._applyHalnyBlockDrain(state.enemy);
+
   state._refreshEnemyIntent();
 
   return { enemyAttack, enemyPassiveHeal, playerPassiveHeal };

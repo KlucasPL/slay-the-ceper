@@ -56,6 +56,12 @@ export function getCardCostInHand(state, cardId) {
   if (state.zegarekFreeSkillAvailable && card?.type === 'skill') {
     return 0;
   }
+  if (cardId === 'lawina_z_morskiego_oka' && state.currentWeather === 'frozen') {
+    return 1;
+  }
+  if (cardId === 'paragon_grozy' && state.enemy?.rachunek >= 25) {
+    return 1;
+  }
   return card?.cost ?? 0;
 }
 
@@ -116,11 +122,15 @@ export function isLansActive(state) {
 }
 
 /**
- * @param {{ player: PlayerState }} state
+ * @param {{ player: PlayerState, gainPlayerBlockFromCard: (amount: number) => void }} state
  * @param {boolean} active
  */
 export function setLansActive(state, active) {
+  const wasActive = state.player.status.lans > 0;
   state.player.status.lans = active ? 1 : 0;
+  if (active && !wasActive && state.player.pan_na_wlosciach) {
+    state.gainPlayerBlockFromCard(3);
+  }
 }
 
 /**

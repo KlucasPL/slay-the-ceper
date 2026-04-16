@@ -16,91 +16,92 @@ Cel: po dodaniu tej puli laczna liczba dostepnych kart bez statusow ma wynosic 7
 - Zostawione karty sa bardziej archetypowe: Rachunek, Lans, pogoda, multi-hit, marynowe i reliktowe synergie.
 - Nowa zasada rozgrywki (globalna): karta z tagiem `Lans` — jesli gracz NIE ma statusu `lans`, karta aktywuje TYLKO `lans` (efekt glowny jest pomijany w calosci). Jesli gracz MA `lans`, efekt glowny odpala sie normalnie.
 - Dutki nie sa wydawane w walce: karty korzystaja z zyskow i progow Dutkow, bez kosztu "zaplac".
+- **IKON: Każda karta MUSI mieć unikalną ikonkę — wśród nowych 50 kart, a także wśród istniejących już kart, pamiątek i fantów od Maryny.**
 
 ---
 
 ## Ataki (20)
 
-1. **Wydruk z Kasy** | attack | uncommon | koszt 1  
+1. ✓ **Wydruk z Kasy** | attack | uncommon | koszt 1  
    Efekt: Zadaj 6 obrazen. Dodaj 4 do Rachunku wroga.
 
-2. **Rozped z Rowni** | attack | uncommon | koszt 1  
+2. ✓ **Rozpęd z Równi** | attack | uncommon | koszt 1  
    Efekt: Zadaj 3x3 obrazenia. Jesli wrog ma `weak`, zadaj 4x3.
 
-3. **Dwa Kroki Baciarza** | attack | uncommon | koszt 2  
+3. ✓ **Krzesany** | attack | uncommon | koszt 2  
    Efekt: Zadaj 2x6 obrazen. Jesli drugi cios zada obrazenia Krzepie (przebije pancerz), zyskaj 1 Oscypek na te ture.
 
-4. **Tatrzanski Szpan** | attack | uncommon | koszt 2  
+4. ✓ **Tatrzanski Szpan** | attack | uncommon | koszt 2  
    Efekt: `Lans`: Zadaj 16 obrazen.
 
-5. **Ciupaga we Mgle** | attack | common | koszt 1  
+5. ✓ **Ciupaga we Mgle** | attack | common | koszt 1  
    Efekt: Zadaj 6 obrazen i naloz 1 `weak`. Jesli pogoda to `fog`, naloz tez 1 `fragile`.
 
-6. **Szarza Pod Reglami** | attack | uncommon | koszt 1  
-   Efekt: `Lans`: Zadaj 12 obrazen.
+6. ✓ **Paradny Zwyrt** | attack | uncommon | koszt 1  
+   Efekt: `Lans`: Zadaj 12 obrazen, dobierz 1 kartę
 
-7. **Nadplacony Bilet** | attack | uncommon | koszt 1  
+7. ✓ **Nadplacony Bilet** | attack | uncommon | koszt 1  
    Efekt: Zadaj 7 obrazen. +1 obrazen za kazde 5 Rachunku na wrogu (maks. +5).
 
-8. **Odbite Uderzenie** | attack | common | koszt 1  
+8. ✓ **Z Rozmachu** | attack | common | koszt 1  
    Efekt: Zadaj 7 obrazen. Jesli masz status `next_double`, dobierz 1 karte.
 
-9. **Brutalna Wymeldowka** | attack | rare | koszt 2  
+9. ✓ **Eksmisja z Kwatery** | attack | rare | koszt 2  
    Efekt: Zadaj 12 obrazen. Jesli wrog ma `weak`, dodaj 10 do Rachunku.
 
-10. **Zwrot bez Paragonu** | attack | common | koszt 1  
+10. ✓ **Cios z Telemarkiem** | attack | common | koszt 1  
     Efekt: `Lans`: Zadaj 9 obrazen.
 
-11. **Janosik z Kasa Fiskalna** | attack | uncommon | koszt 1  
+11. ✓ **Wymuszony Napiwek** | attack | uncommon | koszt 1  
     Efekt: Zadaj 9 obrazen. Jesli wrog padnie od tej karty, zyskaj 15 Dutkow. Exhaust.
 
-12. **Mlynek Ciupaga** | attack | rare | koszt 2  
+12. ✓ **Mlynek Ciupaga** | attack | rare | koszt 2  
     Efekt: `Lans`: Zadaj 3x4 obrazenia i naloz 2 `weak`.
 
-13. **Rachunek za Oddychanie** | attack | rare | koszt 2  
-    Efekt: Zadaj 8 obrazen. Zwieksz aktualny Rachunek wroga o 50% (zaokraglajac w gore). Exhaust.
+13. ✓ **Rachunek za Oddychanie** | attack | rare | koszt 2  
+    Efekt: Zadaj 8 obrazen. Zwieksz aktualny Rachunek wroga o 25% (zaokraglajac w gore). Exhaust.
 
-14. **Lodowy Odbijak** | attack | common | koszt 1  
+14. ✓ **Przymusowe Morsowanie** | attack | common | koszt 1  
     Efekt: Zadaj 7 obrazen. Jesli pogoda to `frozen`, zadaj dodatkowe 7 i dobierz 1 karte.
 
-15. **Wepchniecie w Kolejke** | attack | common | koszt 1  
+15. ✓ **Wepchniecie w Kolejke** | attack | common | koszt 1  
     Efekt: `Lans`: Naloz 1 `vulnerable` i dobierz 1 karte.
 
-16. **Lawina z Dachu** | attack | uncommon | koszt 2  
+16. ✓ **Lawina z Morskiego Oka** | attack | uncommon | koszt 2  
     Efekt: Zadaj 16 obrazen. Jesli pogoda to `frozen`, ta karta kosztuje 1.
 
-17. **Beczenie Redyku** | attack | common | koszt 1  
+17. ✓ **Beczenie Redyku** | attack | common | koszt 1  
     Efekt: Zadaj 5 obrazen. Zyskuje +4 obrazenia za kazdy punkt Twojej Sily (`strength`).
 
-18. **Skrupulatne Wyliczenie** | attack | uncommon | koszt 1  
+18. ✓ **Skrupulatne Wyliczenie** | attack | uncommon | koszt 1  
     Efekt: Zadaj obrazenia rowne polowie Twojej aktualnej Gardy. Jesli Rachunek > 15, dodaj +5 obrazen.
 
-19. **Blysk Aparatu** | attack | common | koszt 1  
+19. **Zaskoczenie z Kosodrzewiny** | attack | common | koszt 1  
     Efekt: Zadaj 7 obrazen. Ten atak ignoruje uniki/pudla (zawsze trafia).
 
-20. **Paragon Grozy** | attack | rare | koszt 3  
+20. ✓ **Paragon Grozy** | attack | rare | koszt 3  
     Efekt: Zadaj 25 obrazen. Jesli wrog ma co najmniej 25 Rachunku, ta karta kosztuje 1 Oscypek.
 
 ---
 
 ## Skille (20)
 
-21. **Pogodzenie Sporow** | skill | common | koszt 1  
+21. ✓ **Pogodzenie Sporów** | skill | common | koszt 1  
     Efekt: Dodaj 10 do Rachunku. Dobierz 1.
 
-22. **Zapas Oscypkow** | skill | common | koszt 1  
+22. ✓ **Zapas Oscypków** | skill | common | koszt 1  
     Efekt: Zyskaj 1 Oscypek na nastepna ture (`energy_next_turn`) i 4 Gardy.
 
-23. **Wdech Halnego** | skill | common | koszt 0  
+23. ✓ **Wdech Halnego** | skill | common | koszt 0  
     Efekt: Odrzuc 1 karte z reki, dobierz 2 karty.
 
-24. **Smycz na Nadgarstku** | skill | uncommon | koszt 0  
+24. **Schowek za Pazuchą** | skill | uncommon | koszt 0  
     Efekt: Wybierz 1 karte z reki. Zostaje ona na nastepna ture (Retain).
 
-25. **Pawi Ogon** | skill | uncommon | koszt 1  
+25. **Piórko u Kapelusza** | skill | uncommon | koszt 1  
     Efekt: `Lans`: Zyskaj 8 Gardy i dobierz 1 karte.
 
-26. **Przyczajony Cennik** | skill | uncommon | koszt 1  
+26. **Wypięta Pierś** | skill | uncommon | koszt 1  
     Efekt: `Lans`: Zyskaj 7 Gardy. Nastepny zagrany przez Ciebie Atak w tej turze zadaje +3 obrazenia.
 
 27. **Stary Numer Maryny** | skill | rare | koszt 2  
@@ -115,68 +116,68 @@ Cel: po dodaniu tej puli laczna liczba dostepnych kart bez statusow ma wynosic 7
 30. **Zamach znad Glodowki** | skill | uncommon | koszt 0  
     Efekt: Ustaw status `next_double` = true. Exhaust.
 
-31. **Punkt Widokowy** | skill | common | koszt 1  
+31. ✓ **Punkt Widokowy** | skill | common | koszt 1  
     Efekt: Dobierz 1 karte. Jesli pogoda to `clear`, dobierz jeszcze 1 karte.
 
-32. **Przymusowy Napiwek** | skill | uncommon | koszt 1  
+32. ✓ **Przymusowy Napiwek** | skill | uncommon | koszt 1  
     Efekt: Dodaj 5 do Rachunku. Jesli przeciwnik ma `vulnerable`, dodaj jeszcze 5.
 
 33. **Wezwanie Przedsadowe** | skill | rare | koszt 2  
     Efekt: Zyskaj Garde rowna 1/3 aktualnego Rachunku wroga. Exhaust.
 
-34. **Zgubieni we Mgle** | skill | uncommon | koszt 1  
+34. ✓ **Zgubieni we Mgle** | skill | uncommon | koszt 1  
     Efekt: Jesli pogoda to `fog`, naloz 2 `weak`. W innym wypadku zyskaj 8 Gardy.
 
-35. **Rabat Dnia** | skill | common | koszt 1  
+35. **Przeliczanie Dutków** | skill | common | koszt 1  
     Efekt: `Lans`: Dobierz 1 karte i zyskaj 4 Gardy.
 
-36. **List od Maryny** | skill | uncommon | koszt 1  
+36. ✓ **List od Maryny** | skill | uncommon | koszt 1  
     Efekt: Dobierz 1 karte. Jesli wrog ma status `weak` lub `fragile`, dobierz jeszcze 1 karte.
 
-37. **Rosol z Nedzy** | skill | uncommon | koszt 1  
+37. **Herbata z Prądem** | skill | uncommon | koszt 1  
     Efekt: Jesli masz <=50% Krzepy, ulecz 6. Inaczej ulecz 2. Exhaust.
 
-38. **Dutki na Stole** | skill | common | koszt 0  
+38. ✓ **Dutki na Stole** | skill | common | koszt 0  
     Efekt: +10 Dutkow i dodaj 4 do Rachunku. Exhaust.
 
 39. **Goralski Upor** | skill | uncommon | koszt 1  
     Efekt: Zyskaj 5 Gardy. Ta Garda nie znika na poczatku nastepnej tury (Blur).
 
-40. **Wezwanie Ratownika** | skill | uncommon | koszt 1  
+40. **Na Ratunek GOPR** | skill | uncommon | koszt 1  
     Efekt: Ulecz 5 Krzepy. Jesli wrog ma >20 Rachunku, ulecz dodatkowe 5. Exhaust.
 
 ---
 
 ## Power (10)
 
-41. **Miejscowy Ton** | power | uncommon | koszt 1  
+41. ✓ **Pan na Włościach** | power | uncommon | koszt 1  
     Efekt: Za kazdym razem, gdy zyskujesz status `lans`, zyskaj 3 Gardy.
 
-42. **Cierpliwosc Przewodnika** | power | rare | koszt 2  
+42. ✓ **Czas na Fajkę** | power | rare | koszt 2  
     Efekt: Na koniec Twojej tury, jesli masz >10 Gardy, ulecz 2 Krzepy.
 
-43. **Zimna Krew** | power | uncommon | koszt 1  
+43. ✓ **Zimna Krew** | power | uncommon | koszt 1  
     Efekt: Ilekroc nakladasz na wroga `weak`, nakladasz +1 `weak` dodatkowo.
 
-44. **Goralska Goscinnosc** | power | rare | koszt 2  
+44. ✓ **Góralska Gościnność** | power | rare | koszt 2  
     Efekt: Za kazda zagrana karte Ataku dodaj 2 do Rachunku wroga.
 
-45. **Przeciwmgielna Latarka** | power | uncommon | koszt 1  
+45. ✓ **Znajomość Szlaku** | power | uncommon | koszt 1  
     Efekt: W pogodzie `fog` zyskujesz 5 Gardy na starcie swojej tury.
 
-46. **Lodowy Dryl** | power | uncommon | koszt 1  
+46. ✓ **Kąpiel w Białce** | power | uncommon | koszt 1  
     Efekt: W pogodzie `frozen` naloz na wroga 1 `vulnerable` na starcie swojej tury.
 
-47. **Koncesja na Krupowkach** | power | rare | koszt 2  
+47. ✓ **Koncesja na Oscypki** | power | rare | koszt 2  
     Efekt: Na poczatku Twojej tury, jesli wrog ma co najmniej 25 Rachunku, zyskaj 1 Oscypek i dobierz 1 karte.
 
-48. **Pazur Podhala** | power | uncommon | koszt 1  
+48. ✓ **Baciarka Ciesy** | power | uncommon | koszt 1  
     Efekt: Zyskaj +2 Sily (`strength`) na cala walke.
 
-49. **Furia Halnego** | power | rare | koszt 2  
+49. **Szał Bacy** | power | rare | koszt 2  
     Efekt: Ilekroc dobierasz dodatkowo karte w trakcie swojej tury, zadaj wrogowi 3 obrazenia.
 
-50. **Kurs Przetrwania** | power | uncommon | koszt 1  
+50. **Góralski Upór** | power | uncommon | koszt 1  
     Efekt: Ilekroc tracisz Krzepe, dobierz 1 karte na poczatku nastepnej tury.
 
 ---

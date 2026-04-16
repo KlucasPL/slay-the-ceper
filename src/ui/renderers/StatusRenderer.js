@@ -1,4 +1,5 @@
 import { relicLibrary } from '../../data/relics.js';
+import { cardLibrary } from '../../data/cards.js';
 import { statusTooltipRegistry } from '../statusTooltips.js';
 import * as uiHelpers from '../helpers/UIHelpers.js';
 
@@ -149,6 +150,26 @@ export function renderStatuses(uiManager, containerId, status) {
     if (stunnedDef) {
       tag(stunnedDef.icon, stunnedDef.label, null, stunnedDef.tooltip);
     }
+  }
+
+  if (containerId === 'p-statuses') {
+    /** @type {Array<{ flag: string, cardId: string }>} */
+    const powerFlags = [
+      { flag: 'weather_fog_garda', cardId: 'znajomosc_szlaku' },
+      { flag: 'weather_frozen_vulnerable', cardId: 'kapiel_w_bialce' },
+      { flag: 'pan_na_wlosciach', cardId: 'pan_na_wlosciach' },
+      { flag: 'zimna_krew', cardId: 'zimna_krew' },
+      { flag: 'czas_na_fajke', cardId: 'czas_na_fajke' },
+      { flag: 'goralska_goscinnosc', cardId: 'goralska_goscinnosc' },
+      { flag: 'koncesja_na_oscypki', cardId: 'koncesja_na_oscypki' },
+    ];
+
+    powerFlags.forEach(({ flag, cardId }) => {
+      if (!uiManager.state.player[flag]) return;
+      const card = cardLibrary[cardId];
+      if (!card) return;
+      tag(card.emoji, card.name, null, card.desc);
+    });
   }
 
   if (containerId === 'e-statuses') {
