@@ -3377,6 +3377,29 @@ describe('GameState', () => {
       s.applyEnemyDebugStatus('weak', 0);
       expect(s.enemy.status.weak).toBe(weakBefore + 3);
     });
+
+    it('applyPlayerDebugStatus on lans disable applies break penalty when lans was active', () => {
+      const s = freshState();
+      s.player.status.lans = 1;
+      s.player.stunned = false;
+
+      s.applyPlayerDebugStatus('lans', 0);
+
+      expect(s.player.status.lans).toBe(0);
+      expect(s.player.stunned).toBe(true);
+      expect(s.consumeLansBreakEvent()).toBe('BANKRUT!');
+    });
+
+    it('applyPlayerDebugStatus on lans disable does not emit break penalty when lans was inactive', () => {
+      const s = freshState();
+      s.player.status.lans = 0;
+      s.player.stunned = false;
+
+      s.applyPlayerDebugStatus('lans', 0);
+
+      expect(s.player.stunned).toBe(false);
+      expect(s.consumeLansBreakEvent()).toBeNull();
+    });
   });
 
   describe('relic library helper', () => {

@@ -1302,7 +1302,10 @@ export class GameState {
       const willBeActive = amount > 0;
       this._setLansActive(willBeActive);
       if (!wasActive && willBeActive) this.lansActivatedEvent = true;
-      if (wasActive && !willBeActive) this.lansBreakEvent = true;
+      if (wasActive && !willBeActive) {
+        this.player.stunned = true;
+        this.lansBreakEvent = true;
+      }
       return;
     }
     if (status === 'next_double') {
