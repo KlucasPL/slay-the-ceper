@@ -3323,6 +3323,210 @@ describe('GameState', () => {
     });
   });
 
+  describe('new rachunek-based cards', () => {
+    it('wydruk_z_kasy deals 6 damage and adds 4 to enemy rachunek', () => {
+      const s = freshState();
+      s.hand = ['wydruk_z_kasy'];
+      const initialRachunek = s.enemy.rachunek;
+      s.playCard(0);
+      expect(s.enemy.rachunek).toBe(initialRachunek + 4);
+      expect(s.enemy.hp).toBeLessThan(mockEnemy.hp);
+    });
+
+    it('nadplacony_bilet deals base 7 damage and scales with enemy rachunek', () => {
+      const s = freshState();
+      s.enemy.rachunek = 20;
+      s.hand = ['nadplacony_bilet'];
+      const hpBefore = s.enemy.hp;
+      s.playCard(0);
+      expect(s.enemy.hp).toBeLessThan(hpBefore);
+    });
+
+    it('nadplacony_bilet bonus caps at +5 damage', () => {
+      const s = freshState();
+      s.enemy.rachunek = 100;
+      s.hand = ['nadplacony_bilet'];
+      const hpBefore = s.enemy.hp;
+      s.playCard(0);
+      const damage = hpBefore - s.enemy.hp;
+      expect(damage).toBeLessThanOrEqual(7 + 5 + 5);
+    });
+
+    it('eksmisja_z_kwatery deals 12 damage and adds 10 to rachunek if enemy has weak', () => {
+      const s = freshState();
+      s.enemy.status.weak = 1;
+      const initialRachunek = s.enemy.rachunek;
+      s.hand = ['eksmisja_z_kwatery'];
+      s.playCard(0);
+      expect(s.enemy.rachunek).toBe(initialRachunek + 10);
+    });
+
+    it('eksmisja_z_kwatery does not bonus rachunek if enemy has no weak', () => {
+      const s = freshState();
+      s.enemy.status.weak = 0;
+      const initialRachunek = s.enemy.rachunek;
+      s.hand = ['eksmisja_z_kwatery'];
+      s.playCard(0);
+      expect(s.enemy.rachunek).toBe(initialRachunek);
+    });
+
+    it('rachunek_za_oddychanie deals 8 damage and increases rachunek by 25%, then exhausts', () => {
+      const s = freshState();
+      s.enemy.rachunek = 100;
+      const expectedIncrease = Math.ceil(100 * 0.25);
+      s.hand = ['rachunek_za_oddychanie'];
+      s.playCard(0);
+      expect(s.enemy.rachunek).toBe(100 + expectedIncrease);
+      expect(s.exhaust).toContain('rachunek_za_oddychanie');
+    });
+
+    it('skrupulatne_wyliczenie deals damage equal to half player block', () => {
+      const s = freshState();
+      s.player.block = 20;
+      const expectedBaseDamage = Math.floor(20 / 2);
+      s.hand = ['skrupulatne_wyliczenie'];
+      const hpBefore = s.enemy.hp;
+      s.playCard(0);
+      const damageDealt = hpBefore - s.enemy.hp;
+      expect(damageDealt).toBeGreaterThanOrEqual(expectedBaseDamage);
+    });
+
+    it('skrupulatne_wyliczenie adds +5 bonus damage when rachunek > 15', () => {
+      const s = freshState();
+      s.player.block = 10;
+      s.enemy.rachunek = 20;
+      const expectedBaseDamage = Math.floor(10 / 2) + 5;
+      s.hand = ['skrupulatne_wyliczenie'];
+      const hpBefore = s.enemy.hp;
+      s.playCard(0);
+      const damageDealt = hpBefore - s.enemy.hp;
+      expect(damageDealt).toBeGreaterThanOrEqual(expectedBaseDamage);
+    });
+
+    it('skrupulatne_wyliczenie does not add +5 bonus when rachunek <= 15', () => {
+      const s = freshState();
+      s.player.block = 20;
+      s.enemy.rachunek = 10;
+      const expectedBaseDamage = Math.floor(20 / 2);
+      s.hand = ['skrupulatne_wyliczenie'];
+      const hpBefore = s.enemy.hp;
+      s.playCard(0);
+      const damageDealt = hpBefore - s.enemy.hp;
+      expect(damageDealt).toBeLessThanOrEqual(expectedBaseDamage);
+    });
+  });
+
+  describe('new lans-based cards', () => {
+    it('tatrzanski_szpan with lans inactive only activates lans (no damage)', () => {
+      const s = freshState();
+      s.player.status.lans = 0;
+      s.hand = ['tatrzanski_szpan'];
+      const enemyHpBefore = s.enemy.hp;
+      s.playCard(0);
+      expect(s.player.status.lans).toBe(1);
+      expect(s.enemy.hp).toBe(enemyHpBefore);
+    });
+
+    it('tatrzanski_szpan with lans active deals 16 damage', () => {
+      const s = freshState();
+      s.player.status.lans = 1;
+      s.hand = ['tatrzanski_szpan'];
+      const enemyHpBefore = s.enemy.hp;
+      s.playCard(0);
+      expect(s.enemy.hp).toBeLessThan(enemyHpBefore);
+      expect(s.enemy.hp).toBeGreaterThanOrEqual(enemyHpBefore - 16 - 10);
+    });
+
+    it('paradny_zwyrt with lans inactive only activates lans (no damage, no draw)', () => {
+      const s = freshState();
+      s.player.status.lans = 0;
+      s.hand = ['paradny_zwyrt'];
+      const handBefore = s.hand.length;
+      const enemyHpBefore = s.enemy.hp;
+      s.playCard(0);
+      expect(s.player.status.lans).toBe(1);
+      expect(s.enemy.hp).toBe(enemyHpBefore);
+      expect(s.hand.length).toBe(handBefore - 1);
+    });
+
+    it('paradny_zwyrt with lans active deals 12 damage and draws 1', () => {
+      const s = freshState();
+      s.player.status.lans = 1;
+      s.hand = ['paradny_zwyrt', 'ciupaga', 'gasior'];
+      const handSizeBefore = s.hand.length;
+      const deckSizeBefore = s.deck.length;
+      const enemyHpBefore = s.enemy.hp;
+      s.playCard(0);
+      expect(s.enemy.hp).toBeLessThan(enemyHpBefore);
+      expect(s.hand.length + s.exhaust.length).toBeGreaterThanOrEqual(handSizeBefore - 1 + 1);
+    });
+
+    it('cios_z_telemarkiem with lans inactive only activates lans', () => {
+      const s = freshState();
+      s.player.status.lans = 0;
+      s.hand = ['cios_z_telemarkiem'];
+      const enemyHpBefore = s.enemy.hp;
+      s.playCard(0);
+      expect(s.player.status.lans).toBe(1);
+      expect(s.enemy.hp).toBe(enemyHpBefore);
+    });
+
+    it('cios_z_telemarkiem with lans active deals 9 damage', () => {
+      const s = freshState();
+      s.player.status.lans = 1;
+      s.hand = ['cios_z_telemarkiem'];
+      const enemyHpBefore = s.enemy.hp;
+      s.playCard(0);
+      expect(s.enemy.hp).toBeLessThan(enemyHpBefore);
+    });
+
+    it('mlynek_ciupaga with lans inactive only activates lans', () => {
+      const s = freshState();
+      s.player.status.lans = 0;
+      s.hand = ['mlynek_ciupaga'];
+      const enemyHpBefore = s.enemy.hp;
+      const enemyWeakBefore = s.enemy.status.weak;
+      s.playCard(0);
+      expect(s.player.status.lans).toBe(1);
+      expect(s.enemy.hp).toBe(enemyHpBefore);
+      expect(s.enemy.status.weak).toBe(enemyWeakBefore);
+    });
+
+    it('mlynek_ciupaga with lans active hits 3x and applies 2 weak', () => {
+      const s = freshState();
+      s.player.status.lans = 1;
+      s.hand = ['mlynek_ciupaga'];
+      const enemyHpBefore = s.enemy.hp;
+      const enemyWeakBefore = s.enemy.status.weak;
+      s.playCard(0);
+      expect(s.enemy.hp).toBeLessThan(enemyHpBefore);
+      expect(s.enemy.status.weak).toBe(enemyWeakBefore + 2);
+    });
+
+    it('wepchniecie_w_kolejke with lans inactive only activates lans (no debuff, no draw)', () => {
+      const s = freshState();
+      s.player.status.lans = 0;
+      s.hand = ['wepchniecie_w_kolejke'];
+      const handBefore = s.hand.length;
+      const enemyVulnBefore = s.enemy.status.vulnerable;
+      s.playCard(0);
+      expect(s.player.status.lans).toBe(1);
+      expect(s.enemy.status.vulnerable).toBe(enemyVulnBefore);
+      expect(s.hand.length).toBe(handBefore - 1);
+    });
+
+    it('wepchniecie_w_kolejke with lans active applies 1 vulnerable and draws 1', () => {
+      const s = freshState();
+      s.player.status.lans = 1;
+      s.hand = ['wepchniecie_w_kolejke', 'ciupaga'];
+      const handSizeBefore = s.hand.length;
+      const enemyVulnBefore = s.enemy.status.vulnerable;
+      s.playCard(0);
+      expect(s.enemy.status.vulnerable).toBe(enemyVulnBefore + 1);
+      expect(s.hand.length).toBeGreaterThanOrEqual(handSizeBefore - 1);
+    });
+  });
+
   describe('debug helpers', () => {
     it('setDebugMapRows clamps value to 10..25', () => {
       const s = freshState();

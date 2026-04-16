@@ -603,6 +603,234 @@ export const cardLibrary = {
       return {};
     },
   },
+
+  wydruk_z_kasy: {
+    id: 'wydruk_z_kasy',
+    name: 'Wydruk z Kasy',
+    type: 'attack',
+    rarity: 'uncommon',
+    cost: 1,
+    price: 50,
+    emoji: '💸',
+    desc: 'Zadaje 6 obrażeń. Dodaje 4 do Rachunku wroga.',
+    tags: ['rachunek'],
+    effect(state) {
+      const dmg = state._calcAttackDamage(state.player, 6 + state.getCardDamageBonus('wydruk_z_kasy'));
+      const damage = state._applyDamageToEnemy(dmg);
+      state.addEnemyRachunek(4);
+      return {
+        playerAnim: 'anim-attack-p',
+        enemyAnim: damage.dealt > 0 ? 'anim-damage' : 'anim-block',
+        damage,
+      };
+    },
+  },
+
+  nadplacony_bilet: {
+    id: 'nadplacony_bilet',
+    name: 'Nadplacony Bilet',
+    type: 'attack',
+    rarity: 'uncommon',
+    cost: 1,
+    price: 55,
+    emoji: '📋',
+    desc: 'Zadaje 7 obrażeń. +1 obrażenia za każde 5 Rachunku na wrogu (maks. +5).',
+    tags: ['rachunek'],
+    effect(state) {
+      const bonus = Math.min(5, Math.floor(state.enemy.rachunek / 5));
+      const baseDmg = 7 + bonus + state.getCardDamageBonus('nadplacony_bilet');
+      const dmg = state._calcAttackDamage(state.player, baseDmg);
+      const damage = state._applyDamageToEnemy(dmg);
+      return {
+        playerAnim: 'anim-attack-p',
+        enemyAnim: damage.dealt > 0 ? 'anim-damage' : 'anim-block',
+        damage,
+      };
+    },
+  },
+
+  eksmisja_z_kwatery: {
+    id: 'eksmisja_z_kwatery',
+    name: 'Eksmisja z Kwatery',
+    type: 'attack',
+    rarity: 'rare',
+    cost: 2,
+    price: 100,
+    emoji: '🚪',
+    desc: 'Zadaje 12 obrażeń. Jeśli wróg ma Słabość, dodaje 10 do Rachunku.',
+    tags: ['rachunek'],
+    effect(state) {
+      const dmg = state._calcAttackDamage(state.player, 12 + state.getCardDamageBonus('eksmisja_z_kwatery'));
+      const damage = state._applyDamageToEnemy(dmg);
+      if (state.enemy.status.weak > 0) {
+        state.addEnemyRachunek(10);
+      }
+      return {
+        playerAnim: 'anim-attack-p',
+        enemyAnim: damage.dealt > 0 ? 'anim-damage' : 'anim-block',
+        damage,
+      };
+    },
+  },
+
+  rachunek_za_oddychanie: {
+    id: 'rachunek_za_oddychanie',
+    name: 'Rachunek za Oddychanie',
+    type: 'attack',
+    rarity: 'rare',
+    cost: 2,
+    price: 110,
+    emoji: '💨',
+    desc: 'Zadaje 8 obrażeń. Zwiększa aktualny Rachunek wroga o 25% (zaokrąglając w górę). Przepada.',
+    tags: ['rachunek'],
+    exhaust: true,
+    effect(state) {
+      const dmg = state._calcAttackDamage(state.player, 8 + state.getCardDamageBonus('rachunek_za_oddychanie'));
+      const damage = state._applyDamageToEnemy(dmg);
+      const increase = Math.ceil(state.enemy.rachunek * 0.25);
+      state.addEnemyRachunek(increase);
+      return {
+        playerAnim: 'anim-attack-p',
+        enemyAnim: damage.dealt > 0 ? 'anim-damage' : 'anim-block',
+        damage,
+      };
+    },
+  },
+
+  skrupulatne_wyliczenie: {
+    id: 'skrupulatne_wyliczenie',
+    name: 'Skrupulatne Wyliczenie',
+    type: 'attack',
+    rarity: 'uncommon',
+    cost: 1,
+    price: 60,
+    emoji: '📊',
+    desc: 'Zadaje obrażenia równe połowie Twojej aktualnej Gardy. Jeśli Rachunek > 15, dodaje +5 obrażeń.',
+    tags: ['rachunek'],
+    effect(state) {
+      const baseFromBlock = Math.floor(state.player.block / 2);
+      const bonus = state.enemy.rachunek > 15 ? 5 : 0;
+      const baseDmg = baseFromBlock + bonus + state.getCardDamageBonus('skrupulatne_wyliczenie');
+      const dmg = state._calcAttackDamage(state.player, baseDmg);
+      const damage = state._applyDamageToEnemy(dmg);
+      return {
+        playerAnim: 'anim-attack-p',
+        enemyAnim: damage.dealt > 0 ? 'anim-damage' : 'anim-block',
+        damage,
+      };
+    },
+  },
+
+  tatrzanski_szpan: {
+    id: 'tatrzanski_szpan',
+    name: 'Tatrzański Szpan',
+    type: 'attack',
+    rarity: 'uncommon',
+    cost: 2,
+    price: 95,
+    emoji: '👤',
+    desc: 'LANS: Zadaje 16 obrażeń.',
+    tags: ['lans'],
+    effect(state) {
+      const dmg = state._calcAttackDamage(state.player, 16 + state.getCardDamageBonus('tatrzanski_szpan'));
+      const damage = state._applyDamageToEnemy(dmg);
+      return {
+        playerAnim: 'anim-attack-p',
+        enemyAnim: damage.dealt > 0 ? 'anim-damage' : 'anim-block',
+        damage,
+      };
+    },
+  },
+
+  paradny_zwyrt: {
+    id: 'paradny_zwyrt',
+    name: 'Paradny Zwyrt',
+    type: 'attack',
+    rarity: 'uncommon',
+    cost: 1,
+    price: 75,
+    emoji: '🎩',
+    desc: 'LANS: Zadaje 12 obrażeń, dobiera 1 kartę.',
+    tags: ['lans'],
+    effect(state) {
+      const dmg = state._calcAttackDamage(state.player, 12 + state.getCardDamageBonus('paradny_zwyrt'));
+      const damage = state._applyDamageToEnemy(dmg);
+      state._drawCards(1);
+      return {
+        playerAnim: 'anim-attack-p',
+        enemyAnim: damage.dealt > 0 ? 'anim-damage' : 'anim-block',
+        damage,
+      };
+    },
+  },
+
+  cios_z_telemarkiem: {
+    id: 'cios_z_telemarkiem',
+    name: 'Cios z Telemarkiem',
+    type: 'attack',
+    rarity: 'common',
+    cost: 1,
+    price: 60,
+    emoji: '☎️',
+    desc: 'LANS: Zadaje 9 obrażeń.',
+    tags: ['lans'],
+    effect(state) {
+      const dmg = state._calcAttackDamage(state.player, 9 + state.getCardDamageBonus('cios_z_telemarkiem'));
+      const damage = state._applyDamageToEnemy(dmg);
+      return {
+        playerAnim: 'anim-attack-p',
+        enemyAnim: damage.dealt > 0 ? 'anim-damage' : 'anim-block',
+        damage,
+      };
+    },
+  },
+
+  mlynek_ciupaga: {
+    id: 'mlynek_ciupaga',
+    name: 'Młynek Ciupagą',
+    type: 'attack',
+    rarity: 'rare',
+    cost: 2,
+    price: 115,
+    emoji: '🌀',
+    desc: 'LANS: Atakuje 3x4 obrażenia i nakłada 2 Słabości.',
+    tags: ['lans'],
+    effect(state) {
+      let totalDealt = 0;
+      let totalBlocked = 0;
+      const baseHit = 4 + state.getCardDamageBonus('mlynek_ciupaga');
+      for (let i = 0; i < 3; i++) {
+        if (state.enemy.hp <= 0) break;
+        const dmg = state._calcAttackDamage(state.player, baseHit);
+        const damage = state._applyDamageToEnemy(dmg);
+        totalDealt += damage.dealt;
+        totalBlocked += damage.blocked;
+      }
+      state.applyEnemyDebuff('weak', 2);
+      return {
+        playerAnim: 'anim-attack-p',
+        enemyAnim: totalDealt > 0 ? 'anim-damage' : 'anim-block',
+        damage: { raw: totalDealt + totalBlocked, blocked: totalBlocked, dealt: totalDealt },
+      };
+    },
+  },
+
+  wepchniecie_w_kolejke: {
+    id: 'wepchniecie_w_kolejke',
+    name: 'Wepchniecie w Kolejkę',
+    type: 'attack',
+    rarity: 'common',
+    cost: 1,
+    price: 65,
+    emoji: '🤜',
+    desc: 'LANS: Nakłada 1 Podatność i dobiera 1 kartę.',
+    tags: ['lans'],
+    effect(state) {
+      state.applyEnemyDebuff('vulnerable', 1);
+      state._drawCards(1);
+      return { playerAnim: 'anim-attack-p', enemyAnim: 'anim-block' };
+    },
+  },
 };
 
 /** @type {string[]} */
