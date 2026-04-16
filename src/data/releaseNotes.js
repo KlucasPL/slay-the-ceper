@@ -5,6 +5,15 @@
 /** @type {ReleaseNoteEntry[]} */
 export const releaseNotesData = [
   {
+    version: 'v1.4.0 - Lans na pełnym gazie',
+    date: 'kwiecień 2026',
+    changes: [
+      '🕶️ LANS Z CHARAKTEREM: Karty z tagiem Lans mają teraz własną, globalną zasadę - jeśli jeszcze nie jesteś w Lansie, pierwsze zagranie odpala sam status, a dopiero kolejne uruchamiają pełny efekt karty.',
+      '💸 SZPAN KOSZTUJE WIĘCEJ: Lans dalej chroni Krzepę kosztem Dutków, ale w trakcie walki rachunek za taki styl rośnie coraz szybciej, więc mocny start łatwiej kończy się bolesnym BANKRUTEM.',
+      '✨ NOWA OPRAWA LANSU: Aktywacji statusu towarzyszy teraz złoty błysk, spadające okulary i okrzyk "JEST LANS!", a przy utracie efektu okulary widowiskowo zlatują z nosa.',
+    ],
+  },
+  {
     version: 'v1.3.2 - Nowa twarz na targu',
     date: 'kwiecień 2026',
     changes: [

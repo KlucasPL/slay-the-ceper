@@ -14,12 +14,12 @@ describe('data exports', () => {
     expect(jedrek.maxEnergy).toBeGreaterThanOrEqual(jedrek.energy);
   });
 
-  it('release notes list is non-empty and newest entry is v1.3.1', () => {
+  it('release notes list is non-empty and newest entry is v1.4.0', () => {
     expect(Array.isArray(releaseNotesData)).toBe(true);
     expect(releaseNotesData.length).toBeGreaterThan(0);
 
     const newest = releaseNotesData[0];
-    expect(newest.version).toContain('v1.3.2');
+    expect(newest.version).toContain('v1.4.0');
     expect(newest.date).toBeTruthy();
     expect(newest.changes.length).toBeGreaterThanOrEqual(1);
   });
