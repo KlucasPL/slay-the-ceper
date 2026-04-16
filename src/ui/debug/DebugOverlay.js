@@ -1,12 +1,12 @@
-import { enemyLibrary } from '../data/enemies.js';
-import { eventLibrary } from '../data/events.js';
-import { relicLibrary } from '../data/relics.js';
+import { enemyLibrary } from '../../data/enemies.js';
+import { eventLibrary } from '../../data/events.js';
+import { relicLibrary } from '../../data/relics.js';
 
 const STYLE_ID = 'debug-overlay-style';
 
 export class DebugOverlay {
   /**
-   * @param {{ state: import('../state/GameState.js').GameState, ui: import('./UIManager.js').UIManager }} options
+   * @param {{ state: import('../../state/GameState.js').GameState, ui: import('../UIManager.js').UIManager }} options
    */
   constructor({ state, ui }) {
     this.state = state;
@@ -376,7 +376,110 @@ export class DebugOverlay {
 
     playerGroup.append(godModeWrap, fullHealBtn);
 
-    panel.append(goldGroup, relicGroup, playerGroup);
+    const playerStatusGroup = this._group('Player Status Injector');
+    /** @type {Array<{value: string, label: string, numeric: boolean}>} */
+    const playerStatuses = [
+      { value: 'lans', label: 'Lans', numeric: false },
+      { value: 'strength', label: 'Siła +1', numeric: true },
+      { value: 'weak', label: 'Słaby +2', numeric: true },
+      { value: 'fragile', label: 'Kruchy +2', numeric: true },
+      { value: 'vulnerable', label: 'Wrażliwy +2', numeric: true },
+      { value: 'next_double', label: 'Next Double', numeric: false },
+      { value: 'energy_next_turn', label: 'Energia +1', numeric: true },
+      { value: 'duma_podhala', label: 'Duma Podhala +1', numeric: true },
+      { value: 'furia_turysty', label: 'Furia Turysty +1', numeric: true },
+    ];
+
+    const playerStatusSelect = document.createElement('select');
+    playerStatusSelect.className = 'debug-select';
+    playerStatuses.forEach(({ value, label }) => {
+      const opt = document.createElement('option');
+      opt.value = value;
+      opt.textContent = label;
+      playerStatusSelect.appendChild(opt);
+    });
+
+    const playerStatusAmountInput = document.createElement('input');
+    playerStatusAmountInput.className = 'debug-input';
+    playerStatusAmountInput.type = 'number';
+    playerStatusAmountInput.min = '0';
+    playerStatusAmountInput.max = '10';
+    playerStatusAmountInput.value = '1';
+
+    const playerStatusAmountRow = document.createElement('div');
+    playerStatusAmountRow.className = 'debug-row inline';
+    const playerStatusAmountLabel = document.createElement('span');
+    playerStatusAmountLabel.textContent = 'Amount';
+    playerStatusAmountLabel.style.fontSize = '11px';
+
+    const playerStatusBoolRow = document.createElement('label');
+    playerStatusBoolRow.className = 'debug-toggle';
+    const playerStatusBoolInput = document.createElement('input');
+    playerStatusBoolInput.type = 'checkbox';
+    playerStatusBoolInput.checked = true;
+    const playerStatusBoolLabel = document.createElement('span');
+    playerStatusBoolLabel.textContent = 'Enabled';
+    playerStatusBoolRow.append(playerStatusBoolInput, playerStatusBoolLabel);
+
+    const syncAmountVisibility = () => {
+      const selected = playerStatuses.find((s) => s.value === playerStatusSelect.value);
+      const isNumeric = selected?.numeric !== false;
+      playerStatusAmountRow.style.display = isNumeric ? '' : 'none';
+      playerStatusBoolRow.style.display = isNumeric ? 'none' : '';
+    };
+    playerStatusSelect.addEventListener('change', syncAmountVisibility);
+    syncAmountVisibility();
+
+    playerStatusAmountRow.append(playerStatusAmountLabel, playerStatusAmountInput);
+
+    const applyPlayerStatusBtn = this._button('Apply to Player', () => {
+      if (this.state.currentScreen !== 'battle') {
+        this._log('Player status: only in battle.');
+        return;
+      }
+      const statusKey = playerStatusSelect.value;
+      const selected = playerStatuses.find((s) => s.value === statusKey);
+      const parsedAmount = Number(playerStatusAmountInput.value);
+      const amount =
+        selected?.numeric === false
+          ? playerStatusBoolInput.checked
+            ? 1
+            : 0
+          : Number.isFinite(parsedAmount)
+            ? Math.max(0, Math.floor(parsedAmount))
+            : 1;
+      this.state.applyPlayerDebugStatus(statusKey, amount);
+      this.ui.applyDebugRefresh({ checkWin: false });
+      this._log(`Applied player status: ${statusKey} (${amount}).`);
+    });
+
+    const clearPlayerStatusBtn = this._button('Clear All Player Statuses', () => {
+      if (this.state.currentScreen !== 'battle') {
+        this._log('Player status: only in battle.');
+        return;
+      }
+      this.state.applyPlayerDebugStatus('strength', 0);
+      this.state.applyPlayerDebugStatus('weak', 0);
+      this.state.applyPlayerDebugStatus('fragile', 0);
+      this.state.applyPlayerDebugStatus('vulnerable', 0);
+      this.state.applyPlayerDebugStatus('next_double', 0);
+      this.state.applyPlayerDebugStatus('energy_next_turn', 0);
+      this.state.applyPlayerDebugStatus('lans', 0);
+      this.state.applyPlayerDebugStatus('duma_podhala', 0);
+      this.state.applyPlayerDebugStatus('furia_turysty', 0);
+      this.ui.applyDebugRefresh({ checkWin: false });
+      this._log('Cleared all player statuses.');
+    });
+
+    playerStatusGroup.append(
+      playerStatusSelect,
+      playerStatusAmountRow,
+      playerStatusBoolRow,
+      applyPlayerStatusBtn,
+      clearPlayerStatusBtn
+    );
+
+    panel.append(goldGroup, relicGroup, playerGroup, playerStatusGroup);
     return panel;
   }
 

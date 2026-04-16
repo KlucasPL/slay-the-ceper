@@ -1,9 +1,22 @@
-import { cardLibrary } from '../data/cards.js';
-import { enemyLibrary } from '../data/enemies.js';
-import { eventLibrary } from '../data/events.js';
-import { relicLibrary } from '../data/relics.js';
 import { weatherLibrary } from '../data/weather.js';
-import { marynaBoonLibrary, rollMarynaChoices } from '../data/marynaBoons.js';
+import {
+  generateCardRewardChoices as generateDeckCardRewardChoices,
+  getCardDamageBonus as getDeckCardDamageBonus,
+  getUpgradeableAttackCards as getDeckUpgradeableAttackCards,
+  removeCardFromDeck as removeDeckCard,
+  upgradeCardDamage as upgradeDeckCardDamage,
+} from './DeckManager.js';
+import * as battleLifecycle from './BattleLifecycle.js';
+import * as combatEngine from './CombatEngine.js';
+import * as enemyState from './EnemyState.js';
+import * as eventSystem from './EventSystem.js';
+import * as mapEngine from './MapEngine.js';
+import * as marynaSystem from './MarynaSystem.js';
+import * as navigationState from './NavigationState.js';
+import * as playerState from './PlayerState.js';
+import * as relicSystem from './RelicSystem.js';
+import * as shopSystem from './ShopSystem.js';
+import { defaultStatus, tickStatus } from './StatusEffects.js';
 
 const RARITY_WEIGHTS = {
   common: 0.7,
@@ -11,16 +24,7 @@ const RARITY_WEIGHTS = {
   rare: 0.05,
 };
 
-const CARD_REWARD_RARITY_WEIGHTS = {
-  common: 0.6,
-  uncommon: 0.25,
-  rare: 0.15,
-};
-
 const MIN_ELITE_LEVEL = 4;
-const MID_NODE_EVENT_CHANCE = 0.34;
-const MID_NODE_FIGHT_CHANCE = 0.2;
-const MID_NODE_ELITE_CHANCE = 0.08;
 const EVENT_OUTCOME_EVENT_CHANCE = 0.68;
 const EVENT_OUTCOME_FIGHT_CHANCE = 0.12;
 
@@ -38,21 +42,6 @@ const EVENT_OUTCOME_FIGHT_CHANCE = 0.12;
  * @typedef {{ cards: string[], relic: string | null }} ShopStock
  */
 
-/** @returns {StatusDef} */
-function defaultStatus() {
-  return {
-    strength: 0,
-    weak: 0,
-    fragile: 0,
-    vulnerable: 0,
-    next_double: false,
-    energy_next_turn: 0,
-    lans: 0,
-    duma_podhala: 0,
-    furia_turysty: 0,
-  };
-}
-
 export class GameState {
   /**
    * @param {import('../data/characters.js').CharacterDef} character
@@ -62,7 +51,13 @@ export class GameState {
     /** @type {import('../data/characters.js').CharacterDef} */
     this.baseCharacter = { ...character };
     /** @type {PlayerState} */
-    this.player = { ...character, status: defaultStatus(), stunned: false, cardsPlayedThisTurn: 0 };
+    this.player = {
+      ...character,
+      status: defaultStatus(),
+      stunned: false,
+      cardsPlayedThisTurn: 0,
+      lansHitsAbsorbed: 0,
+    };
     /** @type {number} */
     this.dutki = 50;
     /** @type {number} Total DUTKI gained during the current run (excludes starting 50). */
@@ -183,6 +178,8 @@ export class GameState {
     this.enemyBankruptcyBonus = 0;
     /** @type {boolean} */
     this.lansBreakEvent = false;
+    /** @type {boolean} One-shot flag for UI messaging when Lans becomes active */
+    this.lansActivatedEvent = false;
     /** @type {number} One-shot accumulator for Dutki consumed by active Lans */
     this.lansDutkiSpentEvent = 0;
     /** @type {boolean} One-shot flag for messaging when enemy resists rachunek win condition */
@@ -216,62 +213,7 @@ export class GameState {
 
   /** @returns {(MapNode | null)[][]} */
   generateMap(rows = this.debugMapRows) {
-    const clampedRows = Math.min(25, Math.max(10, Math.floor(rows)));
-    this.debugMapRows = clampedRows;
-    /** @type {(MapNode | null)[][]} */
-    const generated = Array.from({ length: clampedRows }, () => Array(3).fill(null));
-    const midCampfireLevel = Math.floor(generated.length / 2);
-    const guaranteedTreasureRow = 3 + Math.floor(Math.random() * 3);
-    this.midCampfireLevel = midCampfireLevel;
-    this.guaranteedTreasureRow = guaranteedTreasureRow;
-    this.guaranteedTreasureColumn = 1;
-
-    generated[0][1] = this._createMapNode('maryna', 1, 0);
-
-    const lastMidLevel = generated.length - 3;
-    for (let y = 1; y <= lastMidLevel; y++) {
-      if (y === midCampfireLevel) {
-        generated[y][1] = this._createMapNode('campfire', 1, y);
-        continue;
-      }
-      if (y === guaranteedTreasureRow) {
-        generated[y][this.guaranteedTreasureColumn] = this._createMapNode(
-          'treasure',
-          this.guaranteedTreasureColumn,
-          y
-        );
-        continue;
-      }
-      for (let x = 0; x < 3; x++) {
-        if (Math.random() < 0.7) {
-          generated[y][x] = this._createMapNode(this._rollMidNodeType(y), x, y);
-        }
-      }
-      if (!generated[y].some(Boolean)) {
-        const forcedX = Math.floor(Math.random() * 3);
-        generated[y][forcedX] = this._createMapNode(this._rollMidNodeType(y), forcedX, y);
-      }
-    }
-
-    generated[generated.length - 2][1] = this._createMapNode('campfire', 1, generated.length - 2);
-    generated[generated.length - 1][1] = this._createMapNode('boss', 1, generated.length - 1);
-
-    this._seedRequiredPaths(generated);
-    this._connectOptionalGridNodes(generated);
-    this._removeCrossingConnections(generated);
-    this._pruneUnreachableNodes(generated);
-    this._ensureGuaranteedPathRewards(generated);
-    this._enforceSpecialNodeLimits(generated);
-    this._ensureReachableElite(generated);
-    this._ensureReachableTrueEvent(generated);
-    this._forceRow1CeprFights(generated);
-
-    this.map = generated;
-    this.currentLevel = 0;
-    this.currentNodeIndex = 1;
-    this.currentNode = { x: this.currentNodeIndex, y: 0 };
-    this.hasStartedFirstBattle = false;
-    return this.map;
+    return mapEngine.generateMap(this, rows);
   }
 
   /**
@@ -281,22 +223,7 @@ export class GameState {
    * @returns {MapNode}
    */
   _createMapNode(type, x, y) {
-    const meta = {
-      fight: { label: 'Bitka', emoji: '⚔️' },
-      elite: { label: 'Elita', emoji: '🗡️' },
-      shop: { label: 'Jarmark', emoji: '🛖' },
-      treasure: { label: 'Skarb', emoji: '🎁' },
-      event: { label: 'Wydarzenie', emoji: '❓' },
-      campfire: { label: 'Watra', emoji: '🔥' },
-      boss: { label: 'Herszt', emoji: '👑' },
-      maryna: { label: 'Maryna', emoji: '👵' },
-    };
-    const weather = this._rollNodeWeather(type);
-    const node = { ...meta[type], x, y, type, weather, connections: [] };
-    if (type === 'event') {
-      node.eventOutcome = this.rollEventNodeOutcome();
-    }
-    return node;
+    return mapEngine.createMapNode(this, type, x, y);
   }
 
   /**
@@ -304,12 +231,7 @@ export class GameState {
    * @param {(import('./GameState.js').MapNode | null)[][]} map
    */
   _forceRow1CeprFights(map) {
-    const row = map[1] ?? [];
-    row.forEach((node) => {
-      if (!node) return;
-      this._setNodeType(node, 'fight');
-      node.forcedEnemyId = 'cepr';
-    });
+    mapEngine.forceRow1CeprFights(this, map);
   }
 
   /**
@@ -318,9 +240,7 @@ export class GameState {
    * @returns {string[]}
    */
   rollMarynaChoices(count = 3) {
-    const ids = rollMarynaChoices(count);
-    this.maryna.offeredIds = ids;
-    return ids;
+    return marynaSystem.rollMarynaChoices(this, count);
   }
 
   /**
@@ -329,14 +249,7 @@ export class GameState {
    * @returns {boolean}
    */
   pickMarynaBoon(boonId) {
-    if (this.maryna.pickedId) return false;
-    const boon = marynaBoonLibrary[boonId];
-    if (!boon) return false;
-
-    this.maryna.pickedId = boonId;
-    this.addRelic(boon.relicId);
-    this._applyMarynaBoonImmediateEffects(boonId);
-    return true;
+    return marynaSystem.pickMarynaBoon(this, boonId);
   }
 
   /**
@@ -344,31 +257,7 @@ export class GameState {
    * @param {string} boonId
    */
   _applyMarynaBoonImmediateEffects(boonId) {
-    if (boonId === 'mokra_sciera') {
-      this.gainMaxHp(12);
-    } else if (boonId === 'kiesa') {
-      this.addDutki(80);
-    } else if (boonId === 'przeglad_plecaka') {
-      const starterIds = ['ciupaga', 'gasior', 'kierpce', 'hej'];
-      const startersInDeck = this.deck.filter((id) => starterIds.includes(id));
-      if (startersInDeck.length > 0) {
-        const toRemove = startersInDeck[Math.floor(Math.random() * startersInDeck.length)];
-        this.removeCardFromDeck(toRemove);
-      }
-      const uncommonPool = Object.keys(cardLibrary).filter(
-        (id) =>
-          cardLibrary[id]?.rarity === 'uncommon' &&
-          !cardLibrary[id]?.isStarter &&
-          !cardLibrary[id]?.eventOnly &&
-          !cardLibrary[id]?.tutorialOnly
-      );
-      if (uncommonPool.length > 0) {
-        const pick = uncommonPool[Math.floor(Math.random() * uncommonPool.length)];
-        this.deck.push(pick);
-      }
-    } else if (boonId === 'sloik_rosolu') {
-      this.maryna.counters.rosolBattlesLeft = 3;
-    }
+    marynaSystem.applyMarynaBoonImmediateEffects(this, boonId);
     // kiesa delayed bonus, zloty_rozaniec, lista_zakupow, tajny_skladnik: handled in hooks
   }
 
@@ -377,28 +266,12 @@ export class GameState {
    * @returns {{ label: string, emoji: string }}
    */
   getMapNodeMeta(type) {
-    const meta = {
-      fight: { label: 'Bitka', emoji: '⚔️' },
-      elite: { label: 'Elita', emoji: '🗡️' },
-      shop: { label: 'Jarmark', emoji: '🛖' },
-      treasure: { label: 'Skarb', emoji: '🎁' },
-      event: { label: 'Wydarzenie', emoji: '❓' },
-      campfire: { label: 'Watra', emoji: '🔥' },
-      boss: { label: 'Herszt', emoji: '👑' },
-      maryna: { label: 'Maryna', emoji: '👵' },
-    };
-    return meta[type] ?? { label: 'Pole', emoji: '•' };
+    return navigationState.getMapNodeMeta(type);
   }
 
   /** @returns {MapNodeType} */
   _rollMidNodeType(level = MIN_ELITE_LEVEL) {
-    const roll = Math.random();
-    if (roll < MID_NODE_EVENT_CHANCE) return 'event';
-    if (roll < MID_NODE_EVENT_CHANCE + MID_NODE_FIGHT_CHANCE) return 'fight';
-    if (roll < MID_NODE_EVENT_CHANCE + MID_NODE_FIGHT_CHANCE + MID_NODE_ELITE_CHANCE) {
-      return level >= MIN_ELITE_LEVEL ? 'elite' : 'fight';
-    }
-    return 'shop';
+    return mapEngine.rollMidNodeType(level);
   }
 
   /**
@@ -406,142 +279,21 @@ export class GameState {
    * @returns {WeatherId}
    */
   _rollNodeWeather(nodeType) {
-    if (nodeType === 'boss') return 'halny';
-    if (nodeType === 'maryna') return 'clear';
-    if (nodeType !== 'fight' && nodeType !== 'elite') return 'clear';
-
-    const roll = Math.random();
-    if (roll < 0.5) return 'clear';
-    if (roll < 0.65) return 'halny';
-    if (roll < 0.8) return 'frozen';
-    return 'fog';
+    return mapEngine.rollNodeWeather(nodeType);
   }
 
   /**
    * @param {(MapNode | null)[][]} map
    */
   _seedRequiredPaths(map) {
-    const startNode = map[0][1];
-    if (!startNode) return;
-    const campfireLevel = map.length - 2;
-    const midCampfireLevel = this.midCampfireLevel ?? Math.floor(map.length / 2);
-    const guaranteedTreasureRow = this.guaranteedTreasureRow;
-    const lastMidLevel = campfireLevel - 1;
-
-    const firstTargets = [0, 1, 2];
-    this._shuffle(firstTargets);
-    const branchCount = 2 + Math.floor(Math.random() * 2);
-    const seededTargets = firstTargets.slice(0, branchCount).sort((a, b) => a - b);
-
-    seededTargets.forEach((targetX) => {
-      if (!map[1][targetX]) {
-        map[1][targetX] = this._createMapNode(this._rollMidNodeType(1), targetX, 1);
-      }
-      this._linkNode(startNode, targetX);
-    });
-
-    const usedPerLevel = new Map();
-    usedPerLevel.set(1, new Set(seededTargets));
-
-    seededTargets.forEach((startX, branchIndex) => {
-      let currentX = startX;
-      for (let y = 1; y < campfireLevel; y++) {
-        let nextX;
-        if (y === lastMidLevel || y + 1 === midCampfireLevel || y + 1 === guaranteedTreasureRow) {
-          nextX = 1;
-        } else {
-          const options = this._getAdjacentColumns(currentX);
-          const used = usedPerLevel.get(y + 1) ?? new Set();
-          const freshOptions = options.filter((x) => !used.has(x));
-          const pool = freshOptions.length > 0 ? freshOptions : options;
-          nextX = pool[Math.floor(Math.random() * pool.length)];
-        }
-
-        if (!map[y + 1][nextX]) {
-          const forcedType = this._forcedNodeTypeForLevel(y + 1, map.length);
-          const nextType = forcedType ?? this._rollMidNodeType(y + 1);
-          map[y + 1][nextX] = this._createMapNode(nextType, nextX, y + 1);
-        }
-
-        this._linkNode(map[y][currentX], nextX);
-
-        if (!usedPerLevel.has(y + 1)) {
-          usedPerLevel.set(y + 1, new Set());
-        }
-        usedPerLevel.get(y + 1).add(nextX);
-        currentX = nextX;
-      }
-
-      if (branchIndex === 0) {
-        this._setNodeType(map[1][startX], 'shop');
-      }
-    });
-
-    this._pruneUnreachableNodes(map);
+    mapEngine.seedRequiredPaths(this, map);
   }
 
   /**
    * @param {(MapNode | null)[][]} map
    */
   _connectOptionalGridNodes(map) {
-    const campfireLevel = map.length - 2;
-    const lastMidLevel = campfireLevel - 1;
-
-    for (let y = 1; y <= lastMidLevel; y++) {
-      for (let x = 0; x < 3; x++) {
-        const node = map[y][x];
-        if (!node || this._hasInbound(map, y, x)) continue;
-
-        const prevCandidates = this._getAdjacentColumns(x).filter((prevX) => !!map[y - 1][prevX]);
-        const nextCandidates =
-          y === lastMidLevel
-            ? [1]
-            : this._getAdjacentColumns(x).filter((nextX) => !!map[y + 1][nextX]);
-
-        if (prevCandidates.length === 0 || nextCandidates.length === 0) {
-          map[y][x] = null;
-          continue;
-        }
-
-        const sourceX = prevCandidates[Math.floor(Math.random() * prevCandidates.length)];
-        this._linkNode(map[y - 1][sourceX], x);
-        const targetX = nextCandidates[Math.floor(Math.random() * nextCandidates.length)];
-        this._linkNode(node, targetX);
-      }
-    }
-
-    for (let y = 0; y <= lastMidLevel; y++) {
-      for (let x = 0; x < 3; x++) {
-        const node = map[y][x];
-        if (!node) continue;
-
-        const availableTargets =
-          y === lastMidLevel
-            ? [1]
-            : this._getAdjacentColumns(x).filter((nextX) => !!map[y + 1][nextX]);
-        if (availableTargets.length === 0) continue;
-
-        if (node.connections.length === 0) {
-          this._linkNode(
-            node,
-            availableTargets[Math.floor(Math.random() * availableTargets.length)]
-          );
-        }
-
-        if (y < lastMidLevel && availableTargets.length > 1 && Math.random() < 0.45) {
-          const extraTargets = availableTargets.filter(
-            (targetX) => !node.connections.includes(targetX)
-          );
-          if (extraTargets.length > 0) {
-            this._linkNode(node, extraTargets[Math.floor(Math.random() * extraTargets.length)]);
-          }
-        }
-      }
-    }
-
-    if (map[campfireLevel][1]) {
-      map[campfireLevel][1].connections = [1];
-    }
+    mapEngine.connectOptionalGridNodes(this, map);
   }
 
   /**
@@ -552,86 +304,21 @@ export class GameState {
    * @param {(MapNode | null)[][]} map
    */
   _removeCrossingConnections(map) {
-    for (let y = 0; y < map.length - 1; y++) {
-      let changed = true;
-      while (changed) {
-        changed = false;
-
-        for (let leftX = 0; leftX < 2 && !changed; leftX++) {
-          const leftNode = map[y][leftX];
-          if (!leftNode) continue;
-
-          for (let rightX = leftX + 1; rightX < 3 && !changed; rightX++) {
-            const rightNode = map[y][rightX];
-            if (!rightNode) continue;
-
-            for (const leftTarget of leftNode.connections) {
-              for (const rightTarget of rightNode.connections) {
-                if (leftTarget <= rightTarget) continue;
-
-                // Swap edge targets to remove crossing while preserving degree counts.
-                leftNode.connections = leftNode.connections.filter((x) => x !== leftTarget);
-                rightNode.connections = rightNode.connections.filter((x) => x !== rightTarget);
-                this._linkNode(leftNode, rightTarget);
-                this._linkNode(rightNode, leftTarget);
-                changed = true;
-
-                if (changed) break;
-              }
-              if (changed) break;
-            }
-          }
-        }
-      }
-    }
+    mapEngine.removeCrossingConnections(this, map);
   }
 
   /**
    * @param {(MapNode | null)[][]} map
    */
   _ensureGuaranteedPathRewards(map) {
-    const reachable = this._getReachableCoordinates(map);
-    const reachableNodes = reachable
-      .map(({ x, y }) => map[y][x])
-      .filter((node) => node && node.y > 0 && node.y < map.length - 2);
-
-    const shopNode = reachableNodes.find((node) => node.type === 'shop');
-    if (shopNode) return;
-
-    const rewardCandidates = reachableNodes.filter(
-      (node) => node.y <= map.length - 3 && node.y !== this.guaranteedTreasureRow
-    );
-    const target = rewardCandidates[0];
-    if (target) this._setNodeType(target, 'shop');
+    mapEngine.ensureGuaranteedPathRewards(this, map);
   }
 
   /**
    * @param {(MapNode | null)[][]} map
    */
   _enforceSpecialNodeLimits(map) {
-    const reachableKeys = new Set(
-      this._getReachableCoordinates(map).map(({ x, y }) => `${x},${y}`)
-    );
-    const protectedKeys = new Set();
-
-    const reachableRewardNodes = [...reachableKeys]
-      .map((key) => {
-        const [x, y] = key.split(',').map(Number);
-        return map[y]?.[x] ?? null;
-      })
-      .filter((node) => node && node.y > 0 && node.y < map.length - 2);
-
-    const guaranteedShop = reachableRewardNodes.find((node) => node.type === 'shop');
-    const guaranteedTreasureRow = this.guaranteedTreasureRow;
-    const guaranteedTreasureColumn = this.guaranteedTreasureColumn;
-
-    if (guaranteedShop) protectedKeys.add(`${guaranteedShop.x},${guaranteedShop.y}`);
-    if (guaranteedTreasureRow !== null) {
-      protectedKeys.add(`${guaranteedTreasureColumn},${guaranteedTreasureRow}`);
-    }
-
-    this._trimNodeType(map, 'treasure', 1, protectedKeys, reachableKeys);
-    this._trimNodeType(map, 'shop', 3, protectedKeys, reachableKeys);
+    mapEngine.enforceSpecialNodeLimits(this, map);
   }
 
   /**
@@ -653,16 +340,7 @@ export class GameState {
    * @param {(MapNode | null)[][]} map
    */
   _ensureReachableElite(map) {
-    const reachable = this._getReachableCoordinates(map)
-      .map(({ x, y }) => map[y]?.[x] ?? null)
-      .filter((node) => node && node.y > 0 && node.y < map.length - 2);
-
-    if (reachable.some((node) => node.type === 'elite' && node.y >= MIN_ELITE_LEVEL)) return;
-
-    const candidate = reachable.find((node) => node.type === 'fight' && node.y >= MIN_ELITE_LEVEL);
-    if (candidate) {
-      this._setNodeType(candidate, 'elite');
-    }
+    mapEngine.ensureReachableElite(this, map);
   }
 
   /**
@@ -671,23 +349,7 @@ export class GameState {
    * @param {(MapNode | null)[][]} map
    */
   _ensureReachableTrueEvent(map) {
-    const reachable = this._getReachableCoordinates(map)
-      .map(({ x, y }) => map[y]?.[x] ?? null)
-      .filter((node) => node && node.y > 0 && node.y < map.length - 2);
-
-    if (reachable.some((node) => node.type === 'event' && node.eventOutcome === 'event')) return;
-
-    const existingEventNode = reachable.find((node) => node.type === 'event');
-    if (existingEventNode) {
-      existingEventNode.eventOutcome = 'event';
-      return;
-    }
-
-    const promoteCandidate = reachable.find((node) => node.type === 'fight');
-    if (!promoteCandidate) return;
-
-    this._setNodeType(promoteCandidate, 'event');
-    promoteCandidate.eventOutcome = 'event';
+    mapEngine.ensureReachableTrueEvent(this, map);
   }
 
   /**
@@ -698,36 +360,7 @@ export class GameState {
    * @param {Set<string>} reachableKeys
    */
   _trimNodeType(map, type, maxCount, protectedKeys, reachableKeys) {
-    const nodes = [];
-
-    for (let y = 1; y < map.length - 2; y++) {
-      for (let x = 0; x < 3; x++) {
-        const node = map[y][x];
-        if (node?.type === type) {
-          nodes.push(node);
-        }
-      }
-    }
-
-    if (nodes.length <= maxCount) return;
-
-    const removable = nodes
-      .filter((node) => !protectedKeys.has(`${node.x},${node.y}`))
-      .sort((left, right) => {
-        const leftReachable = reachableKeys.has(`${left.x},${left.y}`) ? 1 : 0;
-        const rightReachable = reachableKeys.has(`${right.x},${right.y}`) ? 1 : 0;
-        if (leftReachable !== rightReachable) {
-          return leftReachable - rightReachable;
-        }
-        return right.y - left.y;
-      });
-
-    let overflow = nodes.length - maxCount;
-    removable.forEach((node) => {
-      if (overflow <= 0) return;
-      this._setNodeType(node, 'fight');
-      overflow -= 1;
-    });
+    mapEngine.trimNodeType(this, map, type, maxCount, protectedKeys, reachableKeys);
   }
 
   /**
@@ -735,28 +368,7 @@ export class GameState {
    * @returns {Array<{ x: number, y: number }>}
    */
   _getReachableCoordinates(map) {
-    const visited = new Set();
-    const queue = [{ x: 1, y: 0 }];
-    const output = [];
-
-    while (queue.length > 0) {
-      const current = queue.shift();
-      const key = `${current.x},${current.y}`;
-      if (visited.has(key)) continue;
-      visited.add(key);
-
-      const node = map[current.y]?.[current.x];
-      if (!node) continue;
-      output.push(current);
-
-      node.connections.forEach((targetX) => {
-        if (map[current.y + 1]?.[targetX]) {
-          queue.push({ x: targetX, y: current.y + 1 });
-        }
-      });
-    }
-
-    return output;
+    return mapEngine.getReachableCoordinates(map);
   }
 
   /**
@@ -764,26 +376,7 @@ export class GameState {
    * @param {MapNodeType} type
    */
   _setNodeType(node, type) {
-    if (!node) return;
-    const meta = {
-      fight: { label: 'Bitka', emoji: '⚔️' },
-      elite: { label: 'Elita', emoji: '🗡️' },
-      shop: { label: 'Jarmark', emoji: '🛖' },
-      treasure: { label: 'Skarb', emoji: '🎁' },
-      event: { label: 'Wydarzenie', emoji: '❓' },
-      campfire: { label: 'Watra', emoji: '🔥' },
-      boss: { label: 'Herszt', emoji: '👑' },
-      maryna: { label: 'Maryna', emoji: '👵' },
-    };
-    node.type = type;
-    node.label = meta[type].label;
-    node.emoji = meta[type].emoji;
-    node.weather = this._rollNodeWeather(type);
-    if (type === 'event') {
-      node.eventOutcome = this.rollEventNodeOutcome();
-    } else {
-      delete node.eventOutcome;
-    }
+    mapEngine.setNodeType(this, node, type);
   }
 
   /**
@@ -791,7 +384,7 @@ export class GameState {
    * @returns {number[]}
    */
   _getAdjacentColumns(x) {
-    return [x - 1, x, x + 1].filter((candidate) => candidate >= 0 && candidate <= 2);
+    return mapEngine.getAdjacentColumns(x);
   }
 
   /**
@@ -799,8 +392,7 @@ export class GameState {
    * @returns {number}
    */
   _pickNextColumn(x) {
-    const options = this._getAdjacentColumns(x);
-    return options[Math.floor(Math.random() * options.length)];
+    return mapEngine.pickNextColumn(this, x);
   }
 
   /**
@@ -808,11 +400,7 @@ export class GameState {
    * @param {number} targetX
    */
   _linkNode(node, targetX) {
-    if (!node) return;
-    if (!node.connections.includes(targetX)) {
-      node.connections.push(targetX);
-      node.connections.sort((a, b) => a - b);
-    }
+    mapEngine.linkNode(node, targetX);
   }
 
   /**
@@ -822,43 +410,19 @@ export class GameState {
    * @returns {boolean}
    */
   _hasInbound(map, y, x) {
-    if (y === 0) return true;
-    return map[y - 1].some((node) => node?.connections.includes(x));
+    return mapEngine.hasInbound(map, y, x);
   }
 
   /**
    * @param {(MapNode | null)[][]} map
    */
   _pruneUnreachableNodes(map) {
-    let changed = true;
-    while (changed) {
-      changed = false;
-      for (let y = 1; y <= map.length - 3; y++) {
-        for (let x = 0; x < 3; x++) {
-          const node = map[y][x];
-          if (!node) continue;
-          if (y === this.guaranteedTreasureRow && x === this.guaranteedTreasureColumn) continue;
-          if (!this._hasInbound(map, y, x)) {
-            map[y][x] = null;
-            changed = true;
-          }
-        }
-      }
-
-      for (let y = 0; y <= map.length - 3; y++) {
-        for (let x = 0; x < 3; x++) {
-          const node = map[y][x];
-          if (!node) continue;
-          node.connections = node.connections.filter((targetX) => !!map[y + 1]?.[targetX]);
-        }
-      }
-    }
+    mapEngine.pruneUnreachableNodes(this, map);
   }
 
   /** @returns {number[]} */
   getReachableNodes() {
-    const node = this.getCurrentMapNode();
-    return node ? [...node.connections] : [];
+    return navigationState.getReachableNodes(this);
   }
 
   /**
@@ -867,13 +431,7 @@ export class GameState {
    * @returns {boolean}
    */
   canTravelTo(level, nodeIndex) {
-    if (!this.hasStartedFirstBattle) return false;
-    if (level !== this.currentLevel + 1) return false;
-    const nextLevel = this.map[level];
-    if (!nextLevel || !nextLevel[nodeIndex]) return false;
-    const currentNode = this.getCurrentMapNode();
-    if (!currentNode) return false;
-    return currentNode.connections.includes(nodeIndex);
+    return navigationState.canTravelTo(this, level, nodeIndex);
   }
 
   /**
@@ -882,62 +440,29 @@ export class GameState {
    * @returns {MapNode | null}
    */
   travelTo(level, nodeIndex) {
-    if (!this.canTravelTo(level, nodeIndex)) return null;
-    this.currentLevel = level;
-    this.currentNodeIndex = nodeIndex;
-    this.currentNode = { x: nodeIndex, y: level };
-    this.maxFloorReached = Math.max(this.maxFloorReached, level + 1);
-    const node = this.getCurrentMapNode();
-    if (node && this.debugForcedNextNodeType && node.type !== 'boss' && node.type !== 'campfire') {
-      this._setNodeType(node, this.debugForcedNextNodeType);
-      this.debugForcedNextNodeType = null;
-    }
-    return node;
+    return navigationState.travelTo(this, level, nodeIndex);
   }
 
   /**
    * @returns {MapNode | null}
    */
   getCurrentMapNode() {
-    return this.map[this.currentLevel]?.[this.currentNodeIndex] ?? null;
+    return navigationState.getCurrentMapNode(this);
   }
 
   /** @returns {GameEventDef | null} */
   pickRandomEventDef() {
-    const currentAct = this._getCurrentAct();
-    const allEventIds = Object.keys(eventLibrary).filter((id) => {
-      const eventDef = eventLibrary[id];
-      return !eventDef?.act || eventDef.act === currentAct;
-    });
-    if (allEventIds.length === 0) return null;
-
-    const historyWindow = Math.max(0, allEventIds.length - 1);
-    const recentSlice = this.recentEventIds.slice(-historyWindow);
-    const filtered = allEventIds.filter((id) => !recentSlice.includes(id));
-    const pool = filtered.length > 0 ? filtered : allEventIds;
-
-    const eventId = pool[Math.floor(Math.random() * pool.length)];
-    this.recentEventIds.push(eventId);
-    if (this.recentEventIds.length > historyWindow) {
-      this.recentEventIds = this.recentEventIds.slice(-historyWindow);
-    }
-    return eventLibrary[eventId] ?? null;
+    return eventSystem.pickRandomEventDef(this);
   }
 
   /** @returns {'I' | 'II' | 'III'} */
   _getCurrentAct() {
-    const rows = Math.max(1, this.map.length);
-    const ratio = this.currentLevel / rows;
-    if (ratio < 1 / 3) return 'I';
-    if (ratio < 2 / 3) return 'II';
-    return 'III';
+    return navigationState.getCurrentAct(this);
   }
 
   /** @returns {number} */
   getPrestizNaKredytBlock() {
-    const baseBlock = 6;
-    const bonus = Math.min(14, Math.floor(this.dutki / 20) * 2);
-    return baseBlock + bonus;
+    return shopSystem.getPrestizNaKredytBlock(this);
   }
 
   /** @returns {'event' | 'fight' | 'shop'} */
@@ -952,17 +477,16 @@ export class GameState {
    * @param {string | null} eventId
    */
   setActiveEvent(eventId) {
-    this.activeEventId = eventId;
+    eventSystem.setActiveEvent(this, eventId);
   }
 
   /** @returns {GameEventDef | null} */
   getActiveEventDef() {
-    if (!this.activeEventId) return null;
-    return eventLibrary[this.activeEventId] ?? null;
+    return eventSystem.getActiveEventDef(this);
   }
 
   clearActiveEvent() {
-    this.activeEventId = null;
+    eventSystem.clearActiveEvent(this);
   }
 
   /**
@@ -970,39 +494,12 @@ export class GameState {
    * @returns {{ success: boolean, message: string }}
    */
   applyActiveEventChoice(choiceIndex) {
-    const eventDef = this.getActiveEventDef();
-    if (!eventDef) {
-      return { success: false, message: 'To wydarzenie już się skończyło.' };
-    }
-
-    const choice = eventDef.choices[choiceIndex];
-    if (!choice) {
-      return { success: false, message: 'Nieprawidłowy wybór.' };
-    }
-
-    if (this.dutki < choice.cost) {
-      return { success: false, message: 'Nie masz tylu dutków.' };
-    }
-
-    this.dutki -= choice.cost;
-    return { success: true, message: choice.effect(this) };
+    return eventSystem.applyActiveEventChoice(this, choiceIndex);
   }
 
   /** @returns {boolean} */
   applyJumpToBossShortcut() {
-    if (!this.jumpToBoss) return false;
-    const campfireLevel = this.map.length - 2;
-    const campfireNode = this.map[campfireLevel]?.[1];
-    if (!campfireNode) return false;
-
-    this.currentLevel = campfireLevel;
-    this.currentNodeIndex = 1;
-    this.currentNode = { x: 1, y: campfireLevel };
-    this.maxFloorReached = Math.max(this.maxFloorReached, campfireLevel + 1);
-    this.jumpToBoss = false;
-    this.hasStartedFirstBattle = true;
-    this._setCurrentWeatherFromNode();
-    return true;
+    return navigationState.applyJumpToBossShortcut(this);
   }
 
   /** @returns {import('../data/weather.js').WeatherDef} */
@@ -1011,8 +508,7 @@ export class GameState {
   }
 
   _setCurrentWeatherFromNode() {
-    const node = this.getCurrentMapNode();
-    this.currentWeather = node?.weather ?? 'clear';
+    navigationState.setCurrentWeatherFromNode(this);
   }
 
   /**
@@ -1052,6 +548,13 @@ export class GameState {
     return 'BANKRUT!';
   }
 
+  /** @returns {boolean} */
+  consumeLansActivatedEvent() {
+    if (!this.lansActivatedEvent) return false;
+    this.lansActivatedEvent = false;
+    return true;
+  }
+
   /** @returns {number} */
   consumeLansDutkiSpentEvent() {
     const spent = this.lansDutkiSpentEvent;
@@ -1085,8 +588,7 @@ export class GameState {
    * @param {number} amount
    */
   queueNextAttackCardBonus(amount) {
-    if (amount <= 0) return;
-    this.nextAttackCardBonus += amount;
+    playerState.queueNextAttackCardBonus(this, amount);
   }
 
   /**
@@ -1094,122 +596,61 @@ export class GameState {
    * @param {string | null} [victoryRelicId]
    */
   queueEventBattle(enemyId, victoryRelicId = null) {
-    const enemyDef = enemyLibrary[enemyId];
-    if (!enemyDef || enemyDef.tutorialOnly) return;
-    this.pendingEventBattleEnemyId = enemyId;
-    this.pendingEventVictoryRelicId = victoryRelicId;
+    eventSystem.queueEventBattle(this, enemyId, victoryRelicId);
   }
 
   /** @returns {{ enemyId: string, rewardRelicId: string | null } | null} */
   consumeQueuedEventBattle() {
-    if (!this.pendingEventBattleEnemyId) return null;
-    const payload = {
-      enemyId: this.pendingEventBattleEnemyId,
-      rewardRelicId: this.pendingEventVictoryRelicId,
-    };
-    this.pendingEventBattleEnemyId = null;
-    this.pendingEventVictoryRelicId = null;
-    return payload;
+    return eventSystem.consumeQueuedEventBattle(this);
   }
 
   /** @returns {string | null} */
   consumePendingEventVictoryRelicReward() {
-    if (this.battleContext !== 'event') return null;
-    if (!this.pendingEventVictoryRelicId) return null;
-    const relicId = this.pendingEventVictoryRelicId;
-    this.pendingEventVictoryRelicId = null;
-    return relicId;
+    return eventSystem.consumePendingEventVictoryRelicReward(this);
   }
 
   _checkEnemyBankruptcy() {
-    if (this.enemyBankruptFlag) {
-      this.enemyBankruptcyPending = false;
-      return;
-    }
-    this.enemyBankruptcyPending = this._isEnemyBankruptcyConditionMet();
+    enemyState.checkEnemyBankruptcy(this);
   }
 
   /** @returns {boolean} */
   _isEnemyBankruptcyConditionMet() {
-    if (this.enemy.passive === 'targowanie_sie') return false;
-    if (this.enemy.rachunek <= 0) return false;
-    return this.enemy.rachunek >= this.enemy.hp;
+    return enemyState.isEnemyBankruptcyConditionMet(this);
   }
 
   /** @returns {boolean} */
   _resolveEnemyBankruptcyAtTurnStart() {
-    this._checkEnemyBankruptcy();
-    if (!this.enemyBankruptcyPending) return false;
-    this.enemyBankrupt();
-    this.enemyBankruptcyPending = false;
-    return true;
+    return enemyState.resolveEnemyBankruptcyAtTurnStart(this);
   }
 
   enemyBankrupt() {
-    if (this.enemyBankruptFlag) return;
-    this.enemyBankruptFlag = true;
-    this.enemy.hp = 0;
-    this.enemy.isBankrupt = true;
-    const bonus = Math.min(25, Math.floor(this.enemy.rachunek / 3));
-    this.enemyBankruptcyBonus = bonus;
-    if (bonus > 0) {
-      this.addDutki(bonus);
-      this.lastVictoryMessage = `Wróg zbankrutował! +${bonus} ${this.getDutkiLabel(bonus)}`;
-    } else {
-      this.lastVictoryMessage = 'Wróg zbankrutował!';
-    }
-    this.enemyBankruptcyPending = false;
+    enemyState.enemyBankrupt(this);
   }
 
   /**
    * @param {number} amount
    */
   addDutki(amount) {
-    if (amount <= 0) return;
-    this.dutki += amount;
-    this.totalDutkiEarned += amount;
+    shopSystem.addDutki(this, amount);
   }
 
   /**
    * @param {number} amount
    */
   addEnemyRachunek(amount) {
-    if (amount <= 0) return;
-    if (this.enemy.passive === 'targowanie_sie') {
-      this.rachunekResistEvent = true;
-      this.enemy.rachunek = 0;
-      this._checkEnemyBankruptcy();
-      return;
-    }
-    let appliedAmount = amount;
-    if (this.enemy.id === 'fiakier') {
-      // Fiakier has a soft counter to Rachunek builds: only 70% incoming stacks apply.
-      appliedAmount = Math.max(1, Math.floor(amount * 0.7));
-    }
-    this.enemy.rachunek += appliedAmount;
-    if (this.hasRelic('pekniete_liczydlo')) {
-      this.player.hp = Math.min(this.player.maxHp, this.player.hp + 2);
-    }
-    this._checkEnemyBankruptcy();
+    enemyState.addEnemyRachunek(this, amount);
   }
 
   /**
    * @param {PlayerState | EnemyState} entity
    */
   _applyHalnyBlockDrain(entity) {
-    if (this.currentWeather !== 'halny') return;
-    entity.block = Math.max(0, entity.block - 2);
+    playerState.applyHalnyBlockDrain(this, entity);
   }
 
   /** @returns {string | null} */
   grantTreasureRelic() {
-    const pool = this._buildAvailableRelicPool();
-    if (pool.length === 0) return null;
-    const relicId = this.getRandomItem(pool, relicLibrary);
-    if (!relicId) return null;
-    this._markRelicAsSeen(relicId);
-    this.addRelic(relicId);
-    return relicId;
+    return relicSystem.grantTreasureRelic(this);
   }
 
   /**
@@ -1217,15 +658,7 @@ export class GameState {
    * @returns {string | null}
    */
   generateRelicReward(forceDrop = false) {
-    const relicChance = 0.33;
-    if (!forceDrop && Math.random() >= relicChance) return null;
-
-    const pool = this._buildAvailableRelicPool();
-    if (pool.length === 0) return null;
-    const relicId = this.getRandomItem(pool, relicLibrary);
-    if (!relicId) return null;
-    this._markRelicAsSeen(relicId);
-    return relicId;
+    return relicSystem.generateRelicReward(this, forceDrop);
   }
 
   /**
@@ -1235,12 +668,7 @@ export class GameState {
    * @returns {string[]}
    */
   generateRelicChoices(count) {
-    const pool = this._buildAvailableRelicPool();
-    if (pool.length < count) return [];
-
-    const choices = this._pickUniqueItems(pool, relicLibrary, count);
-    choices.forEach((relicId) => this._markRelicAsSeen(relicId));
-    return choices;
+    return relicSystem.generateRelicChoices(this, count);
   }
 
   /**
@@ -1248,34 +676,21 @@ export class GameState {
    * @returns {string[]}
    */
   generateCardRewardChoices(count) {
-    const pool = Object.keys(cardLibrary).filter(
-      (id) =>
-        !cardLibrary[id]?.isStarter && !cardLibrary[id]?.eventOnly && !cardLibrary[id]?.tutorialOnly
-    );
-    return this._pickUniqueItems(pool, cardLibrary, count, CARD_REWARD_RARITY_WEIGHTS);
+    return generateDeckCardRewardChoices(this, count);
   }
 
   /**
    * @returns {string[]}
    */
   _buildAvailableRelicPool() {
-    return Object.keys(relicLibrary).filter(
-      (id) =>
-        !this.relics.includes(id) &&
-        !this.seenRelicOffers.includes(id) &&
-        !relicLibrary[id]?.eventOnly &&
-        !relicLibrary[id]?.tutorialOnly &&
-        !relicLibrary[id]?.marynaOnly
-    );
+    return relicSystem.buildAvailableRelicPool(this);
   }
 
   /**
    * @param {string} relicId
    */
   _markRelicAsSeen(relicId) {
-    if (!this.seenRelicOffers.includes(relicId)) {
-      this.seenRelicOffers.push(relicId);
-    }
+    relicSystem.markRelicAsSeen(this, relicId);
   }
 
   /**
@@ -1285,38 +700,7 @@ export class GameState {
    * @returns {string | null}
    */
   getRandomItem(pool, library, rarityWeights = RARITY_WEIGHTS) {
-    if (!pool || pool.length === 0) return null;
-
-    const byRarity = {
-      common: [],
-      uncommon: [],
-      rare: [],
-    };
-
-    pool.forEach((id) => {
-      const rarity = library[id]?.rarity ?? 'common';
-      byRarity[rarity].push(id);
-    });
-
-    const rarityPool = /** @type {Array<'common' | 'uncommon' | 'rare'>} */ (
-      Object.keys(byRarity).filter((rarity) => byRarity[rarity].length > 0)
-    );
-    if (rarityPool.length === 0) return null;
-
-    const weightSum = rarityPool.reduce((sum, rarity) => sum + rarityWeights[rarity], 0);
-    let roll = Math.random() * weightSum;
-
-    let selectedRarity = rarityPool[rarityPool.length - 1];
-    for (const rarity of rarityPool) {
-      roll -= rarityWeights[rarity];
-      if (roll < 0) {
-        selectedRarity = rarity;
-        break;
-      }
-    }
-
-    const rarityItems = byRarity[selectedRarity];
-    return rarityItems[Math.floor(Math.random() * rarityItems.length)] ?? null;
+    return relicSystem.getRandomItem(pool, library, rarityWeights);
   }
 
   /**
@@ -1327,18 +711,7 @@ export class GameState {
    * @returns {string[]}
    */
   _pickUniqueItems(pool, library, count, rarityWeights = RARITY_WEIGHTS) {
-    const remaining = [...pool];
-    const picks = [];
-
-    while (remaining.length > 0 && picks.length < count) {
-      const id = this.getRandomItem(remaining, library, rarityWeights);
-      if (!id) break;
-      picks.push(id);
-      const idx = remaining.indexOf(id);
-      if (idx >= 0) remaining.splice(idx, 1);
-    }
-
-    return picks;
+    return relicSystem.pickUniqueItems(this, pool, library, count, rarityWeights);
   }
 
   /**
@@ -1346,7 +719,7 @@ export class GameState {
    * @returns {boolean}
    */
   hasRelic(relicId) {
-    return this.relics.includes(relicId);
+    return relicSystem.hasRelic(this, relicId);
   }
 
   /**
@@ -1354,63 +727,14 @@ export class GameState {
    * @returns {boolean}
    */
   spendDutki(cost) {
-    if (this.dutki < cost) return false;
-    this.dutki -= cost;
-    return true;
+    return shopSystem.spendDutki(this, cost);
   }
 
   /**
    * @returns {ShopStock}
    */
   generateShopStock() {
-    if (this.hasRelic('certyfikowany_oscypek') && this.certyfikowanyOscypekShopProcs < 3) {
-      this.gainMaxHp(2);
-      this.certyfikowanyOscypekShopProcs += 1;
-    }
-
-    // Lista Zakupów: first shop only gets card discount, free removal stays until consumed.
-    const isListaFirstShopVisit =
-      this.hasRelic('relic_boon_lista_zakupow') && !this.maryna.flags.listaFirstShopUsed;
-    if (isListaFirstShopVisit) {
-      this.maryna.flags.listaFirstShopUsed = true;
-      this.maryna.flags.listaDiscountActive = true;
-      this.maryna.flags.listaFreeRemovalAvailable = true;
-    } else {
-      this.maryna.flags.listaDiscountActive = false;
-    }
-
-    const cardPool = Object.keys(cardLibrary).filter(
-      (id) =>
-        !cardLibrary[id]?.isStarter && !cardLibrary[id]?.eventOnly && !cardLibrary[id]?.tutorialOnly
-    );
-
-    const relicPool = this._buildAvailableRelicPool().filter(
-      (id) => !relicLibrary[id]?.eventOnly && !relicLibrary[id]?.tutorialOnly
-    );
-    let relicId = null;
-    const shouldForceHardPapryczka = this.difficulty === 'hard' && !this.hardFirstShopRolled;
-
-    if (shouldForceHardPapryczka) {
-      this.hardFirstShopRolled = true;
-      if (relicPool.includes('papryczka_marka')) {
-        relicId = 'papryczka_marka';
-      }
-    }
-
-    if (!relicId) {
-      relicId = this.getRandomItem(relicPool, relicLibrary);
-    }
-
-    if (relicId) {
-      this._markRelicAsSeen(relicId);
-    }
-
-    this.shopStock = {
-      cards: this._pickUniqueItems(cardPool, cardLibrary, 3),
-      relic: relicId,
-    };
-    this.lastShopMessage = '';
-    return this.shopStock;
+    return shopSystem.generateShopStock(this);
   }
 
   /**
@@ -1419,32 +743,7 @@ export class GameState {
    * @returns {{ success: boolean, message: string }}
    */
   buyItem(item, type) {
-    if (this.dutki < item.price) {
-      this.lastShopMessage = 'Ni mos tela dutków, synek!';
-      return { success: false, message: this.lastShopMessage };
-    }
-
-    if (type === 'card') {
-      if (!this.shopStock.cards.includes(item.id)) {
-        this.lastShopMessage = 'To już wykupione.';
-        return { success: false, message: this.lastShopMessage };
-      }
-      this.dutki -= item.price;
-      this.deck.push(item.id);
-      this.shopStock.cards = this.shopStock.cards.filter((id) => id !== item.id);
-      this.lastShopMessage = `Kupiono kartę: ${item.name}`;
-      return { success: true, message: this.lastShopMessage };
-    }
-
-    if (this.shopStock.relic !== item.id || this.hasRelic(item.id)) {
-      this.lastShopMessage = 'Tej pamiątki nie ma.';
-      return { success: false, message: this.lastShopMessage };
-    }
-    this.dutki -= item.price;
-    this.addRelic(item.id);
-    this.shopStock.relic = null;
-    this.lastShopMessage = `Kupiono pamiątkę: ${item.name}`;
-    return { success: true, message: this.lastShopMessage };
+    return shopSystem.buyItem(this, item, type);
   }
 
   /**
@@ -1452,21 +751,7 @@ export class GameState {
    * @returns {boolean}
    */
   removeCardFromDeck(cardId) {
-    const removeFrom = (arr) => {
-      const idx = arr.indexOf(cardId);
-      if (idx >= 0) {
-        arr.splice(idx, 1);
-        return true;
-      }
-      return false;
-    };
-
-    return (
-      removeFrom(this.deck) ||
-      removeFrom(this.hand) ||
-      removeFrom(this.discard) ||
-      removeFrom(this.exhaust)
-    );
+    return removeDeckCard(this, cardId);
   }
 
   /**
@@ -1474,16 +759,7 @@ export class GameState {
    * @returns {boolean}
    */
   addRelic(relicId) {
-    if (!relicLibrary[relicId] || this.hasRelic(relicId)) return false;
-
-    this.relics.push(relicId);
-    this._markRelicAsSeen(relicId);
-
-    if (relicId === 'pas_bacowski') {
-      this.gainMaxHp(6);
-    }
-
-    return true;
+    return relicSystem.addRelic(this, relicId);
   }
 
   /**
@@ -1491,17 +767,14 @@ export class GameState {
    * @param {number} amount
    */
   gainMaxHp(amount) {
-    if (amount <= 0) return;
-    this.player.maxHp += amount;
-    this.player.hp = Math.min(this.player.maxHp, this.player.hp + amount);
+    playerState.gainMaxHp(this, amount);
   }
 
   /**
    * @param {number} amount
    */
   healPlayer(amount) {
-    if (this.hasRelic('dzwonek_owcy')) return;
-    this.player.hp = Math.min(this.player.maxHp, this.player.hp + amount);
+    playerState.healPlayer(this, amount);
   }
 
   /**
@@ -1510,13 +783,7 @@ export class GameState {
    * @param {number} amount
    */
   applyEnemyDebuff(key, amount) {
-    if (amount <= 0) return;
-    if (this.enemy.id === 'boss' && (this.enemy.bossArtifact ?? 0) > 0) {
-      this.enemy.bossArtifact -= 1;
-      return;
-    }
-    this.enemy.status[key] += amount;
-    this._checkEnemyBankruptcy();
+    enemyState.applyEnemyDebuff(this, key, amount);
   }
 
   /**
@@ -1524,7 +791,7 @@ export class GameState {
    * @param {number} amount
    */
   upgradeCardDamage(cardId, amount = 3) {
-    this.cardDamageBonus[cardId] = (this.cardDamageBonus[cardId] ?? 0) + amount;
+    upgradeDeckCardDamage(this, cardId, amount);
   }
 
   /**
@@ -1532,24 +799,14 @@ export class GameState {
    * @returns {number}
    */
   getCardDamageBonus(cardId) {
-    return this.cardDamageBonus[cardId] ?? 0;
+    return getDeckCardDamageBonus(this, cardId);
   }
 
   /**
    * @returns {string[]}
    */
   getUpgradeableAttackCards() {
-    const pool = [...this.deck, ...this.hand, ...this.discard, ...this.exhaust];
-    const attackIds = new Set([
-      'ciupaga',
-      'kierpce',
-      'redyk',
-      'zadyma',
-      'janosik',
-      'sandaly',
-      'giewont',
-    ]);
-    return [...new Set(pool.filter((id) => attackIds.has(id)))];
+    return getDeckUpgradeableAttackCards(this);
   }
 
   /**
@@ -1558,14 +815,7 @@ export class GameState {
    * @returns {number}
    */
   getCardCostInHand(cardId) {
-    if (this.hasRelic('flaszka_sliwowicy') && cardId in this.flaszkaCostSeed) {
-      return this.flaszkaCostSeed[cardId];
-    }
-    const card = cardLibrary[cardId];
-    if (this.zegarekFreeSkillAvailable && card?.type === 'skill') {
-      return 0;
-    }
-    return card?.cost ?? 0;
+    return playerState.getCardCostInHand(this, cardId);
   }
 
   /**
@@ -1574,14 +824,7 @@ export class GameState {
    * @returns {number}
    */
   getCardShopPrice(cardId) {
-    const base = cardLibrary[cardId]?.price ?? 0;
-    if (this.hasRelic('zlota_karta_zakopianczyka')) {
-      return Math.floor(base * 0.85);
-    }
-    if (this.maryna.flags.listaDiscountActive) {
-      return Math.floor(base * 0.7);
-    }
-    return base;
+    return playerState.getCardShopPrice(this, cardId);
   }
 
   /**
@@ -1589,24 +832,15 @@ export class GameState {
    * @returns {number}
    */
   getShopRemovalPrice() {
-    if (this.hasRelic('zlota_karta_zakopianczyka')) return 25;
-    if (this.maryna.flags.listaFreeRemovalAvailable && !this.maryna.flags.listaFreeRemovalUsed) {
-      return 0;
-    }
-    return 100;
+    return playerState.getShopRemovalPrice(this);
   }
 
   /**
-   * Marks a hand slot to be kept for next turn (smycz_zakopane).
-    /**
-     * Called after a card is removed in the shop.
-     * Marks lista_zakupow free removal as used and ends the discount.
-     */
+   * Called after a card is removed in the shop.
+   * Marks lista_zakupow free removal as used and ends the discount.
+   */
   afterShopCardRemoval() {
-    if (this.maryna.flags.listaFreeRemovalAvailable && !this.maryna.flags.listaFreeRemovalUsed) {
-      this.maryna.flags.listaFreeRemovalUsed = true;
-      this.maryna.flags.listaDiscountActive = false;
-    }
+    playerState.afterShopCardRemoval(this);
   }
 
   /**
@@ -1615,133 +849,47 @@ export class GameState {
    * @param {number} handIndex
    */
   setSmyczKeptCard(handIndex) {
-    if (!this.hasRelic('smycz_zakopane')) return;
-    if (handIndex < 0 || handIndex >= this.hand.length) return;
-    this.smyczKeptHandIndex = this.smyczKeptHandIndex === handIndex ? null : handIndex;
+    playerState.setSmyczKeptCard(this, handIndex);
   }
 
   /**
    * @returns {number}
    */
   grantBattleDutki() {
-    if (!this.pendingBattleDutki) return 0;
-    const base = 28 + Math.floor(Math.random() * 9);
-    let drop =
-      this.enemy.isBankrupt && this.hasRelic('magnes_na_lodowke') ? Math.floor(base * 1.5) : base;
-
-    if (this.enemy.isElite) {
-      drop = Math.floor(drop * 1.5);
-    }
-
-    // Szczęśliwa Podkowa: +25 Dutki when HP ≤ 40% at end of battle
-    if (
-      this.hasRelic('szczegliwa_podkowa') &&
-      this.player.hp <= Math.floor(this.player.maxHp * 0.4)
-    ) {
-      drop += 25;
-    }
-
-    this.addDutki(drop);
-    this.pendingBattleDutki = false;
-
-    if (this.hasRelic('zasluzony_portfel') && this.battleContext !== 'event') {
-      this.addDutki(6);
-      drop += 6;
-    }
-
-    // Termos z Herbatką: ≤2 turns → +4 HP, otherwise → +15 Dutki
-    if (this.hasRelic('termos_z_herbatka')) {
-      if (this.battleTurnsElapsed <= 2) {
-        this.healPlayer(4);
-      } else {
-        this.addDutki(15);
-        drop += 15;
-      }
-    }
-
-    // Kiesa: +20 dutki on first non-event win
-    if (
-      this.hasRelic('relic_boon_kiesa') &&
-      !this.maryna.flags.kiesaFirstWinClaimed &&
-      this.battleContext !== 'event'
-    ) {
-      this.addDutki(20);
-      drop += 20;
-      this.maryna.flags.kiesaFirstWinClaimed = true;
-    }
-
-    return drop;
+    return shopSystem.grantBattleDutki(this);
   }
 
   /**
    * @returns {number}
    */
   _drawPerTurn() {
-    return 5;
+    return combatEngine.drawPerTurn(this);
   }
 
   /**
    * Applies one-time effects that should trigger at the start of each battle.
    */
   _applyBattleStartRelics() {
-    if (this.hasRelic('flaszka_sliwowicy')) {
-      this.player.status.strength += 4;
-    }
-
-    if (this.hasRelic('papryczka_marka')) {
-      this.player.status.strength += 3;
-    }
-
-    if (this.hasRelic('blacha_przewodnika')) {
-      this.player.status.lans = 1;
-    }
-
-    if (this.hasRelic('krzywy_portret')) {
-      this.enemy.portraitShameTurns = 1;
-      this._refreshEnemyIntent();
-    }
-
-    // ---- Maryna boon battle-start effects ----
-    if (this.hasRelic('relic_boon_zloty_rozaniec')) {
-      this.player.status.next_double = true;
-    }
-
-    if (this.hasRelic('relic_boon_tajny_skladnik')) {
-      this.applyEnemyDebuff('weak', 1);
-      this.applyEnemyDebuff('fragile', 1);
-    }
-
-    if (
-      this.hasRelic('relic_boon_sloik_rosolu') &&
-      (this.maryna.counters.rosolBattlesLeft ?? 3) > 0
-    ) {
-      this.maryna.counters.rosolBattlesLeft = (this.maryna.counters.rosolBattlesLeft ?? 3) - 1;
-      this.gainPlayerBlockFromCard(6);
-      this.player.status.strength += 1;
-    }
+    combatEngine.applyBattleStartRelics(this);
   }
 
   /** @returns {boolean} */
   _isLansActive() {
-    return this.player.status.lans > 0;
+    return playerState.isLansActive(this);
   }
 
   /**
    * @param {boolean} active
    */
   _setLansActive(active) {
-    this.player.status.lans = active ? 1 : 0;
+    playerState.setLansActive(this, active);
   }
 
   /**
    * @param {number} amount
    */
   gainPlayerBlockFromCard(amount) {
-    let effective = this.player.status.fragile > 0 ? Math.floor(amount * 0.75) : amount;
-    if (this.hasRelic('lustrzane_gogle') && this._isLansActive()) {
-      effective += 2;
-    }
-    this.player.block += effective;
+    playerState.gainPlayerBlockFromCard(this, amount);
   }
 
   /**
@@ -1749,111 +897,17 @@ export class GameState {
    * @returns {EnemyState}
    */
   _createEnemyState(enemyDef) {
-    const isFinalBossVariant = enemyDef.id === 'boss' || enemyDef.id === 'fiakier';
-    const isMainBoss = enemyDef.id === 'boss';
-    const scale = isFinalBossVariant ? 1 : this.enemyScaleFactor;
-    const eliteDamageScale = enemyDef.elite ? 1.15 : 1;
-    const pattern = enemyDef.pattern
-      ? enemyDef.pattern.map((move) => {
-          if (move.type !== 'attack') return { ...move };
-          return { ...move, damage: Math.round(move.damage * scale * eliteDamageScale) };
-        })
-      : [];
-    const phaseTwoPattern = enemyDef.phaseTwoPattern
-      ? enemyDef.phaseTwoPattern.map((move) => {
-          if (move.type !== 'attack') return { ...move };
-          return { ...move, damage: Math.round(move.damage * scale * eliteDamageScale) };
-        })
-      : [];
-    const bossBaseHp = this.difficulty === 'hard' ? 330 : 180;
-    const baseMaxHp =
-      this.difficulty === 'hard' && isFinalBossVariant
-        ? bossBaseHp
-        : isMainBoss
-          ? bossBaseHp
-          : enemyDef.maxHp;
-    const dzwonekMod = this.hasRelic('dzwonek_owcy') ? 0.8 : 1.0;
-    const eliteHpScale = enemyDef.elite ? 1.25 : 1;
-    const maxHp = Math.round(baseMaxHp * scale * dzwonekMod * eliteHpScale);
-    /** @type {EnemyState} */
-    const enemyState = {
-      id: enemyDef.id,
-      name: enemyDef.name,
-      emoji: enemyDef.emoji,
-      hp: maxHp,
-      maxHp,
-      block: enemyDef.block,
-      nextAttack: 0,
-      baseAttack: Math.round((enemyDef.baseAttack ?? 0) * scale * eliteDamageScale),
-      status: defaultStatus(),
-      rachunek: 0,
-      ped: 0,
-      spriteSvg: enemyDef.spriteSvg,
-      phase2SpriteSvg: enemyDef.phase2SpriteSvg,
-      patternType: enemyDef.patternType,
-      pattern,
-      phaseTwoPattern,
-      patternIndex: 0,
-      currentIntent: { type: 'attack', name: 'Atak', damage: 0, hits: 1 },
-      tookHpDamageThisTurn: false,
-      bossArtifact: isMainBoss ? 2 : 0,
-      passive: enemyDef.passive ?? null,
-      isElite: Boolean(enemyDef.elite),
-      isBoss: Boolean(enemyDef.isBoss) || isFinalBossVariant,
-      stunnedTurns: 0,
-      lichwaTriggeredThisTurn: false,
-      hartDuchaTriggered: false,
-      portraitShameTurns: 0,
-      phaseTwoTriggered: false,
-      evasionCharges: 0,
-    };
-    enemyState.currentIntent = this._buildEnemyIntent(enemyState);
-    enemyState.nextAttack =
-      enemyState.currentIntent.type === 'attack' ? enemyState.currentIntent.damage : 0;
-    return enemyState;
+    return enemyState.createEnemyState(this, enemyDef);
   }
 
   /** @returns {import('../data/enemies.js').EnemyDef} */
   _pickRandomEnemyDef(isElite = false) {
-    let enemyIds = Object.keys(enemyLibrary).filter(
-      (id) =>
-        id !== 'boss' &&
-        id !== 'fiakier' &&
-        id !== 'pomocnik_fiakra' &&
-        !enemyLibrary[id]?.eventOnly &&
-        !enemyLibrary[id]?.tutorialOnly
-    );
-
-    enemyIds = enemyIds.filter((id) => Boolean(enemyLibrary[id]?.elite) === isElite);
-
-    if (enemyIds.length === 0) {
-      enemyIds = Object.keys(enemyLibrary).filter(
-        (id) =>
-          id !== 'boss' &&
-          id !== 'fiakier' &&
-          id !== 'pomocnik_fiakra' &&
-          !enemyLibrary[id]?.eventOnly &&
-          !enemyLibrary[id]?.tutorialOnly &&
-          Boolean(enemyLibrary[id]?.elite) !== isElite
-      );
-    }
-
-    if (!isElite && this.lastRegularEnemyId && enemyIds.length > 1) {
-      enemyIds = enemyIds.filter((id) => id !== this.lastRegularEnemyId);
-    }
-
-    const enemyId = enemyIds[Math.floor(Math.random() * enemyIds.length)];
-    if (!isElite) {
-      this.lastRegularEnemyId = enemyId;
-    }
-    return enemyLibrary[enemyId];
+    return enemyState.pickRandomEnemyDef(this, isElite);
   }
 
   /** @returns {import('../data/enemies.js').EnemyDef} */
   _pickFinalBossDef() {
-    const bossIds = ['boss', 'fiakier'];
-    const bossId = bossIds[Math.floor(Math.random() * bossIds.length)];
-    return enemyLibrary[bossId];
+    return enemyState.pickFinalBossDef();
   }
 
   /**
@@ -1861,21 +915,7 @@ export class GameState {
    * @param {string[]} startingDeck
    */
   initGame(startingDeck) {
-    this.deck = [...startingDeck];
-    this._shuffle(this.deck);
-    this.attackCardsPlayedThisBattle = 0;
-    this.pocztowkaUsedThisBattle = false;
-    this.smyczKeptCardId = null;
-    this.flaszkaCostSeed = {};
-    this.termometerTurnParity = 0;
-    this.battleTurnsElapsed = 0;
-    this.zegarekFreeSkillAvailable = false;
-    this._resetBattleScopedFlags();
-    this._setCurrentWeatherFromNode();
-    this._applyBattleStartRelics();
-    this.startTurn();
-    this.pendingBattleDutki = true;
-    this.isInputLocked = false;
+    battleLifecycle.initGame(this, startingDeck);
   }
 
   /**
@@ -1893,22 +933,7 @@ export class GameState {
    * @returns {string[]}
    */
   _drawCards(amount) {
-    const drawn = [];
-    const effectiveAmount = amount;
-    for (let i = 0; i < effectiveAmount; i++) {
-      if (this.deck.length === 0) {
-        if (this.discard.length === 0) break;
-        this.deck = [...this.discard];
-        this.discard = [];
-        this._shuffle(this.deck);
-      }
-      const cardId = this.deck.pop();
-      if (typeof cardId === 'string') {
-        this.hand.push(cardId);
-        drawn.push(cardId);
-      }
-    }
-    return drawn;
+    return combatEngine.drawCards(this, amount);
   }
 
   /**
@@ -1916,39 +941,23 @@ export class GameState {
    * Base 8 yields range 5..10.
    * @returns {number}
    */
-  _rollEnemyAttack(enemyState = this.enemy) {
-    return Math.max(1, enemyState.baseAttack - 3 + Math.floor(Math.random() * 6));
+  _rollEnemyAttack(enemyEntity = this.enemy) {
+    return enemyState.rollEnemyAttack(this, enemyEntity);
   }
 
   /**
-   * @param {EnemyState} enemyState
+   * @param {EnemyState} enemyEntity
    * @returns {EnemyMoveDef}
    */
-  _buildEnemyIntent(enemyState) {
-    if (enemyState.patternType === 'loop') {
-      const activePattern =
-        enemyState.phaseTwoTriggered && enemyState.phaseTwoPattern.length > 0
-          ? enemyState.phaseTwoPattern
-          : enemyState.pattern;
-      const move = activePattern[enemyState.patternIndex % activePattern.length];
-      return { ...move };
-    }
-
-    return {
-      type: 'attack',
-      name: 'Pstryka fotkę',
-      damage: this._rollEnemyAttack(enemyState),
-      hits: 1,
-    };
+  _buildEnemyIntent(enemyEntity) {
+    return enemyState.buildEnemyIntent(this, enemyEntity);
   }
 
   /**
    * Refreshes the enemy intent after state changes.
    */
   _refreshEnemyIntent() {
-    this.enemy.currentIntent = this._buildEnemyIntent(this.enemy);
-    this.enemy.nextAttack =
-      this.enemy.currentIntent.type === 'attack' ? this.enemy.currentIntent.damage : 0;
+    enemyState.refreshEnemyIntent(this);
   }
 
   /**
@@ -1963,43 +972,7 @@ export class GameState {
    * @returns {number}
    */
   calculateDamage(baseDmg, sourceEntity, targetEntity) {
-    let dmg = baseDmg;
-
-    if (sourceEntity.status.weak > 0) {
-      const weakMultiplier = this.currentWeather === 'frozen' ? 0.5 : 0.75;
-      dmg = Math.floor(dmg * weakMultiplier);
-    }
-
-    if (sourceEntity.status.strength > 0) {
-      dmg += sourceEntity.status.strength;
-    }
-
-    if (
-      sourceEntity === this.player &&
-      targetEntity === this.enemy &&
-      sourceEntity.status.next_double
-    ) {
-      dmg *= 2;
-      sourceEntity.status.next_double = false;
-    }
-
-    if (
-      sourceEntity === this.player &&
-      targetEntity === this.enemy &&
-      sourceEntity.status.furia_turysty > 0
-    ) {
-      dmg = Math.ceil(dmg * 1.5);
-    }
-
-    if (sourceEntity === this.enemy && this.enemy.portraitShameTurns > 0) {
-      dmg = Math.max(0, dmg - 2);
-    }
-
-    if (targetEntity.status.vulnerable > 0) {
-      dmg = Math.ceil(dmg * 1.5);
-    }
-
-    return Math.max(0, dmg);
+    return playerState.calculateDamage(this, baseDmg, sourceEntity, targetEntity);
   }
 
   /**
@@ -2017,29 +990,11 @@ export class GameState {
   }
 
   _handleEnemyPhaseTransitions() {
-    if (this.enemy.id !== 'naganiacze_duo') return;
-    if (this.enemy.phaseTwoTriggered) return;
-    if (this.enemy.hp > 40 || this.enemy.hp <= 0) return;
-
-    this.enemy.phaseTwoTriggered = true;
-    this.enemy.patternIndex = 0;
-    this.enemy.status.weak = 0;
-    this.enemy.status.fragile = 0;
-    this.enemy.status.vulnerable = 0;
-    this.enemy.status.strength += 2;
-    this.enemy.block += 8;
-    if (this.enemy.phase2SpriteSvg) {
-      this.enemy.spriteSvg = this.enemy.phase2SpriteSvg;
-    }
-    this.enemyPhaseTransitionMessage = 'Seba ucieka! Mati wpada w furię!';
-    this._refreshEnemyIntent();
+    enemyState.handleEnemyPhaseTransitions(this);
   }
 
   _resetBattleScopedFlags() {
-    this.nextAttackCardBonus = 0;
-    this.currentAttackCardBonus = 0;
-    this.enemyEvasionEvent = false;
-    this.enemyPhaseTransitionMessage = null;
+    combatEngine.resetBattleScopedFlags(this);
   }
 
   /**
@@ -2048,74 +1003,7 @@ export class GameState {
    * @returns {{ raw: number, blocked: number, dealt: number }}
    */
   _applyDamageToEnemy(dmg) {
-    if (
-      this.currentWeather === 'fog' &&
-      this.combat.activeSide === 'player' &&
-      this.combat.playerAttackMissCheck
-    ) {
-      if (!this.combat.playerAttackMissRolled) {
-        this.combat.playerAttackMissRolled = true;
-        this.combat.playerAttackMissed = Math.random() < 0.5;
-        if (this.combat.playerAttackMissed) {
-          this._registerWeatherMiss('enemy');
-        }
-      }
-      if (this.combat.playerAttackMissed) {
-        return { raw: 0, blocked: 0, dealt: 0 };
-      }
-    }
-
-    if (this.combat.activeSide === 'player' && this.enemy.evasionCharges > 0) {
-      this.enemy.evasionCharges -= 1;
-      this.enemyEvasionEvent = true;
-      return { raw: 0, blocked: 0, dealt: 0 };
-    }
-
-    const hpBefore = this.enemy.hp;
-    const blocked = Math.min(this.enemy.block, dmg);
-    const dealt = dmg - blocked;
-    this.enemy.block -= blocked;
-    this.enemy.hp -= dealt;
-
-    if (this.enemy.hp < hpBefore) {
-      this.enemy.tookHpDamageThisTurn = true;
-
-      if (
-        this.enemy.passive === 'lichwa' &&
-        this.combat.activeSide === 'player' &&
-        !this.enemy.lichwaTriggeredThisTurn
-      ) {
-        this.dutki = Math.max(0, this.dutki - 3);
-        this.enemy.lichwaTriggeredThisTurn = true;
-      }
-
-      if (
-        this.enemy.passive === 'hart_ducha' &&
-        !this.enemy.hartDuchaTriggered &&
-        this.enemy.hp > 0 &&
-        this.enemy.hp < this.enemy.maxHp * 0.5
-      ) {
-        this.enemy.status.strength += 3;
-        this.enemy.block += 10;
-        this.enemy.hartDuchaTriggered = true;
-      }
-
-      this._handleEnemyPhaseTransitions();
-    }
-
-    this._checkEnemyBankruptcy();
-    if (
-      dmg > 0 &&
-      this.enemy.passive === 'ochrona_wizerunku' &&
-      this.combat.activeSide === 'player'
-    ) {
-      if (this.player.block > 0) {
-        this.player.block -= 1;
-      } else {
-        this.player.hp -= 1;
-      }
-    }
-    return { raw: dmg, blocked, dealt };
+    return combatEngine.applyDamageToEnemy(this, dmg);
   }
 
   /**
@@ -2124,7 +1012,7 @@ export class GameState {
    * @returns {{ raw: number, blocked: number, dealt: number }}
    */
   _applyDamageToPlayer(dmg) {
-    return this.takeDamage(dmg);
+    return combatEngine.applyDamageToPlayer(this, dmg);
   }
 
   /**
@@ -2132,210 +1020,28 @@ export class GameState {
    * @returns {{ raw: number, blocked: number, dealt: number }}
    */
   takeDamage(amount) {
-    if (this.debugGodMode) {
-      return { raw: amount, blocked: amount, dealt: 0 };
-    }
-
-    const blocked = Math.min(this.player.block, amount);
-    let dealt = amount - blocked;
-    let lansSpent = 0;
-    this.player.block -= blocked;
-
-    if (dealt > 0 && this._isLansActive()) {
-      const requiredDutki = dealt * 2;
-      if (this.dutki >= requiredDutki) {
-        this.dutki -= requiredDutki;
-        lansSpent += requiredDutki;
-        dealt = 0;
-      } else {
-        const availableDutki = this.dutki;
-        const prevented = Math.floor(availableDutki / 2);
-        dealt = Math.max(0, dealt - prevented);
-        lansSpent += availableDutki;
-        this.dutki = 0;
-        this._setLansActive(false);
-        this.player.stunned = true;
-        this.lansBreakEvent = true;
-      }
-    }
-
-    if (lansSpent > 0) {
-      this.lansDutkiSpentEvent += lansSpent;
-    }
-
-    this.player.hp -= dealt;
-    if (dealt > 0 && this.hasRelic('kierpce_wyprzedazy')) {
-      this._drawCards(1);
-    }
-    if (dealt > 0 && this.enemy.passive === 'brak_reszty') {
-      this.dutki = Math.max(0, this.dutki - 3);
-    }
-
-    if (
-      this.player.status.duma_podhala > 0 &&
-      this.combat.activeSide === 'enemy' &&
-      blocked >= 10
-    ) {
-      const reflected = Math.floor(blocked / 10) * 5;
-      this._applyDamageToEnemy(reflected);
-    }
-
-    return { raw: amount, blocked, dealt };
+    return playerState.takeDamage(this, amount);
   }
 
   /**
    * @returns {{ raw: number, blocked: number, dealt: number }}
    */
   _applyEnemyIntent() {
-    const intent = this.enemy.currentIntent;
-
-    if (this.enemy.stunnedTurns > 0) {
-      this.enemy.stunnedTurns -= 1;
-      return { raw: 0, blocked: 0, dealt: 0 };
-    }
-
-    if (intent.type === 'block') {
-      this.enemy.block += intent.block;
-      if (intent.gainEvasion && intent.gainEvasion > 0) {
-        this.enemy.evasionCharges += intent.gainEvasion;
-      }
-      if (intent.heal && intent.heal > 0) {
-        this.enemy.hp = Math.min(this.enemy.maxHp, this.enemy.hp + intent.heal);
-      }
-      return { raw: 0, blocked: 0, dealt: 0 };
-    }
-
-    if (intent.type === 'buff') {
-      if (intent.strengthGain && intent.strengthGain > 0) {
-        this.enemy.status.strength += intent.strengthGain;
-      }
-      if (intent.block && intent.block > 0) {
-        this.enemy.block += intent.block;
-      }
-      return { raw: 0, blocked: 0, dealt: 0 };
-    }
-
-    if (intent.type === 'status') {
-      if (intent.addStatusCard) {
-        const amount = intent.amount ?? 1;
-        for (let i = 0; i < amount; i++) {
-          this.discard.push(intent.addStatusCard);
-        }
-      }
-      if (intent.applyStun) {
-        this.player.stunned = true;
-      }
-      return { raw: 0, blocked: 0, dealt: 0 };
-    }
-
-    if (!this.combat.firstAttackUsed) {
-      this.combat.firstAttackUsed = true;
-      if (this.currentWeather === 'fog' && Math.random() < 0.5) {
-        this._registerWeatherMiss('player');
-        return { raw: 0, blocked: 0, dealt: 0 };
-      }
-    }
-
-    let raw = 0;
-    let blocked = 0;
-    let dealt = 0;
-    const hits = intent.hits ?? 1;
-
-    const intentDamage = intent.usePed ? intent.damage + (this.enemy.ped ?? 0) : intent.damage;
-    if (intent.usePed) this.enemy.ped = 0;
-
-    for (let hitIndex = 0; hitIndex < hits; hitIndex++) {
-      const hitDamage = this.calculateDamage(intentDamage, this.enemy, this.player);
-      const result = this._applyDamageToPlayer(hitDamage);
-      raw += result.raw;
-      blocked += result.blocked;
-      dealt += result.dealt;
-    }
-
-    if (intent.applyWeak && intent.applyWeak > 0) {
-      this.player.status.weak += intent.applyWeak;
-    }
-
-    if (intent.applyFrail && intent.applyFrail > 0) {
-      this.player.status.fragile += intent.applyFrail;
-    }
-
-    if (intent.applyVulnerable && intent.applyVulnerable > 0) {
-      this.player.status.vulnerable += intent.applyVulnerable;
-    }
-
-    if (intent.gainPed && intent.gainPed > 0) {
-      this.enemy.ped = (this.enemy.ped ?? 0) + intent.gainPed;
-    }
-
-    if (intent.stealDutki && intent.stealDutki > 0 && dealt > 0) {
-      if (this.dutki >= intent.stealDutki) {
-        this.dutki -= intent.stealDutki;
-      } else {
-        this.dutki = 0;
-        this.player.status.weak += 2;
-      }
-    }
-
-    return { raw, blocked, dealt };
+    return combatEngine.applyEnemyIntent(this);
   }
 
   /**
    * @returns {number}
    */
   getEnemyIntentDamage() {
-    const intent = this.enemy.currentIntent;
-    if (intent.type !== 'attack') return 0;
-
-    let baseDmg = intent.damagePerCardInHand ? intent.damage + this.hand.length : intent.damage;
-    if (intent.usePed) baseDmg += this.enemy.ped ?? 0;
-    const hits = intent.hits ?? 1;
-    const perHit = this.calculateDamage(baseDmg, this.enemy, this.player);
-    return Math.max(0, perHit * hits - this.player.block);
+    return combatEngine.getEnemyIntentDamage(this);
   }
 
   /**
    * @returns {string}
    */
   getEnemyIntentText() {
-    const intent = this.enemy.currentIntent;
-    if (this.enemy.stunnedTurns > 0) {
-      return `Zamiar: Ogłuszony (😵 ${this.enemy.stunnedTurns})`;
-    }
-    if (intent.type === 'block') {
-      const evasionPart = intent.gainEvasion ? `, 🌀 ${intent.gainEvasion}` : '';
-      return `Zamiar: ${intent.name} (🛡️ ${intent.block}${evasionPart})`;
-    }
-
-    if (intent.type === 'buff') {
-      return `Zamiar: ${intent.name} (💪)`;
-    }
-
-    if (intent.type === 'status') {
-      if (intent.applyStun) {
-        return `Zamiar: ${intent.name} (😵)`;
-      }
-      return `Zamiar: ${intent.name} (📄 ×${intent.amount ?? 1})`;
-    }
-
-    const hits = intent.hits ?? 1;
-
-    if (hits === 0) {
-      const parts = [];
-      if (intent.applyFrail) parts.push(`🫧 ×${intent.applyFrail}`);
-      if (intent.applyWeak) parts.push(`🤢 ×${intent.applyWeak}`);
-      if (intent.applyVulnerable) parts.push(`💥 ×${intent.applyVulnerable}`);
-      if (intent.stealDutki) parts.push(`💰 -${intent.stealDutki}`);
-      return `Zamiar: ${intent.name} (${parts.join(', ') || 'efekt'})`;
-    }
-
-    const totalDamage = this.getEnemyIntentDamage();
-    const stealPart = intent.stealDutki ? `, 💰 -${intent.stealDutki}` : '';
-    if (hits > 1) {
-      return `Zamiar: ${intent.name} (⚔️ ${totalDamage}, ${hits}x${stealPart})`;
-    }
-
-    return `Zamiar: ${intent.name} (⚔️ ${totalDamage}${stealPart})`;
+    return combatEngine.getEnemyIntentText(this);
   }
 
   /**
@@ -2461,68 +1167,14 @@ export class GameState {
    * @param {StatusDef} status
    */
   _tickStatus(status) {
-    if (status.weak > 0) status.weak--;
-    if (status.fragile > 0) status.fragile--;
-    if (status.vulnerable > 0) status.vulnerable--;
-    if (status.furia_turysty > 0) status.furia_turysty--;
+    tickStatus(status);
   }
 
   /**
    * Restores Oscypki (+energy_next_turn bonus), ticks player statuses, resets Garda, draws 5 cards.
    */
   startTurn() {
-    this.combat.activeSide = 'player';
-    this.combat.firstAttackUsed = false;
-    this.combat.playerAttackMissCheck = false;
-    this.combat.playerAttackMissRolled = false;
-    this.combat.playerAttackMissed = false;
-
-    this.enemy.tookHpDamageThisTurn = false;
-    this.enemy.lichwaTriggeredThisTurn = false;
-    this.player.cardsPlayedThisTurn = 0;
-    this.nextAttackCardBonus = 0;
-    this.currentAttackCardBonus = 0;
-
-    this.battleTurnsElapsed += 1;
-    this.totalTurnsPlayed += 1;
-
-    // Góralski Zegarek: first Skill costs 0 on even turns (2, 4, 6...)
-    this.zegarekFreeSkillAvailable =
-      this.hasRelic('goralski_zegarek') && this.battleTurnsElapsed % 2 === 0;
-
-    this._applyHalnyBlockDrain(this.player);
-    this.player.energy = this.player.maxEnergy + this.player.status.energy_next_turn;
-    this.player.status.energy_next_turn = 0;
-    this.player.block = 0;
-    this._drawCards(this._drawPerTurn());
-
-    // Smycz Zakopane: re-add kept card to front of hand
-    if (this.smyczKeptCardId) {
-      this.hand.unshift(this.smyczKeptCardId);
-      this.smyczKeptCardId = null;
-    }
-
-    // Wiatr Halny: +1 card draw every turn
-    if (this.hasRelic('wiatr_halny')) {
-      this._drawCards(1);
-    }
-
-    // Flaszka Śliwowicy: randomize card costs per card type in hand this turn
-    if (this.hasRelic('flaszka_sliwowicy')) {
-      this.flaszkaCostSeed = {};
-      for (const cardId of this.hand) {
-        if (!(cardId in this.flaszkaCostSeed)) {
-          this.flaszkaCostSeed[cardId] = Math.floor(Math.random() * 4); // 0–3
-        }
-      }
-    } else {
-      this.flaszkaCostSeed = {};
-    }
-
-    // Papryczka Marka: –2 HP per turn (min 1)
-    if (this.hasRelic('papryczka_marka')) {
-      this.player.hp = Math.max(1, this.player.hp - 2);
-    }
+    combatEngine.startTurn(this);
   }
 
   /**
@@ -2532,90 +1184,7 @@ export class GameState {
    * @returns {PlayCardResult}
    */
   playCard(handIndex) {
-    const cardId = this.hand[handIndex];
-    const card = cardLibrary[cardId];
-    const actualCost = this.getCardCostInHand(cardId);
-    if (!card || this.player.energy < actualCost) return { success: false };
-    if (card.unplayable) return { success: false };
-
-    // Ogłuszenie po rozbiciu Lansu blokuje tylko karty ataku w bieżącej turze.
-    if (this.player.stunned && card.type === 'attack') {
-      return { success: false, reason: 'stunned_attack' };
-    }
-
-    if (this.enemy.passive === 'blokada_parkingowa' && this.player.cardsPlayedThisTurn >= 3) {
-      return { success: false, reason: 'blokada' };
-    }
-
-    if (this.smyczKeptHandIndex !== null) {
-      if (handIndex === this.smyczKeptHandIndex) {
-        this.smyczKeptHandIndex = null;
-      } else if (handIndex < this.smyczKeptHandIndex) {
-        this.smyczKeptHandIndex -= 1;
-      }
-    }
-
-    this.player.energy -= actualCost;
-
-    const isFirstCardThisBattle =
-      this.hasRelic('pocztowka_giewont') && !this.pocztowkaUsedThisBattle;
-    this.pocztowkaUsedThisBattle = true;
-    const isAttackCard = card.type === 'attack';
-
-    if (isAttackCard) {
-      if (this.nextAttackCardBonus > 0) {
-        this.currentAttackCardBonus = this.nextAttackCardBonus;
-        this.nextAttackCardBonus = 0;
-      }
-      this.combat.playerAttackMissCheck =
-        this.currentWeather === 'fog' && !this.combat.firstAttackUsed;
-      this.combat.playerAttackMissRolled = false;
-      this.combat.playerAttackMissed = false;
-      this.combat.firstAttackUsed = true;
-    } else {
-      this.combat.playerAttackMissCheck = false;
-    }
-
-    this.hand.splice(handIndex, 1);
-    if (card.exhaust) {
-      this.exhaust.push(cardId);
-    } else {
-      this.discard.push(cardId);
-    }
-
-    const effect = card.effect(this);
-
-    // Pocztówka z Giewontem: first card in battle fires twice (skip if enemy already dead)
-    if (isFirstCardThisBattle && this.enemy.hp > 0) {
-      card.effect(this);
-    }
-
-    // Ciupaga-Długopis: every skill card deals 4 bonus dmg
-    if (this.hasRelic('ciupaga_dlugopis') && card.type === 'skill') {
-      this._applyDamageToEnemy(4);
-    }
-
-    // Góralski Zegarek: consume free skill flag when a skill is played
-    if (this.zegarekFreeSkillAvailable && card.type === 'skill') {
-      this.zegarekFreeSkillAvailable = false;
-    }
-
-    // Bilet TPN: every 3rd attack card this battle grants +1 energy
-    if (card.type === 'attack') {
-      this.attackCardsPlayedThisBattle += 1;
-      if (this.attackCardsPlayedThisBattle % 3 === 0 && this.hasRelic('bilet_tpn')) {
-        this.player.energy += 1;
-      }
-    }
-
-    this.combat.playerAttackMissCheck = false;
-    this.combat.playerAttackMissRolled = false;
-    this.combat.playerAttackMissed = false;
-    this.currentAttackCardBonus = 0;
-
-    this.player.cardsPlayedThisTurn += 1;
-
-    return { success: true, effect };
+    return combatEngine.playCard(this, handIndex);
   }
 
   /**
@@ -2623,136 +1192,7 @@ export class GameState {
    * @returns {EndTurnResult}
    */
   endTurn() {
-    const playerHandSizeBeforeDiscard = this.hand.length;
-
-    // Smycz Zakopane: extract exact selected card slot before discarding.
-    if (this.hasRelic('smycz_zakopane') && this.smyczKeptHandIndex !== null) {
-      if (this.smyczKeptHandIndex >= 0 && this.smyczKeptHandIndex < this.hand.length) {
-        const [keptCardId] = this.hand.splice(this.smyczKeptHandIndex, 1);
-        this.smyczKeptCardId = keptCardId ?? null;
-      } else {
-        this.smyczKeptCardId = null;
-      }
-      this.smyczKeptHandIndex = null;
-    }
-
-    // spam_tagami: drain 2 DUTKI per turn while in hand
-    if (this.hand.includes('spam_tagami')) {
-      this.dutki = Math.max(0, this.dutki - 2);
-    }
-
-    // Parkingowy: compute damagePerCardInHand before hand is discarded
-    if (
-      this.enemy.currentIntent.type === 'attack' &&
-      this.enemy.currentIntent.damagePerCardInHand
-    ) {
-      this.enemy.currentIntent = {
-        ...this.enemy.currentIntent,
-        damage: this.enemy.currentIntent.damage + this.hand.length,
-      };
-    }
-
-    this.discard.push(...this.hand);
-    this.hand = [];
-
-    if (this.player.stunned) {
-      this.player.stunned = false;
-    }
-
-    // End of player turn.
-    this._tickStatus(this.player.status);
-
-    // Krokus pod Ochroną: heal 2 HP if block > 10 (before enemy attacks clear block)
-    /** @type {{ amount: number, text: string } | null} */
-    let playerPassiveHeal = null;
-    if (this.hasRelic('krokus') && this.player.block > 10) {
-      const hpBefore = this.player.hp;
-      this.healPlayer(2);
-      const healed = this.player.hp - hpBefore;
-      if (healed > 0) {
-        playerPassiveHeal = { amount: healed, text: `+${healed} Krzepy (Krokus)` };
-      }
-    }
-
-    if (this.hasRelic('papucie_po_babci') && this._isLansActive()) {
-      const hpBefore = this.player.hp;
-      this.healPlayer(2);
-      const healed = this.player.hp - hpBefore;
-      if (healed > 0 && !playerPassiveHeal) {
-        playerPassiveHeal = { amount: healed, text: `+${healed} Krzepy (Papucie)` };
-      }
-    }
-
-    /** @type {{ amount: number, text: string } | null} */
-    let enemyPassiveHeal = null;
-    if (this.enemy.id === 'baba' && !this.enemy.tookHpDamageThisTurn) {
-      const hpBefore = this.enemy.hp;
-      this.enemy.hp = Math.min(this.enemy.maxHp, this.enemy.hp + 3);
-      const healedAmount = this.enemy.hp - hpBefore;
-      if (healedAmount > 0) {
-        enemyPassiveHeal = {
-          amount: healedAmount,
-          text: `+${healedAmount} Krzepy (Świeży oscypek)`,
-        };
-      }
-      this._checkEnemyBankruptcy();
-    }
-
-    // Enemy loses old block at the start of its own turn, before taking a new action.
-    this.combat.activeSide = 'enemy';
-    this.combat.firstAttackUsed = false;
-
-    if (this._resolveEnemyBankruptcyAtTurnStart()) {
-      return {
-        enemyAttack: { raw: 0, blocked: 0, dealt: 0 },
-        enemyPassiveHeal,
-        playerPassiveHeal,
-      };
-    }
-
-    this._applyHalnyBlockDrain(this.enemy);
-    this.enemy.block = 0;
-
-    // parcie_na_szklo: influencerka gains strength when player has Lans
-    if (this.enemy.passive === 'parcie_na_szklo' && this._isLansActive()) {
-      this.enemy.status.strength += 2;
-    }
-
-    // influencer_aura: ceprzyca VIP gains block if player ended turn with a large hand.
-    if (this.enemy.passive === 'influencer_aura' && playerHandSizeBeforeDiscard >= 3) {
-      this.enemy.block += 5;
-    }
-
-    const enemyAttack = this._applyEnemyIntent();
-
-    if (this.enemy.portraitShameTurns > 0) {
-      this.enemy.portraitShameTurns -= 1;
-    }
-
-    // Zepsuty Termometr: enemy status ticks every other turn
-    if (!this.hasRelic('zepsuty_termometr') || this.termometerTurnParity === 0) {
-      this._tickStatus(this.enemy.status);
-      this._checkEnemyBankruptcy();
-    }
-    if (this.hasRelic('zepsuty_termometr')) {
-      this.termometerTurnParity = 1 - this.termometerTurnParity;
-    }
-
-    if (this.enemy.id === 'busiarz') {
-      this.enemy.status.strength += 1;
-      this._checkEnemyBankruptcy();
-    }
-
-    if (this.enemy.patternType === 'loop') {
-      const activePattern =
-        this.enemy.phaseTwoTriggered && this.enemy.phaseTwoPattern.length > 0
-          ? this.enemy.phaseTwoPattern
-          : this.enemy.pattern;
-      this.enemy.patternIndex = (this.enemy.patternIndex + 1) % activePattern.length;
-    }
-    this._refreshEnemyIntent();
-
-    return { enemyAttack, enemyPassiveHeal, playerPassiveHeal };
+    return combatEngine.endTurn(this);
   }
 
   /**
@@ -2764,65 +1204,7 @@ export class GameState {
    * - Start a fresh turn
    */
   resetBattle() {
-    this.battleWins += 1;
-
-    if (this.difficulty === 'hard') {
-      this.enemyScaleFactor = Math.round(this.enemyScaleFactor * 1.1 * 100) / 100;
-    }
-
-    this.player.block = 0;
-
-    this.attackCardsPlayedThisBattle = 0;
-    this.pocztowkaUsedThisBattle = false;
-    this.smyczKeptCardId = null;
-    this.smyczKeptHandIndex = null;
-    this.flaszkaCostSeed = {};
-    this.termometerTurnParity = 0;
-    this.battleTurnsElapsed = 0;
-    this.zegarekFreeSkillAvailable = false;
-    this.enemyBankruptFlag = false;
-    this.enemyBankruptcyPending = false;
-    this.enemyBankruptcyBonus = 0;
-    this.lansBreakEvent = false;
-    this.lansDutkiSpentEvent = 0;
-    this.rachunekResistEvent = false;
-    this.dumaPodhalaActive = false;
-    this._resetBattleScopedFlags();
-    this.lastVictoryMessage = '';
-
-    this.player.status = defaultStatus();
-    this._setLansActive(false);
-    this.player.stunned = false;
-
-    const allCards = [...this.hand, ...this.discard, ...this.exhaust, ...this.deck];
-    this.deck = allCards.filter((id) => cardLibrary[id]?.type !== 'status');
-    this.hand = [];
-    this.discard = [];
-    this.exhaust = [];
-    this._shuffle(this.deck);
-
-    const currentNode = this.getCurrentMapNode();
-    const isBossNode = currentNode?.type === 'boss';
-    const isEliteNode = currentNode?.type === 'elite';
-    const forcedId = currentNode?.forcedEnemyId ?? null;
-    let nextEnemy;
-    if (forcedId && enemyLibrary[forcedId]) {
-      nextEnemy = enemyLibrary[forcedId];
-    } else if (isBossNode) {
-      nextEnemy = this.forceMainBossNextBattle ? enemyLibrary.boss : this._pickFinalBossDef();
-    } else {
-      nextEnemy = this._pickRandomEnemyDef(isEliteNode);
-    }
-    if (isBossNode) {
-      this.forceMainBossNextBattle = false;
-    }
-    this.enemy = this._createEnemyState(nextEnemy);
-    this.battleContext = 'map';
-    this._setCurrentWeatherFromNode();
-    this.pendingBattleDutki = true;
-
-    this._applyBattleStartRelics();
-    this.startTurn();
+    battleLifecycle.resetBattle(this);
   }
 
   /**
@@ -2833,73 +1215,21 @@ export class GameState {
    * @returns {boolean}
    */
   startBattleWithEnemyId(enemyId, options = {}) {
-    const enemyDef = enemyLibrary[enemyId];
-    if (!enemyDef) return false;
-
-    const { battleContext = 'map', rewardRelicId = null } = options;
-    if (enemyDef.tutorialOnly && battleContext !== 'tutorial') {
-      return false;
-    }
-    if (enemyDef.eventOnly && battleContext !== 'event' && battleContext !== 'tutorial') {
-      return false;
-    }
-
-    this.player.block = 0;
-    this.attackCardsPlayedThisBattle = 0;
-    this.pocztowkaUsedThisBattle = false;
-    this.smyczKeptCardId = null;
-    this.smyczKeptHandIndex = null;
-    this.flaszkaCostSeed = {};
-    this.termometerTurnParity = 0;
-    this.battleTurnsElapsed = 0;
-    this.zegarekFreeSkillAvailable = false;
-    this.enemyBankruptFlag = false;
-    this.enemyBankruptcyPending = false;
-    this.enemyBankruptcyBonus = 0;
-    this.lansBreakEvent = false;
-    this.lansDutkiSpentEvent = 0;
-    this.rachunekResistEvent = false;
-    this.dumaPodhalaActive = false;
-    this._resetBattleScopedFlags();
-    this.lastVictoryMessage = '';
-
-    this.player.status = defaultStatus();
-    this._setLansActive(false);
-    this.player.stunned = false;
-
-    const allCards = [...this.hand, ...this.discard, ...this.exhaust, ...this.deck];
-    this.deck = allCards.filter((id) => cardLibrary[id]?.type !== 'status');
-    this.hand = [];
-    this.discard = [];
-    this.exhaust = [];
-    this._shuffle(this.deck);
-
-    this.enemy = this._createEnemyState(enemyDef);
-    this.battleContext = battleContext;
-    this.pendingEventVictoryRelicId = rewardRelicId;
-    this._setCurrentWeatherFromNode();
-    this.pendingBattleDutki = true;
-
-    this._applyBattleStartRelics();
-    this.startTurn();
-    return true;
+    return eventSystem.startBattleWithEnemyId(this, enemyId, options);
   }
 
   /**
    * @returns {'player_win' | 'enemy_win' | null}
    */
   checkWinCondition() {
-    if (this.enemyBankruptFlag || this.enemy.hp <= 0) return 'player_win';
-    if (this.player.hp <= 0) return 'enemy_win';
-    return null;
+    return battleLifecycle.checkWinCondition(this);
   }
 
   /**
    * @returns {string[]}
    */
   getRunDeckCardIds() {
-    const all = [...this.deck, ...this.hand, ...this.discard, ...this.exhaust];
-    return all.filter((id) => cardLibrary[id] && cardLibrary[id].type !== 'status');
+    return battleLifecycle.getRunDeckCardIds(this);
   }
 
   /**
@@ -2908,26 +1238,7 @@ export class GameState {
    * @returns {NonNullable<GameState['runSummary']>}
    */
   captureRunSummary(outcome) {
-    const finalDeck = this.getRunDeckCardIds().map((id) => ({ ...cardLibrary[id] }));
-    const finalRelics = this.relics
-      .map((id) => relicLibrary[id])
-      .filter(Boolean)
-      .map((relic) => ({ ...relic }));
-    const killerName = outcome === 'enemy_win' ? `${this.enemy.name} ${this.enemy.emoji}` : null;
-
-    this.runSummary = {
-      outcome,
-      finalDeck,
-      finalRelics,
-      killerName,
-      runStats: {
-        totalDutkiEarned: this.totalDutkiEarned,
-        floorReached: Math.max(this.maxFloorReached, this.currentLevel + 1),
-        totalTurnsPlayed: this.totalTurnsPlayed,
-      },
-    };
-
-    return this.runSummary;
+    return battleLifecycle.captureRunSummary(this, outcome);
   }
 
   /**
@@ -2935,82 +1246,7 @@ export class GameState {
    * @param {string[]} startingDeck
    */
   resetForNewRun(startingDeck) {
-    this.player = {
-      ...this.baseCharacter,
-      status: defaultStatus(),
-      stunned: false,
-      cardsPlayedThisTurn: 0,
-    };
-
-    this.dutki = 50;
-    this.totalDutkiEarned = 0;
-    this.battleWins = 0;
-    this.deck = [];
-    this.hand = [];
-    this.discard = [];
-    this.exhaust = [];
-    this.relics = [];
-    this.seenRelicOffers = [];
-    this.hardFirstShopRolled = false;
-    this.certyfikowanyOscypekShopProcs = 0;
-    this.cardDamageBonus = {};
-    this.currentLevel = 0;
-    this.currentNodeIndex = 1;
-    this.currentNode = { x: 1, y: 0 };
-    this.maxFloorReached = 1;
-    this.currentAct = 1;
-    this.currentActName = 'KRUPÓWKI';
-    this.debugForcedNextNodeType = null;
-    this.debugRevealAllMap = false;
-    this.debugGodMode = false;
-    this.pendingBattleDutki = true;
-    this.isInputLocked = false;
-    this.enemyScaleFactor = 1.0;
-    this.attackCardsPlayedThisBattle = 0;
-    this.pocztowkaUsedThisBattle = false;
-    this.smyczKeptCardId = null;
-    this.smyczKeptHandIndex = null;
-    this.flaszkaCostSeed = {};
-    this.termometerTurnParity = 0;
-    this.battleTurnsElapsed = 0;
-    this.totalTurnsPlayed = 0;
-    this.zegarekFreeSkillAvailable = false;
-    this.shopStock = { cards: [], relic: null };
-    this.lastShopMessage = '';
-    this.lastVictoryMessage = '';
-    this.currentScreen = 'map';
-    this.lastRegularEnemyId = 'cepr';
-    this.activeEventId = null;
-    this.recentEventIds = [];
-    this.maryna = { offeredIds: [], pickedId: null, flags: {}, counters: {} };
-    this.jumpToBoss = false;
-    this.forceMainBossNextBattle = false;
-    this.currentWeather = 'clear';
-    this.combat = {
-      firstAttackUsed: false,
-      activeSide: 'player',
-      playerAttackMissCheck: false,
-      playerAttackMissRolled: false,
-      playerAttackMissed: false,
-      missEventTarget: null,
-    };
-    this.enemyBankruptFlag = false;
-    this.enemyBankruptcyPending = false;
-    this.enemyBankruptcyBonus = 0;
-    this.lansBreakEvent = false;
-    this.lansDutkiSpentEvent = 0;
-    this.rachunekResistEvent = false;
-    this.hasStartedFirstBattle = false;
-    this.dumaPodhalaActive = false;
-    this._resetBattleScopedFlags();
-    this.battleContext = 'map';
-    this.pendingEventBattleEnemyId = null;
-    this.pendingEventVictoryRelicId = null;
-    this.runSummary = null;
-
-    this.enemy = this._createEnemyState(enemyLibrary.cepr);
-    this.generateMap();
-    this.initGame(startingDeck);
+    battleLifecycle.resetForNewRun(this, startingDeck);
   }
 
   /**
@@ -3053,12 +1289,31 @@ export class GameState {
    * @param {number} amount
    */
   applyEnemyDebugStatus(status, amount) {
-    const value = Math.max(0, Math.floor(amount));
-    if (value <= 0) return;
-    if (status === 'stun') {
-      this.enemy.stunnedTurns += value;
+    enemyState.applyEnemyDebugStatus(this, status, amount);
+  }
+
+  /**
+   * @param {'strength' | 'weak' | 'fragile' | 'vulnerable' | 'next_double' | 'energy_next_turn' | 'lans' | 'duma_podhala' | 'furia_turysty'} status
+   * @param {number} amount
+   */
+  applyPlayerDebugStatus(status, amount) {
+    if (status === 'lans') {
+      const wasActive = this._isLansActive();
+      const willBeActive = amount > 0;
+      this._setLansActive(willBeActive);
+      if (!wasActive && willBeActive) this.lansActivatedEvent = true;
+      if (wasActive && !willBeActive) {
+        this.player.stunned = true;
+        this.lansBreakEvent = true;
+      }
       return;
     }
-    this.enemy.status[status] += value;
+    if (status === 'next_double') {
+      this.player.status.next_double = amount > 0;
+      return;
+    }
+    if (Object.prototype.hasOwnProperty.call(this.player.status, status)) {
+      this.player.status[status] = Math.max(0, Number(amount));
+    }
   }
 }

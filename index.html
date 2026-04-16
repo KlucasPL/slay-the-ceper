@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Usiec Cepra (ang. Slay the Ceper)</title>
+    <link rel="icon" type="image/png" href="/src/pictures/favicon.png" />
     <script type="module" src="/src/main.js"></script>
   </head>
   <body>
@@ -180,6 +181,65 @@
         <div class="entity" id="player">
           <h2>Jędrek 🧔‍♂️</h2>
           <div class="sprite" id="sprite-player">
+            <svg
+              id="lans-sunglasses"
+              class="lans-sunglasses-overlay"
+              viewBox="0 0 100 100"
+              width="120"
+              height="120"
+              aria-hidden="true"
+            >
+              <!-- left arm -->
+              <line
+                x1="37"
+                y1="32"
+                x2="25"
+                y2="35"
+                stroke="#c8a600"
+                stroke-width="1.8"
+                stroke-linecap="round"
+              />
+              <!-- right arm -->
+              <line
+                x1="63"
+                y1="32"
+                x2="75"
+                y2="35"
+                stroke="#c8a600"
+                stroke-width="1.8"
+                stroke-linecap="round"
+              />
+              <!-- left lens -->
+              <ellipse
+                cx="44"
+                cy="32"
+                rx="7.5"
+                ry="5"
+                fill="rgba(5,5,20,0.93)"
+                stroke="#ffd700"
+                stroke-width="1.6"
+              />
+              <!-- right lens -->
+              <ellipse
+                cx="56"
+                cy="32"
+                rx="7.5"
+                ry="5"
+                fill="rgba(5,5,20,0.93)"
+                stroke="#ffd700"
+                stroke-width="1.6"
+              />
+              <!-- bridge -->
+              <path
+                d="M 51.5,31 Q 50,33.5 48.5,31"
+                fill="none"
+                stroke="#ffd700"
+                stroke-width="1.6"
+              />
+              <!-- lens sheen -->
+              <ellipse cx="41" cy="30" rx="2.5" ry="1.4" fill="rgba(255,255,255,0.18)" />
+              <ellipse cx="53" cy="30" rx="2.5" ry="1.4" fill="rgba(255,255,255,0.18)" />
+            </svg>
             <svg viewBox="0 0 100 100" width="120" height="120">
               <line
                 x1="50"

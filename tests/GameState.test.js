@@ -559,6 +559,17 @@ describe('GameState', () => {
       expect(s.exhaust).toContain('wypozyczone_gogle');
     });
 
+    it('emits one-shot lans activation event when turning lans on', () => {
+      const s = freshState();
+      s.hand = ['wypozyczone_gogle'];
+      s.player.status.lans = 0;
+
+      s.playCard(0);
+
+      expect(s.consumeLansActivatedEvent()).toBe(true);
+      expect(s.consumeLansActivatedEvent()).toBe(false);
+    });
+
     it('is a power card', () => {
       expect(cardLibrary.wypozyczone_gogle.type).toBe('power');
     });
@@ -574,13 +585,29 @@ describe('GameState', () => {
       expect(s.dutki).toBe(30);
     });
 
-    it('does nothing without lans', () => {
+    it('activates lans and skips main effect without lans', () => {
       const s = freshState();
       s.hand = ['zdjecie_z_misiem'];
       s.player.status.lans = 0;
       s.dutki = 10;
       s.playCard(0);
       expect(s.dutki).toBe(10);
+      expect(s.player.status.lans).toBe(1);
+      expect(s.consumeLansActivatedEvent()).toBe(true);
+      expect(s.consumeLansActivatedEvent()).toBe(false);
+    });
+
+    it('does not trigger main effect from first-card duplicate when lans was inactive', () => {
+      const s = freshState();
+      s.relics.push('pocztowka_giewont');
+      s.hand = ['zdjecie_z_misiem'];
+      s.player.status.lans = 0;
+      s.dutki = 10;
+
+      s.playCard(0);
+
+      expect(s.dutki).toBe(10);
+      expect(s.player.status.lans).toBe(1);
     });
   });
 
@@ -3349,6 +3376,29 @@ describe('GameState', () => {
 
       s.applyEnemyDebugStatus('weak', 0);
       expect(s.enemy.status.weak).toBe(weakBefore + 3);
+    });
+
+    it('applyPlayerDebugStatus on lans disable applies break penalty when lans was active', () => {
+      const s = freshState();
+      s.player.status.lans = 1;
+      s.player.stunned = false;
+
+      s.applyPlayerDebugStatus('lans', 0);
+
+      expect(s.player.status.lans).toBe(0);
+      expect(s.player.stunned).toBe(true);
+      expect(s.consumeLansBreakEvent()).toBe('BANKRUT!');
+    });
+
+    it('applyPlayerDebugStatus on lans disable does not emit break penalty when lans was inactive', () => {
+      const s = freshState();
+      s.player.status.lans = 0;
+      s.player.stunned = false;
+
+      s.applyPlayerDebugStatus('lans', 0);
+
+      expect(s.player.stunned).toBe(false);
+      expect(s.consumeLansBreakEvent()).toBeNull();
     });
   });
 

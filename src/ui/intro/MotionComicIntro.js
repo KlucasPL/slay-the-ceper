@@ -94,7 +94,7 @@ export class MotionComicIntro {
     root.className = 'motion-comic-intro hidden';
     root.setAttribute('aria-hidden', 'true');
 
-    const imageUrl = new URL('../pictures/intro.png', import.meta.url).href;
+    const imageUrl = new URL('../../pictures/intro.png', import.meta.url).href;
     root.innerHTML = `
       <div class="motion-comic-viewport" aria-label="Intro komiksowy">
         <img class="motion-comic-track" src="${imageUrl}" alt="Komiksowy prolog Slay the Ceper" />
