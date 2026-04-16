@@ -19,7 +19,7 @@ describe('data exports', () => {
     expect(releaseNotesData.length).toBeGreaterThan(0);
 
     const newest = releaseNotesData[0];
-    expect(newest.version).toContain('v1.3.1');
+    expect(newest.version).toContain('v1.3.2');
     expect(newest.date).toBeTruthy();
     expect(newest.changes.length).toBeGreaterThanOrEqual(1);
   });

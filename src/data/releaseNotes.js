@@ -5,6 +5,13 @@
 /** @type {ReleaseNoteEntry[]} */
 export const releaseNotesData = [
   {
+    version: 'v1.3.2 - Nowa twarz na targu',
+    date: 'kwiecień 2026',
+    changes: [
+      '🧀 HANDLARA OSCYPKAMI: Gaździna Maryna zmieniła się w Handlarę oscypkami – ta sama twarda gospodyni, nowe, trafniejsze imię.',
+    ],
+  },
+  {
     version: 'v1.3.1 - Spokojniejszy finał wyprawy',
     date: 'kwiecień 2026',
     changes: [

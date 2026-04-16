@@ -2576,7 +2576,7 @@ describe('GameState', () => {
       vi.spyOn(s, '_pickRandomEnemyDef').mockReturnValue(enemyLibrary.baba);
       s.resetBattle();
       expect(s.enemy.id).toBe('baba');
-      expect(s.enemy.name).toBe('Gaździna Maryna');
+      expect(s.enemy.name).toBe('Handlara oscypkami');
       expect(s.enemy.maxHp).toBe(88);
     });
 

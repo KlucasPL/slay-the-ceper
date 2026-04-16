@@ -566,7 +566,7 @@ export const enemyLibrary = {
   },
   baba: {
     id: 'baba',
-    name: 'Gaździna Maryna',
+    name: 'Handlara oscypkami',
     emoji: '🧀',
     hp: 88,
     maxHp: 88,
