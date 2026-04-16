@@ -58,6 +58,13 @@ export function resetBattle(state) {
   state.lastVictoryMessage = '';
 
   state.player.lansHitsAbsorbed = 0;
+  state.player.weather_fog_garda = false;
+  state.player.weather_frozen_vulnerable = false;
+  state.player.pan_na_wlosciach = false;
+  state.player.zimna_krew = false;
+  state.player.czas_na_fajke = false;
+  state.player.goralska_goscinnosc = false;
+  state.player.koncesja_na_oscypki = false;
   state.player.status = defaultStatus();
   state._setLansActive(false);
   state.player.stunned = false;
@@ -150,6 +157,13 @@ export function resetForNewRun(state, startingDeck) {
     stunned: false,
     cardsPlayedThisTurn: 0,
     lansHitsAbsorbed: 0,
+    weather_fog_garda: false,
+    weather_frozen_vulnerable: false,
+    pan_na_wlosciach: false,
+    zimna_krew: false,
+    czas_na_fajke: false,
+    goralska_goscinnosc: false,
+    koncesja_na_oscypki: false,
   };
 
   state.dutki = 50;

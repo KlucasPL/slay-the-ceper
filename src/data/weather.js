@@ -15,7 +15,7 @@ export const weatherLibrary = {
     id: 'halny',
     name: 'Wiatr Halny',
     emoji: '🌬️',
-    desc: 'Na początku każdej tury obie strony tracą 2 punkty Gardy.',
+    desc: 'Na końcu każdej tury obie strony tracą 2 punkty Gardy.',
   },
   frozen: {
     id: 'frozen',
@@ -27,6 +27,6 @@ export const weatherLibrary = {
     id: 'fog',
     name: 'Gęsta Mgła',
     emoji: '🌫️',
-    desc: 'Pierwszy atak gracza i pierwszy atak wroga w turze mają 50% szans na pudło.',
+    desc: 'Pierwszy atak gracza i pierwszy atak wroga w turze mają 25% szans na pudło.',
   },
 };

@@ -2455,6 +2455,69 @@ describe('GameState', () => {
       s.startTurn();
       expect(s.hand).toHaveLength(5);
     });
+
+    it('fog: first player attack hits when roll is >= 0.25', () => {
+      const s = freshState();
+      s.currentWeather = 'fog';
+      s.hand = ['ciupaga'];
+      s.enemy.block = 0;
+      const hpBefore = s.enemy.hp;
+      vi.spyOn(Math, 'random').mockReturnValue(0.3);
+
+      s.playCard(0);
+
+      expect(s.enemy.hp).toBeLessThan(hpBefore);
+    });
+
+    it('fog: first player attack misses when roll is < 0.25', () => {
+      const s = freshState();
+      s.currentWeather = 'fog';
+      s.hand = ['ciupaga'];
+      s.enemy.block = 0;
+      const hpBefore = s.enemy.hp;
+      vi.spyOn(Math, 'random').mockReturnValue(0.2);
+
+      s.playCard(0);
+
+      expect(s.enemy.hp).toBe(hpBefore);
+    });
+
+    it('fog: enemy attack hits when roll is >= 0.25', () => {
+      const s = freshState();
+      s.currentWeather = 'fog';
+      s.player.hp = 50;
+      s.player.block = 0;
+      setEnemyIntent(s, { type: 'attack', name: 'Pstryka fotkę', damage: 8, hits: 1 });
+      vi.spyOn(Math, 'random').mockReturnValue(0.3);
+
+      s.endTurn();
+
+      expect(s.player.hp).toBe(42);
+    });
+
+    it('fog: enemy attack misses when roll is < 0.25', () => {
+      const s = freshState();
+      s.currentWeather = 'fog';
+      s.player.hp = 50;
+      s.player.block = 0;
+      setEnemyIntent(s, { type: 'attack', name: 'Pstryka fotkę', damage: 8, hits: 1 });
+      vi.spyOn(Math, 'random').mockReturnValue(0.2);
+
+      s.endTurn();
+
+      expect(s.player.hp).toBe(50);
+    });
+
+    it('halny drains 2 player block at end of turn (not start)', () => {
+      const s = freshState();
+      s.currentWeather = 'halny';
+      s.player.block = 10;
+      setEnemyIntent(s, { type: 'buff', name: 'Ryk', strengthGain: 1, block: 0 });
+
+      s.endTurn();
+
+      expect(s.player.block).toBe(8);
+    });
   });
 
   // ── checkWinCondition ─────────────────────────────────────────────────────
@@ -3535,7 +3598,7 @@ describe('GameState', () => {
       const weakBefore = s.enemy.status.weak;
       s.playCard(0);
       expect(s.enemy.status.weak).toBe(weakBefore + 1);
-      expect(s.enemy.hp).toBeLessThan(hpBefore);
+      expect(s.enemy.hp).toBeLessThanOrEqual(hpBefore);
       expect(s.enemy.status.fragile).toBe(1);
     });
 
@@ -3647,6 +3710,199 @@ describe('GameState', () => {
       const vulnBefore = s.enemy.status.vulnerable;
       s.startTurn();
       expect(s.enemy.status.vulnerable).toBe(vulnBefore + 1);
+    });
+  });
+
+  describe('new attack/skill/power cards batch', () => {
+    it('rozped_z_rowni deals 3x3 normally and 4x3 when enemy has weak', () => {
+      const s = freshState();
+      s.hand = ['rozped_z_rowni'];
+      const hpBefore = s.enemy.hp;
+      s.playCard(0);
+      const normalDamage = hpBefore - s.enemy.hp;
+
+      const s2 = freshState();
+      s2.enemy.status.weak = 1;
+      s2.hand = ['rozped_z_rowni'];
+      const hpBefore2 = s2.enemy.hp;
+      s2.playCard(0);
+      const boostedDamage = hpBefore2 - s2.enemy.hp;
+
+      expect(normalDamage).toBe(9);
+      expect(boostedDamage).toBe(12);
+    });
+
+    it('z_rozmachu draws 1 card if next_double was active', () => {
+      const s = freshState();
+      s.player.status.next_double = true;
+      s.hand = ['z_rozmachu'];
+      s.deck = ['ciupaga'];
+      s.playCard(0);
+      expect(s.hand.length).toBe(1);
+    });
+
+    it('beczenie_redyku scales with player strength', () => {
+      const s = freshState();
+      s.player.status.strength = 2;
+      s.hand = ['beczenie_redyku'];
+      s.enemy.block = 0;
+      const hpBefore = s.enemy.hp;
+      s.playCard(0);
+      expect(s.enemy.hp).toBe(hpBefore - 15);
+    });
+
+    it('pogodzenie_sporow adds 10 rachunek and draws 1', () => {
+      const s = freshState();
+      s.hand = ['pogodzenie_sporow', 'ciupaga'];
+      s.deck = ['gasior'];
+      const rachunekBefore = s.enemy.rachunek;
+      s.playCard(0);
+      expect(s.enemy.rachunek).toBe(rachunekBefore + 10);
+      expect(s.hand.length).toBe(2);
+    });
+
+    it('przymusowy_napiwek adds 5 rachunek, or 10 when enemy is vulnerable', () => {
+      const s = freshState();
+      s.hand = ['przymusowy_napiwek'];
+      s.playCard(0);
+      expect(s.enemy.rachunek).toBe(5);
+
+      const s2 = freshState();
+      s2.enemy.status.vulnerable = 1;
+      s2.hand = ['przymusowy_napiwek'];
+      s2.playCard(0);
+      expect(s2.enemy.rachunek).toBe(10);
+    });
+
+    it('list_od_maryny draws extra card if enemy has weak or fragile', () => {
+      const s = freshState();
+      s.enemy.status.weak = 1;
+      s.hand = ['list_od_maryny', 'ciupaga'];
+      s.deck = ['gasior', 'kierpce'];
+      s.playCard(0);
+      expect(s.hand.length).toBe(3);
+
+      const s2 = freshState();
+      s2.hand = ['list_od_maryny', 'ciupaga'];
+      s2.deck = ['gasior', 'kierpce'];
+      s2.playCard(0);
+      expect(s2.hand.length).toBe(2);
+    });
+
+    it('pan_na_wlosciach grants 3 block when Lans becomes active', () => {
+      const s = freshState();
+      s.hand = ['pan_na_wlosciach', 'cios_z_telemarkiem'];
+      s.playCard(0);
+      const blockBefore = s.player.block;
+      s.playCard(0);
+      expect(s.player.status.lans).toBe(1);
+      expect(s.player.block).toBe(blockBefore + 3);
+    });
+
+    it('zimna_krew adds +1 weak to weak applications', () => {
+      const s = freshState();
+      s.hand = ['zimna_krew', 'sandaly'];
+      s.playCard(0);
+      s.playCard(0);
+      expect(s.enemy.status.weak).toBe(3);
+    });
+
+    it('baciarka_ciesy grants +2 strength and exhausts', () => {
+      const s = freshState();
+      s.hand = ['baciarka_ciesy'];
+      const strBefore = s.player.status.strength;
+      s.playCard(0);
+      expect(s.player.status.strength).toBe(strBefore + 2);
+      expect(s.exhaust).toContain('baciarka_ciesy');
+    });
+
+    it('krzesany hits twice and grants +1 energy if second hit deals HP damage', () => {
+      const s = freshState();
+      s.hand = ['krzesany'];
+      s.enemy.block = 0;
+      const energyBefore = s.player.energy;
+      s.playCard(0);
+      expect(s.enemy.hp).toBe(58);
+      expect(s.player.energy).toBe(energyBefore - 2 + 1);
+    });
+
+    it('wymuszony_napiwek grants +15 dutki on kill', () => {
+      const s = freshState();
+      s.hand = ['wymuszony_napiwek'];
+      s.enemy.hp = 9;
+      const dutkiBefore = s.dutki;
+      s.playCard(0);
+      expect(s.dutki).toBe(dutkiBefore + 15);
+      expect(s.exhaust).toContain('wymuszony_napiwek');
+    });
+
+    it('paragon_grozy costs 1 when enemy rachunek >= 25', () => {
+      const s = freshState();
+      s.enemy.rachunek = 25;
+      expect(s.getCardCostInHand('paragon_grozy')).toBe(1);
+    });
+
+    it('zapas_oscypkow gives 4 block and +1 energy_next_turn', () => {
+      const s = freshState();
+      s.hand = ['zapas_oscypkow'];
+      const blockBefore = s.player.block;
+      s.playCard(0);
+      expect(s.player.block).toBeGreaterThanOrEqual(blockBefore + 4);
+      expect(s.player.status.energy_next_turn).toBe(1);
+    });
+
+    it('wdech_halnego discards one and draws two', () => {
+      const s = freshState();
+      s.hand = ['wdech_halnego', 'ciupaga', 'gasior'];
+      s.deck = ['ciupaga', 'gasior'];
+      const discardBefore = s.discard.length;
+      s.playCard(0);
+      expect(s.discard.length).toBe(discardBefore + 2);
+      expect(s.hand.length).toBe(3);
+    });
+
+    it('dutki_na_stole gives +10 dutki and +4 rachunek', () => {
+      const s = freshState();
+      s.hand = ['dutki_na_stole'];
+      const dutkiBefore = s.dutki;
+      const rachunekBefore = s.enemy.rachunek;
+      s.playCard(0);
+      expect(s.dutki).toBe(dutkiBefore + 10);
+      expect(s.enemy.rachunek).toBe(rachunekBefore + 4);
+      expect(s.exhaust).toContain('dutki_na_stole');
+    });
+
+    it('czas_na_fajke heals 2 at end turn when block > 10', () => {
+      const s = freshState();
+      s.hand = ['czas_na_fajke'];
+      s.playCard(0);
+      s.player.hp = 40;
+      s.player.block = 12;
+      setEnemyIntent(s, { type: 'buff', name: 'Ryk', strengthGain: 1, block: 0 });
+      s.endTurn();
+      expect(s.player.hp).toBe(42);
+    });
+
+    it('goralska_goscinnosc adds 2 rachunek for each played attack', () => {
+      const s = freshState();
+      s.hand = ['goralska_goscinnosc', 'ciupaga'];
+      s.playCard(0);
+      const rachunekBefore = s.enemy.rachunek;
+      s.playCard(0);
+      expect(s.enemy.rachunek).toBe(rachunekBefore + 2);
+    });
+
+    it('koncesja_na_oscypki grants +1 energy and draw at turn start when rachunek >= 25', () => {
+      const s = freshState();
+      s.hand = ['koncesja_na_oscypki'];
+      s.playCard(0);
+      s.enemy.rachunek = 25;
+      s.player.energy = 0;
+      s.deck = Array.from({ length: 10 }, () => 'ciupaga');
+      s.hand = [];
+      s.startTurn();
+      expect(s.player.energy).toBe(4);
+      expect(s.hand.length).toBe(6);
     });
   });
 

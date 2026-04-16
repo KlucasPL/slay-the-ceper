@@ -850,6 +850,364 @@ export const cardLibrary = {
     },
   },
 
+  rozped_z_rowni: {
+    id: 'rozped_z_rowni',
+    name: 'Rozpęd z Równi',
+    type: 'attack',
+    rarity: 'uncommon',
+    cost: 1,
+    price: 75,
+    emoji: '🛷',
+    desc: 'Zadaje 3x3 obrażenia. Jeśli wróg ma Słabość, zadaje 4x3.',
+    effect(state) {
+      let totalDealt = 0;
+      let totalBlocked = 0;
+      const baseHit =
+        (state.enemy.status.weak > 0 ? 4 : 3) + state.getCardDamageBonus('rozped_z_rowni');
+      for (let i = 0; i < 3; i++) {
+        if (state.enemy.hp <= 0) break;
+        const dmg = state._calcAttackDamage(state.player, baseHit);
+        const damage = state._applyDamageToEnemy(dmg);
+        totalDealt += damage.dealt;
+        totalBlocked += damage.blocked;
+      }
+      return {
+        playerAnim: 'anim-attack-p',
+        enemyAnim: totalDealt > 0 ? 'anim-damage' : 'anim-block',
+        damage: { raw: totalDealt + totalBlocked, blocked: totalBlocked, dealt: totalDealt },
+      };
+    },
+  },
+
+  z_rozmachu: {
+    id: 'z_rozmachu',
+    name: 'Z Rozmachu',
+    type: 'attack',
+    rarity: 'common',
+    cost: 1,
+    price: 65,
+    emoji: '🪵',
+    desc: 'Zadaje 7 obrażeń. Jeśli masz status następnego podwójnego ciosu, dobierz 1 kartę.',
+    effect(state) {
+      const hadNextDouble = state.player.status.next_double;
+      const dmg = state._calcAttackDamage(state.player, 7 + state.getCardDamageBonus('z_rozmachu'));
+      const damage = state._applyDamageToEnemy(dmg);
+      if (hadNextDouble) {
+        state._drawCards(1);
+      }
+      return {
+        playerAnim: 'anim-attack-p',
+        enemyAnim: damage.dealt > 0 ? 'anim-damage' : 'anim-block',
+        damage,
+      };
+    },
+  },
+
+  beczenie_redyku: {
+    id: 'beczenie_redyku',
+    name: 'Beczenie Redyku',
+    type: 'attack',
+    rarity: 'common',
+    cost: 1,
+    price: 70,
+    emoji: '🐏',
+    desc: 'Zadaje 5 obrażeń. Zyskuje +4 obrażenia za każdy punkt Twojej Siły.',
+    effect(state) {
+      const strengthBonus = Math.max(0, state.player.status.strength) * 4;
+      const dmg = state._calcAttackDamage(
+        state.player,
+        5 + strengthBonus + state.getCardDamageBonus('beczenie_redyku')
+      );
+      const damage = state._applyDamageToEnemy(dmg);
+      return {
+        playerAnim: 'anim-attack-p',
+        enemyAnim: damage.dealt > 0 ? 'anim-damage' : 'anim-block',
+        damage,
+      };
+    },
+  },
+
+  krzesany: {
+    id: 'krzesany',
+    name: 'Krzesany',
+    type: 'attack',
+    rarity: 'uncommon',
+    cost: 2,
+    price: 90,
+    emoji: '💃',
+    desc: 'Atakuje 2x6 obrażeń. Jeśli drugi cios przebije pancerz, zyskujesz 1 Oscypek.',
+    effect(state) {
+      let totalDealt = 0;
+      let totalBlocked = 0;
+      const baseHit = 6 + state.getCardDamageBonus('krzesany');
+      for (let i = 0; i < 2; i++) {
+        if (state.enemy.hp <= 0) break;
+        const dmg = state._calcAttackDamage(state.player, baseHit);
+        const damage = state._applyDamageToEnemy(dmg);
+        totalDealt += damage.dealt;
+        totalBlocked += damage.blocked;
+        if (i === 1 && damage.dealt > 0) {
+          state.player.energy += 1;
+        }
+      }
+      return {
+        playerAnim: 'anim-attack-p',
+        enemyAnim: totalDealt > 0 ? 'anim-damage' : 'anim-block',
+        damage: { raw: totalDealt + totalBlocked, blocked: totalBlocked, dealt: totalDealt },
+      };
+    },
+  },
+
+  wymuszony_napiwek: {
+    id: 'wymuszony_napiwek',
+    name: 'Wymuszony Napiwek',
+    type: 'attack',
+    rarity: 'uncommon',
+    cost: 1,
+    price: 80,
+    emoji: '💰',
+    desc: 'Zadaje 9 obrażeń. Jeśli wróg padnie od tej karty, zyskujesz 15 dutków.',
+    exhaust: true,
+    effect(state) {
+      const dmg = state._calcAttackDamage(
+        state.player,
+        9 + state.getCardDamageBonus('wymuszony_napiwek')
+      );
+      const damage = state._applyDamageToEnemy(dmg);
+      if (state.enemy.hp <= 0) {
+        state.addDutki(15);
+      }
+      return {
+        playerAnim: 'anim-attack-p',
+        enemyAnim: damage.dealt > 0 ? 'anim-damage' : 'anim-block',
+        damage,
+      };
+    },
+  },
+
+  paragon_grozy: {
+    id: 'paragon_grozy',
+    name: 'Paragon Grozy',
+    type: 'attack',
+    rarity: 'rare',
+    cost: 3,
+    price: 120,
+    emoji: '🧨',
+    desc: 'Zadaje 25 obrażeń. Jeśli wróg ma co najmniej 25 Rachunku, kosztuje 1 Oscypek.',
+    effect(state) {
+      const dmg = state._calcAttackDamage(
+        state.player,
+        25 + state.getCardDamageBonus('paragon_grozy')
+      );
+      const damage = state._applyDamageToEnemy(dmg);
+      return {
+        playerAnim: 'anim-attack-p',
+        enemyAnim: damage.dealt > 0 ? 'anim-damage' : 'anim-block',
+        damage,
+      };
+    },
+  },
+
+  pogodzenie_sporow: {
+    id: 'pogodzenie_sporow',
+    name: 'Pogodzenie Sporów',
+    type: 'skill',
+    rarity: 'common',
+    cost: 1,
+    price: 55,
+    emoji: '🤝',
+    desc: 'Dodaj 10 do Rachunku i dobierz 1 kartę.',
+    effect(state) {
+      state.addEnemyRachunek(10);
+      state._drawCards(1);
+      return { playerAnim: 'anim-block' };
+    },
+  },
+
+  przymusowy_napiwek: {
+    id: 'przymusowy_napiwek',
+    name: 'Przymusowy Napiwek',
+    type: 'skill',
+    rarity: 'uncommon',
+    cost: 1,
+    price: 70,
+    emoji: '🫴',
+    desc: 'Dodaj 5 do Rachunku. Jeśli wróg ma Podatność, dodaj jeszcze 5.',
+    effect(state) {
+      state.addEnemyRachunek(5);
+      if (state.enemy.status.vulnerable > 0) {
+        state.addEnemyRachunek(5);
+      }
+      return { playerAnim: 'anim-block' };
+    },
+  },
+
+  list_od_maryny: {
+    id: 'list_od_maryny',
+    name: 'List od Maryny',
+    type: 'skill',
+    rarity: 'uncommon',
+    cost: 1,
+    price: 75,
+    emoji: '💌',
+    desc: 'Dobierz 1 kartę. Jeśli wróg ma Słabość lub Kruchość, dobierz jeszcze 1.',
+    effect(state) {
+      state._drawCards(1);
+      if (state.enemy.status.weak > 0 || state.enemy.status.fragile > 0) {
+        state._drawCards(1);
+      }
+      return { playerAnim: 'anim-block' };
+    },
+  },
+
+  zapas_oscypkow: {
+    id: 'zapas_oscypkow',
+    name: 'Zapas Oscypków',
+    type: 'skill',
+    rarity: 'common',
+    cost: 1,
+    price: 55,
+    emoji: '🧀',
+    desc: 'Zyskaj 1 Oscypek na następną turę i 4 Gardy.',
+    effect(state) {
+      state.player.status.energy_next_turn += 1;
+      state.gainPlayerBlockFromCard(4);
+      return { playerAnim: 'anim-block' };
+    },
+  },
+
+  wdech_halnego: {
+    id: 'wdech_halnego',
+    name: 'Wdech Halnego',
+    type: 'skill',
+    rarity: 'common',
+    cost: 0,
+    price: 60,
+    emoji: '🌪️',
+    desc: 'Odrzuć 1 kartę z ręki i dobierz 2 karty.',
+    effect(state) {
+      if (state.hand.length > 0) {
+        const idx = Math.floor(Math.random() * state.hand.length);
+        state.discard.push(state.hand.splice(idx, 1)[0]);
+      }
+      state._drawCards(2);
+      return { playerAnim: 'anim-block' };
+    },
+  },
+
+  dutki_na_stole: {
+    id: 'dutki_na_stole',
+    name: 'Dutki na Stole',
+    type: 'skill',
+    rarity: 'common',
+    cost: 0,
+    price: 65,
+    emoji: '🪙',
+    desc: 'Zyskujesz 10 dutków i dodajesz 4 do Rachunku.',
+    exhaust: true,
+    effect(state) {
+      state.addDutki(10);
+      state.addEnemyRachunek(4);
+      return { playerAnim: 'anim-block' };
+    },
+  },
+
+  pan_na_wlosciach: {
+    id: 'pan_na_wlosciach',
+    name: 'Pan na Włościach',
+    type: 'power',
+    rarity: 'uncommon',
+    cost: 1,
+    price: 85,
+    emoji: '🏰',
+    desc: 'Za każdym razem, gdy aktywujesz Lans, zyskujesz 3 Gardy.',
+    exhaust: true,
+    effect(state) {
+      state.player.pan_na_wlosciach = true;
+      return { playerAnim: 'anim-block' };
+    },
+  },
+
+  zimna_krew: {
+    id: 'zimna_krew',
+    name: 'Zimna Krew',
+    type: 'power',
+    rarity: 'uncommon',
+    cost: 1,
+    price: 85,
+    emoji: '🥶',
+    desc: 'Ilekroć nakładasz Słabość, nakładasz dodatkowo +1 Słabości.',
+    exhaust: true,
+    effect(state) {
+      state.player.zimna_krew = true;
+      return { playerAnim: 'anim-block' };
+    },
+  },
+
+  baciarka_ciesy: {
+    id: 'baciarka_ciesy',
+    name: 'Baciarka Ciesy',
+    type: 'power',
+    rarity: 'uncommon',
+    cost: 1,
+    price: 90,
+    emoji: '🧗',
+    desc: 'Zyskujesz +2 Siły na całą walkę.',
+    exhaust: true,
+    effect(state) {
+      state.player.status.strength += 2;
+      return { playerAnim: 'anim-block' };
+    },
+  },
+
+  czas_na_fajke: {
+    id: 'czas_na_fajke',
+    name: 'Czas na Fajkę',
+    type: 'power',
+    rarity: 'rare',
+    cost: 2,
+    price: 120,
+    emoji: '🚬',
+    desc: 'Na koniec Twojej tury, jeśli masz ponad 10 Gardy, leczysz 2 Krzepy.',
+    exhaust: true,
+    effect(state) {
+      state.player.czas_na_fajke = true;
+      return { playerAnim: 'anim-block' };
+    },
+  },
+
+  goralska_goscinnosc: {
+    id: 'goralska_goscinnosc',
+    name: 'Góralska Gościnność',
+    type: 'power',
+    rarity: 'rare',
+    cost: 2,
+    price: 120,
+    emoji: '🏡',
+    desc: 'Za każdą zagraną kartę Ataku dodajesz 2 do Rachunku wroga.',
+    exhaust: true,
+    effect(state) {
+      state.player.goralska_goscinnosc = true;
+      return { playerAnim: 'anim-block' };
+    },
+  },
+
+  koncesja_na_oscypki: {
+    id: 'koncesja_na_oscypki',
+    name: 'Koncesja na Oscypki',
+    type: 'power',
+    rarity: 'rare',
+    cost: 2,
+    price: 125,
+    emoji: '🧾',
+    desc: 'Na początku tury, jeśli wróg ma co najmniej 25 Rachunku, zyskujesz 1 Oscypek i dobierasz 1 kartę.',
+    exhaust: true,
+    effect(state) {
+      state.player.koncesja_na_oscypki = true;
+      return { playerAnim: 'anim-block' };
+    },
+  },
+
   ciupaga_we_mgle: {
     id: 'ciupaga_we_mgle',
     name: 'Ciupaga we Mgle',
