@@ -412,9 +412,20 @@ export class DebugOverlay {
     playerStatusAmountLabel.textContent = 'Amount';
     playerStatusAmountLabel.style.fontSize = '11px';
 
+    const playerStatusBoolRow = document.createElement('label');
+    playerStatusBoolRow.className = 'debug-toggle';
+    const playerStatusBoolInput = document.createElement('input');
+    playerStatusBoolInput.type = 'checkbox';
+    playerStatusBoolInput.checked = true;
+    const playerStatusBoolLabel = document.createElement('span');
+    playerStatusBoolLabel.textContent = 'Enabled';
+    playerStatusBoolRow.append(playerStatusBoolInput, playerStatusBoolLabel);
+
     const syncAmountVisibility = () => {
       const selected = playerStatuses.find((s) => s.value === playerStatusSelect.value);
-      playerStatusAmountRow.style.display = selected?.numeric === false ? 'none' : '';
+      const isNumeric = selected?.numeric !== false;
+      playerStatusAmountRow.style.display = isNumeric ? '' : 'none';
+      playerStatusBoolRow.style.display = isNumeric ? 'none' : '';
     };
     playerStatusSelect.addEventListener('change', syncAmountVisibility);
     syncAmountVisibility();
@@ -428,8 +439,15 @@ export class DebugOverlay {
       }
       const statusKey = playerStatusSelect.value;
       const selected = playerStatuses.find((s) => s.value === statusKey);
+      const parsedAmount = Number(playerStatusAmountInput.value);
       const amount =
-        selected?.numeric === false ? 1 : Math.max(0, Number(playerStatusAmountInput.value) || 1);
+        selected?.numeric === false
+          ? playerStatusBoolInput.checked
+            ? 1
+            : 0
+          : Number.isFinite(parsedAmount)
+            ? Math.max(0, Math.floor(parsedAmount))
+            : 1;
       this.state.applyPlayerDebugStatus(statusKey, amount);
       this.ui.applyDebugRefresh({ checkWin: false });
       this._log(`Applied player status: ${statusKey} (${amount}).`);
@@ -456,6 +474,7 @@ export class DebugOverlay {
     playerStatusGroup.append(
       playerStatusSelect,
       playerStatusAmountRow,
+      playerStatusBoolRow,
       applyPlayerStatusBtn,
       clearPlayerStatusBtn
     );
