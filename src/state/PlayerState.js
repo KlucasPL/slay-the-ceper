@@ -211,14 +211,16 @@ export function takeDamage(state, amount) {
   state.player.block -= blocked;
 
   if (dealt > 0 && state._isLansActive()) {
-    const requiredDutki = dealt * 2;
+    const rate = 2 + state.player.lansHitsAbsorbed;
+    const requiredDutki = dealt * rate;
     if (state.dutki >= requiredDutki) {
       state.dutki -= requiredDutki;
       lansSpent += requiredDutki;
       dealt = 0;
+      state.player.lansHitsAbsorbed += 1;
     } else {
       const availableDutki = state.dutki;
-      const prevented = Math.floor(availableDutki / 2);
+      const prevented = Math.floor(availableDutki / rate);
       dealt = Math.max(0, dealt - prevented);
       lansSpent += availableDutki;
       state.dutki = 0;

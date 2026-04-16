@@ -56,6 +56,7 @@ export function resetBattle(state) {
   state._resetBattleScopedFlags();
   state.lastVictoryMessage = '';
 
+  state.player.lansHitsAbsorbed = 0;
   state.player.status = defaultStatus();
   state._setLansActive(false);
   state.player.stunned = false;
@@ -147,6 +148,7 @@ export function resetForNewRun(state, startingDeck) {
     status: defaultStatus(),
     stunned: false,
     cardsPlayedThisTurn: 0,
+    lansHitsAbsorbed: 0,
   };
 
   state.dutki = 50;

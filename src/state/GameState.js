@@ -51,7 +51,13 @@ export class GameState {
     /** @type {import('../data/characters.js').CharacterDef} */
     this.baseCharacter = { ...character };
     /** @type {PlayerState} */
-    this.player = { ...character, status: defaultStatus(), stunned: false, cardsPlayedThisTurn: 0 };
+    this.player = {
+      ...character,
+      status: defaultStatus(),
+      stunned: false,
+      cardsPlayedThisTurn: 0,
+      lansHitsAbsorbed: 0,
+    };
     /** @type {number} */
     this.dutki = 50;
     /** @type {number} Total DUTKI gained during the current run (excludes starting 50). */
