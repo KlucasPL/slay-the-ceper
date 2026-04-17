@@ -215,6 +215,9 @@ export function showEndGame(uiManager, outcome) {
     return;
   }
   if (outcome === 'player_win') {
+    // Clear temporary status cards right after victory so they cannot appear in map/shop flows.
+    uiManager.state.clearStatusCardsFromPiles();
+
     const droppedDutki = uiManager.state.grantBattleDutki();
     const currentNode = uiManager.state.getCurrentMapNode();
     const isBossFight =

@@ -65,6 +65,152 @@ if (sceneDef) {
   sceneDef.build(state);
 }
 
+/**
+ * Attempts to lock the screen orientation to portrait on supported mobile browsers.
+ * Browsers may reject this unless the page is installed or in fullscreen mode.
+ *
+ * @returns {Promise<boolean>} True when lock request succeeds.
+ */
+async function tryLockPortraitOrientation() {
+  if (!('orientation' in screen) || typeof screen.orientation?.lock !== 'function') {
+    return false;
+  }
+
+  try {
+    await screen.orientation.lock('portrait');
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Sets up repeated portrait-lock attempts on mobile-like devices.
+ * This is a best-effort fallback and stays silent when unsupported.
+ *
+ * @returns {void}
+ */
+function setupMobilePortraitLock() {
+  const isMobileLike = window.matchMedia('(hover: none) and (pointer: coarse)').matches;
+  if (!isMobileLike) return;
+
+  const requestLock = () => {
+    void tryLockPortraitOrientation();
+  };
+
+  requestLock();
+  window.addEventListener('orientationchange', requestLock);
+  window.addEventListener('resize', requestLock);
+  window.addEventListener('pointerdown', requestLock, { once: true });
+}
+
+/**
+ * Wraps the app in a viewport container and shows a blocking overlay on mobile
+ * landscape, forcing the user to rotate the device back to portrait.
+ *
+ * @returns {void}
+ */
+function setupMobilePortraitViewportFallback() {
+  const isMobileLike = window.matchMedia('(hover: none) and (pointer: coarse)').matches;
+  if (!isMobileLike) return;
+
+  let appViewport = document.getElementById('app-viewport');
+  if (!appViewport) {
+    appViewport = document.createElement('div');
+    appViewport.id = 'app-viewport';
+
+    const bodyNodes = Array.from(document.body.childNodes);
+    bodyNodes.forEach((node) => {
+      appViewport.appendChild(node);
+    });
+
+    document.body.appendChild(appViewport);
+  }
+
+  let orientationOverlay = document.getElementById('orientation-lock-overlay');
+  if (!orientationOverlay) {
+    orientationOverlay = document.createElement('div');
+    orientationOverlay.id = 'orientation-lock-overlay';
+    orientationOverlay.setAttribute('role', 'dialog');
+    orientationOverlay.setAttribute('aria-modal', 'true');
+    orientationOverlay.setAttribute('aria-live', 'polite');
+    orientationOverlay.innerHTML = `
+      <div class="orientation-lock-card">
+        <div class="orientation-lock-icon" aria-hidden="true">📱</div>
+        <h2 class="orientation-lock-title">Obróć telefon do pionu</h2>
+        <p class="orientation-lock-text">
+          Ta gra działa tylko w orientacji pionowej. Obróć urządzenie, aby kontynuować.
+        </p>
+      </div>
+    `;
+    document.body.appendChild(orientationOverlay);
+  }
+
+  const updateOrientationClass = () => {
+    const isLandscape = window.matchMedia('(orientation: landscape)').matches;
+    document.body.classList.toggle('mobile-orientation-blocked', isLandscape);
+    orientationOverlay?.setAttribute('aria-hidden', String(!isLandscape));
+  };
+
+  updateOrientationClass();
+  window.addEventListener('orientationchange', updateOrientationClass);
+  window.addEventListener('resize', updateOrientationClass);
+}
+
+/**
+ * Shows a blocking overlay on desktop when the viewport is extremely wide but too short
+ * to render the game without collapsing into the low-height fallback layout.
+ *
+ * @returns {void}
+ */
+function setupDesktopViewportGuard() {
+  const isDesktopLike = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+  if (!isDesktopLike) return;
+
+  let appViewport = document.getElementById('app-viewport');
+  if (!appViewport) {
+    appViewport = document.createElement('div');
+    appViewport.id = 'app-viewport';
+
+    const bodyNodes = Array.from(document.body.childNodes);
+    bodyNodes.forEach((node) => {
+      appViewport.appendChild(node);
+    });
+
+    document.body.appendChild(appViewport);
+  }
+
+  let desktopViewportOverlay = document.getElementById('desktop-viewport-overlay');
+  if (!desktopViewportOverlay) {
+    desktopViewportOverlay = document.createElement('div');
+    desktopViewportOverlay.id = 'desktop-viewport-overlay';
+    desktopViewportOverlay.setAttribute('role', 'dialog');
+    desktopViewportOverlay.setAttribute('aria-modal', 'true');
+    desktopViewportOverlay.setAttribute('aria-live', 'polite');
+    desktopViewportOverlay.innerHTML = `
+      <div class="orientation-lock-card orientation-lock-card--desktop">
+        <div class="orientation-lock-icon" aria-hidden="true">🖥️</div>
+        <h2 class="orientation-lock-title">Okno jest za niskie</h2>
+        <p class="orientation-lock-text">
+          Ten widok jest zbyt szeroki i zbyt niski dla wygodnej gry. Zwiększ wysokość okna
+          albo zmniejsz jego szerokość, aby wrócić do rozgrywki.
+        </p>
+      </div>
+    `;
+    document.body.appendChild(desktopViewportOverlay);
+  }
+
+  const updateDesktopViewportClass = () => {
+    const isTooShortDesktop =
+      window.innerHeight <= 720 && window.innerWidth / window.innerHeight >= 1.9;
+    document.body.classList.toggle('desktop-viewport-blocked', isTooShortDesktop);
+    desktopViewportOverlay?.setAttribute('aria-hidden', String(!isTooShortDesktop));
+  };
+
+  updateDesktopViewportClass();
+  window.addEventListener('resize', updateDesktopViewportClass);
+}
+
 async function bootstrap() {
   document.body.dataset.appScene = 'INTRO_SCENE';
 
@@ -125,4 +271,7 @@ function _activateScene(scene, ui) {
   }
 }
 
+setupMobilePortraitViewportFallback();
+setupDesktopViewportGuard();
 bootstrap();
+setupMobilePortraitLock();
