@@ -1,4 +1,4 @@
-import { cardLibrary } from '../../data/cards.js';
+import { getBaseCardId, getCardDefinition } from '../../data/cards.js';
 import * as uiHelpers from '../helpers/UIHelpers.js';
 
 /**
@@ -20,11 +20,14 @@ export function openCampfire(uiManager) {
 
   const select = document.getElementById('camp-card-select');
   select.innerHTML = '';
-  const options = uiManager.state.getUpgradeableAttackCards();
+  const options = uiManager.state
+    .getUpgradeableAttackCards()
+    .filter((cardId) => getCardDefinition(cardId)?.type === 'attack');
   options.forEach((cardId) => {
+    const card = getCardDefinition(cardId);
     const option = document.createElement('option');
     option.value = cardId;
-    option.textContent = cardLibrary[cardId]?.name ?? cardId;
+    option.textContent = card?.name ?? getBaseCardId(cardId);
     select.appendChild(option);
   });
 
@@ -63,6 +66,7 @@ export function useCampfireUpgrade(uiManager) {
   const select = document.getElementById('camp-card-select');
   const cardId = select.value;
   if (!cardId) return;
+  if (getCardDefinition(cardId)?.type !== 'attack') return;
   uiManager.state.upgradeCardDamage(cardId, 3);
   uiManager.campfireUsed = true;
   closeCampfire(uiManager);

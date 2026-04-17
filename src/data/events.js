@@ -191,7 +191,7 @@ export const eventLibrary = {
       "Wielka bryczka tarasuje przejście. Fiakier w zakurzonym kapeluszu strzela z bata i patrzy na Twoją sakiewkę. 'Panocku, koń tyż głodny, a patrzynie na luksusy kosztuje!'",
     image: fiakierEventSvg,
     fallbackFight: {
-      minDutki: 10,
+      minDutki: 20,
       enemyId: 'pomocnik_fiakra',
       message:
         "Fiakier mierzy Cię wzrokiem: 'Bez dutków to se możesz po asfalcie tupać, a nie moją bryką jechać! Naucy Cie rozumu...'",

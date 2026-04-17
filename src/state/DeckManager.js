@@ -56,6 +56,8 @@ export function removeCardFromDeck(state, cardId) {
  */
 export function upgradeCardDamage(state, cardId, amount = 3) {
   const targetBaseId = getBaseCardId(cardId);
+  if (getCardDefinition(targetBaseId)?.type !== 'attack') return;
+
   const piles = [state.deck, state.hand, state.discard, state.exhaust];
   let runtimeCardId = null;
 
@@ -106,7 +108,7 @@ export function getUpgradeableAttackCards(state) {
       pool
         .map((id) => getBaseCardId(id))
         .filter((id) => {
-          const card = cardLibrary[id];
+          const card = getCardDefinition(id);
           return (
             card &&
             card.type === 'attack' &&

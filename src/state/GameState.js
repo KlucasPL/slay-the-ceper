@@ -1213,6 +1213,14 @@ export class GameState {
   }
 
   /**
+   * Removes temporary status cards from hand/discard/exhaust/deck immediately.
+   * Useful right after a battle win, before opening map/shop overlays.
+   */
+  clearStatusCardsFromPiles() {
+    battleLifecycle.clearStatusCardsFromPiles(this);
+  }
+
+  /**
    * Starts a fresh battle against a specific enemy ID without entering the random encounter pool.
    * Intended for scripted transitions (e.g., event fallback fights).
    * @param {string} enemyId

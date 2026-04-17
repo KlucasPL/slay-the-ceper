@@ -70,12 +70,7 @@ export function resetBattle(state) {
   state._setLansActive(false);
   state.player.stunned = false;
 
-  const allCards = [...state.hand, ...state.discard, ...state.exhaust, ...state.deck];
-  state.deck = allCards.filter((id) => getCardDefinition(id)?.type !== 'status');
-  state.hand = [];
-  state.discard = [];
-  state.exhaust = [];
-  state._shuffle(state.deck);
+  clearStatusCardsFromPiles(state);
 
   const currentNode = state.getCurrentMapNode();
   const isBossNode = currentNode?.type === 'boss';
@@ -99,6 +94,20 @@ export function resetBattle(state) {
 
   state._applyBattleStartRelics();
   state.startTurn();
+}
+
+/**
+ * Removes temporary status cards from all player piles immediately.
+ * Keeps non-status cards by merging piles back into deck and shuffling.
+ * @param {any} state
+ */
+export function clearStatusCardsFromPiles(state) {
+  const allCards = [...state.hand, ...state.discard, ...state.exhaust, ...state.deck];
+  state.deck = allCards.filter((id) => getCardDefinition(id)?.type !== 'status');
+  state.hand = [];
+  state.discard = [];
+  state.exhaust = [];
+  state._shuffle(state.deck);
 }
 
 /**

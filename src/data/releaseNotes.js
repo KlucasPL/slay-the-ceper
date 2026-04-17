@@ -5,6 +5,15 @@
 /** @type {ReleaseNoteEntry[]} */
 export const releaseNotesData = [
   {
+    version: 'v1.5.2 - Bugfixy walki i eventów',
+    date: 'kwiecień 2026',
+    changes: [
+      '🔥 WATRA TYLKO DLA ATAKÓW: Naostrzenie w Watrze ponownie akceptuje wyłącznie karty Ataku; Skille i Moce są poprawnie odrzucane.',
+      '🧹 STATUSY CZYSZCZONE OD RAZU PO WYGRANEJ: Tymczasowe karty statusu od Ceprów znikają natychmiast po walce, więc nie pojawiają się już w Jarmarku na liście usuwania.',
+      '🐴 WĄSATY FIAKIER - POPRAWIONY PRÓG WALKI: Fallbackowa walka uruchamia się teraz poprawnie przy mniej niż 20 Dutkach (także dla zakresu 10-19).',
+    ],
+  },
+  {
     version: 'v1.5.1 - Poprawki i szlify',
     date: 'kwiecień 2026',
     changes: [

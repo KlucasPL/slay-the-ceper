@@ -146,6 +146,48 @@ describe('GameState', () => {
       s.playCard(0);
       expect(s.enemy.hp).toBe(35);
     });
+
+    it('campfire sharpening never upgrades non-attack cards', () => {
+      const s = freshState(3);
+      s.deck = ['gasior'];
+      s.hand = [];
+      s.discard = [];
+      s.exhaust = [];
+
+      s.upgradeCardDamage('gasior', 3);
+
+      expect(s.deck).toEqual(['gasior']);
+      expect(Object.keys(s.cardDamageBonus)).toHaveLength(0);
+      expect(s.getCardDamageBonus('gasior')).toBe(0);
+    });
+
+    it('getUpgradeableAttackCards returns only attack cards', () => {
+      const s = freshState(3);
+      s.deck = ['ciupaga', 'gasior', 'kierpce'];
+      s.hand = [];
+      s.discard = [];
+      s.exhaust = [];
+
+      expect(s.getUpgradeableAttackCards().sort()).toEqual(['ciupaga', 'kierpce']);
+    });
+
+    it('clearStatusCardsFromPiles removes status cards immediately', () => {
+      const s = freshState(3);
+      s.deck = ['ciupaga', 'ulotka'];
+      s.hand = ['spam_tagami'];
+      s.discard = ['gasior'];
+      s.exhaust = ['spam_tagami'];
+
+      s.clearStatusCardsFromPiles();
+
+      expect(s.hand).toEqual([]);
+      expect(s.discard).toEqual([]);
+      expect(s.exhaust).toEqual([]);
+      expect(s.deck).toContain('ciupaga');
+      expect(s.deck).toContain('gasior');
+      expect(s.deck).not.toContain('ulotka');
+      expect(s.deck).not.toContain('spam_tagami');
+    });
     it('returns effect with playerAnim and damage', () => {
       const s = freshState();
       s.hand = ['ciupaga'];
@@ -2049,7 +2091,7 @@ describe('GameState', () => {
       const fallback = eventLibrary.fiakier_event.fallbackFight;
       expect(fallback).toBeTruthy();
       if (!fallback) return;
-      expect(fallback.minDutki).toBe(10);
+      expect(fallback.minDutki).toBe(20);
       expect(fallback.enemyId).toBe('pomocnik_fiakra');
     });
 
