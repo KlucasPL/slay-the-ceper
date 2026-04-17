@@ -1,7 +1,13 @@
 import { cardLibrary, startingDeck } from '../data/cards.js';
 import { releaseNotesData } from '../data/releaseNotes.js';
 import { ActIntroOverlay } from './overlays/ActIntroOverlay.js';
-import { getSkipIntro, setSkipIntro } from '../logic/settings.js';
+import {
+  getSkipIntro,
+  setSkipIntro,
+  getTextSizePreset,
+  setTextSizePreset,
+  getTextSizeScale,
+} from '../logic/settings.js';
 import * as uiHelpers from './helpers/UIHelpers.js';
 import * as cardRenderer from './renderers/CardRenderer.js';
 import * as statusRenderer from './renderers/StatusRenderer.js';
@@ -153,6 +159,9 @@ export class UIManager {
       .getElementById('option-skip-intro-btn')
       ?.addEventListener('click', () => this._toggleSkipIntroOption());
     document
+      .getElementById('option-text-size-btn')
+      ?.addEventListener('click', () => this._cycleTextSizeOption());
+    document
       .getElementById('tutorial-ack-btn')
       ?.addEventListener('click', () => this._handleTutorialAcknowledge());
     document.getElementById('tutorial-exit-btn')?.addEventListener('click', () => {
@@ -279,6 +288,7 @@ export class UIManager {
     window.addEventListener('resize', () => this._renderTutorialOverlay());
     window.addEventListener('resize', () => this._queueCardDescFit());
     this._setupCardDescriptionAutoFit();
+    this._applyTextSizePreference();
     this._renderReleaseNotesButtonLabel();
     this._renderReleaseNotes();
     this._renderAudioOptions();
@@ -623,6 +633,16 @@ export class UIManager {
       skipIntroBtn.classList.toggle('is-on', skipOn);
       skipIntroBtn.setAttribute('aria-pressed', String(skipOn));
     }
+
+    const textSizeBtn = document.getElementById('option-text-size-btn');
+    if (textSizeBtn) {
+      const preset = getTextSizePreset();
+      const label =
+        preset === 'xlarge' ? 'BARDZO DUZY' : preset === 'large' ? 'DUZY' : 'NORMALNY';
+      textSizeBtn.textContent = label;
+      textSizeBtn.classList.toggle('is-on', preset !== 'normal');
+      textSizeBtn.setAttribute('aria-label', `Rozmiar tekstu: ${label}`);
+    }
   }
 
   _toggleMenuMusicOption() {
@@ -641,6 +661,21 @@ export class UIManager {
     if (this._isInputLocked()) return;
     setSkipIntro(!getSkipIntro());
     this._renderAudioOptions();
+  }
+
+  _cycleTextSizeOption() {
+    if (this._isInputLocked()) return;
+    const current = getTextSizePreset();
+    const next = current === 'normal' ? 'large' : current === 'large' ? 'xlarge' : 'normal';
+    setTextSizePreset(next);
+    this._applyTextSizePreference();
+    this._renderAudioOptions();
+  }
+
+  _applyTextSizePreference() {
+    const preset = getTextSizePreset();
+    const scale = getTextSizeScale(preset);
+    document.documentElement.style.setProperty('--user-text-scale', String(scale));
   }
 
   _syncScreenState() {

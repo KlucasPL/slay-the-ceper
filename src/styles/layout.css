@@ -1,12 +1,14 @@
 html {
+  --user-text-scale: 1;
   height: 100%;
+  font-size: calc(100% * var(--user-text-scale));
   overflow: hidden;
   overscroll-behavior: none;
 }
 
 @media (hover: none) and (pointer: coarse) {
   html {
-    font-size: 112.5%;
+    font-size: calc(112.5% * var(--user-text-scale));
   }
 }
 
@@ -354,6 +356,8 @@ body.desktop-viewport-blocked #desktop-viewport-overlay {
 
 .options-content {
   max-width: 420px;
+  max-height: none;
+  overflow-y: visible;
 }
 
 .options-row {
@@ -2685,14 +2689,38 @@ h1 {
     grid-template-columns: repeat(auto-fit, minmax(122px, 1fr));
   }
 
+  #library-overlay .library-panel {
+    width: 100%;
+    max-width: 100%;
+    height: calc(100% - 2px);
+    max-height: calc(100% - 2px);
+    overflow: hidden;
+  }
+
+  #library-overlay .library-grid {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    max-height: none;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+
   .library-grid .library-item.card {
     width: 100%;
     max-width: none;
     min-width: 0;
-    min-height: 205px;
+    min-height: 265px;
     padding: 14px;
     justify-self: stretch;
     box-sizing: border-box;
+  }
+
+  #library-overlay .library-item-title {
+    font-size: 1.2rem;
+  }
+
+  #library-overlay .library-item-desc {
+    font-size: 1.02rem;
   }
 
   .library-back-btn {
@@ -2961,6 +2989,51 @@ h1 {
   }
 }
 
+@media (hover: none) and (pointer: coarse) and (orientation: landscape) {
+  #library-overlay {
+    align-items: stretch;
+    justify-content: center;
+    padding: 8px;
+  }
+
+  #library-overlay .library-panel {
+    width: 100%;
+    max-width: 100%;
+    height: 100%;
+    max-height: 100%;
+    overflow: hidden;
+    padding: 14px;
+  }
+
+  #library-overlay .library-grid {
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 12px;
+    max-height: none;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  #library-overlay .library-grid .library-item.card {
+    min-height: 280px;
+    padding: 16px;
+  }
+
+  #library-overlay .library-item-title {
+    font-size: 1.22rem;
+  }
+
+  #library-overlay .library-item-desc {
+    font-size: 1.04rem;
+  }
+
+  #library-overlay .library-tab,
+  #library-overlay .library-filter {
+    font-size: 0.98rem;
+    padding: 9px 15px;
+  }
+}
+
 @media (max-width: 480px) {
   .tutorial-bubble {
     --tutorial-safe-top: 46px;
@@ -3040,6 +3113,8 @@ h1 {
 
 .maryna-boon-panel {
   width: min(860px, 95vw);
+  max-height: none;
+  overflow: visible;
   background:
     radial-gradient(circle at 14% 12%, rgba(255, 223, 150, 0.14), transparent 34%),
     radial-gradient(circle at 86% 78%, rgba(176, 114, 62, 0.18), transparent 38%),
@@ -3161,6 +3236,11 @@ h1 {
 
   .maryna-boon-card {
     min-height: 138px;
+  }
+
+  #maryna-boon-overlay .maryna-boon-panel {
+    max-height: none;
+    overflow: visible;
   }
 }
 
