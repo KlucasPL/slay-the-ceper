@@ -106,7 +106,7 @@ describe('data exports', () => {
   it('shouldResolveHumanReadableNameForEveryEventInEventLibrary', () => {
     // given — analyzer's NAME_LOOKUPS resolves event labels via `title ?? name`.
     // Entries missing both fall back to their id in the dashboard, which reads
-    // as raw snake_case and hides regressions (E1 in docs/balancing-audit.md).
+    // as raw snake_case and hides balance regressions.
     const entries = Object.entries(eventLibrary);
     expect(entries.length).toBeGreaterThan(0);
 

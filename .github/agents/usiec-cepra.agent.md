@@ -85,7 +85,7 @@ When asked to implement any feature, follow these steps in order:
 4. **Test** — Write a Vitest test in the matching `tests/` subdirectory. Logic only; never touch the DOM. Tests must pass before wiring UI.
 5. **UI** — Wire rendering in `src/ui/UIManager.js` or the relevant renderer/overlay module.
 
-For in-depth architecture decisions, see `docs/balancing-api-plan.md`.
+For balancing-toolchain usage (sim CLI, analyzer output, dashboard), see `docs/balancing-usage.md`.
 
 ## Constraints
 
