@@ -7,6 +7,8 @@ export function openMarynaBoonOverlay(uiManager) {
   const overlay = document.getElementById('maryna-boon-overlay');
   if (!overlay) return;
 
+  uiManager.audioManager.playMarynaMusic();
+
   const imageEl = document.getElementById('maryna-boon-image');
   if (imageEl) imageEl.innerHTML = marynaSvg;
 
@@ -39,6 +41,7 @@ export function openMarynaBoonOverlay(uiManager) {
       uiManager.state.hasStartedFirstBattle = true;
       overlay.classList.add('hidden');
       overlay.setAttribute('aria-hidden', 'true');
+      uiManager.audioManager.stopMarynaMusic();
       uiManager._openMapOverlay();
     });
 

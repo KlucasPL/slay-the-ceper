@@ -64,7 +64,7 @@ export const marynaBoonLibrary = {
     relicId: 'relic_boon_tajny_skladnik',
     name: 'Tajny Składnik Maryny',
     flavor: 'Najpierw ich osłabi, potem ich dobij.',
-    effectDesc: 'Na starcie każdej walki wróg dostaje 1 Słaby i 1 Kruchy.',
+    effectDesc: 'Na starcie każdej walki wróg dostaje 1 Słabość i 1 Kruchość.',
     emoji: '🌿',
   },
 };

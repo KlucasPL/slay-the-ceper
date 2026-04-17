@@ -1,4 +1,4 @@
-import { cardLibrary } from '../../data/cards.js';
+import { cardLibrary, getBaseCardId, getCardDefinition } from '../../data/cards.js';
 import { relicLibrary } from '../../data/relics.js';
 import * as uiHelpers from '../helpers/UIHelpers.js';
 import * as cardRenderer from './CardRenderer.js';
@@ -37,13 +37,26 @@ export function renderShopOffers(uiManager) {
   const healBtn = document.getElementById('shop-heal-btn');
   const removeBtn = document.getElementById('shop-remove-btn');
   const message = document.getElementById('shop-message');
+  const dutkiCurrent = document.getElementById('shop-dutki-current');
+  const hpCurrent = document.getElementById('shop-hp-current');
+  const hpMax = document.getElementById('shop-hp-max');
   const cards = uiManager.state.shopStock.cards;
+
+  if (dutkiCurrent) {
+    dutkiCurrent.textContent = String(uiManager.state.dutki);
+  }
+  if (hpCurrent) {
+    hpCurrent.textContent = String(uiManager.state.player.hp);
+  }
+  if (hpMax) {
+    hpMax.textContent = String(uiManager.state.player.maxHp);
+  }
 
   cardContainer.innerHTML = '';
   cards.forEach((cardId) => {
-    const card = cardLibrary[cardId];
+    const card = getCardDefinition(cardId);
     if (!card) return;
-    const cardDesc = cardRenderer.getCardDescription(uiManager, card);
+    const cardDesc = cardRenderer.getCardDescription(uiManager, card, cardId);
 
     const cardBox = document.createElement('div');
     cardBox.className = `shop-item ${uiHelpers.rarityClass(card.rarity)}`;
@@ -189,7 +202,7 @@ export function buyCardRemoval(uiManager) {
     message.textContent = 'Nie ma tej karty do usunięcia.';
     return;
   }
-  message.textContent = `Usunięto kartę: ${cardLibrary[cardId]?.name ?? cardId}`;
+  message.textContent = `Usunięto kartę: ${getCardDefinition(cardId)?.name ?? getBaseCardId(cardId)}`;
   uiManager.state.afterShopCardRemoval();
   renderShopOffers(uiManager);
   uiManager.updateUI();
@@ -206,12 +219,12 @@ export function populateRemoveCardSelect(uiManager) {
     ...uiManager.state.discard,
     ...uiManager.state.exhaust,
   ];
-  const unique = [...new Set(pool)];
+  const unique = [...new Set(pool.map((cardId) => getBaseCardId(cardId)))];
   select.innerHTML = '';
   unique.forEach((cardId) => {
     const option = document.createElement('option');
     option.value = cardId;
-    option.textContent = cardLibrary[cardId]?.name ?? cardId;
+    option.textContent = getCardDefinition(cardId)?.name ?? cardId;
     select.appendChild(option);
   });
 }

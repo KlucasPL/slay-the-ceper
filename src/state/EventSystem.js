@@ -1,4 +1,4 @@
-import { cardLibrary } from '../data/cards.js';
+import { getCardDefinition } from '../data/cards.js';
 import { enemyLibrary } from '../data/enemies.js';
 import { eventLibrary } from '../data/events.js';
 import { defaultStatus } from './StatusEffects.js';
@@ -199,7 +199,7 @@ export function startBattleWithEnemyId(state, enemyId, options = {}) {
   state.player.stunned = false;
 
   const allCards = [...state.hand, ...state.discard, ...state.exhaust, ...state.deck];
-  state.deck = allCards.filter((id) => cardLibrary[id]?.type !== 'status');
+  state.deck = allCards.filter((id) => getCardDefinition(id)?.type !== 'status');
   state.hand = [];
   state.discard = [];
   state.exhaust = [];

@@ -259,7 +259,7 @@ export class DebugOverlay {
 
     const statusGroup = this._group('Status Injector');
     const weakBtn = this._button('Weak (2)', () => this._applyBattleStatus('weak', 2));
-    const vulnBtn = this._button('Vulnerable (2)', () => this._applyBattleStatus('vulnerable', 2));
+    const vulnBtn = this._button('Podatność (2)', () => this._applyBattleStatus('vulnerable', 2));
     const frailBtn = this._button('Frail (2)', () => this._applyBattleStatus('fragile', 2));
     const stunBtn = this._button('Stun (1)', () => this._applyBattleStatus('stun', 1));
     const statusRow = document.createElement('div');
@@ -381,9 +381,9 @@ export class DebugOverlay {
     const playerStatuses = [
       { value: 'lans', label: 'Lans', numeric: false },
       { value: 'strength', label: 'Siła +1', numeric: true },
-      { value: 'weak', label: 'Słaby +2', numeric: true },
-      { value: 'fragile', label: 'Kruchy +2', numeric: true },
-      { value: 'vulnerable', label: 'Wrażliwy +2', numeric: true },
+      { value: 'weak', label: 'Słabość +2', numeric: true },
+      { value: 'fragile', label: 'Kruchość +2', numeric: true },
+      { value: 'vulnerable', label: 'Podatność +2', numeric: true },
       { value: 'next_double', label: 'Next Double', numeric: false },
       { value: 'energy_next_turn', label: 'Energia +1', numeric: true },
       { value: 'duma_podhala', label: 'Duma Podhala +1', numeric: true },

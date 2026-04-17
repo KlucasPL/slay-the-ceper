@@ -1,4 +1,4 @@
-import { cardLibrary } from '../data/cards.js';
+import { getBaseCardId, getCardDefinition } from '../data/cards.js';
 
 /** @returns {number} */
 export function drawPerTurn() {
@@ -394,7 +394,7 @@ export function startTurn(state) {
  */
 export function playCard(state, handIndex) {
   const cardId = state.hand[handIndex];
-  const card = cardLibrary[cardId];
+  const card = getCardDefinition(cardId);
   const isLansTaggedCard = Array.isArray(card?.tags) && card.tags.includes('lans');
   const lansWasActiveBeforePlay = state._isLansActive();
   const activateLansOnly = isLansTaggedCard && !lansWasActiveBeforePlay;
@@ -447,16 +447,21 @@ export function playCard(state, handIndex) {
   }
 
   let effect;
-  if (activateLansOnly) {
-    state._setLansActive(true);
-    state.lansActivatedEvent = true;
-    effect = { playerAnim: 'anim-block' };
-  } else {
-    effect = card.effect(state);
-  }
+  state.activeRuntimeCardId = cardId;
+  try {
+    if (activateLansOnly) {
+      state._setLansActive(true);
+      state.lansActivatedEvent = true;
+      effect = { playerAnim: 'anim-block' };
+    } else {
+      effect = card.effect(state);
+    }
 
-  if (isFirstCardThisBattle && state.enemy.hp > 0 && !activateLansOnly) {
-    card.effect(state);
+    if (isFirstCardThisBattle && state.enemy.hp > 0 && !activateLansOnly) {
+      card.effect(state);
+    }
+  } finally {
+    state.activeRuntimeCardId = null;
   }
 
   if (card.type === 'attack' && state.player.goralska_goscinnosc) {
@@ -505,7 +510,7 @@ export function endTurn(state) {
     state.smyczKeptHandIndex = null;
   }
 
-  if (state.hand.includes('spam_tagami')) {
+  if (state.hand.some((entry) => getBaseCardId(entry) === 'spam_tagami')) {
     state.dutki = Math.max(0, state.dutki - 2);
   }
 

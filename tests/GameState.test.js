@@ -119,6 +119,33 @@ describe('GameState', () => {
       expect(s.discard).toContain('ciupaga');
       expect(s.hand).not.toContain('ciupaga');
     });
+
+    it('campfire sharpening applies to only one copy of a duplicated attack card', () => {
+      const s = freshState(3);
+      s.deck = ['ciupaga', 'ciupaga'];
+      s.hand = [];
+      s.discard = [];
+      s.exhaust = [];
+
+      s.upgradeCardDamage('ciupaga', 3);
+
+      const upgradedCardId = s.deck.find((cardId) => cardId !== 'ciupaga');
+      expect(upgradedCardId).toBeTruthy();
+      expect(s.deck.filter((cardId) => cardId === 'ciupaga')).toHaveLength(1);
+      expect(Object.keys(s.cardDamageBonus)).toHaveLength(1);
+      expect(s.getCardDamageBonus('ciupaga')).toBe(0);
+      expect(s.getCardDamageBonus(upgradedCardId)).toBe(3);
+
+      s.enemy.hp = 50;
+      s.hand = ['ciupaga'];
+      s.playCard(0);
+      expect(s.enemy.hp).toBe(44);
+
+      s.player.energy = 3;
+      s.hand = [upgradedCardId];
+      s.playCard(0);
+      expect(s.enemy.hp).toBe(35);
+    });
     it('returns effect with playerAnim and damage', () => {
       const s = freshState();
       s.hand = ['ciupaga'];
@@ -1702,10 +1729,99 @@ describe('GameState', () => {
       const earliestElite = allNodes
         .filter((node) => node.type === 'elite')
         .reduce((min, node) => Math.min(min, node.y), Infinity);
-      expect(shopCount).toBeLessThanOrEqual(3);
+      expect(shopCount).toBeGreaterThanOrEqual(5);
       expect(treasureCount).toBe(1);
-      expect(eliteCount).toBeGreaterThanOrEqual(1);
+      expect(eliteCount).toBeGreaterThanOrEqual(3);
       expect(earliestElite).toBeGreaterThanOrEqual(4);
+
+      // Elite rules: reachable elites must be >= 3 and any two must have row distance >= 4
+      const reachableCoords3 = new Set();
+      const qElite = [{ x: 1, y: 0 }];
+      const seenElite = new Set();
+      while (qElite.length > 0) {
+        const cur = qElite.shift();
+        const k = `${cur.x},${cur.y}`;
+        if (seenElite.has(k)) continue;
+        seenElite.add(k);
+        reachableCoords3.add(k);
+        const node = s.map[cur.y]?.[cur.x];
+        if (!node) continue;
+        for (const next of node.connections ?? []) {
+          qElite.push({ x: next, y: cur.y + 1 });
+        }
+      }
+      const reachableElites = s.map
+        .flat()
+        .filter(Boolean)
+        .filter((n) => n.type === 'elite' && reachableCoords3.has(`${n.x},${n.y}`))
+        .sort((a, b) => a.y - b.y);
+      expect(reachableElites.length).toBeGreaterThanOrEqual(3);
+      for (let i = 1; i < reachableElites.length; i++) {
+        expect(reachableElites[i].y - reachableElites[i - 1].y).toBeGreaterThanOrEqual(3);
+      }
+
+
+      // Shop spawn rules:
+      // 1) no reachable edge can connect shop -> shop,
+      // 2) at least one reachable path to boss contains >= 3 shops.
+      const reachableKeys = new Set();
+      const queue2 = [{ x: 1, y: 0 }];
+      const seen2 = new Set();
+      while (queue2.length > 0) {
+        const current = queue2.shift();
+        const key = `${current.x},${current.y}`;
+        if (seen2.has(key)) continue;
+        seen2.add(key);
+        const node = s.map[current.y]?.[current.x];
+        if (!node) continue;
+        reachableKeys.add(key);
+        node.connections.forEach((targetX) => {
+          if (s.map[current.y + 1]?.[targetX]) {
+            queue2.push({ x: targetX, y: current.y + 1 });
+          }
+        });
+      }
+
+      for (let y = 0; y < s.map.length - 1; y++) {
+        for (let x = 0; x < 3; x++) {
+          const node = s.map[y]?.[x];
+          if (!node || node.type !== 'shop' || !reachableKeys.has(`${x},${y}`)) continue;
+          node.connections.forEach((targetX) => {
+            const nextNode = s.map[y + 1]?.[targetX];
+            if (!nextNode || !reachableKeys.has(`${targetX},${y + 1}`)) return;
+            expect(nextNode.type).not.toBe('shop');
+          });
+        }
+      }
+
+      const reachableShops = [...reachableKeys]
+        .map((key) => {
+          const [x, y] = key.split(',').map(Number);
+          return s.map[y]?.[x] ?? null;
+        })
+        .filter((node) => node?.type === 'shop');
+      expect(reachableShops.length).toBeGreaterThanOrEqual(5);
+      const shopColumns = new Set(reachableShops.map((node) => node.x));
+      expect(shopColumns.size).toBeGreaterThanOrEqual(2);
+
+      const rows = s.map.length;
+      const NEG = Number.NEGATIVE_INFINITY;
+      const best = Array.from({ length: rows }, () => Array(3).fill(NEG));
+      best[0][1] = s.map[0][1]?.type === 'shop' ? 1 : 0;
+      for (let y = 0; y < rows - 1; y++) {
+        for (let x = 0; x < 3; x++) {
+          const node = s.map[y]?.[x];
+          if (!node || best[y][x] === NEG) continue;
+          node.connections.forEach((targetX) => {
+            const nextNode = s.map[y + 1]?.[targetX];
+            if (!nextNode) return;
+            if (node.type === 'shop' && nextNode.type === 'shop') return;
+            const gain = nextNode.type === 'shop' ? 1 : 0;
+            best[y + 1][targetX] = Math.max(best[y + 1][targetX], best[y][x] + gain);
+          });
+        }
+      }
+      expect(best[rows - 1][1]).toBeGreaterThanOrEqual(3);
     });
 
     it('battle reward grants 28-36 Dutki only once per battle', () => {
@@ -1904,17 +2020,17 @@ describe('GameState', () => {
         });
     });
 
-    it('fiakier event heal choice costs 30 and heals up to max HP', () => {
+    it('fiakier event heal choice costs 60 and heals up to max HP', () => {
       const s = freshState();
       s.setActiveEvent('fiakier_event');
-      s.player.hp = 40;
-      s.dutki = 50;
+      s.player.hp = 48;
+      s.dutki = 70;
 
       const result = s.applyActiveEventChoice(0);
 
       expect(result.success).toBe(true);
       expect(s.player.hp).toBe(50);
-      expect(s.dutki).toBe(20);
+      expect(s.dutki).toBe(10);
     });
 
     it('fiakier event rejects choice if player cannot afford the cost', () => {

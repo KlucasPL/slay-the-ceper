@@ -1,4 +1,4 @@
-import { cardLibrary } from '../../data/cards.js';
+import { getCardDefinition } from '../../data/cards.js';
 import * as uiHelpers from '../helpers/UIHelpers.js';
 import * as cardRenderer from './CardRenderer.js';
 
@@ -49,7 +49,7 @@ export function renderPileViewer(uiManager) {
     grid.appendChild(empty);
   } else {
     view.ids.forEach((cardId) => {
-      const card = cardLibrary[cardId];
+      const card = getCardDefinition(cardId);
       if (!card) return;
 
       const cardEl = document.createElement('article');
@@ -76,7 +76,7 @@ export function renderPileViewer(uiManager) {
 
       const descEl = document.createElement('div');
       descEl.className = 'card-desc';
-      descEl.textContent = cardRenderer.getCardDescription(uiManager, card);
+      descEl.textContent = cardRenderer.getCardDescription(uiManager, card, cardId);
 
       cardEl.append(costEl, titleEl, rarityEl, imgEl, descEl);
 
@@ -127,19 +127,19 @@ export function buildPileViewerData(uiManager, pileType) {
   };
 
   const drawIds = toIds(drawSource)
-    .filter((id) => Boolean(cardLibrary[id]))
+    .filter((id) => Boolean(getCardDefinition(id)))
     .sort((a, b) => {
-      const cardA = cardLibrary[a];
-      const cardB = cardLibrary[b];
+      const cardA = getCardDefinition(a);
+      const cardB = getCardDefinition(b);
       return cardA.cost - cardB.cost || cardA.name.localeCompare(cardB.name, 'pl');
     });
 
   const discardIds = toIds(discardSource)
-    .filter((id) => Boolean(cardLibrary[id]))
+    .filter((id) => Boolean(getCardDefinition(id)))
     .reverse();
 
   const exhaustIds = toIds(exhaustSource)
-    .filter((id) => Boolean(cardLibrary[id]))
+    .filter((id) => Boolean(getCardDefinition(id)))
     .reverse();
 
   if (pileType === 'draw') {

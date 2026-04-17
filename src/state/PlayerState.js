@@ -1,4 +1,4 @@
-import { cardLibrary } from '../data/cards.js';
+import { cardLibrary, getBaseCardId, getCardDefinition } from '../data/cards.js';
 
 /**
  * @typedef {import('../data/cards.js').StatusDef} StatusDef
@@ -52,14 +52,15 @@ export function getCardCostInHand(state, cardId) {
   if (state.hasRelic('flaszka_sliwowicy') && cardId in state.flaszkaCostSeed) {
     return state.flaszkaCostSeed[cardId];
   }
-  const card = cardLibrary[cardId];
+  const card = getCardDefinition(cardId);
+  const baseCardId = getBaseCardId(cardId);
   if (state.zegarekFreeSkillAvailable && card?.type === 'skill') {
     return 0;
   }
-  if (cardId === 'lawina_z_morskiego_oka' && state.currentWeather === 'frozen') {
+  if (baseCardId === 'lawina_z_morskiego_oka' && state.currentWeather === 'frozen') {
     return 1;
   }
-  if (cardId === 'paragon_grozy' && state.enemy?.rachunek >= 25) {
+  if (baseCardId === 'paragon_grozy' && state.enemy?.rachunek >= 25) {
     return 1;
   }
   return card?.cost ?? 0;
@@ -71,7 +72,7 @@ export function getCardCostInHand(state, cardId) {
  * @returns {number}
  */
 export function getCardShopPrice(state, cardId) {
-  const base = cardLibrary[cardId]?.price ?? 0;
+  const base = getCardDefinition(cardId)?.price ?? 0;
   if (state.hasRelic('zlota_karta_zakopianczyka')) {
     return Math.floor(base * 0.85);
   }

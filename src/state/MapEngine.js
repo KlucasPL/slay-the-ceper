@@ -84,6 +84,10 @@ export function generateMap(state, rows = state.debugMapRows) {
   state._ensureReachableElite(generated);
   state._ensureReachableTrueEvent(generated);
   state._forceRow1CeprFights(generated);
+  ensureShopPathRules(state, generated);
+  // Re-check elite guarantee after shop rewrites to preserve map invariants.
+  state._ensureReachableElite(generated);
+  ensureEliteRules(state, generated);
 
   state.map = generated;
   state.currentLevel = 0;
@@ -369,6 +373,269 @@ export function ensureGuaranteedPathRewards(state, map) {
 }
 
 /**
+ * Ensures map shop rules:
+ * 1) there is at least one reachable path with >= 3 shops,
+ * 2) no path can traverse two consecutive shop nodes.
+ *
+ * @param {{
+ *   _getReachableCoordinates: (map: (MapNode | null)[][]) => Array<{ x: number, y: number }>,
+ *   _setNodeType: (node: MapNode | null, type: MapNodeType) => void
+ * }} state
+ * @param {(MapNode | null)[][]} map
+ */
+export function ensureShopPathRules(state, map) {
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const reachableKeys = new Set(
+      state._getReachableCoordinates(map).map(({ x, y }) => `${x},${y}`)
+    );
+
+    breakConsecutiveShops(state, map, reachableKeys);
+    promoteShopsOnBestReachablePath(state, map);
+    ensureMinimumReachableShops(state, map, reachableKeys, 5);
+
+    const noConsecutive = !hasConsecutiveReachableShops(map, reachableKeys);
+    const bestPath = getBestReachablePathNoConsecutive(map);
+    const pathShopCount = countShopsOnPath(bestPath);
+    const reachableShopCount = countReachableShops(map, reachableKeys);
+    if (noConsecutive && pathShopCount >= 3 && reachableShopCount >= 5) return;
+  }
+}
+
+/**
+ * @param {(MapNode | null)[][]} map
+ * @param {Set<string>} reachableKeys
+ * @returns {boolean}
+ */
+function hasConsecutiveReachableShops(map, reachableKeys) {
+  for (let y = 0; y < map.length - 1; y++) {
+    for (let x = 0; x < 3; x++) {
+      const node = map[y]?.[x];
+      if (!node || node.type !== 'shop' || !reachableKeys.has(`${x},${y}`)) continue;
+
+      for (const targetX of node.connections) {
+        const target = map[y + 1]?.[targetX];
+        if (!target || !reachableKeys.has(`${targetX},${y + 1}`)) continue;
+        if (target.type === 'shop') return true;
+      }
+    }
+  }
+  return false;
+}
+
+/**
+ * @param {{ _setNodeType: (node: MapNode | null, type: MapNodeType) => void }} state
+ * @param {(MapNode | null)[][]} map
+ * @param {Set<string>} reachableKeys
+ */
+function breakConsecutiveShops(state, map, reachableKeys) {
+  for (let y = 0; y < map.length - 1; y++) {
+    for (let x = 0; x < 3; x++) {
+      const node = map[y]?.[x];
+      if (!node || node.type !== 'shop' || !reachableKeys.has(`${x},${y}`)) continue;
+
+      for (const targetX of node.connections) {
+        const target = map[y + 1]?.[targetX];
+        if (!target || !reachableKeys.has(`${targetX},${y + 1}`)) continue;
+        if (target.type !== 'shop') continue;
+        state._setNodeType(target, 'fight');
+      }
+    }
+  }
+}
+
+/**
+ * Picks the best reachable path under the no-consecutive-shop rule.
+ *
+ * @param {(MapNode | null)[][]} map
+ * @returns {MapNode[]}
+ */
+function getBestReachablePathNoConsecutive(map) {
+  const rows = map.length;
+  const NEG = Number.NEGATIVE_INFINITY;
+  const best = Array.from({ length: rows }, () => Array(3).fill(NEG));
+  const parent = Array.from({ length: rows }, () => Array(3).fill(null));
+
+  const start = map[0]?.[1];
+  if (!start) return [];
+  best[0][1] = start.type === 'shop' ? 1 : 0;
+
+  for (let y = 0; y < rows - 1; y++) {
+    for (let x = 0; x < 3; x++) {
+      const node = map[y]?.[x];
+      if (!node || best[y][x] === NEG) continue;
+
+      for (const targetX of node.connections) {
+        const target = map[y + 1]?.[targetX];
+        if (!target) continue;
+        if (node.type === 'shop' && target.type === 'shop') continue;
+
+        const gain = target.type === 'shop' ? 1 : 0;
+        const candidate = best[y][x] + gain;
+        if (candidate <= best[y + 1][targetX]) continue;
+
+        best[y + 1][targetX] = candidate;
+        parent[y + 1][targetX] = { x, y };
+      }
+    }
+  }
+
+  if (best[rows - 1][1] === NEG || !map[rows - 1]?.[1]) return [];
+
+  /** @type {MapNode[]} */
+  const reversed = [];
+  let cursor = { x: 1, y: rows - 1 };
+  while (cursor) {
+    const node = map[cursor.y]?.[cursor.x];
+    if (!node) break;
+    reversed.push(node);
+    cursor = parent[cursor.y][cursor.x];
+  }
+
+  return reversed.reverse();
+}
+
+/**
+ * @param {MapNode[]} path
+ * @returns {number}
+ */
+function countShopsOnPath(path) {
+  return path.reduce((sum, node) => sum + (node.type === 'shop' ? 1 : 0), 0);
+}
+
+/**
+ * @param {(MapNode | null)[][]} map
+ * @param {Set<string>} reachableKeys
+ * @returns {number}
+ */
+function countReachableShops(map, reachableKeys) {
+  let count = 0;
+  for (const key of reachableKeys) {
+    const [x, y] = key.split(',').map(Number);
+    const node = map[y]?.[x];
+    if (node?.type === 'shop') count += 1;
+  }
+  return count;
+}
+
+/**
+ * @param {{ _setNodeType: (node: MapNode | null, type: MapNodeType) => void }} state
+ * @param {(MapNode | null)[][]} map
+ */
+function promoteShopsOnBestReachablePath(state, map) {
+  const path = getBestReachablePathNoConsecutive(map);
+  if (path.length === 0) return;
+
+  let shops = countShopsOnPath(path);
+  if (shops >= 3) return;
+
+  for (let i = 1; i < path.length - 2 && shops < 3; i++) {
+    const node = path[i];
+    if (!node) continue;
+
+    // Keep row 1 reserved for forced Ceper fights after Maryna.
+    if (node.y <= 1) continue;
+
+    if (node.type === 'shop') continue;
+    if (node.type === 'elite') continue;
+    if (node.type === 'maryna' || node.type === 'campfire' || node.type === 'boss') continue;
+    if (node.type === 'treasure') continue;
+
+    const prev = path[i - 1];
+    const next = path[i + 1];
+    const prevIsShop = !!prev && prev.type === 'shop';
+    const nextIsShop = !!next && next.type === 'shop';
+    if (prevIsShop || nextIsShop) continue;
+
+    state._setNodeType(node, 'shop');
+    shops += 1;
+  }
+}
+
+/**
+ * Guarantees a minimum number of reachable shops while preserving:
+ * - no consecutive shop transitions,
+ * - row-1 forced Ceper fights,
+ * - elite/treasure/campfire/boss nodes.
+ *
+ * @param {{ _setNodeType: (node: MapNode | null, type: MapNodeType) => void }} state
+ * @param {(MapNode | null)[][]} map
+ * @param {Set<string>} reachableKeys
+ * @param {number} minCount
+ */
+function ensureMinimumReachableShops(state, map, reachableKeys, minCount) {
+  let currentCount = countReachableShops(map, reachableKeys);
+  if (currentCount >= minCount) return;
+
+  const perColumn = [0, 0, 0];
+  for (const key of reachableKeys) {
+    const [x, y] = key.split(',').map(Number);
+    const node = map[y]?.[x];
+    if (node?.type === 'shop') perColumn[x] += 1;
+  }
+
+  /** @type {MapNode[]} */
+  const candidates = [];
+  for (const key of reachableKeys) {
+    const [x, y] = key.split(',').map(Number);
+    const node = map[y]?.[x];
+    if (!node) continue;
+    if (!canConvertToShop(map, x, y, reachableKeys)) continue;
+    candidates.push(node);
+  }
+
+  candidates.sort((left, right) => {
+    const byColumnNeed = perColumn[left.x] - perColumn[right.x];
+    if (byColumnNeed !== 0) return byColumnNeed;
+    return left.y - right.y;
+  });
+
+  for (const node of candidates) {
+    if (currentCount >= minCount) break;
+    if (!canConvertToShop(map, node.x, node.y, reachableKeys)) continue;
+    state._setNodeType(node, 'shop');
+    perColumn[node.x] += 1;
+    currentCount += 1;
+  }
+}
+
+/**
+ * @param {(MapNode | null)[][]} map
+ * @param {number} x
+ * @param {number} y
+ * @param {Set<string>} reachableKeys
+ * @returns {boolean}
+ */
+function canConvertToShop(map, x, y, reachableKeys) {
+  const node = map[y]?.[x];
+  if (!node) return false;
+  if (!reachableKeys.has(`${x},${y}`)) return false;
+
+  // Keep row 1 reserved for forced Ceper fights after Maryna.
+  if (y <= 1) return false;
+
+  if (node.type === 'shop') return false;
+  if (node.type === 'elite') return false;
+  if (node.type === 'maryna' || node.type === 'campfire' || node.type === 'boss') return false;
+  if (node.type === 'treasure') return false;
+
+  const prevRow = map[y - 1] ?? [];
+  for (let prevX = 0; prevX < 3; prevX++) {
+    const prev = prevRow[prevX];
+    if (!prev || !reachableKeys.has(`${prevX},${y - 1}`)) continue;
+    if (!prev.connections.includes(x)) continue;
+    if (prev.type === 'shop') return false;
+  }
+
+  for (const targetX of node.connections) {
+    const next = map[y + 1]?.[targetX];
+    if (!next || !reachableKeys.has(`${targetX},${y + 1}`)) continue;
+    if (next.type === 'shop') return false;
+  }
+
+  return true;
+}
+
+/**
  * @param {{
  *   _getReachableCoordinates: (map: (MapNode | null)[][]) => Array<{ x: number, y: number }>,
  *   guaranteedTreasureRow: number | null,
@@ -404,7 +671,7 @@ export function enforceSpecialNodeLimits(state, map) {
   }
 
   state._trimNodeType(map, 'treasure', 1, protectedKeys, reachableKeys);
-  state._trimNodeType(map, 'shop', 3, protectedKeys, reachableKeys);
+  state._trimNodeType(map, 'shop', 8, protectedKeys, reachableKeys);
 }
 
 /**
@@ -425,6 +692,64 @@ export function ensureReachableElite(state, map) {
   const candidate = reachable.find((node) => node.type === 'fight' && node.y >= MIN_ELITE_LEVEL);
   if (candidate) {
     state._setNodeType(candidate, 'elite');
+  }
+}
+
+/**
+ * Ensures at least 3 reachable elite nodes on the map, with at least 3 rows separating
+ * any two elites (i.e. row distance >= 4). Converts fight nodes to fill gaps as needed,
+ * and breaks apart elites that are too close.
+ * @param {{
+ *   _getReachableCoordinates: (map: (MapNode | null)[][]) => Array<{ x: number, y: number }>,
+ *   _setNodeType: (node: MapNode | null, type: MapNodeType) => void
+ * }} state
+ * @param {(MapNode | null)[][]} map
+ */
+export function ensureEliteRules(state, map) {
+  const MIN_GAP = 3;
+  const MIN_COUNT = 3;
+
+  const isEligible = (y) => y >= MIN_ELITE_LEVEL && y < map.length - 2;
+
+  const getReachableElites = () =>
+    state
+      ._getReachableCoordinates(map)
+      .map(({ x, y }) => map[y]?.[x] ?? null)
+      .filter((n) => n && n.type === 'elite' && isEligible(n.y))
+      .sort((a, b) => a.y - b.y);
+
+  // Step 1: break up elites that are too close to each other
+  let elites = getReachableElites();
+  let changed = true;
+  while (changed) {
+    changed = false;
+    elites = getReachableElites();
+    for (let i = 1; i < elites.length; i++) {
+      if (elites[i].y - elites[i - 1].y < MIN_GAP) {
+        state._setNodeType(elites[i], 'fight');
+        changed = true;
+        break;
+      }
+    }
+  }
+
+  // Step 2: promote fight nodes to elites until count >= MIN_COUNT, respecting min gap
+  elites = getReachableElites();
+  if (elites.length >= MIN_COUNT) return;
+
+  const candidates = state
+    ._getReachableCoordinates(map)
+    .map(({ x, y }) => map[y]?.[x] ?? null)
+    .filter((n) => n && n.type === 'fight' && isEligible(n.y))
+    .sort((a, b) => a.y - b.y);
+
+  for (const candidate of candidates) {
+    if (elites.length >= MIN_COUNT) break;
+    const tooClose = elites.some((e) => Math.abs(e.y - candidate.y) < MIN_GAP);
+    if (!tooClose) {
+      state._setNodeType(candidate, 'elite');
+      elites = getReachableElites();
+    }
   }
 }
 

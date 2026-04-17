@@ -1,15 +1,26 @@
-import { cardLibrary } from '../../data/cards.js';
+import { getCardDefinition } from '../../data/cards.js';
 import * as uiHelpers from '../helpers/UIHelpers.js';
 
 /**
  * @param {any} uiManager
  * @param {import('../../data/cards.js').CardDef} card
+ * @param {string} [runtimeCardId]
  * @returns {string}
  */
-export function getCardDescription(uiManager, card) {
+export function getCardDescription(uiManager, card, runtimeCardId = card.id) {
+  const upgradeBonus = uiManager.state.getCardDamageBonus(runtimeCardId);
+
   if (card.id === 'prestiz_na_kredyt') {
-    return `Zyskujesz ${uiManager.state.getPrestizNaKredytBlock()} Gardy (bazowo 6, +2 za każde 20 dutków, max +14).`;
+    const baseDescription = `Zyskujesz ${uiManager.state.getPrestizNaKredytBlock()} Gardy (bazowo 6, +2 za każde 20 dutków, max +14).`;
+    return upgradeBonus > 0
+      ? `${baseDescription} Naostrzona: +${upgradeBonus} do ataku w tej walce.`
+      : baseDescription;
   }
+
+  if (card.type === 'attack' && upgradeBonus > 0) {
+    return `${card.desc} Naostrzona: +${upgradeBonus} do ataku w tej walce.`;
+  }
+
   return card.desc;
 }
 
@@ -33,7 +44,8 @@ export function renderHand(uiManager) {
   handDiv.innerHTML = '';
 
   hand.forEach((cardId, index) => {
-    const card = cardLibrary[cardId];
+    const card = getCardDefinition(cardId);
+    if (!card) return;
     const actualCost = uiManager.state.getCardCostInHand(cardId);
     const canPlay = player.energy >= actualCost && !card.unplayable;
 
@@ -70,7 +82,7 @@ export function renderHand(uiManager) {
     imgEl.appendChild(iconEl);
     const descEl = document.createElement('div');
     descEl.className = 'card-desc';
-    descEl.textContent = getCardDescription(uiManager, card);
+    descEl.textContent = getCardDescription(uiManager, card, cardId);
 
     cardEl.append(costEl, titleEl, rarityEl, imgEl, descEl);
 

@@ -1,14 +1,9 @@
-import { cardLibrary } from '../data/cards.js';
-
-const UPGRADEABLE_ATTACK_CARD_IDS = new Set([
-  'ciupaga',
-  'kierpce',
-  'redyk',
-  'zadyma',
-  'janosik',
-  'sandaly',
-  'giewont',
-]);
+import {
+  cardLibrary,
+  createRuntimeCardId,
+  getBaseCardId,
+  getCardDefinition,
+} from '../data/cards.js';
 
 const CARD_REWARD_RARITY_WEIGHTS = {
   common: 0.6,
@@ -35,8 +30,10 @@ export function generateCardRewardChoices(state, count) {
  * @returns {boolean}
  */
 export function removeCardFromDeck(state, cardId) {
+  const targetBaseId = getBaseCardId(cardId);
+
   const removeFrom = (arr) => {
-    const idx = arr.indexOf(cardId);
+    const idx = arr.findIndex((entry) => getBaseCardId(entry) === targetBaseId);
     if (idx >= 0) {
       arr.splice(idx, 1);
       return true;
@@ -53,21 +50,49 @@ export function removeCardFromDeck(state, cardId) {
 }
 
 /**
- * @param {{ cardDamageBonus: Record<string, number> }} state
+ * @param {{ deck: string[], hand: string[], discard: string[], exhaust: string[], cardDamageBonus: Record<string, number>, nextRuntimeCardInstanceId: number }} state
  * @param {string} cardId
  * @param {number} amount
  */
 export function upgradeCardDamage(state, cardId, amount = 3) {
-  state.cardDamageBonus[cardId] = (state.cardDamageBonus[cardId] ?? 0) + amount;
+  const targetBaseId = getBaseCardId(cardId);
+  const piles = [state.deck, state.hand, state.discard, state.exhaust];
+  let runtimeCardId = null;
+
+  for (const pile of piles) {
+    const pileIndex = pile.findIndex((entry) => getBaseCardId(entry) === targetBaseId);
+    if (pileIndex < 0) continue;
+
+    runtimeCardId = pile[pileIndex];
+    if (runtimeCardId === targetBaseId) {
+      runtimeCardId = createRuntimeCardId(targetBaseId, state.nextRuntimeCardInstanceId);
+      state.nextRuntimeCardInstanceId += 1;
+      pile[pileIndex] = runtimeCardId;
+    }
+    break;
+  }
+
+  if (!runtimeCardId) return;
+
+  state.cardDamageBonus[runtimeCardId] = (state.cardDamageBonus[runtimeCardId] ?? 0) + amount;
 }
 
 /**
- * @param {{ cardDamageBonus: Record<string, number> }} state
+ * @param {{ cardDamageBonus: Record<string, number>, activeRuntimeCardId?: string | null }} state
  * @param {string} cardId
  * @returns {number}
  */
 export function getCardDamageBonus(state, cardId) {
-  return state.cardDamageBonus[cardId] ?? 0;
+  if (state.cardDamageBonus[cardId] !== undefined) {
+    return state.cardDamageBonus[cardId];
+  }
+
+  const activeRuntimeCardId = state.activeRuntimeCardId ?? null;
+  if (activeRuntimeCardId && getBaseCardId(activeRuntimeCardId) === getBaseCardId(cardId)) {
+    return state.cardDamageBonus[activeRuntimeCardId] ?? 0;
+  }
+
+  return 0;
 }
 
 /**
@@ -76,7 +101,22 @@ export function getCardDamageBonus(state, cardId) {
  */
 export function getUpgradeableAttackCards(state) {
   const pool = [...state.deck, ...state.hand, ...state.discard, ...state.exhaust];
-  return [...new Set(pool.filter((id) => UPGRADEABLE_ATTACK_CARD_IDS.has(id)))];
+  return [
+    ...new Set(
+      pool
+        .map((id) => getBaseCardId(id))
+        .filter((id) => {
+          const card = cardLibrary[id];
+          return (
+            card &&
+            card.type === 'attack' &&
+            !card.unplayable &&
+            !card.eventOnly &&
+            !card.tutorialOnly
+          );
+        }),
+    ),
+  ];
 }
 
 /**
@@ -85,5 +125,13 @@ export function getUpgradeableAttackCards(state) {
  */
 export function getRunDeckCardIds(state) {
   const all = [...state.deck, ...state.hand, ...state.discard, ...state.exhaust];
-  return all.filter((id) => cardLibrary[id] && cardLibrary[id].type !== 'status');
+  return all
+    .map((id) => getBaseCardId(id))
+    .filter((id) => {
+      const card = getCardDefinition(id);
+        return (
+          card &&
+          card.type !== 'status'
+        );
+      });
 }

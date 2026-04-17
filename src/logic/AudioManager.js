@@ -40,6 +40,7 @@ export class AudioManager {
     const defeatUrl = new URL('../audio/echoes_mourning_valley.mp3', import.meta.url).href;
     const shopUrl = new URL('../audio/shop.mp3', import.meta.url).href;
     const watraUrl = new URL('../audio/watra.mp3', import.meta.url).href;
+    const marynaUrl = new URL('../audio/maryna.mp3', import.meta.url).href;
     const fiakierEventUrl = new URL('../audio/fiakier_event.mp3', import.meta.url).href;
     const karykaturaEventUrl = new URL('../audio/karykatura_event.mp3', import.meta.url).href;
     const trzyKubkiEventUrl = new URL('../audio/event_trzy_kubki.mp3', import.meta.url).href;
@@ -63,6 +64,8 @@ export class AudioManager {
     /** @type {HTMLAudioElement} */
     this.watraTrack = this._createTrack(watraUrl, true, 0.5);
     /** @type {HTMLAudioElement} */
+    this.marynaTrack = this._createTrack(marynaUrl, true, 0.5);
+    /** @type {HTMLAudioElement} */
     this.fiakierEventTrack = this._createTrack(fiakierEventUrl, true, 0.5);
     /** @type {HTMLAudioElement} */
     this.karykaturaEventTrack = this._createTrack(karykaturaEventUrl, true, 0.5);
@@ -73,7 +76,7 @@ export class AudioManager {
     this.context = 'title';
     /** @type {'none' | 'defeat'} */
     this.themeLock = 'none';
-    /** @type {'battle' | 'boss' | 'shop' | 'campfire' | 'map' | 'event'} */
+    /** @type {'battle' | 'boss' | 'shop' | 'campfire' | 'map' | 'event' | 'maryna'} */
     this.gameScene = 'map';
     /** @type {'fiakier' | 'karykatura' | 'trzy_kubki' | null} */
     this.eventSceneTrack = null;
@@ -233,6 +236,8 @@ export class AudioManager {
     this.shopTrack.currentTime = 0;
     this.watraTrack.pause();
     this.watraTrack.currentTime = 0;
+    this.marynaTrack.pause();
+    this.marynaTrack.currentTime = 0;
     this.mapTrack.pause();
     this.mapTrack.currentTime = 0;
     this.fiakierEventTrack.pause();
@@ -304,6 +309,24 @@ export class AudioManager {
     }
   }
 
+  playMarynaMusic() {
+    if (this.themeLock === 'defeat') return;
+    this.gameScene = 'maryna';
+    this._stopAllMenuTracks();
+    this._stopInGameSceneTracks();
+    if (this.gameMusicEnabled) {
+      this._play(this.marynaTrack);
+    }
+  }
+
+  stopMarynaMusic() {
+    this.marynaTrack.pause();
+    this.marynaTrack.currentTime = 0;
+    if (this.gameScene === 'maryna') {
+      this.gameScene = 'map';
+    }
+  }
+
   stopInGameMusic() {
     this._stopInGameSceneTracks();
   }
@@ -319,6 +342,8 @@ export class AudioManager {
     this.shopTrack.currentTime = 0;
     this.watraTrack.pause();
     this.watraTrack.currentTime = 0;
+    this.marynaTrack.pause();
+    this.marynaTrack.currentTime = 0;
     this.fiakierEventTrack.pause();
     this.fiakierEventTrack.currentTime = 0;
     this.karykaturaEventTrack.pause();

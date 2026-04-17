@@ -267,7 +267,7 @@ export const relicLibrary = {
     name: 'Tajny Składnik Maryny',
     rarity: 'rare',
     emoji: '🌿',
-    desc: 'Na starcie każdej walki wróg dostaje 1 Słaby i 1 Kruchy.',
+    desc: 'Na starcie każdej walki wróg dostaje 1 Słabość i 1 Kruchość.',
     price: 0,
     marynaOnly: true,
   },

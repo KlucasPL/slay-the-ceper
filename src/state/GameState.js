@@ -82,6 +82,8 @@ export class GameState {
     this.certyfikowanyOscypekShopProcs = 0;
     /** @type {Record<string, number>} */
     this.cardDamageBonus = {};
+    /** @type {number} */
+    this.nextRuntimeCardInstanceId = 1;
     /** @type {(MapNode | null)[][]} */
     this.map = [];
     /** @type {number} */
@@ -194,6 +196,8 @@ export class GameState {
     this.nextAttackCardBonus = 0;
     /** @type {number} Temporary attack bonus bound to the currently resolving attack card */
     this.currentAttackCardBonus = 0;
+    /** @type {string | null} Exact runtime card ID currently being resolved */
+    this.activeRuntimeCardId = null;
     /** @type {boolean} */
     this.enemyEvasionEvent = false;
     /** @type {string | null} */

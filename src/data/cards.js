@@ -502,7 +502,7 @@ export const cardLibrary = {
     type: 'skill',
     rarity: 'rare',
     eventOnly: true,
-    cost: 1,
+    cost: 2,
     price: 135,
     emoji: '⛓️',
     desc: 'Zyskujesz 6 Gardy. +2 Gardy za każde 20 dutków (max +14).',
@@ -544,7 +544,7 @@ export const cardLibrary = {
     effect(state) {
       const drawn = state._drawCards(1);
       const drawnCardId = drawn[0] ?? null;
-      if (drawnCardId && cardLibrary[drawnCardId]?.type === 'attack') {
+      if (drawnCardId && getCardDefinition(drawnCardId)?.type === 'attack') {
         state.queueNextAttackCardBonus(2);
       }
       return { playerAnim: 'anim-block' };
@@ -1380,6 +1380,35 @@ export const startingDeck = [
   'kierpce',
   'hej',
 ];
+
+const RUNTIME_CARD_SEPARATOR = '__runtime__';
+
+/**
+ * @param {string} cardId
+ * @returns {string}
+ */
+export function getBaseCardId(cardId) {
+  if (typeof cardId !== 'string') return '';
+  const separatorIndex = cardId.indexOf(RUNTIME_CARD_SEPARATOR);
+  return separatorIndex >= 0 ? cardId.slice(0, separatorIndex) : cardId;
+}
+
+/**
+ * @param {string} cardId
+ * @returns {CardDef | null}
+ */
+export function getCardDefinition(cardId) {
+  return cardLibrary[getBaseCardId(cardId)] ?? null;
+}
+
+/**
+ * @param {string} cardId
+ * @param {number} instanceNumber
+ * @returns {string}
+ */
+export function createRuntimeCardId(cardId, instanceNumber) {
+  return `${getBaseCardId(cardId)}${RUNTIME_CARD_SEPARATOR}${instanceNumber}`;
+}
 
 /**
  * Adds or updates a card in the runtime card library.

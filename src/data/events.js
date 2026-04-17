@@ -198,20 +198,20 @@ export const eventLibrary = {
     },
     choices: [
       {
-        text: 'Pogłaskaj konia (30 dutków)',
+        text: 'Pogłaskaj konia (60 dutków)',
         description: 'Koń jest miły w dotyku. Chwila relaksu regeneruje siły.',
-        consequence: 'Koszt: 30 dutków. Efekt: +15 Krzepy.',
-        cost: 30,
+        consequence: 'Koszt: 60 dutków. Efekt: +7 Krzepy.',
+        cost: 60,
         effect(state) {
-          state.healPlayer(15);
-          return 'Poczułeś powiew tatrzańskiej natury. Odzyskałeś 15 Krzepy.';
+          state.healPlayer(7);
+          return 'Poczułeś powiew tatrzańskiej natury. Odzyskałeś 7 Krzepy.';
         },
       },
       {
-        text: 'Popatrz na konia (10 dutków)',
+        text: 'Popatrz na konia (20 dutków)',
         description: 'Tylko rzuciłeś okiem na kopyta, ale Fiakier już wyciąga rękę po zapłatę.',
-        consequence: 'Koszt: 10 dutków. Efekt: brak dodatkowej nagrody.',
-        cost: 10,
+        consequence: 'Koszt: 20 dutków. Efekt: brak dodatkowej nagrody.',
+        cost: 20,
         effect() {
           return 'Fiakier mruknął coś pod nosem i schował monety. Nic się nie zmieniło.';
         },

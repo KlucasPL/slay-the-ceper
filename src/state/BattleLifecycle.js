@@ -1,4 +1,4 @@
-import { cardLibrary } from '../data/cards.js';
+import { cardLibrary, getCardDefinition } from '../data/cards.js';
 import { enemyLibrary } from '../data/enemies.js';
 import { relicLibrary } from '../data/relics.js';
 import { getRunDeckCardIds as getDeckRunCardIds } from './DeckManager.js';
@@ -18,6 +18,7 @@ export function initGame(state, startingDeck) {
   state.termometerTurnParity = 0;
   state.battleTurnsElapsed = 0;
   state.zegarekFreeSkillAvailable = false;
+  state.activeRuntimeCardId = null;
   state._resetBattleScopedFlags();
   state._setCurrentWeatherFromNode();
   state._applyBattleStartRelics();
@@ -70,7 +71,7 @@ export function resetBattle(state) {
   state.player.stunned = false;
 
   const allCards = [...state.hand, ...state.discard, ...state.exhaust, ...state.deck];
-  state.deck = allCards.filter((id) => cardLibrary[id]?.type !== 'status');
+  state.deck = allCards.filter((id) => getCardDefinition(id)?.type !== 'status');
   state.hand = [];
   state.discard = [];
   state.exhaust = [];
@@ -178,6 +179,7 @@ export function resetForNewRun(state, startingDeck) {
   state.hardFirstShopRolled = false;
   state.certyfikowanyOscypekShopProcs = 0;
   state.cardDamageBonus = {};
+  state.nextRuntimeCardInstanceId = 1;
   state.currentLevel = 0;
   state.currentNodeIndex = 1;
   state.currentNode = { x: 1, y: 0 };
@@ -199,6 +201,7 @@ export function resetForNewRun(state, startingDeck) {
   state.battleTurnsElapsed = 0;
   state.totalTurnsPlayed = 0;
   state.zegarekFreeSkillAvailable = false;
+  state.activeRuntimeCardId = null;
   state.shopStock = { cards: [], relic: null };
   state.lastShopMessage = '';
   state.lastVictoryMessage = '';
