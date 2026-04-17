@@ -816,7 +816,7 @@ h1 {
   margin-bottom: 4px;
   padding: 4px 5px 6px;
   border-radius: 5px;
-  overflow: hidden;
+  overflow: visible;
   word-break: break-word;
   overflow-wrap: anywhere;
   hyphens: auto;
@@ -3068,6 +3068,227 @@ h1 {
     width: 42px;
     height: 42px;
   }
+}
+
+/* --- Responsive Layout Lock System (global, invariant structure) --- */
+:root {
+  --board-base-w: 1600;
+  --board-base-h: 1000;
+  --board-ratio: calc(var(--board-base-w) / var(--board-base-h));
+
+  --board-stage-w: min(100vw, calc(100dvh * var(--board-ratio)));
+  --board-stage-h: min(100dvh, calc(100vw / var(--board-ratio)));
+
+  --space-1: clamp(0.24rem, min(0.45vmin, 0.56vw), 0.52rem);
+  --space-2: clamp(0.4rem, min(0.72vmin, 0.78vw), 0.82rem);
+  --space-3: clamp(0.56rem, min(1vmin, 1.06vw), 1.08rem);
+  --space-4: clamp(0.86rem, min(1.38vmin, 1.44vw), 1.42rem);
+
+  --hud-font-size: clamp(0.72rem, max(1.1vmin, 0.88vw), 1.12rem);
+  --hud-tight-font-size: clamp(0.62rem, max(0.98vmin, 0.76vw), 0.96rem);
+  --hud-btn-pad-y: clamp(0.34rem, max(0.58vmin, 0.44vw), 0.84rem);
+  --hud-btn-pad-x: clamp(0.6rem, max(0.92vmin, 0.7vw), 1.55rem);
+
+  --card-w: clamp(152px, min(12.2vmin, 11vw), 196px);
+  --card-h: clamp(218px, min(17.4vmin, 15.6vw), 278px);
+}
+
+html,
+body {
+  width: 100%;
+  min-height: 100%;
+}
+
+body {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+#game-wrapper {
+  width: calc(var(--board-stage-w) - (2 * var(--space-3)));
+  height: calc(var(--board-stage-h) - (2 * var(--space-3)));
+  max-width: 100vw;
+  max-height: 100dvh;
+  padding: var(--space-4);
+  box-sizing: border-box;
+
+  display: grid;
+  grid-template-areas:
+    'relics'
+    'battle'
+    'ui'
+    'hand';
+  grid-template-columns: 1fr;
+  grid-template-rows: auto minmax(0, 1fr) auto minmax(0, 0.9fr);
+  gap: var(--space-3);
+  align-items: stretch;
+  justify-items: stretch;
+}
+
+.relics-wrap {
+  grid-area: relics;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+}
+
+.battlefield {
+  grid-area: battle;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: clamp(0.5rem, min(1.2vmin, 1.25vw), 1.24rem);
+}
+
+.ui-bar {
+  display: grid;
+  grid-area: ui;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  grid-template-columns: auto 1fr auto;
+  gap: var(--space-2);
+}
+
+.energy {
+  font-size: var(--hud-font-size);
+  padding: var(--hud-btn-pad-y) var(--hud-btn-pad-x);
+}
+
+.currency {
+  font-size: var(--hud-tight-font-size);
+}
+
+.btn {
+  font-size: var(--hud-font-size);
+  padding: var(--hud-btn-pad-y) var(--hud-btn-pad-x);
+}
+
+.piles {
+  display: flex;
+  width: 100%;
+  max-width: none;
+  justify-content: center;
+}
+
+.pile-btn {
+  width: clamp(38px, max(3.8vmin, 2.9vw), 50px);
+  height: clamp(38px, max(3.8vmin, 2.9vw), 50px);
+}
+
+.hand {
+  display: flex;
+  grid-area: hand;
+  width: 100%;
+  max-width: none;
+  height: auto;
+  min-height: 0;
+  margin: 0;
+  gap: clamp(5px, max(0.76vmin, 0.66vw), 13px);
+  justify-content: center;
+  align-items: center;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: var(--space-1);
+}
+
+.card {
+  width: var(--card-w);
+  height: var(--card-h);
+}
+
+.entity {
+  min-width: 0;
+  width: min(36%, 37cqw);
+  padding: clamp(0.42rem, min(0.9vmin, 0.95vw), 0.96rem);
+}
+
+.sprite {
+  height: clamp(64px, min(10.6vmin, 8.4vw), 132px);
+}
+
+.stats,
+.intent {
+  font-size: clamp(0.68rem, max(1.06vmin, 0.78vw), 1.08rem);
+}
+
+/* Keep card text readable and never ellipsize/truncate. */
+.card-desc {
+  font-size: clamp(0.6rem, 4.65cqw, 0.96rem);
+  line-height: clamp(1.08, 1.1 + 0.02cqw, 1.22);
+  white-space: normal;
+  text-overflow: clip;
+  overflow-wrap: anywhere;
+}
+
+@container (max-width: 160px) {
+  .card-title {
+    font-size: clamp(0.72rem, 5.4cqw, 1rem);
+  }
+
+  .card-desc {
+    font-size: clamp(0.54rem, 4.35cqw, 0.84rem);
+    padding: clamp(2px, 0.6cqw, 4px) clamp(3px, 0.95cqw, 5px) clamp(3px, 1.05cqw, 6px);
+  }
+}
+
+@container (max-width: 132px) {
+  .card-title {
+    font-size: clamp(0.65rem, 5.15cqw, 0.88rem);
+  }
+
+  .card-desc {
+    font-size: clamp(0.48rem, 4.1cqw, 0.72rem);
+    line-height: 1.08;
+  }
+}
+
+/* Tooltip/bubble viewport safety and clamp scaling. */
+.relic-tooltip,
+.weather-tooltip,
+.status-tooltip {
+  max-width: 90vw;
+  font-size: clamp(0.66rem, max(1.1vmin, 0.8vw), 0.84rem);
+  padding: clamp(5px, max(0.64vmin, 0.45vw), 10px) clamp(7px, max(0.88vmin, 0.62vw), 12px);
+}
+
+.tutorial-exit-btn {
+  font-size: clamp(0.72rem, max(1.12vmin, 0.82vw), 0.94rem);
+  padding: clamp(5px, max(0.58vmin, 0.42vw), 8px) clamp(8px, max(0.9vmin, 0.64vw), 12px);
+}
+
+.tutorial-bubble {
+  --tutorial-safe-top: clamp(48px, 8.2vmin, 72px);
+  width: min(44ch, 90vw);
+  max-width: 90vw;
+  max-height: min(42dvh, calc(100dvh - var(--tutorial-safe-top) - 20px));
+  padding: clamp(8px, max(1vmin, 0.7vw), 13px) clamp(9px, max(1.2vmin, 0.86vw), 15px) clamp(8px, max(0.95vmin, 0.68vw), 12px);
+}
+
+.tutorial-bubble-title {
+  font-size: clamp(0.82rem, max(1.34vmin, 0.96vw), 1rem);
+}
+
+.tutorial-bubble-text {
+  font-size: clamp(0.74rem, max(1.24vmin, 0.88vw), 0.94rem);
+  line-height: clamp(1.18, 1.22 + 0.01vmin, 1.32);
+}
+
+.tutorial-ack-btn,
+.tutorial-conclude-btn {
+  font-size: clamp(0.7rem, max(1.08vmin, 0.76vw), 0.88rem);
+  padding: clamp(4px, max(0.54vmin, 0.38vw), 7px) clamp(8px, max(0.86vmin, 0.62vw), 11px);
+}
+
+.modal-content,
+.victory-panel,
+.event-panel,
+.run-summary-panel,
+.library-panel,
+.pile-viewer-modal {
+  max-width: min(90vw, 1200px);
 }
 
 /* ── Maryna Boon Overlay ───────────────────────────────────────────── */
