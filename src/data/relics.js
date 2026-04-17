@@ -10,7 +10,7 @@ export const relicLibrary = {
     name: 'Ciupaga-Długopis',
     rarity: 'common',
     emoji: '🖊️',
-    desc: 'Każda zagrana karta Skill zadaje wrogowi 4 obrażenia.',
+    desc: 'Każda zagrana karta Umiejętności zadaje wrogowi 4 obrażenia.',
     price: 95,
   },
   bilet_tpn: {
@@ -154,7 +154,7 @@ export const relicLibrary = {
     name: 'Góralski Zegarek',
     rarity: 'uncommon',
     emoji: '⌚',
-    desc: 'W każdej parzystej turze walki (2, 4, 6...) pierwsza zagrana karta Skill kosztuje 0 Oscypków.',
+    desc: 'W każdej parzystej turze walki (2, 4, 6...) pierwsza zagrana karta Umiejętności kosztuje 0 Oscypków.',
     price: 170,
   },
   termos_z_herbatka: {
@@ -204,7 +204,7 @@ export const relicLibrary = {
     rarity: 'uncommon',
     eventOnly: true,
     emoji: '💰',
-    desc: 'Po zwycięstwie w walce nie-eventowej: +6 dutków.',
+    desc: 'Po zwycięstwie poza walką wydarzeniową: +6 dutków.',
     price: 175,
   },
   // ---- Wyprawki Maryny (marynaOnly — excluded from all reward/shop/tutorial pools) ----

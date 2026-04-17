@@ -120,7 +120,7 @@ export const eventLibrary = {
         text: 'Obserwuj z boku',
         description: 'Nie grasz. Patrzysz, jak oszust robi robotę palcami.',
         consequence:
-          'Koszt: 0 dutków. Nagroda: karta Spostrzegawczość (dobierz 1; jeśli to Attack, Twój następny atak w tej turze zadaje +2 obrażeń).',
+          'Koszt: 0 dutków. Nagroda: karta Spostrzegawczość (dobierz 1; jeśli to Atak, Twój następny atak w tej turze zadaje +2 obrażeń).',
         cost: 0,
         effect(state) {
           state.deck.push('spostrzegawczosc');
@@ -131,7 +131,7 @@ export const eventLibrary = {
         text: 'Wywróć im stolik',
         description: 'Masz dość wałków. Czas roznieść ten interes.',
         consequence:
-          'Koszt: 0 dutków. Efekt: walka eventowa z Naganiaczami. Nagroda po wygranej: Zasłużony Portfel (+6 dutków po każdym zwycięstwie w walce nieeventowej).',
+          'Koszt: 0 dutków. Efekt: walka wydarzeniowa z Naganiaczami. Nagroda po wygranej: Zasłużony Portfel (+6 dutków po każdym zwycięstwie poza walkami wydarzeniowymi).',
         cost: 0,
         effect(state) {
           state.queueEventBattle('naganiacze_duo', 'zasluzony_portfel');
@@ -174,7 +174,7 @@ export const eventLibrary = {
         text: 'Dorysuj złoty łańcuch i furę',
         description: 'Pozujesz jak gwiazda. Plecy cierpną, ale styl musi się zgadzać.',
         consequence:
-          'Koszt: -5 Krzepy. Nagroda: karta Prestiż na Kredyt (1 koszt, 6 Gardy +2 za każde 20 dutków, max +14 bonusu).',
+          'Koszt: -5 Krzepy. Nagroda: karta Prestiż na Kredyt (1 koszt, 6 Gardy +2 za każde 20 dutków, maks. +14 premii).',
         cost: 0,
         effect(state) {
           state.player.hp = Math.max(1, state.player.hp - 5);
@@ -221,7 +221,7 @@ export const eventLibrary = {
         description:
           'Wsiadasz dumnie na tył. Bryczka rusza z kopyta, omijając wszystkich turystów!',
         consequence:
-          'Koszt: 150 dutków. Efekt: skrót do finału i wymuszenie walki z głównym bossem.',
+          'Koszt: 150 dutków. Efekt: skrót do finału i wymuszenie walki z głównym finałowym wrogiem.',
         cost: 150,
         effect(state) {
           state.jumpToBoss = true;

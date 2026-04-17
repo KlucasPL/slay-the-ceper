@@ -5,12 +5,12 @@
 /** @type {ReleaseNoteEntry[]} */
 export const releaseNotesData = [
   {
-    version: 'v1.5.2 - Bugfixy walki i eventów',
+    version: 'v1.5.2 - Poprawki walki i wydarzeń',
     date: 'kwiecień 2026',
     changes: [
-      '🔥 WATRA TYLKO DLA ATAKÓW: Naostrzenie w Watrze ponownie akceptuje wyłącznie karty Ataku; Skille i Moce są poprawnie odrzucane.',
+      '🔥 WATRA TYLKO DLA ATAKÓW: Naostrzenie w Watrze ponownie akceptuje wyłącznie karty Ataku; Umiejętności i Moce są poprawnie odrzucane.',
       '🧹 STATUSY CZYSZCZONE OD RAZU PO WYGRANEJ: Tymczasowe karty statusu od Ceprów znikają natychmiast po walce, więc nie pojawiają się już w Jarmarku na liście usuwania.',
-      '🐴 WĄSATY FIAKIER - POPRAWIONY PRÓG WALKI: Fallbackowa walka uruchamia się teraz poprawnie przy mniej niż 20 Dutkach (także dla zakresu 10-19).',
+      '🐴 WĄSATY FIAKIER - POPRAWIONY PRÓG WALKI: Awaryjna walka uruchamia się teraz poprawnie przy mniej niż 20 Dutkach (także dla zakresu 10-19).',
     ],
   },
   {
@@ -19,7 +19,7 @@ export const releaseNotesData = [
     changes: [
       '🗡️ ELITY NA MAPIE: Mapa gwarantuje teraz co najmniej 3 Elity na dostępnych ścieżkach, a każda z nich jest oddalona od pozostałych o co najmniej 3 węzły – koniec z pustymi trasami bez wyzwań.',
       '🛖 NOWE ZASADY JARMARKÓW: Na mapie pojawia się teraz co najmniej 5 Jarmarków, przynajmniej jedna ścieżka prowadzi przez 3 Jarmarki, a dwa Jarmarki nie mogą już stać jeden po drugim.',
-      '🔥 WATRA NAPRAWIONA: Przy Watrze lista kart do naostrzenia pokazuje teraz wszystkie Ataki z talii, nie tylko wybrane kilka – każdy build może w pełni skorzystać z ulepszenia.',
+      '🔥 WATRA NAPRAWIONA: Przy Watrze lista kart do naostrzenia pokazuje teraz wszystkie Ataki z talii, nie tylko wybrane kilka – każda talia może w pełni skorzystać z ulepszenia.',
       '🪓 JEDNA KARTA, NIE CAŁY STOS: Naostrzenie z Watry wzmacnia już tylko jedną wybraną kopię Ataku, zamiast wszystkich kart tego samego typu w talii.',
       '📝 PORZĄDEK W TERMINOLOGII: Ujednolicono nazwę statusu „Podatność" w całym interfejsie gry.',
     ],
@@ -28,9 +28,9 @@ export const releaseNotesData = [
     version: 'v1.5.0 - Nowa paczka kart',
     date: 'kwiecień 2026',
     changes: [
-      '🃏 NOWE KARTY: Dodano 35 kart łącznie (19 Ataków, 8 Skilli, 8 Mocy).',
+      '🃏 NOWE KARTY: Dodano 35 kart łącznie (19 Ataków, 8 Umiejętności, 8 Mocy).',
       '⚔️ ATAKI: Wydruk z Kasy, Rozpęd z Równi, Krzesany, Tatrzanski Szpan, Ciupaga we Mgle, Paradny Zwyrt, Nadplacony Bilet, Z Rozmachu, Eksmisja z Kwatery, Cios z Telemarkiem, Wymuszony Napiwek, Mlynek Ciupaga, Rachunek za Oddychanie, Przymusowe Morsowanie, Wepchniecie w Kolejke, Lawina z Morskiego Oka, Beczenie Redyku, Skrupulatne Wyliczenie, Paragon Grozy.',
-      '🛡️ SKILLE: Pogodzenie Sporów, Zapas Oscypków, Wdech Halnego, Punkt Widokowy, Przymusowy Napiwek, Zgubieni we Mgle, List od Maryny, Dutki na Stole.',
+      '🛡️ UMIEJĘTNOŚCI: Pogodzenie Sporów, Zapas Oscypków, Wdech Halnego, Punkt Widokowy, Przymusowy Napiwek, Zgubieni we Mgle, List od Maryny, Dutki na Stole.',
       '✨ MOCE: Pan na Włościach, Czas na Fajkę, Zimna Krew, Góralska Gościnność, Znajomość Szlaku, Kąpiel w Białce, Koncesja na Oscypki, Baciarka Ciesy.',
     ],
   },
@@ -54,7 +54,7 @@ export const releaseNotesData = [
     version: 'v1.3.1 - Spokojniejszy finał wyprawy',
     date: 'kwiecień 2026',
     changes: [
-      '👹 ŁAGODNIEJSI BOSSOWIE: Fiakier spod Krupówek i Biały Misiek mają teraz po 50 Krzepy mniej, więc finał dalej boli, ale rzadziej kończy wyprawę jedną, zbyt długą walką.',
+      '👹 ŁAGODNIEJSI FINAŁOWI WROGOWIE: Fiakier spod Krupówek i Biały Misiek mają teraz po 50 Krzepy mniej, więc finał dalej boli, ale rzadziej kończy wyprawę jedną, zbyt długą walką.',
     ],
   },
   {
@@ -73,7 +73,7 @@ export const releaseNotesData = [
     changes: [
       '🃏 PERFEKCYJNE KARTY: Gruntowny remont wyglądu kart! Teksty i ikony inteligentnie robią sobie nawzajem miejsce, opisy są większe i czytelniejsze, a rogi z kosztami już się nie ucinają na telefonach. Dodatkowo karty jasno wyświetlają swój pełny rodzaj (np. "Powszechny Atak", "Niepowszechna Umiejętność").',
       '📱 ELASTYCZNY INTERFEJS: Koniec z uciętymi widokami! Nieważne, czy grasz na małym smartfonie, czy na laptopie (jak Mac Air) – Menu Główne i Biblioteka Tatrzańska idealnie dopasują się do Twojego wyświetlacza bez chowania przycisków na dole.',
-      '📖 LEPSZE TEMPO INTRO: Wydłużyliśmy czas wyświetlania paneli w komiksie startowym, żeby każdy mógł na spokojnie zapoznać się z historią Jędrka.',
+      '📖 LEPSZE TEMPO WSTĘPU: Wydłużyliśmy czas wyświetlania paneli w komiksie startowym, żeby każdy mógł na spokojnie zapoznać się z historią Jędrka.',
       '🎓 POPRAWKA W SAMOUCZKU: Przesunęliśmy dymek Jędrka, który wcześniej niegrzecznie zasłaniał przycisk "Wyjdź".',
       '⚖️ FORMALNOŚCI: Na dole menu dodaliśmy dyskretną informację przypominającą, że nasza góraleskowa gra jest po prostu humorystyczną parodią Slay the Spire.',
     ],
@@ -87,10 +87,10 @@ export const releaseNotesData = [
     ],
   },
   {
-    version: 'v1.2.4 - Intro i grafika pierwszej części na mapie',
+    version: 'v1.2.4 - Wstęp i grafika pierwszej części na mapie',
     date: 'Kwiecień 2026',
     changes: [
-      '🎬 NOWE INTRO: Dodano komiksowe Intro uruchamiane przed główną pętlą gry, z możliwością pominięcia klawiszem ESC lub kliknięciem. Można je również wyłączyć w ustawieniach.',
+      '🎬 NOWY WSTĘP: Dodano komiksowy wstęp uruchamiany przed główną pętlą gry, z możliwością pominięcia klawiszem ESC lub kliknięciem. Można go również wyłączyć w ustawieniach.',
       '🖼️ NOWA GRAFIKA PRZYGODY: Dodano grafikę pierwszej części przygód Jędrka wykorzystywaną na mapie.',
       '🎵 NOWY UTWÓR W MENU: Dodano nowy utwór muzyczny w głównym menu gry.',
     ],
@@ -102,7 +102,7 @@ export const releaseNotesData = [
       '🃏 NOWY PODGLĄD STOSÓW W WALCE: W trakcie starcia możesz kliknąć ikonki Talii, Odrzuconych i Przepadłych, aby podejrzeć dokładnie jakie karty są w każdym stosie.',
       '👀 CZYTELNIEJSZE DECYZJE TAKTYCZNE: Podgląd działa w wygodnym oknie z siatką kart, więc łatwiej planować kolejne ruchy i zarządzać tempem walki.',
       '📱 LEPSZA ERGONOMIA UI: Ikony stosów są stale widoczne w górnym panelu i nie zasłaniają już kart na ręce, także na mniejszych ekranach.',
-      '🧾 BUGFIX GAŹDZINY: Gaździna jest teraz w pełni odporna na Rachunek - licznik nie narasta i pozostaje na 0 przez całe starcie, co usuwa mylące wskazania.',
+      '🧾 POPRAWKA GAŹDZINY: Gaździna jest teraz w pełni odporna na Rachunek - licznik nie narasta i pozostaje na 0 przez całe starcie, co usuwa mylące wskazania.',
     ],
   },
   {
@@ -110,17 +110,17 @@ export const releaseNotesData = [
     date: 'Kwiecień 2026',
     changes: [
       '🎲 NOWE WYDARZENIE: Na trasie możesz trafić na Hazard na Kartonie z kilkoma różnymi wyborami i konsekwencjami, które zmieniają przebieg wyprawy.',
-      '🎨 DRUGIE NOWE WYDARZENIE: Do puli doszedł też Uliczny Karykaturzysta, czyli kolejne spotkanie z własnymi wyborami i nagrodami wpływającymi na build.',
+      '🎨 DRUGIE NOWE WYDARZENIE: Do puli doszedł też Uliczny Karykaturzysta, czyli kolejne spotkanie z własnymi wyborami i nagrodami wpływającymi na talię.',
       '⚔️ NOWE STARCIE SPECJALNE: W ramach wydarzenia pojawia się unikalna walka z Naganiaczami oraz dedykowana nagroda powiązana z tym spotkaniem.',
       '🎁 CZYTELNIEJSZE NAGRODY: Po elitach i wybranych starciach nagrody układają się bardziej przewidywalnie, dzięki czemu łatwiej planować dalsze decyzje.',
-      '🗺️ PŁYNNIEJSZY RUN: Dopracowano mapę i losowość wydarzeń, aby wyprawy częściej trzymały dobre tempo walk i dawały bardziej satysfakcjonujące wybory.',
+      '🗺️ PŁYNNIEJSZA WYPRAWA: Dopracowano mapę i losowość wydarzeń, aby wyprawy częściej trzymały dobre tempo walk i dawały bardziej satysfakcjonujące wybory.',
     ],
   },
   {
     version: 'v1.2.1 - Muzyka i Płynność Wyprawy',
     date: 'Kwiecień 2026',
     changes: [
-      '🎵 NOWA MUZYKA I LEPSZE PRZEJŚCIA: Dodano osobne motywy dla mapy, zwykłej walki, bossa i wydarzenia Wąsatego Fiakra, a przejścia między mapą, wydarzeniem i starciem wracają teraz zawsze do właściwego utworu bez nakładania dźwięku.',
+      '🎵 NOWA MUZYKA I LEPSZE PRZEJŚCIA: Dodano osobne motywy dla mapy, zwykłej walki, finałowego wroga i wydarzenia Wąsatego Fiakra, a przejścia między mapą, wydarzeniem i starciem wracają teraz zawsze do właściwego utworu bez nakładania dźwięku.',
       '💥 LEPSZE WYCZUCIE TURY PRZECIWNIKA: Rozstrzygnięcia związane z bankructwem przeciwnika są bardziej spójne z rytmem tury i animacji.',
     ],
   },
@@ -128,9 +128,9 @@ export const releaseNotesData = [
     version: 'v1.2.0 - Struktura Wyprawy i Prawdziwe Elity',
     date: 'Kwiecień 2026',
     changes: [
-      '🗺️ STRUKTURA RUNA: Wyprawa ma teraz 15 poziomów, gwarantowaną Watrę w połowie trasy oraz końcową Watrę przed bossem, co stabilizuje tempo przygotowania do finału.',
-      '🎁 SKARB I ŚCIEŻKI: Każda wyprawa zawiera dokładnie jeden gwarantowany węzeł skarbu we wczesnym-midgame, a połączenia na mapie są czytelniejsze i nie przecinają się lokalnie.',
-      '👹 PRAWDZIWE ELITY: Węzły elitarne korzystają z osobnej puli przeciwników, pojawiają się najwcześniej od y=4 i dają dedykowaną nagrodę 1 z 3 pamiątek (z fallbackiem do kart rare).',
+      '🗺️ STRUKTURA WYPRAWY: Wyprawa ma teraz 15 poziomów, gwarantowaną Watrę w połowie trasy oraz końcową Watrę przed finałowym wrogiem, co stabilizuje tempo przygotowania do finału.',
+      '🎁 SKARB I ŚCIEŻKI: Każda wyprawa zawiera dokładnie jeden gwarantowany węzeł skarbu we wczesnej i środkowej fazie, a połączenia na mapie są czytelniejsze i nie przecinają się lokalnie.',
+      '👹 PRAWDZIWE ELITY: Węzły elitarne korzystają z osobnej puli przeciwników, pojawiają się najwcześniej od y=4 i dają dedykowaną nagrodę 1 z 3 pamiątek (z awaryjnym doborem kart rzadkich).',
       '👑 NOWE ELITY: Elitarne starcia zyskały nową pulę przeciwników z wyraźnie różnymi stylami walki, więc każda walka elitarna ma własny charakter i tempo.',
       '⚖️ LEPSZY BALANS ELIT: Dopracowano siłę wybranych elit, żeby nadal były wymagające, ale rzadziej kończyły wyprawę przez pojedynczy zbyt mocny spike.',
       '🧭 CZYTELNIEJ W TRAKCIE WYPRAWY: Na mapie widzisz teraz od razu aktualną Krzepę i Dutki, więc łatwiej planować ryzyko kolejnych węzłów.',
@@ -169,8 +169,8 @@ export const releaseNotesData = [
     date: 'Kwiecień 2026',
     changes: [
       '🆕 NOWOŚCI: Rozszerzono grę o nowe karty, nowych przeciwników i nowe pamiątki.',
-      '⚖️ REBALANS RUNA: Tempo walk, ekonomia i siła buildów zostały lepiej zestrojone, żeby decyzje w trakcie wyprawy miały większe znaczenie.',
-      '🌄 PRZEBIEG WYPRAWY: Wczesne i środkowe etapy wyprawy płynniej prowadzą do finału, a bossowie są bliżej siebie poziomem wyzwania.',
+      '⚖️ PRZEBALANSOWANIE WYPRAWY: Tempo walk, ekonomia i siła talii zostały lepiej zestrojone, żeby decyzje w trakcie wyprawy miały większe znaczenie.',
+      '🌄 PRZEBIEG WYPRAWY: Wczesne i środkowe etapy wyprawy płynniej prowadzą do finału, a finałowi wrogowie są bliżej siebie poziomem wyzwania.',
       '🗺️ MAPA I JARMARK: Zdarzenia, nagrody i zakupy zostały odświeżone, żeby każda ścieżka dawała ciekawsze wybory.',
     ],
   },
@@ -178,7 +178,7 @@ export const releaseNotesData = [
     version: 'v1.0.2 - Uspokojenie Finału',
     date: 'Kwiecień 2026',
     changes: [
-      '👹 FINAŁ RUNA: Osłabiono końcowych bossów, żeby finał wyprawy był wymagający, ale mniej frustrujący dla szerszej gamy buildów.',
+      '👹 FINAŁ WYPRAWY: Osłabiono końcowych wrogów, żeby finał wyprawy był wymagający, ale mniej frustrujący dla szerszej gamy talii.',
       '🎴 NAGRODY: Łatwiej trafić na mocniejsze karty po walce, więc składanie talii pod konkretny plan stało się przyjemniejsze.',
       '🗺️ ŚCIEŻKA WYPRAWY: Środkowa część mapy częściej prowadzi przez walki i sklepy, a rzadziej przez przypadkowe odskoki od głównego tempa wyprawy.',
     ],
@@ -198,11 +198,11 @@ export const releaseNotesData = [
       '🏔️ GRA KARCIANA ROGUELIKE: Budujesz talię, zarządzasz Oscypkami i planujesz tury na mapie z wydarzeniami.',
       "⚔️ DWIE ŚCIEŻKI ZWYCIĘSTWA: Możesz wygrać klasycznie przez obrażenia albo przez mechanikę 'Rachunku' i bankructwo przeciwnika.",
       '✨ LANS I STATUSY: Walka opiera się na statusach, synergii kart i efektach, które pozwalają budować bardzo różne style gry.',
-      '🎒 SYSTEM PAMIĄTEK: Rozwijasz build przez pamiątki różnej rzadkości, które zmieniają ekonomię, obronę i tempo walki.',
-      '🗺️ PERĆ I WYDARZENIA: Mapa prowadzi przez bitki, Jarmark, Watrę, skarby i finałowe starcie z bossem.',
+      '🎒 SYSTEM PAMIĄTEK: Rozwijasz talię przez pamiątki różnej rzadkości, które zmieniają ekonomię, obronę i tempo walki.',
+      '🗺️ PERĆ I WYDARZENIA: Mapa prowadzi przez bitki, Jarmark, Watrę, skarby i finałowe starcie z finałowym wrogiem.',
       '⚖️ WROGOWIE: Każdy przeciwnik ma własny styl walki i wymusza inne podejście do rozgrywki.',
       '👺 GALERIA PRZECIWNIKÓW: Wrogowie mają unikalne pasywki i wzorce ruchów, które zmuszają do zmiany taktyki między walkami.',
-      '👹 FINAŁ WYPRAWY: Na końcu perci czeka losowy boss i wymagające starcie domykające wyprawę.',
+      '👹 FINAŁ WYPRAWY: Na końcu perci czeka losowy finałowy wróg i wymagające starcie domykające wyprawę.',
     ],
   },
 ];
