@@ -5,6 +5,15 @@
 /** @type {ReleaseNoteEntry[]} */
 export const releaseNotesData = [
   {
+    version: 'v1.5.3 - Wygodniejsza gra na telefonach',
+    date: 'kwiecień 2026',
+    changes: [
+      '📱 TYLKO PION NA TELEFONACH: Gra blokuje teraz rozgrywkę na urządzeniach mobilnych w orientacji poziomej i wyświetla wyraźny komunikat, aby obrócić telefon do pionu.',
+      '🛑 CZYTELNY EKRAN BLOKADY: Zamiast próbować upychać interfejs po obrocie, pokazujemy pełnoekranowy ekran informacyjny i wyłączamy interakcję z grą do czasu powrotu do układu pionowego.',
+      '🖥️ BRAK MOBILNEGO TRYBU NA DESKTOPIE: Bardzo szerokie, ale niskie okna na komputerach nie przełączają już gry do awaryjnego układu mobilnego. Zamiast tego pojawia się jasny komunikat, że okno jest zbyt niskie do wygodnej rozgrywki.',
+    ],
+  },
+  {
     version: 'v1.5.2 - Poprawki walki i wydarzeń',
     date: 'kwiecień 2026',
     changes: [

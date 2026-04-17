@@ -1,4 +1,4 @@
-import { cardLibrary, getBaseCardId, getCardDefinition } from '../data/cards.js';
+import { getBaseCardId, getCardDefinition } from '../data/cards.js';
 
 /**
  * @typedef {import('../data/cards.js').StatusDef} StatusDef

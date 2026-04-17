@@ -15,6 +15,95 @@ body {
   overflow-x: hidden;
 }
 
+#app-viewport {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+@media (hover: none) and (pointer: coarse) and (orientation: landscape) {
+  body.mobile-orientation-blocked #app-viewport {
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  body.mobile-orientation-blocked #orientation-lock-overlay {
+    display: grid;
+  }
+}
+
+body.desktop-viewport-blocked #app-viewport {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+body.desktop-viewport-blocked #desktop-viewport-overlay {
+  display: grid;
+}
+
+#orientation-lock-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 6000;
+  display: none;
+  place-items: center;
+  padding: 24px;
+  box-sizing: border-box;
+  background:
+    radial-gradient(circle at 50% 22%, rgba(255, 214, 112, 0.18), transparent 30%),
+    linear-gradient(180deg, rgba(25, 15, 10, 0.96), rgba(12, 8, 5, 0.98));
+  text-align: center;
+}
+
+#desktop-viewport-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 6000;
+  display: none;
+  place-items: center;
+  padding: 24px;
+  box-sizing: border-box;
+  background:
+    radial-gradient(circle at 50% 22%, rgba(122, 187, 255, 0.16), transparent 30%),
+    linear-gradient(180deg, rgba(20, 14, 12, 0.97), rgba(10, 8, 7, 0.99));
+  text-align: center;
+}
+
+.orientation-lock-card {
+  width: min(420px, 100%);
+  padding: 24px 20px;
+  border: 3px solid rgba(255, 214, 112, 0.55);
+  border-radius: 22px;
+  background: linear-gradient(180deg, rgba(83, 52, 30, 0.96), rgba(43, 26, 15, 0.98));
+  box-shadow:
+    0 0 0 2px rgba(38, 22, 10, 0.85) inset,
+    0 18px 48px rgba(0, 0, 0, 0.5);
+}
+
+.orientation-lock-card--desktop {
+  width: min(520px, 100%);
+  border-color: rgba(122, 187, 255, 0.45);
+  background: linear-gradient(180deg, rgba(61, 51, 43, 0.97), rgba(28, 22, 18, 0.99));
+}
+
+.orientation-lock-icon {
+  font-size: clamp(2.5rem, 10vw, 4rem);
+  line-height: 1;
+}
+
+.orientation-lock-title {
+  margin: 14px 0 10px;
+  color: #ffd45e;
+  font-size: clamp(1.4rem, 5vw, 2rem);
+}
+
+.orientation-lock-text {
+  margin: 0;
+  color: #f8e8c4;
+  font-size: clamp(0.95rem, 3.6vw, 1.15rem);
+  line-height: 1.4;
+}
+
 :root {
   --rarity-common: #a9a9a9;
   --rarity-uncommon: #2e8b57;
@@ -2921,7 +3010,7 @@ h1 {
 }
 
 /* --- Landscape mobile (low-height viewport) --- */
-@media (orientation: landscape) and (max-height: 560px) {
+@media (hover: none) and (pointer: coarse) and (orientation: landscape) and (max-height: 560px) {
   .corner-options-btn {
     top: 6px;
     right: 6px;
@@ -3198,7 +3287,7 @@ h1 {
   }
 }
 
-@media (orientation: landscape) and (max-height: 560px) {
+@media (hover: none) and (pointer: coarse) and (orientation: landscape) and (max-height: 560px) {
   .maryna-boon-card {
     min-height: 124px;
     padding: 9px 10px;

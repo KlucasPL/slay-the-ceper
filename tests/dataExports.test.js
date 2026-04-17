@@ -14,12 +14,30 @@ describe('data exports', () => {
     expect(jedrek.maxEnergy).toBeGreaterThanOrEqual(jedrek.energy);
   });
 
-  it('release notes list is non-empty and newest entry is v1.5.0', () => {
+  it('release notes list is non-empty and newest entry has the highest semantic version', () => {
     expect(Array.isArray(releaseNotesData)).toBe(true);
     expect(releaseNotesData.length).toBeGreaterThan(0);
 
     const newest = releaseNotesData[0];
-    expect(newest.version).toContain('v1.5.0');
+    const extractVersion = (value) => {
+      const match = value.match(/v(\d+)\.(\d+)\.(\d+)/i);
+      return match ? match.slice(1).map(Number) : null;
+    };
+
+    const newestVersion = extractVersion(newest.version);
+    expect(newestVersion).not.toBeNull();
+
+    const allVersions = releaseNotesData
+      .map((entry) => extractVersion(entry.version))
+      .filter(Boolean);
+
+    const sortedVersions = [...allVersions].sort((left, right) => {
+      if (left[0] !== right[0]) return right[0] - left[0];
+      if (left[1] !== right[1]) return right[1] - left[1];
+      return right[2] - left[2];
+    });
+
+    expect(newestVersion).toEqual(sortedVersions[0]);
     expect(newest.date).toBeTruthy();
     expect(newest.changes.length).toBeGreaterThanOrEqual(1);
   });

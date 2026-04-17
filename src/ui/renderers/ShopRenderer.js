@@ -1,4 +1,4 @@
-import { cardLibrary, getBaseCardId, getCardDefinition } from '../../data/cards.js';
+import { getBaseCardId, getCardDefinition } from '../../data/cards.js';
 import { relicLibrary } from '../../data/relics.js';
 import * as uiHelpers from '../helpers/UIHelpers.js';
 import * as cardRenderer from './CardRenderer.js';

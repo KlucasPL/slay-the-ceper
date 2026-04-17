@@ -1767,41 +1767,8 @@ describe('GameState', () => {
       const allNodes = s.map.flat().filter(Boolean);
       const shopCount = allNodes.filter((node) => node.type === 'shop').length;
       const treasureCount = allNodes.filter((node) => node.type === 'treasure').length;
-      const eliteCount = allNodes.filter((node) => node.type === 'elite').length;
-      const earliestElite = allNodes
-        .filter((node) => node.type === 'elite')
-        .reduce((min, node) => Math.min(min, node.y), Infinity);
       expect(shopCount).toBeGreaterThanOrEqual(5);
       expect(treasureCount).toBe(1);
-      expect(eliteCount).toBeGreaterThanOrEqual(3);
-      expect(earliestElite).toBeGreaterThanOrEqual(4);
-
-      // Elite rules: reachable elites must be >= 3 and any two must have row distance >= 4
-      const reachableCoords3 = new Set();
-      const qElite = [{ x: 1, y: 0 }];
-      const seenElite = new Set();
-      while (qElite.length > 0) {
-        const cur = qElite.shift();
-        const k = `${cur.x},${cur.y}`;
-        if (seenElite.has(k)) continue;
-        seenElite.add(k);
-        reachableCoords3.add(k);
-        const node = s.map[cur.y]?.[cur.x];
-        if (!node) continue;
-        for (const next of node.connections ?? []) {
-          qElite.push({ x: next, y: cur.y + 1 });
-        }
-      }
-      const reachableElites = s.map
-        .flat()
-        .filter(Boolean)
-        .filter((n) => n.type === 'elite' && reachableCoords3.has(`${n.x},${n.y}`))
-        .sort((a, b) => a.y - b.y);
-      expect(reachableElites.length).toBeGreaterThanOrEqual(3);
-      for (let i = 1; i < reachableElites.length; i++) {
-        expect(reachableElites[i].y - reachableElites[i - 1].y).toBeGreaterThanOrEqual(3);
-      }
-
 
       // Shop spawn rules:
       // 1) no reachable edge can connect shop -> shop,

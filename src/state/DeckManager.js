@@ -116,7 +116,7 @@ export function getUpgradeableAttackCards(state) {
             !card.eventOnly &&
             !card.tutorialOnly
           );
-        }),
+        })
     ),
   ];
 }
@@ -131,9 +131,6 @@ export function getRunDeckCardIds(state) {
     .map((id) => getBaseCardId(id))
     .filter((id) => {
       const card = getCardDefinition(id);
-        return (
-          card &&
-          card.type !== 'status'
-        );
-      });
+      return card && card.type !== 'status';
+    });
 }
