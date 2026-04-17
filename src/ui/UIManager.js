@@ -1,4 +1,4 @@
-import { cardLibrary, startingDeck } from '../data/cards.js';
+import { cardLibrary, startingDeck, getCardDefinition } from '../data/cards.js';
 import { releaseNotesData } from '../data/releaseNotes.js';
 import { ActIntroOverlay } from './overlays/ActIntroOverlay.js';
 import {
@@ -21,6 +21,8 @@ import * as campfireOverlay from './overlays/CampfireOverlay.js';
 import * as marynaOverlay from './overlays/MarynaOverlay.js';
 import * as combatUI from './combat/CombatUI.js';
 import * as tutorialUI from './tutorial/TutorialUI.js';
+import * as cardZoomOverlay from './overlays/CardZoomOverlay.js';
+import * as handViewOverlay from './overlays/HandViewOverlay.js';
 
 export class UIManager {
   /**
@@ -288,6 +290,14 @@ export class UIManager {
     window.addEventListener('resize', () => this._renderTutorialOverlay());
     window.addEventListener('resize', () => this._queueCardDescFit());
     this._setupCardDescriptionAutoFit();
+    cardZoomOverlay.initCardZoomOverlay();
+    handViewOverlay.initHandViewOverlay();
+    document.getElementById('hand-view-close-btn')?.addEventListener('click', () => {
+      handViewOverlay.closeHandView();
+    });
+    document.getElementById('hand-view-btn')?.addEventListener('click', () => {
+      this._openHandViewOverlay();
+    });
     this._applyTextSizePreference();
     this._renderReleaseNotesButtonLabel();
     this._renderReleaseNotes();
@@ -1140,6 +1150,40 @@ export class UIManager {
 
   _renderLibrary() {
     libraryRenderer.renderLibrary(this);
+  }
+
+  _openHandViewOverlay() {
+    const cardViews = this.state.hand
+      .map((cardId, index) => {
+        const card = getCardDefinition(cardId);
+        if (!card) return null;
+
+        const actualCost = this.state.getCardCostInHand(cardId);
+        const cardDescription = cardRenderer.getCardDescription(this, card, cardId);
+
+        return {
+          cardId,
+          handIndex: index,
+          name: card.name,
+          emoji: card.emoji,
+          rarityLabel: uiHelpers.getFullCardType(card.rarity, card.type),
+          cost: actualCost,
+          description: cardDescription,
+          rarityClass: uiHelpers.rarityClass(card.rarity),
+          typeClass: `card-${card.type}`,
+          exhaust: Boolean(card.exhaust),
+        };
+      })
+      .filter(Boolean);
+
+    if (cardViews.length > 0) {
+      const onCardClick = (index) => {
+        if (!this.isAnimating) {
+          this._handlePlayCard(index);
+        }
+      };
+      handViewOverlay.openHandView(cardViews, onCardClick);
+    }
   }
 
   _closeCampfire() {

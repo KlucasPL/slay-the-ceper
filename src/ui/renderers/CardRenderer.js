@@ -1,5 +1,6 @@
 import { getCardDefinition } from '../../data/cards.js';
 import * as uiHelpers from '../helpers/UIHelpers.js';
+import * as cardZoomOverlay from '../overlays/CardZoomOverlay.js';
 
 /**
  * @param {any} uiManager
@@ -47,6 +48,7 @@ export function renderHand(uiManager) {
     const card = getCardDefinition(cardId);
     if (!card) return;
     const actualCost = uiManager.state.getCardCostInHand(cardId);
+    const cardDescription = getCardDescription(uiManager, card, cardId);
     const canPlay = player.energy >= actualCost && !card.unplayable;
 
     const cardEl = document.createElement('div');
@@ -61,9 +63,24 @@ export function renderHand(uiManager) {
 
     if (canPlay && player.hp > 0 && enemy.hp > 0) {
       cardEl.addEventListener('click', () => {
+        if (cardEl.dataset.longPressZoomUsed === 'true') {
+          cardEl.dataset.longPressZoomUsed = 'false';
+          return;
+        }
         if (!uiManager.isAnimating) uiManager._handlePlayCard(index);
       });
     }
+
+    attachMobileLongPressZoom(cardEl, {
+      name: card.name,
+      emoji: card.emoji,
+      rarityLabel: uiHelpers.getFullCardType(card.rarity, card.type),
+      cost: actualCost,
+      description: cardDescription,
+      rarityClass: uiHelpers.rarityClass(card.rarity),
+      typeClass: `card-${card.type}`,
+      exhaust: Boolean(card.exhaust),
+    });
 
     const costEl = document.createElement('div');
     costEl.className = 'card-cost';
@@ -82,7 +99,7 @@ export function renderHand(uiManager) {
     imgEl.appendChild(iconEl);
     const descEl = document.createElement('div');
     descEl.className = 'card-desc';
-    descEl.textContent = getCardDescription(uiManager, card, cardId);
+    descEl.textContent = cardDescription;
 
     cardEl.append(costEl, titleEl, rarityEl, imgEl, descEl);
 
@@ -102,4 +119,139 @@ export function renderHand(uiManager) {
 
     handDiv.appendChild(cardEl);
   });
+
+  attachHandTapToOpenView(handDiv, uiManager);
+}
+
+/**
+ * Attaches a tap handler to the hand container on mobile to open the full hand view.
+ * Distinguishes between tapping a card (which triggers zoom/play) and tapping the background.
+ *
+ * @param {HTMLElement} handDiv
+ * @param {any} uiManager
+ */
+function attachHandTapToOpenView(handDiv, uiManager) {
+  if (!isTouchMobileDevice()) return;
+
+  // Remove old handler if exists
+  if (handDiv.dataset.handViewHandler === 'true') {
+    return;
+  }
+  handDiv.dataset.handViewHandler = 'true';
+
+  handDiv.addEventListener('click', (event) => {
+    const target = event.target;
+    if (!(target instanceof Element)) return;
+
+    // If clicked on a card element itself, let card's own handlers deal with it
+    if (target.closest('.card')) return;
+
+    // Only open hand view on mobile if there are cards
+    if (uiManager.state.hand.length === 0) return;
+
+    // Build card view objects for the hand view overlay
+    const cardViews = uiManager.state.hand
+      .map((cardId, index) => {
+        const card = getCardDefinition(cardId);
+        if (!card) return null;
+
+        const actualCost = uiManager.state.getCardCostInHand(cardId);
+        const cardDescription = getCardDescription(uiManager, card, cardId);
+
+        return {
+          cardId,
+          handIndex: index,
+          name: card.name,
+          emoji: card.emoji,
+          rarityLabel: uiHelpers.getFullCardType(card.rarity, card.type),
+          cost: actualCost,
+          description: cardDescription,
+          rarityClass: uiHelpers.rarityClass(card.rarity),
+          typeClass: `card-${card.type}`,
+          exhaust: Boolean(card.exhaust),
+        };
+      })
+      .filter(Boolean);
+
+    if (cardViews.length > 0) {
+      // Import at function scope to avoid circular dependency
+      import('../overlays/HandViewOverlay.js').then((handViewOverlay) => {
+        const onCardClick = (index) => {
+          if (!uiManager.isAnimating) {
+            uiManager._handlePlayCard(index);
+          }
+        };
+        handViewOverlay.openHandView(cardViews, onCardClick);
+      });
+    }
+  });
+}
+
+/**
+ * @returns {boolean}
+ */
+function isTouchMobileDevice() {
+  return (
+    typeof window !== 'undefined' &&
+    typeof window.matchMedia === 'function' &&
+    window.matchMedia('(hover: none) and (pointer: coarse)').matches
+  );
+}
+
+/**
+ * Adds long-press gesture on mobile to preview a card in full-screen.
+ *
+ * @param {HTMLDivElement} cardEl
+ * @param {{
+ *   name: string,
+ *   emoji: string,
+ *   rarityLabel: string,
+ *   cost: number,
+ *   description: string,
+ *   rarityClass: string,
+ *   typeClass: string,
+ *   exhaust: boolean,
+ * }} cardView
+ */
+function attachMobileLongPressZoom(cardEl, cardView) {
+  if (!isTouchMobileDevice()) return;
+
+  const LONG_PRESS_MS = 360;
+  const MOVE_CANCEL_PX = 14;
+  /** @type {ReturnType<typeof setTimeout> | null} */
+  let timer = null;
+  /** @type {number} */
+  let startX = 0;
+  /** @type {number} */
+  let startY = 0;
+
+  const clearLongPress = () => {
+    if (timer !== null) {
+      clearTimeout(timer);
+      timer = null;
+    }
+  };
+
+  cardEl.addEventListener('pointerdown', (event) => {
+    if (event.pointerType !== 'touch') return;
+    event.preventDefault();
+    startX = event.clientX;
+    startY = event.clientY;
+    clearLongPress();
+    timer = setTimeout(() => {
+      cardEl.dataset.longPressZoomUsed = 'true';
+      cardZoomOverlay.openCardZoom(cardView);
+      timer = null;
+    }, LONG_PRESS_MS);
+  });
+
+  cardEl.addEventListener('pointermove', (event) => {
+    if (timer === null || event.pointerType !== 'touch') return;
+    if (Math.abs(event.clientX - startX) > MOVE_CANCEL_PX) clearLongPress();
+    if (Math.abs(event.clientY - startY) > MOVE_CANCEL_PX) clearLongPress();
+  });
+
+  cardEl.addEventListener('pointerup', clearLongPress);
+  cardEl.addEventListener('pointercancel', clearLongPress);
+  cardEl.addEventListener('pointerleave', clearLongPress);
 }
