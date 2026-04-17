@@ -9,6 +9,7 @@ export const releaseNotesData = [
     date: 'kwiecień 2026',
     changes: [
       '🗡️ ELITY NA MAPIE: Mapa gwarantuje teraz co najmniej 3 Elity na dostępnych ścieżkach, a każda z nich jest oddalona od pozostałych o co najmniej 3 węzły – koniec z pustymi trasami bez wyzwań.',
+      '🛖 NOWE ZASADY JARMARKÓW: Na mapie pojawia się teraz co najmniej 5 Jarmarków, przynajmniej jedna ścieżka prowadzi przez 3 Jarmarki, a dwa Jarmarki nie mogą już stać jeden po drugim.',
       '🔥 WATRA NAPRAWIONA: Przy Watrze lista kart do naostrzenia pokazuje teraz wszystkie Ataki z talii, nie tylko wybrane kilka – każdy build może w pełni skorzystać z ulepszenia.',
       '🪓 JEDNA KARTA, NIE CAŁY STOS: Naostrzenie z Watry wzmacnia już tylko jedną wybraną kopię Ataku, zamiast wszystkich kart tego samego typu w talii.',
       '📝 PORZĄDEK W TERMINOLOGII: Ujednolicono nazwę statusu „Podatność" w całym interfejsie gry.',
