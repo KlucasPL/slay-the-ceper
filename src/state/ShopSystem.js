@@ -65,14 +65,16 @@ export function generateShopStock(state) {
     state.maryna.flags.listaDiscountActive = false;
   }
 
-  const cardPool = Object.keys(cardLibrary).filter(
+  const baseCardPool = Object.keys(cardLibrary).filter(
     (id) =>
       !cardLibrary[id]?.isStarter && !cardLibrary[id]?.eventOnly && !cardLibrary[id]?.tutorialOnly
   );
+  const cardPool = state.filterPool('cards', baseCardPool);
 
-  const relicPool = state
+  const baseRelicPool = state
     ._buildAvailableRelicPool()
     .filter((id) => !relicLibrary[id]?.eventOnly && !relicLibrary[id]?.tutorialOnly);
+  const relicPool = state.filterPool('relics', baseRelicPool);
   let relicId = null;
   const shouldForceHardPapryczka = state.difficulty === 'hard' && !state.hardFirstShopRolled;
 
@@ -96,6 +98,10 @@ export function generateShopStock(state) {
     relic: relicId,
   };
   state.lastShopMessage = '';
+  state.emit('shop_opened', {
+    cards: state.shopStock.cards.map((id) => ({ kind: 'card', id })),
+    relic: relicId ? { kind: 'relic', id: relicId } : null,
+  });
   return state.shopStock;
 }
 
@@ -127,6 +133,8 @@ export function buyItem(state, item, type) {
     state.deck.push(item.id);
     state.shopStock.cards = state.shopStock.cards.filter((id) => id !== item.id);
     state.lastShopMessage = `Kupiono kartę: ${item.name}`;
+    state.emit('shop_purchase', { entity: { kind: 'card', id: item.id }, price: item.price });
+    state.emit('deck_mutation', { mutation: 'add', card: { kind: 'card', id: item.id } });
     return { success: true, message: state.lastShopMessage };
   }
 
@@ -138,6 +146,7 @@ export function buyItem(state, item, type) {
   state.addRelic(item.id);
   state.shopStock.relic = null;
   state.lastShopMessage = `Kupiono pamiątkę: ${item.name}`;
+  state.emit('shop_purchase', { entity: { kind: 'relic', id: item.id }, price: item.price });
   return { success: true, message: state.lastShopMessage };
 }
 
@@ -157,7 +166,7 @@ export function buyItem(state, item, type) {
  */
 export function grantBattleDutki(state) {
   if (!state.pendingBattleDutki) return 0;
-  const base = 28 + Math.floor(Math.random() * 9);
+  const base = 28 + Math.floor(state.rng() * 9);
   let drop =
     state.enemy.isBankrupt && state.hasRelic('magnes_na_lodowke') ? Math.floor(base * 1.5) : base;
 

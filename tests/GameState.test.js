@@ -5,6 +5,7 @@ import { enemyLibrary } from '../src/data/enemies.js';
 import { eventLibrary } from '../src/data/events.js';
 import { relicLibrary, addRelicToLibrary } from '../src/data/relics.js';
 import { marynaBoonLibrary } from '../src/data/marynaBoons.js';
+import { withSeededRng } from '../src/engine/Rng.js';
 
 const mockPlayer = {
   name: 'Jędrek',
@@ -1626,7 +1627,7 @@ describe('GameState', () => {
     });
 
     it('starts with 50 Dutki and generated map', () => {
-      const s = freshState();
+      const s = withSeededRng(0x12345678, () => freshState());
       expect(s.dutki).toBe(50);
       expect(s.map).toHaveLength(15);
       s.map.forEach((level) => {
@@ -1759,7 +1760,6 @@ describe('GameState', () => {
       for (let i = 1; i < reachableElites.length; i++) {
         expect(reachableElites[i].y - reachableElites[i - 1].y).toBeGreaterThanOrEqual(3);
       }
-
 
       // Shop spawn rules:
       // 1) no reachable edge can connect shop -> shop,
@@ -2292,6 +2292,42 @@ describe('GameState', () => {
       const removed = s.removeCardFromDeck('gasior');
       expect(removed).toBe(true);
       expect(s.deck).not.toContain('gasior');
+    });
+
+    it('shouldProduceSameMapAndDeckForSameSeedViaBeginSeededRun', () => {
+      // given
+      const deck = ['ciupaga', 'ciupaga', 'gasior'];
+      const makeSeeded = () => {
+        const s = new GameState({ ...mockPlayer }, { ...mockEnemy });
+        s.beginSeededRun('cafef00d', deck);
+        return s;
+      };
+
+      // when
+      const s1 = makeSeeded();
+      const s2 = makeSeeded();
+
+      // then — map topology identical
+      expect(JSON.stringify(s1.map)).toBe(JSON.stringify(s2.map));
+      expect(s1.runSeed).toBe('cafef00d');
+      expect(s2.runSeed).toBe('cafef00d');
+    });
+
+    it('shouldProduceDifferentMapsForDifferentSeeds', () => {
+      // given
+      const deck = ['ciupaga', 'gasior'];
+      const make = (seed) => {
+        const s = new GameState({ ...mockPlayer }, { ...mockEnemy });
+        s.beginSeededRun(seed, deck);
+        return s;
+      };
+
+      // when
+      const s1 = make('deadbeef');
+      const s2 = make('cafebabe');
+
+      // then — different seeds produce different maps (very high probability)
+      expect(JSON.stringify(s1.map)).not.toBe(JSON.stringify(s2.map));
     });
   });
 

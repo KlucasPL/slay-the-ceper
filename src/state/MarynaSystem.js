@@ -1,15 +1,26 @@
 import { cardLibrary } from '../data/cards.js';
-import { marynaBoonLibrary, rollMarynaChoices as rollMarynaBoonIds } from '../data/marynaBoons.js';
+import { marynaBoonLibrary } from '../data/marynaBoons.js';
 
 /**
- * @param {{ maryna: { offeredIds: string[] } }} state
+ * @param {{ maryna: { offeredIds: string[] }, filterPool: (kind: string, ids: string[]) => string[] }} state
  * @param {number} [count=3]
  * @returns {string[]}
  */
 export function rollMarynaChoices(state, count = 3) {
-  const ids = rollMarynaBoonIds(count);
-  state.maryna.offeredIds = ids;
-  return ids;
+  const basePool = Object.keys(marynaBoonLibrary);
+  const pool = state.filterPool('boons', basePool);
+  const result = [];
+  const remaining = [...pool];
+  const n = Math.min(count, remaining.length);
+  for (let i = 0; i < n; i += 1) {
+    const idx = Math.floor(state.rng() * remaining.length);
+    result.push(remaining.splice(idx, 1)[0]);
+  }
+  state.maryna.offeredIds = result;
+  if (result.length > 0) {
+    state.emit('boon_offered', { boons: result.map((id) => ({ kind: 'boon', id })) });
+  }
+  return result;
 }
 
 /**
@@ -25,6 +36,7 @@ export function pickMarynaBoon(state, boonId) {
   state.maryna.pickedId = boonId;
   state.addRelic(boon.relicId);
   state._applyMarynaBoonImmediateEffects(boonId);
+  state.emit('boon_picked', { boon: { kind: 'boon', id: boonId } });
   return true;
 }
 
@@ -47,7 +59,7 @@ export function applyMarynaBoonImmediateEffects(state, boonId) {
     const starterIds = ['ciupaga', 'gasior', 'kierpce', 'hej'];
     const startersInDeck = state.deck.filter((id) => starterIds.includes(id));
     if (startersInDeck.length > 0) {
-      const toRemove = startersInDeck[Math.floor(Math.random() * startersInDeck.length)];
+      const toRemove = startersInDeck[Math.floor(state.rng() * startersInDeck.length)];
       state.removeCardFromDeck(toRemove);
     }
     const uncommonPool = Object.keys(cardLibrary).filter(
@@ -58,7 +70,7 @@ export function applyMarynaBoonImmediateEffects(state, boonId) {
         !cardLibrary[id]?.tutorialOnly
     );
     if (uncommonPool.length > 0) {
-      const pick = uncommonPool[Math.floor(Math.random() * uncommonPool.length)];
+      const pick = uncommonPool[Math.floor(state.rng() * uncommonPool.length)];
       state.deck.push(pick);
     }
   } else if (boonId === 'sloik_rosolu') {

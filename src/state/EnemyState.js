@@ -1,6 +1,16 @@
 import { enemyLibrary } from '../data/enemies.js';
 import { defaultStatus } from './StatusEffects.js';
 
+/** @param {any} state @param {string} kind @param {Record<string, unknown>} payload */
+function emitS(state, kind, payload) {
+  state.emit(kind, payload);
+}
+
+/** @param {any} state @param {string} kind @param {Record<string, unknown>} payload */
+function emitF(state, kind, payload) {
+  if (state._eventVerbosity === 'full') state.emit(kind, payload);
+}
+
 /**
  * @typedef {import('../data/cards.js').StatusDef} StatusDef
  * @typedef {import('../data/enemies.js').EnemyMoveDef} EnemyMoveDef
@@ -95,6 +105,12 @@ export function applyEnemyDebuff(state, key, amount) {
     return;
   }
   state.enemy.status[key] += amount;
+  emitF(state, 'status_applied', {
+    target: 'enemy',
+    enemy: { kind: 'enemy', id: state.enemy.id },
+    status: key,
+    amount,
+  });
   state._checkEnemyBankruptcy();
 }
 
@@ -179,6 +195,7 @@ export function createEnemyState(state, enemyDef) {
  * @returns {import('../data/enemies.js').EnemyDef}
  */
 export function pickRandomEnemyDef(state, isElite = false) {
+  const filterKind = isElite ? 'enemy_elite' : 'enemy_regular';
   let enemyIds = Object.keys(enemyLibrary).filter(
     (id) =>
       id !== 'boss' &&
@@ -189,6 +206,7 @@ export function pickRandomEnemyDef(state, isElite = false) {
   );
 
   enemyIds = enemyIds.filter((id) => Boolean(enemyLibrary[id]?.elite) === isElite);
+  enemyIds = state.filterPool(filterKind, enemyIds);
 
   if (enemyIds.length === 0) {
     enemyIds = Object.keys(enemyLibrary).filter(
@@ -206,17 +224,20 @@ export function pickRandomEnemyDef(state, isElite = false) {
     enemyIds = enemyIds.filter((id) => id !== state.lastRegularEnemyId);
   }
 
-  const enemyId = enemyIds[Math.floor(Math.random() * enemyIds.length)];
+  const enemyId = enemyIds[Math.floor(state.rng() * enemyIds.length)];
   if (!isElite) {
     state.lastRegularEnemyId = enemyId;
   }
   return enemyLibrary[enemyId];
 }
 
-/** @returns {import('../data/enemies.js').EnemyDef} */
-export function pickFinalBossDef() {
-  const bossIds = ['boss', 'fiakier'];
-  const bossId = bossIds[Math.floor(Math.random() * bossIds.length)];
+/**
+ * @param {{ filterPool: (kind: string, ids: string[]) => string[] }} state
+ * @returns {import('../data/enemies.js').EnemyDef}
+ */
+export function pickFinalBossDef(state) {
+  const bossIds = state.filterPool('enemy_boss', ['boss', 'fiakier']);
+  const bossId = bossIds[Math.floor(state.rng() * bossIds.length)] ?? 'boss';
   return enemyLibrary[bossId];
 }
 
@@ -226,7 +247,7 @@ export function pickFinalBossDef() {
  * @returns {number}
  */
 export function rollEnemyAttack(state, enemyState = state.enemy) {
-  return Math.max(1, enemyState.baseAttack - 3 + Math.floor(Math.random() * 6));
+  return Math.max(1, enemyState.baseAttack - 3 + Math.floor(state.rng() * 6));
 }
 
 /**
@@ -280,6 +301,7 @@ export function handleEnemyPhaseTransitions(state) {
     state.enemy.spriteSvg = state.enemy.phase2SpriteSvg;
   }
   state.enemyPhaseTransitionMessage = 'Seba ucieka! Mati wpada w furię!';
+  emitS(state, 'phase_transition', { enemy: { kind: 'enemy', id: state.enemy.id }, phase: 2 });
   state._refreshEnemyIntent();
 }
 

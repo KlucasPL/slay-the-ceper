@@ -72,6 +72,9 @@ export function travelTo(state, level, nodeIndex) {
     state._setNodeType(node, state.debugForcedNextNodeType);
     state.debugForcedNextNodeType = null;
   }
+  if (node) {
+    state.emit('node_entered', { floor: level + 1, nodeType: node.type, weather: node.weather });
+  }
   return node;
 }
 
@@ -129,5 +132,10 @@ export function applyJumpToBossShortcut(state) {
  */
 export function setCurrentWeatherFromNode(state) {
   const node = state.getCurrentMapNode();
-  state.currentWeather = node?.weather ?? 'clear';
+  const weather = node?.weather ?? 'clear';
+  const prevWeather = state.currentWeather;
+  state.currentWeather = weather;
+  if (weather !== prevWeather) {
+    state.emit('weather_entered', { weather: { kind: 'weather', id: weather } });
+  }
 }

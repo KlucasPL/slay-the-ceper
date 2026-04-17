@@ -36,13 +36,14 @@ export function grantTreasureRelic(state) {
  */
 export function generateRelicReward(state, forceDrop = false) {
   const relicChance = 0.33;
-  if (!forceDrop && Math.random() >= relicChance) return null;
+  if (!forceDrop && state.rng() >= relicChance) return null;
 
   const pool = state._buildAvailableRelicPool();
   if (pool.length === 0) return null;
   const relicId = state.getRandomItem(pool, relicLibrary);
   if (!relicId) return null;
   state._markRelicAsSeen(relicId);
+  state.emit('reward_offered', { entities: [{ kind: 'relic', id: relicId }] });
   return relicId;
 }
 
@@ -65,7 +66,7 @@ export function generateRelicChoices(state, count) {
  * @returns {string[]}
  */
 export function buildAvailableRelicPool(state) {
-  return Object.keys(relicLibrary).filter(
+  const basePool = Object.keys(relicLibrary).filter(
     (id) =>
       !state.relics.includes(id) &&
       !state.seenRelicOffers.includes(id) &&
@@ -73,6 +74,7 @@ export function buildAvailableRelicPool(state) {
       !relicLibrary[id]?.tutorialOnly &&
       !relicLibrary[id]?.marynaOnly
   );
+  return state.filterPool('relics', basePool);
 }
 
 /**
@@ -89,9 +91,10 @@ export function markRelicAsSeen(state, relicId) {
  * @param {string[]} pool
  * @param {Record<string, { rarity?: 'common' | 'uncommon' | 'rare' }>} library
  * @param {{ common: number, uncommon: number, rare: number }} [rarityWeights]
+ * @param {() => number} [rng]
  * @returns {string | null}
  */
-export function getRandomItem(pool, library, rarityWeights = RARITY_WEIGHTS) {
+export function getRandomItem(pool, library, rarityWeights = RARITY_WEIGHTS, rng = Math.random) {
   if (!pool || pool.length === 0) return null;
 
   const byRarity = {
@@ -111,7 +114,7 @@ export function getRandomItem(pool, library, rarityWeights = RARITY_WEIGHTS) {
   if (rarityPool.length === 0) return null;
 
   const weightSum = rarityPool.reduce((sum, rarity) => sum + rarityWeights[rarity], 0);
-  let roll = Math.random() * weightSum;
+  let roll = rng() * weightSum;
 
   let selectedRarity = rarityPool[rarityPool.length - 1];
   for (const rarity of rarityPool) {
@@ -123,7 +126,7 @@ export function getRandomItem(pool, library, rarityWeights = RARITY_WEIGHTS) {
   }
 
   const rarityItems = byRarity[selectedRarity];
-  return rarityItems[Math.floor(Math.random() * rarityItems.length)] ?? null;
+  return rarityItems[Math.floor(rng() * rarityItems.length)] ?? null;
 }
 
 /**
@@ -163,6 +166,8 @@ export function addRelic(state, relicId) {
   if (relicId === 'pas_bacowski') {
     state.gainMaxHp(6);
   }
+
+  state.emit('relic_gained', { relic: { kind: 'relic', id: relicId } });
 
   return true;
 }

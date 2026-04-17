@@ -40,7 +40,7 @@ export function generateMap(state, rows = state.debugMapRows) {
   /** @type {(MapNode | null)[][]} */
   const generated = Array.from({ length: clampedRows }, () => Array(3).fill(null));
   const midCampfireLevel = Math.floor(generated.length / 2);
-  const guaranteedTreasureRow = 3 + Math.floor(Math.random() * 3);
+  const guaranteedTreasureRow = 3 + Math.floor(state.rng() * 3);
   state.midCampfireLevel = midCampfireLevel;
   state.guaranteedTreasureRow = guaranteedTreasureRow;
   state.guaranteedTreasureColumn = 1;
@@ -62,12 +62,12 @@ export function generateMap(state, rows = state.debugMapRows) {
       continue;
     }
     for (let x = 0; x < 3; x++) {
-      if (Math.random() < 0.7) {
+      if (state.rng() < 0.7) {
         generated[y][x] = state._createMapNode(state._rollMidNodeType(y), x, y);
       }
     }
     if (!generated[y].some(Boolean)) {
-      const forcedX = Math.floor(Math.random() * 3);
+      const forcedX = Math.floor(state.rng() * 3);
       generated[y][forcedX] = state._createMapNode(state._rollMidNodeType(y), forcedX, y);
     }
   }
@@ -94,6 +94,7 @@ export function generateMap(state, rows = state.debugMapRows) {
   state.currentNodeIndex = 1;
   state.currentNode = { x: state.currentNodeIndex, y: 0 };
   state.hasStartedFirstBattle = false;
+  state.emit('map_generated', { rows: clampedRows });
   return state.map;
 }
 
@@ -138,10 +139,11 @@ export function forceRow1CeprFights(state, map) {
 
 /**
  * @param {number} [level]
+ * @param {() => number} [rng]
  * @returns {MapNodeType}
  */
-export function rollMidNodeType(level = MIN_ELITE_LEVEL) {
-  const roll = Math.random();
+export function rollMidNodeType(level = MIN_ELITE_LEVEL, rng = Math.random) {
+  const roll = rng();
   if (roll < MID_NODE_EVENT_CHANCE) return 'event';
   if (roll < MID_NODE_EVENT_CHANCE + MID_NODE_FIGHT_CHANCE) return 'fight';
   if (roll < MID_NODE_EVENT_CHANCE + MID_NODE_FIGHT_CHANCE + MID_NODE_ELITE_CHANCE) {
@@ -152,14 +154,35 @@ export function rollMidNodeType(level = MIN_ELITE_LEVEL) {
 
 /**
  * @param {MapNodeType} nodeType
+ * @param {{ _poolOverrides?: import('../engine/PoolOverrides.js').PoolOverrides | null, currentLevel?: number } | null} [state]
  * @returns {import('../data/weather.js').WeatherId}
  */
-export function rollNodeWeather(nodeType) {
+export function rollNodeWeather(nodeType, state) {
   if (nodeType === 'boss') return 'halny';
   if (nodeType === 'maryna') return 'clear';
   if (nodeType !== 'fight' && nodeType !== 'elite') return 'clear';
 
-  const roll = Math.random();
+  const weatherOverride = state?._poolOverrides?.weathers;
+  if (weatherOverride) {
+    if (weatherOverride.force) return weatherOverride.force;
+    const floor = (state?.currentLevel ?? 0) + 1;
+    if (weatherOverride.forcePerFloor?.[floor]) return weatherOverride.forcePerFloor[floor];
+    if (weatherOverride.weights) {
+      /** @type {Array<import('../data/weather.js').WeatherId>} */
+      const weathers = ['clear', 'halny', 'frozen', 'fog'];
+      const total = weathers.reduce((sum, w) => sum + (weatherOverride.weights[w] ?? 0), 0);
+      if (total > 0) {
+        let roll = (state?.rng ?? Math.random)() * total;
+        for (const w of weathers) {
+          roll -= weatherOverride.weights[w] ?? 0;
+          if (roll < 0) return w;
+        }
+        return weathers[weathers.length - 1];
+      }
+    }
+  }
+
+  const roll = (state?.rng ?? Math.random)();
   if (roll < 0.5) return 'clear';
   if (roll < 0.65) return 'halny';
   if (roll < 0.8) return 'frozen';
@@ -191,7 +214,7 @@ export function seedRequiredPaths(state, map) {
 
   const firstTargets = [0, 1, 2];
   state._shuffle(firstTargets);
-  const branchCount = 2 + Math.floor(Math.random() * 2);
+  const branchCount = 2 + Math.floor(state.rng() * 2);
   const seededTargets = firstTargets.slice(0, branchCount).sort((a, b) => a - b);
 
   seededTargets.forEach((targetX) => {
@@ -215,7 +238,7 @@ export function seedRequiredPaths(state, map) {
         const used = usedPerLevel.get(y + 1) ?? new Set();
         const freshOptions = options.filter((x) => !used.has(x));
         const pool = freshOptions.length > 0 ? freshOptions : options;
-        nextX = pool[Math.floor(Math.random() * pool.length)];
+        nextX = pool[Math.floor(state.rng() * pool.length)];
       }
 
       if (!map[y + 1][nextX]) {
@@ -269,9 +292,9 @@ export function connectOptionalGridNodes(state, map) {
         continue;
       }
 
-      const sourceX = prevCandidates[Math.floor(Math.random() * prevCandidates.length)];
+      const sourceX = prevCandidates[Math.floor(state.rng() * prevCandidates.length)];
       state._linkNode(map[y - 1][sourceX], x);
-      const targetX = nextCandidates[Math.floor(Math.random() * nextCandidates.length)];
+      const targetX = nextCandidates[Math.floor(state.rng() * nextCandidates.length)];
       state._linkNode(node, targetX);
     }
   }
@@ -288,18 +311,15 @@ export function connectOptionalGridNodes(state, map) {
       if (availableTargets.length === 0) continue;
 
       if (node.connections.length === 0) {
-        state._linkNode(
-          node,
-          availableTargets[Math.floor(Math.random() * availableTargets.length)]
-        );
+        state._linkNode(node, availableTargets[Math.floor(state.rng() * availableTargets.length)]);
       }
 
-      if (y < lastMidLevel && availableTargets.length > 1 && Math.random() < 0.45) {
+      if (y < lastMidLevel && availableTargets.length > 1 && state.rng() < 0.45) {
         const extraTargets = availableTargets.filter(
           (targetX) => !node.connections.includes(targetX)
         );
         if (extraTargets.length > 0) {
-          state._linkNode(node, extraTargets[Math.floor(Math.random() * extraTargets.length)]);
+          state._linkNode(node, extraTargets[Math.floor(state.rng() * extraTargets.length)]);
         }
       }
     }
@@ -899,7 +919,7 @@ export function getAdjacentColumns(x) {
  */
 export function pickNextColumn(state, x) {
   const options = state._getAdjacentColumns(x);
-  return options[Math.floor(Math.random() * options.length)];
+  return options[Math.floor(state.rng() * options.length)];
 }
 
 /**
