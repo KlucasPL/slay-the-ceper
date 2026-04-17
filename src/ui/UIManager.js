@@ -247,7 +247,7 @@ export class UIManager {
     document.addEventListener(
       'click',
       (event) => {
-        if (!this._isInputLocked()) return;
+        if (!this._isInputLocked() || !this.isActIntroPlaying) return;
         const target = event.target;
         if (!(target instanceof Element)) return;
         if (target.closest('#act-intro-overlay')) return;
@@ -276,10 +276,8 @@ export class UIManager {
       },
       true
     );
-    window.addEventListener('resize', () => this._scaleGame());
     window.addEventListener('resize', () => this._renderTutorialOverlay());
     window.addEventListener('resize', () => this._queueCardDescFit());
-    this._scaleGame();
     this._setupCardDescriptionAutoFit();
     this._renderReleaseNotesButtonLabel();
     this._renderReleaseNotes();
@@ -1004,7 +1002,6 @@ export class UIManager {
   }
 
   _handleMapAdvance() {
-    if (this._isInputLocked()) return;
     const isOnBoss = this.state.currentLevel === this.state.map.length - 1;
     if (!isOnBoss) return;
 
@@ -1299,13 +1296,6 @@ export class UIManager {
 
   _showLansDutkiSpentFeedback() {
     combatUI.showLansDutkiSpentFeedback(this);
-  }
-
-  /**
-   * Scales the game wrapper to fit the viewport height on small screens.
-   */
-  _scaleGame() {
-    uiHelpers.scaleGame();
   }
 
   _isInputLocked() {

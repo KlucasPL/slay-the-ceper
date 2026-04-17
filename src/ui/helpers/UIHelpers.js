@@ -64,17 +64,6 @@ export function getFullCardType(rarity, type) {
 }
 
 /**
- * Scales the game wrapper to fit the viewport height on small screens.
- */
-export function scaleGame() {
-  const wrapper = document.getElementById('game-wrapper');
-  if (!wrapper) return;
-  wrapper.style.zoom = '';
-  const scale = Math.min(1, window.innerHeight / wrapper.offsetHeight);
-  if (scale < 1) wrapper.style.zoom = scale;
-}
-
-/**
  * @param {{ isInputLocked: boolean }} state
  * @returns {boolean}
  */
