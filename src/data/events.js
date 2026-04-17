@@ -108,7 +108,7 @@ export const eventLibrary = {
           'Koszt: 20 dutków. Wynik: 50% WYGRANA (+45 dutków), 50% PRZEGRANA (karta Pocieszenie: dobierz 1).',
         cost: 20,
         effect(state) {
-          if (Math.random() < 0.5) {
+          if (state.rng() < 0.5) {
             state.addDutki(45);
             return 'Wygrana! Czysty fart. Wyciągasz banknot z rąk oszusta (+45 dutków).';
           }

@@ -18,6 +18,15 @@
     >
       ⚙️
     </button>
+    <button
+      id="seed-hud"
+      class="seed-hud hidden"
+      type="button"
+      aria-label="Skopiuj seed"
+      title="Kliknij, aby skopiować seed"
+    >
+      seed: <span id="seed-hud-value"></span>
+    </button>
 
     <div id="title-screen" class="title-screen" aria-hidden="false">
       <div class="title-backdrop">
@@ -79,12 +88,52 @@
               </button>
             </li>
             <li class="title-menu-item">
+              <button id="title-btn-seeded" class="title-start-btn" type="button">
+                Podany Seed 🌱
+              </button>
+            </li>
+            <li class="title-menu-item">
               <button id="btn-release-notes" class="title-start-btn" type="button">
                 Co nowego? (v1.2.4)
               </button>
             </li>
           </ul>
         </nav>
+
+        <div
+          id="seeded-run-modal"
+          class="seeded-run-modal hidden"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="seeded-run-modal-title"
+        >
+          <div class="seeded-run-modal-inner">
+            <h3 id="seeded-run-modal-title" class="seeded-run-modal-title">Podany Seed</h3>
+            <p class="seeded-run-modal-hint">
+              Podaj seed (1–8 znaków hex), aby zagrać identyczny przebieg z innym graczem.
+            </p>
+            <input
+              id="seeded-run-input"
+              class="seeded-run-input"
+              type="text"
+              maxlength="8"
+              placeholder="np. deadbeef"
+              autocomplete="off"
+              spellcheck="false"
+            />
+            <p id="seeded-run-error" class="seeded-run-error hidden">
+              Nieprawidłowy seed — użyj 1–8 znaków hex (0–9, a–f).
+            </p>
+            <div class="seeded-run-actions">
+              <button id="seeded-run-confirm-btn" class="title-start-btn" type="button">
+                Start
+              </button>
+              <button id="seeded-run-cancel-btn" class="reward-skip-btn" type="button">
+                Anuluj
+              </button>
+            </div>
+          </div>
+        </div>
         <p class="title-difficulty-hint">
           W trybie Dla Marka przeciwnicy stają się silniejsi z każdą walką!
         </p>
@@ -562,7 +611,22 @@
         <h3 class="run-summary-section-title">Końcowa Talia</h3>
         <div id="run-summary-deck" class="run-summary-deck"></div>
 
+        <div class="run-summary-seed-row hidden" id="run-summary-seed-row">
+          <span class="run-summary-seed-label">Seed:</span>
+          <button
+            id="run-summary-seed-copy"
+            class="run-summary-seed-btn"
+            type="button"
+            title="Kliknij, aby skopiować"
+          >
+            <span id="run-summary-seed-value"></span>
+          </button>
+        </div>
+
         <div class="run-summary-actions">
+          <button id="run-summary-replay-seed-btn" class="reward-relic-btn hidden" type="button">
+            Powtórz ten seed
+          </button>
           <button id="run-summary-replay-btn" class="reward-relic-btn" type="button">
             Zagraj ponownie
           </button>
@@ -651,9 +715,7 @@
           <p class="shop-line">"Patrzcie no! Mom towar i ciepłe oscypki!"</p>
         </div>
         <div class="camp-resource-strip" aria-live="polite">
-          <span class="camp-resource-pill"
-            >💰 Dutki: <span id="shop-dutki-current">50</span></span
-          >
+          <span class="camp-resource-pill">💰 Dutki: <span id="shop-dutki-current">50</span></span>
           <span class="camp-resource-pill"
             >❤️ Krzepa: <span id="shop-hp-current">50</span>/<span id="shop-hp-max">50</span></span
           >

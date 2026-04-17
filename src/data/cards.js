@@ -425,7 +425,7 @@ export const cardLibrary = {
     desc: 'Odrzuć 1 kartę, dobierz 2 karty.',
     effect(state) {
       if (state.hand.length > 0) {
-        const idx = Math.floor(Math.random() * state.hand.length);
+        const idx = Math.floor(state.rng() * state.hand.length);
         state.discard.push(state.hand.splice(idx, 1)[0]);
       }
       state._drawCards(2);
@@ -1087,7 +1087,7 @@ export const cardLibrary = {
     desc: 'Odrzuć 1 kartę z ręki i dobierz 2 karty.',
     effect(state) {
       if (state.hand.length > 0) {
-        const idx = Math.floor(Math.random() * state.hand.length);
+        const idx = Math.floor(state.rng() * state.hand.length);
         state.discard.push(state.hand.splice(idx, 1)[0]);
       }
       state._drawCards(2);

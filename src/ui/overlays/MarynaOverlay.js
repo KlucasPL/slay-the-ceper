@@ -36,7 +36,9 @@ export function openMarynaBoonOverlay(uiManager) {
         <span class="maryna-boon-effect">${boon.effectDesc}</span>
       `;
 
-    card.addEventListener('click', () => {
+    card.addEventListener('click', (event) => {
+      // Move focus out of the overlay before marking it aria-hidden.
+      /** @type {HTMLElement} */ (event.currentTarget).blur();
       uiManager.state.pickMarynaBoon(boonId);
       uiManager.state.hasStartedFirstBattle = true;
       overlay.classList.add('hidden');

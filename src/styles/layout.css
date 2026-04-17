@@ -58,6 +58,106 @@ body {
     0 10px 18px rgba(0, 0, 0, 0.45);
 }
 
+/* ---- Seed HUD ---- */
+.seed-hud {
+  position: fixed;
+  bottom: 12px;
+  left: 14px;
+  z-index: 4100;
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(209, 166, 93, 0.35);
+  border-radius: 6px;
+  color: rgba(255, 229, 179, 0.7);
+  font-size: 0.7rem;
+  font-family: monospace;
+  padding: 3px 8px;
+  cursor: pointer;
+  transition:
+    color 0.2s,
+    border-color 0.2s;
+  letter-spacing: 0.04em;
+}
+.seed-hud:hover {
+  color: #ffe5b3;
+  border-color: rgba(209, 166, 93, 0.65);
+}
+.seed-hud--copied::after {
+  content: ' ✓';
+  color: #8fde8f;
+}
+
+/* ---- Seeded-run modal (inside title panel) ---- */
+.seeded-run-modal {
+  margin-top: 14px;
+  background: rgba(15, 30, 22, 0.92);
+  border: 1px solid #d1a65d;
+  border-radius: 10px;
+  padding: 16px 20px;
+}
+.seeded-run-modal-title {
+  margin: 0 0 6px;
+  color: #ffe5b3;
+  font-size: 1rem;
+}
+.seeded-run-modal-hint {
+  margin: 0 0 10px;
+  color: #b8a07a;
+  font-size: 0.8rem;
+}
+.seeded-run-input {
+  width: 100%;
+  box-sizing: border-box;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid #d1a65d;
+  border-radius: 6px;
+  color: #ffe5b3;
+  font-family: monospace;
+  font-size: 1rem;
+  padding: 6px 10px;
+  outline: none;
+}
+.seeded-run-input:focus {
+  border-color: #f0c97a;
+  box-shadow: 0 0 0 2px rgba(240, 201, 122, 0.2);
+}
+.seeded-run-error {
+  color: #f88;
+  font-size: 0.78rem;
+  margin: 4px 0 0;
+}
+.seeded-run-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+/* ---- Run-summary seed row ---- */
+.run-summary-seed-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0;
+  font-size: 0.85rem;
+  color: #b8a07a;
+}
+.run-summary-seed-label {
+  font-weight: 600;
+}
+.run-summary-seed-btn {
+  background: none;
+  border: 1px solid rgba(209, 166, 93, 0.4);
+  border-radius: 4px;
+  color: #ffe5b3;
+  font-family: monospace;
+  font-size: 0.85rem;
+  padding: 2px 8px;
+  cursor: pointer;
+}
+.run-summary-seed-btn:hover {
+  border-color: #d1a65d;
+  background: rgba(209, 166, 93, 0.1);
+}
+
 .title-screen {
   position: fixed;
   inset: 0;
