@@ -17,6 +17,21 @@ coverage/
 # OS
 .DS_Store
 
+# Dashboard vendored assets (copied via `npm run dashboard:vendor`)
+tools/dashboard/vendor/chart.umd.min.js
+
 # Editor
 .vscode/
 *.local
+
+# Sim raw JSONL output — regenerate via `npm run sim`; too large for git
+# (The aggregated metrics.json artifacts under baselines/ and
+# tools/dashboard/metrics.fixture.json are small and committed.)
+metrics/*.jsonl
+metrics/*.jsonl.gz
+test-results/
+.playwright-mcp/
+
+# Local QA captures — attach to PRs, don't commit
+qa-*.png
+qa2-*.png
