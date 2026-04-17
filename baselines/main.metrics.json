@@ -1,0 +1,6804 @@
+{
+  "schemaVersion": 1,
+  "batchId": "baseline",
+  "batchName": "baseline",
+  "gitSha": "",
+  "runCount": 99998,
+  "dateRun": "2026-04-17T19:01:17.773Z",
+  "configHash": "",
+  "poolOverridesHash": "",
+  "agentMix": {
+    "aggressive": 10000,
+    "berserker": 10000,
+    "defensive": 9998,
+    "draw-engine": 10000,
+    "economy": 10000,
+    "elitist": 10000,
+    "greedy": 10000,
+    "heuristic": 10000,
+    "minimalist": 10000,
+    "status": 10000
+  },
+  "overall": {
+    "winrate": {
+      "rate": 0.0004,
+      "lo": 0.0002,
+      "hi": 0.0005,
+      "n": 99998
+    },
+    "avgFloorReached": {
+      "mean": 8.5629,
+      "lo": 8.54,
+      "hi": 8.5858,
+      "n": 99998
+    },
+    "avgTurnsPlayed": {
+      "mean": 19.9309,
+      "lo": 19.8676,
+      "hi": 19.9941,
+      "n": 99998
+    },
+    "avgDutkiEarned": {
+      "mean": 91.6174,
+      "lo": 91.2309,
+      "hi": 92.0038,
+      "n": 99998
+    },
+    "floorReached": {
+      "mean": 8.5629,
+      "lo": 8.54,
+      "hi": 8.5858,
+      "n": 99998,
+      "p10": 4,
+      "p50": 7,
+      "p90": 15,
+      "max": 15
+    },
+    "turnsPlayed": {
+      "mean": 19.9309,
+      "lo": 19.8676,
+      "hi": 19.9941,
+      "n": 99998,
+      "p10": 11,
+      "p50": 17,
+      "p90": 32,
+      "max": 434
+    },
+    "dutkiEarned": {
+      "mean": 91.6174,
+      "lo": 91.2309,
+      "hi": 92.0038,
+      "n": 99998,
+      "p10": 31,
+      "p50": 70,
+      "p90": 174,
+      "max": 1830
+    }
+  },
+  "bySlice": {
+    "jedrek/normal/1": {
+      "winrate": {
+        "rate": 0,
+        "lo": 0,
+        "hi": 0,
+        "n": 26290
+      },
+      "avgFloorReached": {
+        "mean": 4.3187,
+        "lo": 4.3094,
+        "hi": 4.3281,
+        "n": 26290
+      },
+      "avgTurnsPlayed": {
+        "mean": 16.4017,
+        "lo": 16.3024,
+        "hi": 16.501,
+        "n": 26290
+      },
+      "runCount": 26290
+    },
+    "jedrek/normal/3": {
+      "winrate": {
+        "rate": 0.0011,
+        "lo": 0.0008,
+        "hi": 0.0015,
+        "n": 31121
+      },
+      "avgFloorReached": {
+        "mean": 13.1853,
+        "lo": 13.1671,
+        "hi": 13.2034,
+        "n": 31121
+      },
+      "avgTurnsPlayed": {
+        "mean": 25.481,
+        "lo": 25.3532,
+        "hi": 25.6088,
+        "n": 31121
+      },
+      "runCount": 31121
+    },
+    "jedrek/normal/2": {
+      "winrate": {
+        "rate": 0,
+        "lo": 0,
+        "hi": 0,
+        "n": 42587
+      },
+      "avgFloorReached": {
+        "mean": 7.8051,
+        "lo": 7.7901,
+        "hi": 7.8201,
+        "n": 42587
+      },
+      "avgTurnsPlayed": {
+        "mean": 18.0537,
+        "lo": 17.9729,
+        "hi": 18.1346,
+        "n": 42587
+      },
+      "runCount": 42587
+    }
+  },
+  "byEntity": {
+    "character:jedrek": {
+      "kind": "character",
+      "id": "jedrek",
+      "name": "Jędrek",
+      "offeredCount": 0,
+      "acquiredCount": 99998,
+      "runsWithEntity": 99998,
+      "runsWithoutEntity": 0,
+      "pickRate": null,
+      "winrateWithEntity": {
+        "rate": 0.0004,
+        "lo": 0.0002,
+        "hi": 0.0005,
+        "n": 99998
+      },
+      "winrateWithout": null,
+      "winrateLiftPp": null,
+      "liftCi": null,
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 8.5629,
+      "avgFloorReachedWithout": null,
+      "floorReachedLift": null,
+      "floorReachedLiftCi": null,
+      "bySlice": {
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 26290
+        },
+        "jedrek/normal/3": {
+          "wins": 35,
+          "total": 31121
+        },
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 42587
+        }
+      },
+      "acquisitionSources": {},
+      "sampleTier": "green"
+    },
+    "card:paradny_zwyrt": {
+      "kind": "card",
+      "id": "paradny_zwyrt",
+      "name": "Paradny Zwyrt",
+      "offeredCount": 9909,
+      "acquiredCount": 5040,
+      "runsWithEntity": 5437,
+      "runsWithoutEntity": 94561,
+      "pickRate": 0.5086,
+      "winrateWithEntity": {
+        "rate": 0.0009,
+        "lo": 0.0001,
+        "hi": 0.0017,
+        "n": 5437
+      },
+      "winrateWithout": {
+        "rate": 0.0003,
+        "lo": 0.0002,
+        "hi": 0.0004,
+        "n": 94561
+      },
+      "winrateLiftPp": 0.0006,
+      "liftCi": {
+        "lo": -0.0002,
+        "hi": 0.0014
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 9.5082,
+      "avgFloorReachedWithout": 8.5086,
+      "floorReachedLift": 0.9996,
+      "floorReachedLiftCi": {
+        "lo": 0.895,
+        "hi": 1.1042
+      },
+      "bySlice": {
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 1118
+        },
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 2129
+        },
+        "jedrek/normal/3": {
+          "wins": 5,
+          "total": 2190
+        }
+      },
+      "acquisitionSources": {
+        "reward": 3490,
+        "shop": 1550
+      },
+      "sampleTier": "green",
+      "avgPlaysPerBattle": 1.5061,
+      "damagePerEnergy": null
+    },
+    "card:ciupaga": {
+      "kind": "card",
+      "id": "ciupaga",
+      "name": "Cios ciupagą",
+      "offeredCount": 0,
+      "acquiredCount": 0,
+      "runsWithEntity": 99998,
+      "runsWithoutEntity": 0,
+      "pickRate": null,
+      "winrateWithEntity": {
+        "rate": 0.0004,
+        "lo": 0.0002,
+        "hi": 0.0005,
+        "n": 99998
+      },
+      "winrateWithout": null,
+      "winrateLiftPp": null,
+      "liftCi": null,
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 8.5629,
+      "avgFloorReachedWithout": null,
+      "floorReachedLift": null,
+      "floorReachedLiftCi": null,
+      "bySlice": {
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 26290
+        },
+        "jedrek/normal/3": {
+          "wins": 35,
+          "total": 31121
+        },
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 42587
+        }
+      },
+      "acquisitionSources": {},
+      "sampleTier": "green",
+      "avgPlaysPerBattle": 10.6143,
+      "damagePerEnergy": null
+    },
+    "card:gasior": {
+      "kind": "card",
+      "id": "gasior",
+      "name": "Łyk z Gąsiora",
+      "offeredCount": 0,
+      "acquiredCount": 0,
+      "runsWithEntity": 99998,
+      "runsWithoutEntity": 0,
+      "pickRate": null,
+      "winrateWithEntity": {
+        "rate": 0.0004,
+        "lo": 0.0002,
+        "hi": 0.0005,
+        "n": 99998
+      },
+      "winrateWithout": null,
+      "winrateLiftPp": null,
+      "liftCi": null,
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 8.5629,
+      "avgFloorReachedWithout": null,
+      "floorReachedLift": null,
+      "floorReachedLiftCi": null,
+      "bySlice": {
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 26290
+        },
+        "jedrek/normal/3": {
+          "wins": 35,
+          "total": 31121
+        },
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 42587
+        }
+      },
+      "acquisitionSources": {},
+      "sampleTier": "green",
+      "avgPlaysPerBattle": 5.3933,
+      "damagePerEnergy": null
+    },
+    "card:ciupaga_we_mgle": {
+      "kind": "card",
+      "id": "ciupaga_we_mgle",
+      "name": "Ciupaga we Mgle",
+      "offeredCount": 39108,
+      "acquiredCount": 5082,
+      "runsWithEntity": 4946,
+      "runsWithoutEntity": 95052,
+      "pickRate": 0.1299,
+      "winrateWithEntity": {
+        "rate": 0.0012,
+        "lo": 0.0002,
+        "hi": 0.0022,
+        "n": 4946
+      },
+      "winrateWithout": {
+        "rate": 0.0003,
+        "lo": 0.0002,
+        "hi": 0.0004,
+        "n": 95052
+      },
+      "winrateLiftPp": 0.0009,
+      "liftCi": {
+        "lo": -0.0001,
+        "hi": 0.0019
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 10.2266,
+      "avgFloorReachedWithout": 8.4763,
+      "floorReachedLift": 1.7503,
+      "floorReachedLiftCi": {
+        "lo": 1.6483,
+        "hi": 1.8523
+      },
+      "bySlice": {
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 620
+        },
+        "jedrek/normal/3": {
+          "wins": 6,
+          "total": 2408
+        },
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 1918
+        }
+      },
+      "acquisitionSources": {
+        "shop": 2149,
+        "reward": 2933
+      },
+      "sampleTier": "green",
+      "avgPlaysPerBattle": 1.0435,
+      "damagePerEnergy": null
+    },
+    "relic:relic_boon_lista_zakupow": {
+      "kind": "relic",
+      "id": "relic_boon_lista_zakupow",
+      "name": "Lista Zakupów",
+      "offeredCount": 0,
+      "acquiredCount": 27220,
+      "runsWithEntity": 13610,
+      "runsWithoutEntity": 86388,
+      "pickRate": 0.2722,
+      "winrateWithEntity": {
+        "rate": 0.0001,
+        "lo": 0,
+        "hi": 0.0004,
+        "n": 13610
+      },
+      "winrateWithout": {
+        "rate": 0.0004,
+        "lo": 0.0003,
+        "hi": 0.0005,
+        "n": 86388
+      },
+      "winrateLiftPp": -0.0003,
+      "liftCi": {
+        "lo": -0.0005,
+        "hi": 0
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 8.4181,
+      "avgFloorReachedWithout": 8.5857,
+      "floorReachedLift": -0.1676,
+      "floorReachedLiftCi": {
+        "lo": -0.2345,
+        "hi": -0.1007
+      },
+      "bySlice": {
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 3818
+        },
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 5744
+        },
+        "jedrek/normal/3": {
+          "wins": 2,
+          "total": 4048
+        }
+      },
+      "acquisitionSources": {
+        "reward": 13610
+      },
+      "sampleTier": "green"
+    },
+    "relic:kierpce_wyprzedazy": {
+      "kind": "relic",
+      "id": "kierpce_wyprzedazy",
+      "name": "Kierpce z Wyprzedaży",
+      "offeredCount": 12078,
+      "acquiredCount": 55167,
+      "runsWithEntity": 21125,
+      "runsWithoutEntity": 78873,
+      "pickRate": 0.5517,
+      "winrateWithEntity": {
+        "rate": 0.0002,
+        "lo": 0,
+        "hi": 0.0004,
+        "n": 21125
+      },
+      "winrateWithout": {
+        "rate": 0.0004,
+        "lo": 0.0002,
+        "hi": 0.0005,
+        "n": 78873
+      },
+      "winrateLiftPp": -0.0002,
+      "liftCi": {
+        "lo": -0.0004,
+        "hi": 0.0001
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 10.1189,
+      "avgFloorReachedWithout": 8.1461,
+      "floorReachedLift": 1.9728,
+      "floorReachedLiftCi": {
+        "lo": 1.9195,
+        "hi": 2.026
+      },
+      "bySlice": {
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 2074
+        },
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 9270
+        },
+        "jedrek/normal/3": {
+          "wins": 5,
+          "total": 9781
+        }
+      },
+      "acquisitionSources": {
+        "reward": 33203,
+        "shop": 839
+      },
+      "sampleTier": "green"
+    },
+    "boon:lista_zakupow": {
+      "kind": "boon",
+      "id": "lista_zakupow",
+      "name": "Lista Zakupów",
+      "offeredCount": 42240,
+      "acquiredCount": 27220,
+      "runsWithEntity": 13610,
+      "runsWithoutEntity": 86388,
+      "pickRate": 0.2722,
+      "winrateWithEntity": {
+        "rate": 0.0001,
+        "lo": 0,
+        "hi": 0.0004,
+        "n": 13610
+      },
+      "winrateWithout": {
+        "rate": 0.0004,
+        "lo": 0.0003,
+        "hi": 0.0005,
+        "n": 86388
+      },
+      "winrateLiftPp": -0.0003,
+      "liftCi": {
+        "lo": -0.0005,
+        "hi": 0
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 8.4181,
+      "avgFloorReachedWithout": 8.5857,
+      "floorReachedLift": -0.1676,
+      "floorReachedLiftCi": {
+        "lo": -0.2345,
+        "hi": -0.1007
+      },
+      "bySlice": {
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 3818
+        },
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 5744
+        },
+        "jedrek/normal/3": {
+          "wins": 2,
+          "total": 4048
+        }
+      },
+      "acquisitionSources": {
+        "maryna": 13610
+      },
+      "sampleTier": "green"
+    },
+    "enemy:cepr": {
+      "kind": "enemy",
+      "id": "cepr",
+      "name": "Cepr",
+      "offeredCount": 0,
+      "acquiredCount": 0,
+      "runsWithEntity": 99998,
+      "runsWithoutEntity": 0,
+      "pickRate": null,
+      "winrateWithEntity": {
+        "rate": 0.0004,
+        "lo": 0.0002,
+        "hi": 0.0005,
+        "n": 99998
+      },
+      "winrateWithout": null,
+      "winrateLiftPp": null,
+      "liftCi": null,
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 8.5629,
+      "avgFloorReachedWithout": null,
+      "floorReachedLift": null,
+      "floorReachedLiftCi": null,
+      "bySlice": {},
+      "acquisitionSources": {},
+      "sampleTier": "green",
+      "avgTurnsToKill": 5.8351,
+      "byFloor": {
+        "1": {
+          "wins": 0,
+          "total": 99998,
+          "winrate": 0
+        },
+        "4": {
+          "wins": 417,
+          "total": 656,
+          "winrate": 0.6357
+        },
+        "5": {
+          "wins": 242,
+          "total": 300,
+          "winrate": 0.8067
+        },
+        "6": {
+          "wins": 321,
+          "total": 379,
+          "winrate": 0.847
+        },
+        "7": {
+          "wins": 992,
+          "total": 1241,
+          "winrate": 0.7994
+        },
+        "9": {
+          "wins": 639,
+          "total": 688,
+          "winrate": 0.9288
+        },
+        "10": {
+          "wins": 1194,
+          "total": 1344,
+          "winrate": 0.8884
+        },
+        "11": {
+          "wins": 1309,
+          "total": 1497,
+          "winrate": 0.8744
+        },
+        "12": {
+          "wins": 1118,
+          "total": 1310,
+          "winrate": 0.8534
+        },
+        "13": {
+          "wins": 640,
+          "total": 733,
+          "winrate": 0.8731
+        }
+      },
+      "byWeather": {
+        "clear": {
+          "wins": 2185,
+          "total": 2595,
+          "winrate": 0.842
+        },
+        "fog": {
+          "wins": 1448,
+          "total": 1634,
+          "winrate": 0.8862
+        },
+        "frozen": {
+          "wins": 1032,
+          "total": 1189,
+          "winrate": 0.868
+        },
+        "halny": {
+          "wins": 862,
+          "total": 1124,
+          "winrate": 0.7669
+        }
+      }
+    },
+    "boon:zloty_rozaniec": {
+      "kind": "boon",
+      "id": "zloty_rozaniec",
+      "name": "Złoty Różaniec Maryny",
+      "offeredCount": 43458,
+      "acquiredCount": 29140,
+      "runsWithEntity": 14570,
+      "runsWithoutEntity": 85428,
+      "pickRate": 0.2914,
+      "winrateWithEntity": {
+        "rate": 0.0005,
+        "lo": 0.0001,
+        "hi": 0.0008,
+        "n": 14570
+      },
+      "winrateWithout": {
+        "rate": 0.0003,
+        "lo": 0.0002,
+        "hi": 0.0004,
+        "n": 85428
+      },
+      "winrateLiftPp": 0.0002,
+      "liftCi": {
+        "lo": -0.0002,
+        "hi": 0.0005
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 8.4482,
+      "avgFloorReachedWithout": 8.5825,
+      "floorReachedLift": -0.1343,
+      "floorReachedLiftCi": {
+        "lo": -0.1991,
+        "hi": -0.0693
+      },
+      "bySlice": {
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 6154
+        },
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 4026
+        },
+        "jedrek/normal/3": {
+          "wins": 7,
+          "total": 4390
+        }
+      },
+      "acquisitionSources": {
+        "maryna": 14570
+      },
+      "sampleTier": "green"
+    },
+    "boon:sloik_rosolu": {
+      "kind": "boon",
+      "id": "sloik_rosolu",
+      "name": "Słoik Rosołu na Drogę",
+      "offeredCount": 43360,
+      "acquiredCount": 29140,
+      "runsWithEntity": 14570,
+      "runsWithoutEntity": 85428,
+      "pickRate": 0.2914,
+      "winrateWithEntity": {
+        "rate": 0.0003,
+        "lo": 0,
+        "hi": 0.0005,
+        "n": 14570
+      },
+      "winrateWithout": {
+        "rate": 0.0004,
+        "lo": 0.0002,
+        "hi": 0.0005,
+        "n": 85428
+      },
+      "winrateLiftPp": -0.0001,
+      "liftCi": {
+        "lo": -0.0004,
+        "hi": 0.0002
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 8.9183,
+      "avgFloorReachedWithout": 8.5023,
+      "floorReachedLift": 0.416,
+      "floorReachedLiftCi": {
+        "lo": 0.3513,
+        "hi": 0.4806
+      },
+      "bySlice": {
+        "jedrek/normal/3": {
+          "wins": 4,
+          "total": 4973
+        },
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 3232
+        },
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 6365
+        }
+      },
+      "acquisitionSources": {
+        "maryna": 14570
+      },
+      "sampleTier": "green"
+    },
+    "card:pan_na_wlosciach": {
+      "kind": "card",
+      "id": "pan_na_wlosciach",
+      "name": "Pan na Włościach",
+      "offeredCount": 10698,
+      "acquiredCount": 4179,
+      "runsWithEntity": 4644,
+      "runsWithoutEntity": 95354,
+      "pickRate": 0.3906,
+      "winrateWithEntity": {
+        "rate": 0.0002,
+        "lo": 0,
+        "hi": 0.0006,
+        "n": 4644
+      },
+      "winrateWithout": {
+        "rate": 0.0004,
+        "lo": 0.0002,
+        "hi": 0.0005,
+        "n": 95354
+      },
+      "winrateLiftPp": -0.0002,
+      "liftCi": {
+        "lo": -0.0006,
+        "hi": 0.0003
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 9.924,
+      "avgFloorReachedWithout": 8.4966,
+      "floorReachedLift": 1.4274,
+      "floorReachedLiftCi": {
+        "lo": 1.3164,
+        "hi": 1.5383
+      },
+      "bySlice": {
+        "jedrek/normal/3": {
+          "wins": 1,
+          "total": 2195
+        },
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 734
+        },
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 1715
+        }
+      },
+      "acquisitionSources": {
+        "reward": 3716,
+        "shop": 463
+      },
+      "sampleTier": "green",
+      "avgPlaysPerBattle": 0.4964,
+      "damagePerEnergy": null
+    },
+    "card:echo": {
+      "kind": "card",
+      "id": "echo",
+      "name": "Echo w Tatrach",
+      "offeredCount": 10388,
+      "acquiredCount": 3621,
+      "runsWithEntity": 4118,
+      "runsWithoutEntity": 95880,
+      "pickRate": 0.3486,
+      "winrateWithEntity": {
+        "rate": 0,
+        "lo": 0,
+        "hi": 0,
+        "n": 4118
+      },
+      "winrateWithout": {
+        "rate": 0.0004,
+        "lo": 0.0002,
+        "hi": 0.0005,
+        "n": 95880
+      },
+      "winrateLiftPp": -0.0004,
+      "liftCi": {
+        "lo": -0.0005,
+        "hi": -0.0002
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 10.1241,
+      "avgFloorReachedWithout": 8.4958,
+      "floorReachedLift": 1.6283,
+      "floorReachedLiftCi": {
+        "lo": 1.5112,
+        "hi": 1.7453
+      },
+      "bySlice": {
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 1388
+        },
+        "jedrek/normal/3": {
+          "wins": 0,
+          "total": 2076
+        },
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 654
+        }
+      },
+      "acquisitionSources": {
+        "reward": 3564,
+        "shop": 57
+      },
+      "sampleTier": "green",
+      "avgPlaysPerBattle": 0.4613,
+      "damagePerEnergy": null
+    },
+    "enemy:spekulant": {
+      "kind": "enemy",
+      "id": "spekulant",
+      "name": "Spekulant z Zakopanego",
+      "offeredCount": 0,
+      "acquiredCount": 0,
+      "runsWithEntity": 23095,
+      "runsWithoutEntity": 76903,
+      "pickRate": null,
+      "winrateWithEntity": {
+        "rate": 0.0005,
+        "lo": 0.0002,
+        "hi": 0.0008,
+        "n": 23095
+      },
+      "winrateWithout": {
+        "rate": 0.0003,
+        "lo": 0.0002,
+        "hi": 0.0004,
+        "n": 76903
+      },
+      "winrateLiftPp": 0.0002,
+      "liftCi": {
+        "lo": -0.0001,
+        "hi": 0.0005
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 8.5296,
+      "avgFloorReachedWithout": 8.5729,
+      "floorReachedLift": -0.0433,
+      "floorReachedLiftCi": {
+        "lo": -0.0909,
+        "hi": 0.0044
+      },
+      "bySlice": {},
+      "acquisitionSources": {},
+      "sampleTier": "green",
+      "avgTurnsToKill": 8.6218,
+      "byFloor": {
+        "5": {
+          "wins": 366,
+          "total": 5039,
+          "winrate": 0.0726
+        },
+        "6": {
+          "wins": 428,
+          "total": 4086,
+          "winrate": 0.1047
+        },
+        "7": {
+          "wins": 294,
+          "total": 3237,
+          "winrate": 0.0908
+        },
+        "9": {
+          "wins": 521,
+          "total": 3215,
+          "winrate": 0.1621
+        },
+        "10": {
+          "wins": 537,
+          "total": 3205,
+          "winrate": 0.1676
+        },
+        "11": {
+          "wins": 191,
+          "total": 1218,
+          "winrate": 0.1568
+        },
+        "12": {
+          "wins": 278,
+          "total": 1687,
+          "winrate": 0.1648
+        },
+        "13": {
+          "wins": 283,
+          "total": 1762,
+          "winrate": 0.1606
+        }
+      },
+      "byWeather": {
+        "frozen": {
+          "wins": 414,
+          "total": 3446,
+          "winrate": 0.1201
+        },
+        "halny": {
+          "wins": 251,
+          "total": 3526,
+          "winrate": 0.0712
+        },
+        "fog": {
+          "wins": 984,
+          "total": 4850,
+          "winrate": 0.2029
+        },
+        "clear": {
+          "wins": 410,
+          "total": 4114,
+          "winrate": 0.0997
+        }
+      }
+    },
+    "weather:frozen": {
+      "kind": "weather",
+      "id": "frozen",
+      "name": "Zamarznięty Szlak",
+      "offeredCount": 0,
+      "acquiredCount": 0,
+      "runsWithEntity": 26404,
+      "runsWithoutEntity": 73594,
+      "pickRate": null,
+      "winrateWithEntity": {
+        "rate": 0.0005,
+        "lo": 0.0002,
+        "hi": 0.0008,
+        "n": 26404
+      },
+      "winrateWithout": {
+        "rate": 0.0003,
+        "lo": 0.0002,
+        "hi": 0.0004,
+        "n": 73594
+      },
+      "winrateLiftPp": 0.0002,
+      "liftCi": {
+        "lo": -0.0001,
+        "hi": 0.0005
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 9.4586,
+      "avgFloorReachedWithout": 8.2415,
+      "floorReachedLift": 1.2171,
+      "floorReachedLiftCi": {
+        "lo": 1.1656,
+        "hi": 1.2685
+      },
+      "bySlice": {},
+      "acquisitionSources": {},
+      "sampleTier": "green"
+    },
+    "card:zimna_krew": {
+      "kind": "card",
+      "id": "zimna_krew",
+      "name": "Zimna Krew",
+      "offeredCount": 10234,
+      "acquiredCount": 4009,
+      "runsWithEntity": 4357,
+      "runsWithoutEntity": 95641,
+      "pickRate": 0.3917,
+      "winrateWithEntity": {
+        "rate": 0,
+        "lo": 0,
+        "hi": 0,
+        "n": 4357
+      },
+      "winrateWithout": {
+        "rate": 0.0004,
+        "lo": 0.0002,
+        "hi": 0.0005,
+        "n": 95641
+      },
+      "winrateLiftPp": -0.0004,
+      "liftCi": {
+        "lo": -0.0005,
+        "hi": -0.0002
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 10.0174,
+      "avgFloorReachedWithout": 8.4966,
+      "floorReachedLift": 1.5208,
+      "floorReachedLiftCi": {
+        "lo": 1.4109,
+        "hi": 1.6307
+      },
+      "bySlice": {
+        "jedrek/normal/3": {
+          "wins": 0,
+          "total": 2039
+        },
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 1768
+        },
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 550
+        }
+      },
+      "acquisitionSources": {
+        "reward": 3570,
+        "shop": 439
+      },
+      "sampleTier": "green",
+      "avgPlaysPerBattle": 0.4508,
+      "damagePerEnergy": null
+    },
+    "card:punkt_widokowy": {
+      "kind": "card",
+      "id": "punkt_widokowy",
+      "name": "Punkt Widokowy",
+      "offeredCount": 38229,
+      "acquiredCount": 6973,
+      "runsWithEntity": 6737,
+      "runsWithoutEntity": 93261,
+      "pickRate": 0.1824,
+      "winrateWithEntity": {
+        "rate": 0.0006,
+        "lo": 0,
+        "hi": 0.0012,
+        "n": 6737
+      },
+      "winrateWithout": {
+        "rate": 0.0003,
+        "lo": 0.0002,
+        "hi": 0.0004,
+        "n": 93261
+      },
+      "winrateLiftPp": 0.0003,
+      "liftCi": {
+        "lo": -0.0003,
+        "hi": 0.0009
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 9.8544,
+      "avgFloorReachedWithout": 8.4696,
+      "floorReachedLift": 1.3848,
+      "floorReachedLiftCi": {
+        "lo": 1.2974,
+        "hi": 1.4721
+      },
+      "bySlice": {
+        "jedrek/normal/3": {
+          "wins": 4,
+          "total": 3013
+        },
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 874
+        },
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 2850
+        }
+      },
+      "acquisitionSources": {
+        "reward": 2764,
+        "shop": 4209
+      },
+      "sampleTier": "green",
+      "avgPlaysPerBattle": 0.7652,
+      "damagePerEnergy": null
+    },
+    "card:sernik": {
+      "kind": "card",
+      "id": "sernik",
+      "name": "Sernik",
+      "offeredCount": 37562,
+      "acquiredCount": 7254,
+      "runsWithEntity": 7002,
+      "runsWithoutEntity": 92996,
+      "pickRate": 0.1931,
+      "winrateWithEntity": {
+        "rate": 0.0009,
+        "lo": 0.0002,
+        "hi": 0.0015,
+        "n": 7002
+      },
+      "winrateWithout": {
+        "rate": 0.0003,
+        "lo": 0.0002,
+        "hi": 0.0004,
+        "n": 92996
+      },
+      "winrateLiftPp": 0.0006,
+      "liftCi": {
+        "lo": -0.0001,
+        "hi": 0.0012
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 9.7915,
+      "avgFloorReachedWithout": 8.4704,
+      "floorReachedLift": 1.3211,
+      "floorReachedLiftCi": {
+        "lo": 1.2346,
+        "hi": 1.4076
+      },
+      "bySlice": {
+        "jedrek/normal/3": {
+          "wins": 6,
+          "total": 3137
+        },
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 1079
+        },
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 2786
+        }
+      },
+      "acquisitionSources": {
+        "shop": 4308,
+        "reward": 2946
+      },
+      "sampleTier": "green",
+      "avgPlaysPerBattle": 0.3263,
+      "damagePerEnergy": null
+    },
+    "card:zemsta_gorala": {
+      "kind": "card",
+      "id": "zemsta_gorala",
+      "name": "Zemsta Górala",
+      "offeredCount": 12919,
+      "acquiredCount": 7411,
+      "runsWithEntity": 7059,
+      "runsWithoutEntity": 92939,
+      "pickRate": 0.5737,
+      "winrateWithEntity": {
+        "rate": 0.0016,
+        "lo": 0.0006,
+        "hi": 0.0025,
+        "n": 7059
+      },
+      "winrateWithout": {
+        "rate": 0.0003,
+        "lo": 0.0002,
+        "hi": 0.0004,
+        "n": 92939
+      },
+      "winrateLiftPp": 0.0013,
+      "liftCi": {
+        "lo": 0.0004,
+        "hi": 0.0022
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 10.6777,
+      "avgFloorReachedWithout": 8.4023,
+      "floorReachedLift": 2.2754,
+      "floorReachedLiftCi": {
+        "lo": 2.191,
+        "hi": 2.3599
+      },
+      "bySlice": {
+        "jedrek/normal/3": {
+          "wins": 11,
+          "total": 3848
+        },
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 2514
+        },
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 697
+        }
+      },
+      "acquisitionSources": {
+        "reward": 7405,
+        "shop": 6
+      },
+      "sampleTier": "green",
+      "avgPlaysPerBattle": 1.0002,
+      "damagePerEnergy": null
+    },
+    "card:wepchniecie_w_kolejke": {
+      "kind": "card",
+      "id": "wepchniecie_w_kolejke",
+      "name": "Wepchniecie w Kolejkę",
+      "offeredCount": 38873,
+      "acquiredCount": 5276,
+      "runsWithEntity": 5110,
+      "runsWithoutEntity": 94888,
+      "pickRate": 0.1357,
+      "winrateWithEntity": {
+        "rate": 0.0012,
+        "lo": 0.0002,
+        "hi": 0.0021,
+        "n": 5110
+      },
+      "winrateWithout": {
+        "rate": 0.0003,
+        "lo": 0.0002,
+        "hi": 0.0004,
+        "n": 94888
+      },
+      "winrateLiftPp": 0.0009,
+      "liftCi": {
+        "lo": -0.0001,
+        "hi": 0.0018
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 9.7374,
+      "avgFloorReachedWithout": 8.4997,
+      "floorReachedLift": 1.2377,
+      "floorReachedLiftCi": {
+        "lo": 1.1348,
+        "hi": 1.3406
+      },
+      "bySlice": {
+        "jedrek/normal/3": {
+          "wins": 6,
+          "total": 2162
+        },
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 2164
+        },
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 784
+        }
+      },
+      "acquisitionSources": {
+        "reward": 2927,
+        "shop": 2349
+      },
+      "sampleTier": "green",
+      "avgPlaysPerBattle": 0.5767,
+      "damagePerEnergy": null
+    },
+    "relic:relic_boon_sloik_rosolu": {
+      "kind": "relic",
+      "id": "relic_boon_sloik_rosolu",
+      "name": "Słoik Rosołu na Drogę",
+      "offeredCount": 0,
+      "acquiredCount": 29140,
+      "runsWithEntity": 14570,
+      "runsWithoutEntity": 85428,
+      "pickRate": 0.2914,
+      "winrateWithEntity": {
+        "rate": 0.0003,
+        "lo": 0,
+        "hi": 0.0005,
+        "n": 14570
+      },
+      "winrateWithout": {
+        "rate": 0.0004,
+        "lo": 0.0002,
+        "hi": 0.0005,
+        "n": 85428
+      },
+      "winrateLiftPp": -0.0001,
+      "liftCi": {
+        "lo": -0.0004,
+        "hi": 0.0002
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 8.9183,
+      "avgFloorReachedWithout": 8.5023,
+      "floorReachedLift": 0.416,
+      "floorReachedLiftCi": {
+        "lo": 0.3513,
+        "hi": 0.4806
+      },
+      "bySlice": {
+        "jedrek/normal/3": {
+          "wins": 4,
+          "total": 4973
+        },
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 3232
+        },
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 6365
+        }
+      },
+      "acquisitionSources": {
+        "reward": 14570
+      },
+      "sampleTier": "green"
+    },
+    "relic:termos_z_herbatka": {
+      "kind": "relic",
+      "id": "termos_z_herbatka",
+      "name": "Termos z Herbatką",
+      "offeredCount": 2916,
+      "acquiredCount": 13283,
+      "runsWithEntity": 5107,
+      "runsWithoutEntity": 94891,
+      "pickRate": 0.1328,
+      "winrateWithEntity": {
+        "rate": 0.0002,
+        "lo": 0,
+        "hi": 0.0006,
+        "n": 5107
+      },
+      "winrateWithout": {
+        "rate": 0.0004,
+        "lo": 0.0002,
+        "hi": 0.0005,
+        "n": 94891
+      },
+      "winrateLiftPp": -0.0002,
+      "liftCi": {
+        "lo": -0.0006,
+        "hi": 0.0002
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 10.0511,
+      "avgFloorReachedWithout": 8.4828,
+      "floorReachedLift": 1.5683,
+      "floorReachedLiftCi": {
+        "lo": 1.4699,
+        "hi": 1.6666
+      },
+      "bySlice": {
+        "jedrek/normal/3": {
+          "wins": 1,
+          "total": 2306
+        },
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 2356
+        },
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 445
+        }
+      },
+      "acquisitionSources": {
+        "reward": 8023,
+        "shop": 153
+      },
+      "sampleTier": "green"
+    },
+    "relic:bilet_tpn": {
+      "kind": "relic",
+      "id": "bilet_tpn",
+      "name": "Bilet TPN Ulgowy",
+      "offeredCount": 11341,
+      "acquiredCount": 53120,
+      "runsWithEntity": 20405,
+      "runsWithoutEntity": 79593,
+      "pickRate": 0.5312,
+      "winrateWithEntity": {
+        "rate": 0.0006,
+        "lo": 0.0003,
+        "hi": 0.0009,
+        "n": 20405
+      },
+      "winrateWithout": {
+        "rate": 0.0003,
+        "lo": 0.0002,
+        "hi": 0.0004,
+        "n": 79593
+      },
+      "winrateLiftPp": 0.0003,
+      "liftCi": {
+        "lo": -0.0001,
+        "hi": 0.0007
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 10.6771,
+      "avgFloorReachedWithout": 8.0209,
+      "floorReachedLift": 2.6562,
+      "floorReachedLiftCi": {
+        "lo": 2.6016,
+        "hi": 2.7109
+      },
+      "bySlice": {
+        "jedrek/normal/3": {
+          "wins": 12,
+          "total": 10827
+        },
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 7726
+        },
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 1852
+        }
+      },
+      "acquisitionSources": {
+        "reward": 31746,
+        "shop": 969
+      },
+      "sampleTier": "green"
+    },
+    "relic:szczegliwa_podkowa": {
+      "kind": "relic",
+      "id": "szczegliwa_podkowa",
+      "name": "Szczęśliwa Podkowa",
+      "offeredCount": 11394,
+      "acquiredCount": 53502,
+      "runsWithEntity": 20398,
+      "runsWithoutEntity": 79600,
+      "pickRate": 0.535,
+      "winrateWithEntity": {
+        "rate": 0.0005,
+        "lo": 0.0002,
+        "hi": 0.0009,
+        "n": 20398
+      },
+      "winrateWithout": {
+        "rate": 0.0003,
+        "lo": 0.0002,
+        "hi": 0.0004,
+        "n": 79600
+      },
+      "winrateLiftPp": 0.0002,
+      "liftCi": {
+        "lo": -0.0001,
+        "hi": 0.0006
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 10.1028,
+      "avgFloorReachedWithout": 8.1683,
+      "floorReachedLift": 1.9345,
+      "floorReachedLiftCi": {
+        "lo": 1.8801,
+        "hi": 1.9889
+      },
+      "bySlice": {
+        "jedrek/normal/3": {
+          "wins": 11,
+          "total": 9500
+        },
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 8775
+        },
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 2123
+        }
+      },
+      "acquisitionSources": {
+        "reward": 31792,
+        "shop": 1312
+      },
+      "sampleTier": "green"
+    },
+    "relic:magnes_na_lodowke": {
+      "kind": "relic",
+      "id": "magnes_na_lodowke",
+      "name": "Magnes na Lodówkę",
+      "offeredCount": 12405,
+      "acquiredCount": 57114,
+      "runsWithEntity": 21711,
+      "runsWithoutEntity": 78287,
+      "pickRate": 0.5712,
+      "winrateWithEntity": {
+        "rate": 0.0005,
+        "lo": 0.0002,
+        "hi": 0.0008,
+        "n": 21711
+      },
+      "winrateWithout": {
+        "rate": 0.0003,
+        "lo": 0.0002,
+        "hi": 0.0004,
+        "n": 78287
+      },
+      "winrateLiftPp": 0.0002,
+      "liftCi": {
+        "lo": -0.0001,
+        "hi": 0.0005
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 10.2017,
+      "avgFloorReachedWithout": 8.1084,
+      "floorReachedLift": 2.0933,
+      "floorReachedLiftCi": {
+        "lo": 2.0404,
+        "hi": 2.1463
+      },
+      "bySlice": {
+        "jedrek/normal/3": {
+          "wins": 11,
+          "total": 10466
+        },
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 9150
+        },
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 2095
+        }
+      },
+      "acquisitionSources": {
+        "reward": 34116,
+        "shop": 1287
+      },
+      "sampleTier": "green"
+    },
+    "card:z_rozmachu": {
+      "kind": "card",
+      "id": "z_rozmachu",
+      "name": "Z Rozmachu",
+      "offeredCount": 37863,
+      "acquiredCount": 5290,
+      "runsWithEntity": 5186,
+      "runsWithoutEntity": 94812,
+      "pickRate": 0.1397,
+      "winrateWithEntity": {
+        "rate": 0,
+        "lo": 0,
+        "hi": 0,
+        "n": 5186
+      },
+      "winrateWithout": {
+        "rate": 0.0004,
+        "lo": 0.0002,
+        "hi": 0.0005,
+        "n": 94812
+      },
+      "winrateLiftPp": -0.0004,
+      "liftCi": {
+        "lo": -0.0005,
+        "hi": -0.0002
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 10.0553,
+      "avgFloorReachedWithout": 8.4813,
+      "floorReachedLift": 1.574,
+      "floorReachedLiftCi": {
+        "lo": 1.4731,
+        "hi": 1.6751
+      },
+      "bySlice": {
+        "jedrek/normal/3": {
+          "wins": 0,
+          "total": 2338
+        },
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 2135
+        },
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 713
+        }
+      },
+      "acquisitionSources": {
+        "reward": 2846,
+        "shop": 2444
+      },
+      "sampleTier": "green",
+      "avgPlaysPerBattle": 1.2462,
+      "damagePerEnergy": null
+    },
+    "card:zapas_oscypkow": {
+      "kind": "card",
+      "id": "zapas_oscypkow",
+      "name": "Zapas Oscypków",
+      "offeredCount": 38579,
+      "acquiredCount": 6302,
+      "runsWithEntity": 6051,
+      "runsWithoutEntity": 93947,
+      "pickRate": 0.1634,
+      "winrateWithEntity": {
+        "rate": 0.0002,
+        "lo": 0,
+        "hi": 0.0005,
+        "n": 6051
+      },
+      "winrateWithout": {
+        "rate": 0.0004,
+        "lo": 0.0002,
+        "hi": 0.0005,
+        "n": 93947
+      },
+      "winrateLiftPp": -0.0002,
+      "liftCi": {
+        "lo": -0.0005,
+        "hi": 0.0001
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 10.0197,
+      "avgFloorReachedWithout": 8.4691,
+      "floorReachedLift": 1.5506,
+      "floorReachedLiftCi": {
+        "lo": 1.4565,
+        "hi": 1.6447
+      },
+      "bySlice": {
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 2343
+        },
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 903
+        },
+        "jedrek/normal/3": {
+          "wins": 1,
+          "total": 2805
+        }
+      },
+      "acquisitionSources": {
+        "reward": 2762,
+        "shop": 3540
+      },
+      "sampleTier": "green",
+      "avgPlaysPerBattle": 0.9406,
+      "damagePerEnergy": null
+    },
+    "card:kapiel_w_bialce": {
+      "kind": "card",
+      "id": "kapiel_w_bialce",
+      "name": "Kąpiel w Białce",
+      "offeredCount": 10461,
+      "acquiredCount": 4287,
+      "runsWithEntity": 4753,
+      "runsWithoutEntity": 95245,
+      "pickRate": 0.4098,
+      "winrateWithEntity": {
+        "rate": 0.0002,
+        "lo": 0,
+        "hi": 0.0006,
+        "n": 4753
+      },
+      "winrateWithout": {
+        "rate": 0.0004,
+        "lo": 0.0002,
+        "hi": 0.0005,
+        "n": 95245
+      },
+      "winrateLiftPp": -0.0002,
+      "liftCi": {
+        "lo": -0.0006,
+        "hi": 0.0003
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 9.79,
+      "avgFloorReachedWithout": 8.5017,
+      "floorReachedLift": 1.2883,
+      "floorReachedLiftCi": {
+        "lo": 1.1803,
+        "hi": 1.3964
+      },
+      "bySlice": {
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 1718
+        },
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 811
+        },
+        "jedrek/normal/3": {
+          "wins": 1,
+          "total": 2224
+        }
+      },
+      "acquisitionSources": {
+        "shop": 1076,
+        "reward": 3211
+      },
+      "sampleTier": "green",
+      "avgPlaysPerBattle": 0.4529,
+      "damagePerEnergy": null
+    },
+    "card:zyntyca": {
+      "kind": "card",
+      "id": "zyntyca",
+      "name": "Żyntyca",
+      "offeredCount": 38992,
+      "acquiredCount": 5599,
+      "runsWithEntity": 5372,
+      "runsWithoutEntity": 94626,
+      "pickRate": 0.1436,
+      "winrateWithEntity": {
+        "rate": 0,
+        "lo": 0,
+        "hi": 0,
+        "n": 5372
+      },
+      "winrateWithout": {
+        "rate": 0.0004,
+        "lo": 0.0002,
+        "hi": 0.0005,
+        "n": 94626
+      },
+      "winrateLiftPp": -0.0004,
+      "liftCi": {
+        "lo": -0.0005,
+        "hi": -0.0002
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 9.6219,
+      "avgFloorReachedWithout": 8.5028,
+      "floorReachedLift": 1.1191,
+      "floorReachedLiftCi": {
+        "lo": 1.0166,
+        "hi": 1.2217
+      },
+      "bySlice": {
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 2080
+        },
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 973
+        },
+        "jedrek/normal/3": {
+          "wins": 0,
+          "total": 2319
+        }
+      },
+      "acquisitionSources": {
+        "shop": 2535,
+        "reward": 3064
+      },
+      "sampleTier": "green",
+      "avgPlaysPerBattle": 0.2923,
+      "damagePerEnergy": null
+    },
+    "card:goralska_goscinnosc": {
+      "kind": "card",
+      "id": "goralska_goscinnosc",
+      "name": "Góralska Gościnność",
+      "offeredCount": 12567,
+      "acquiredCount": 7372,
+      "runsWithEntity": 7079,
+      "runsWithoutEntity": 92919,
+      "pickRate": 0.5866,
+      "winrateWithEntity": {
+        "rate": 0,
+        "lo": 0,
+        "hi": 0,
+        "n": 7079
+      },
+      "winrateWithout": {
+        "rate": 0.0004,
+        "lo": 0.0003,
+        "hi": 0.0005,
+        "n": 92919
+      },
+      "winrateLiftPp": -0.0004,
+      "liftCi": {
+        "lo": -0.0005,
+        "hi": -0.0003
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 10.5915,
+      "avgFloorReachedWithout": 8.4084,
+      "floorReachedLift": 2.1831,
+      "floorReachedLiftCi": {
+        "lo": 2.097,
+        "hi": 2.2692
+      },
+      "bySlice": {
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 2506
+        },
+        "jedrek/normal/3": {
+          "wins": 0,
+          "total": 3777
+        },
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 796
+        }
+      },
+      "acquisitionSources": {
+        "reward": 7341,
+        "shop": 31
+      },
+      "sampleTier": "green",
+      "avgPlaysPerBattle": 0.4254,
+      "damagePerEnergy": null
+    },
+    "enemy:konik_spod_kuznic": {
+      "kind": "enemy",
+      "id": "konik_spod_kuznic",
+      "name": "Konik spod Kuźnic",
+      "offeredCount": 0,
+      "acquiredCount": 0,
+      "runsWithEntity": 22186,
+      "runsWithoutEntity": 77812,
+      "pickRate": null,
+      "winrateWithEntity": {
+        "rate": 0.0009,
+        "lo": 0.0005,
+        "hi": 0.0014,
+        "n": 22186
+      },
+      "winrateWithout": {
+        "rate": 0.0002,
+        "lo": 0.0001,
+        "hi": 0.0003,
+        "n": 77812
+      },
+      "winrateLiftPp": 0.0007,
+      "liftCi": {
+        "lo": 0.0004,
+        "hi": 0.0012
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 10.2996,
+      "avgFloorReachedWithout": 8.0677,
+      "floorReachedLift": 2.2319,
+      "floorReachedLiftCi": {
+        "lo": 2.1786,
+        "hi": 2.2852
+      },
+      "bySlice": {},
+      "acquisitionSources": {},
+      "sampleTier": "green",
+      "avgTurnsToKill": 6.2194,
+      "byFloor": {
+        "3": {
+          "wins": 4305,
+          "total": 4531,
+          "winrate": 0.9501
+        },
+        "4": {
+          "wins": 4969,
+          "total": 5571,
+          "winrate": 0.8919
+        },
+        "5": {
+          "wins": 852,
+          "total": 1016,
+          "winrate": 0.8386
+        },
+        "6": {
+          "wins": 1360,
+          "total": 1608,
+          "winrate": 0.8458
+        },
+        "7": {
+          "wins": 2053,
+          "total": 2601,
+          "winrate": 0.7893
+        },
+        "9": {
+          "wins": 1165,
+          "total": 1301,
+          "winrate": 0.8955
+        },
+        "10": {
+          "wins": 1795,
+          "total": 2107,
+          "winrate": 0.8519
+        },
+        "11": {
+          "wins": 1600,
+          "total": 2012,
+          "winrate": 0.7952
+        },
+        "12": {
+          "wins": 1016,
+          "total": 1293,
+          "winrate": 0.7858
+        },
+        "13": {
+          "wins": 699,
+          "total": 852,
+          "winrate": 0.8204
+        }
+      },
+      "byWeather": {
+        "halny": {
+          "wins": 2602,
+          "total": 3192,
+          "winrate": 0.8152
+        },
+        "frozen": {
+          "wins": 3006,
+          "total": 3420,
+          "winrate": 0.8789
+        },
+        "fog": {
+          "wins": 4046,
+          "total": 4558,
+          "winrate": 0.8877
+        },
+        "clear": {
+          "wins": 1939,
+          "total": 2530,
+          "winrate": 0.7664
+        }
+      }
+    },
+    "card:pchniecie_ciupaga": {
+      "kind": "card",
+      "id": "pchniecie_ciupaga",
+      "name": "Pchnięcie Ciupagą",
+      "offeredCount": 38646,
+      "acquiredCount": 5292,
+      "runsWithEntity": 5142,
+      "runsWithoutEntity": 94856,
+      "pickRate": 0.1369,
+      "winrateWithEntity": {
+        "rate": 0.0002,
+        "lo": 0,
+        "hi": 0.0006,
+        "n": 5142
+      },
+      "winrateWithout": {
+        "rate": 0.0004,
+        "lo": 0.0002,
+        "hi": 0.0005,
+        "n": 94856
+      },
+      "winrateLiftPp": -0.0002,
+      "liftCi": {
+        "lo": -0.0006,
+        "hi": 0.0002
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 10.4741,
+      "avgFloorReachedWithout": 8.4593,
+      "floorReachedLift": 2.0148,
+      "floorReachedLiftCi": {
+        "lo": 1.9151,
+        "hi": 2.1145
+      },
+      "bySlice": {
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 623
+        },
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 1857
+        },
+        "jedrek/normal/3": {
+          "wins": 1,
+          "total": 2662
+        }
+      },
+      "acquisitionSources": {
+        "reward": 3122,
+        "shop": 2170
+      },
+      "sampleTier": "green",
+      "avgPlaysPerBattle": 1.2124,
+      "damagePerEnergy": null
+    },
+    "card:beczenie_redyku": {
+      "kind": "card",
+      "id": "beczenie_redyku",
+      "name": "Beczenie Redyku",
+      "offeredCount": 38580,
+      "acquiredCount": 5224,
+      "runsWithEntity": 5071,
+      "runsWithoutEntity": 94927,
+      "pickRate": 0.1354,
+      "winrateWithEntity": {
+        "rate": 0.0022,
+        "lo": 0.0009,
+        "hi": 0.0034,
+        "n": 5071
+      },
+      "winrateWithout": {
+        "rate": 0.0003,
+        "lo": 0.0002,
+        "hi": 0.0004,
+        "n": 94927
+      },
+      "winrateLiftPp": 0.0019,
+      "liftCi": {
+        "lo": 0.0006,
+        "hi": 0.0032
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 9.9507,
+      "avgFloorReachedWithout": 8.4888,
+      "floorReachedLift": 1.4619,
+      "floorReachedLiftCi": {
+        "lo": 1.3599,
+        "hi": 1.564
+      },
+      "bySlice": {
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 1947
+        },
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 761
+        },
+        "jedrek/normal/3": {
+          "wins": 11,
+          "total": 2363
+        }
+      },
+      "acquisitionSources": {
+        "shop": 2230,
+        "reward": 2994
+      },
+      "sampleTier": "green",
+      "avgPlaysPerBattle": 0.6477,
+      "damagePerEnergy": null
+    },
+    "card:pogodzenie_sporow": {
+      "kind": "card",
+      "id": "pogodzenie_sporow",
+      "name": "Pogodzenie Sporów",
+      "offeredCount": 37626,
+      "acquiredCount": 6090,
+      "runsWithEntity": 5797,
+      "runsWithoutEntity": 94201,
+      "pickRate": 0.1619,
+      "winrateWithEntity": {
+        "rate": 0.0005,
+        "lo": 0,
+        "hi": 0.0011,
+        "n": 5797
+      },
+      "winrateWithout": {
+        "rate": 0.0003,
+        "lo": 0.0002,
+        "hi": 0.0005,
+        "n": 94201
+      },
+      "winrateLiftPp": 0.0002,
+      "liftCi": {
+        "lo": -0.0004,
+        "hi": 0.0008
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 10.3264,
+      "avgFloorReachedWithout": 8.4544,
+      "floorReachedLift": 1.872,
+      "floorReachedLiftCi": {
+        "lo": 1.7761,
+        "hi": 1.9679
+      },
+      "bySlice": {
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 2228
+        },
+        "jedrek/normal/3": {
+          "wins": 3,
+          "total": 2885
+        },
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 684
+        }
+      },
+      "acquisitionSources": {
+        "reward": 2777,
+        "shop": 3313
+      },
+      "sampleTier": "green",
+      "avgPlaysPerBattle": 1.4994,
+      "damagePerEnergy": null
+    },
+    "card:sandaly": {
+      "kind": "card",
+      "id": "sandaly",
+      "name": "Sandały",
+      "offeredCount": 10013,
+      "acquiredCount": 5072,
+      "runsWithEntity": 5403,
+      "runsWithoutEntity": 94595,
+      "pickRate": 0.5065,
+      "winrateWithEntity": {
+        "rate": 0.0015,
+        "lo": 0.0005,
+        "hi": 0.0025,
+        "n": 5403
+      },
+      "winrateWithout": {
+        "rate": 0.0003,
+        "lo": 0.0002,
+        "hi": 0.0004,
+        "n": 94595
+      },
+      "winrateLiftPp": 0.0012,
+      "liftCi": {
+        "lo": 0.0002,
+        "hi": 0.0022
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 10.2295,
+      "avgFloorReachedWithout": 8.4677,
+      "floorReachedLift": 1.7618,
+      "floorReachedLiftCi": {
+        "lo": 1.6623,
+        "hi": 1.8613
+      },
+      "bySlice": {
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 2122
+        },
+        "jedrek/normal/3": {
+          "wins": 8,
+          "total": 2597
+        },
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 684
+        }
+      },
+      "acquisitionSources": {
+        "reward": 3666,
+        "shop": 1406
+      },
+      "sampleTier": "green",
+      "avgPlaysPerBattle": 0.7573,
+      "damagePerEnergy": null
+    },
+    "card:wdech_halnego": {
+      "kind": "card",
+      "id": "wdech_halnego",
+      "name": "Wdech Halnego",
+      "offeredCount": 37373,
+      "acquiredCount": 5687,
+      "runsWithEntity": 5557,
+      "runsWithoutEntity": 94441,
+      "pickRate": 0.1522,
+      "winrateWithEntity": {
+        "rate": 0.0005,
+        "lo": 0,
+        "hi": 0.0012,
+        "n": 5557
+      },
+      "winrateWithout": {
+        "rate": 0.0003,
+        "lo": 0.0002,
+        "hi": 0.0005,
+        "n": 94441
+      },
+      "winrateLiftPp": 0.0002,
+      "liftCi": {
+        "lo": -0.0004,
+        "hi": 0.0008
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 9.8643,
+      "avgFloorReachedWithout": 8.4863,
+      "floorReachedLift": 1.378,
+      "floorReachedLiftCi": {
+        "lo": 1.2771,
+        "hi": 1.4789
+      },
+      "bySlice": {
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 894
+        },
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 2217
+        },
+        "jedrek/normal/3": {
+          "wins": 3,
+          "total": 2446
+        }
+      },
+      "acquisitionSources": {
+        "shop": 2875,
+        "reward": 2812
+      },
+      "sampleTier": "green",
+      "avgPlaysPerBattle": 1.6452,
+      "damagePerEnergy": null
+    },
+    "enemy:boss": {
+      "kind": "enemy",
+      "id": "boss",
+      "name": "Król Krupówek - Biały Misiek (Zdzisiek)",
+      "offeredCount": 0,
+      "acquiredCount": 0,
+      "runsWithEntity": 6256,
+      "runsWithoutEntity": 93742,
+      "pickRate": null,
+      "winrateWithEntity": {
+        "rate": 0,
+        "lo": 0,
+        "hi": 0,
+        "n": 6256
+      },
+      "winrateWithout": {
+        "rate": 0.0004,
+        "lo": 0.0002,
+        "hi": 0.0005,
+        "n": 93742
+      },
+      "winrateLiftPp": -0.0004,
+      "liftCi": {
+        "lo": -0.0005,
+        "hi": -0.0002
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 15,
+      "avgFloorReachedWithout": 8.1333,
+      "floorReachedLift": 6.8667,
+      "floorReachedLiftCi": {
+        "lo": 6.8448,
+        "hi": 6.8885
+      },
+      "bySlice": {},
+      "acquisitionSources": {},
+      "sampleTier": "green",
+      "avgTurnsToKill": null,
+      "byFloor": {
+        "15": {
+          "wins": 0,
+          "total": 6256,
+          "winrate": 0
+        }
+      },
+      "byWeather": {
+        "halny": {
+          "wins": 0,
+          "total": 6256,
+          "winrate": 0
+        }
+      }
+    },
+    "event:fiakier_event": {
+      "kind": "event",
+      "id": "fiakier_event",
+      "name": "Wąsaty Fiakier",
+      "offeredCount": 0,
+      "acquiredCount": 0,
+      "runsWithEntity": 52610,
+      "runsWithoutEntity": 47388,
+      "pickRate": null,
+      "winrateWithEntity": {
+        "rate": 0.0006,
+        "lo": 0.0004,
+        "hi": 0.0009,
+        "n": 52610
+      },
+      "winrateWithout": {
+        "rate": 0,
+        "lo": 0,
+        "hi": 0.0001,
+        "n": 47388
+      },
+      "winrateLiftPp": 0.0006,
+      "liftCi": {
+        "lo": 0.0004,
+        "hi": 0.0008
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 11.0744,
+      "avgFloorReachedWithout": 5.7747,
+      "floorReachedLift": 5.2997,
+      "floorReachedLiftCi": {
+        "lo": 5.2683,
+        "hi": 5.3312
+      },
+      "bySlice": {},
+      "acquisitionSources": {},
+      "sampleTier": "green"
+    },
+    "weather:halny": {
+      "kind": "weather",
+      "id": "halny",
+      "name": "Wiatr Halny",
+      "offeredCount": 0,
+      "acquiredCount": 0,
+      "runsWithEntity": 34648,
+      "runsWithoutEntity": 65350,
+      "pickRate": null,
+      "winrateWithEntity": {
+        "rate": 0.001,
+        "lo": 0.0007,
+        "hi": 0.0013,
+        "n": 34648
+      },
+      "winrateWithout": {
+        "rate": 0,
+        "lo": 0,
+        "hi": 0,
+        "n": 65350
+      },
+      "winrateLiftPp": 0.001,
+      "liftCi": {
+        "lo": 0.0007,
+        "hi": 0.0013
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 10.7962,
+      "avgFloorReachedWithout": 7.3788,
+      "floorReachedLift": 3.4174,
+      "floorReachedLiftCi": {
+        "lo": 3.3698,
+        "hi": 3.465
+      },
+      "bySlice": {},
+      "acquisitionSources": {},
+      "sampleTier": "green"
+    },
+    "card:mlynek_ciupaga": {
+      "kind": "card",
+      "id": "mlynek_ciupaga",
+      "name": "Młynek Ciupagą",
+      "offeredCount": 12183,
+      "acquiredCount": 7082,
+      "runsWithEntity": 6805,
+      "runsWithoutEntity": 93193,
+      "pickRate": 0.5813,
+      "winrateWithEntity": {
+        "rate": 0.0013,
+        "lo": 0.0005,
+        "hi": 0.0022,
+        "n": 6805
+      },
+      "winrateWithout": {
+        "rate": 0.0003,
+        "lo": 0.0002,
+        "hi": 0.0004,
+        "n": 93193
+      },
+      "winrateLiftPp": 0.001,
+      "liftCi": {
+        "lo": 0.0002,
+        "hi": 0.0019
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 10.6551,
+      "avgFloorReachedWithout": 8.4101,
+      "floorReachedLift": 2.245,
+      "floorReachedLiftCi": {
+        "lo": 2.1557,
+        "hi": 2.3342
+      },
+      "bySlice": {
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 2190
+        },
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 829
+        },
+        "jedrek/normal/3": {
+          "wins": 9,
+          "total": 3786
+        }
+      },
+      "acquisitionSources": {
+        "reward": 7068,
+        "shop": 14
+      },
+      "sampleTier": "green",
+      "avgPlaysPerBattle": 0.4428,
+      "damagePerEnergy": null
+    },
+    "card:koncesja_na_oscypki": {
+      "kind": "card",
+      "id": "koncesja_na_oscypki",
+      "name": "Koncesja na Oscypki",
+      "offeredCount": 12719,
+      "acquiredCount": 7358,
+      "runsWithEntity": 7026,
+      "runsWithoutEntity": 92972,
+      "pickRate": 0.5785,
+      "winrateWithEntity": {
+        "rate": 0.0001,
+        "lo": 0,
+        "hi": 0.0004,
+        "n": 7026
+      },
+      "winrateWithout": {
+        "rate": 0.0004,
+        "lo": 0.0002,
+        "hi": 0.0005,
+        "n": 92972
+      },
+      "winrateLiftPp": -0.0003,
+      "liftCi": {
+        "lo": -0.0005,
+        "hi": 0.0001
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 10.2942,
+      "avgFloorReachedWithout": 8.4321,
+      "floorReachedLift": 1.8621,
+      "floorReachedLiftCi": {
+        "lo": 1.7737,
+        "hi": 1.9505
+      },
+      "bySlice": {
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 2437
+        },
+        "jedrek/normal/3": {
+          "wins": 1,
+          "total": 3604
+        },
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 985
+        }
+      },
+      "acquisitionSources": {
+        "reward": 7337,
+        "shop": 21
+      },
+      "sampleTier": "green",
+      "avgPlaysPerBattle": 0.4057,
+      "damagePerEnergy": null
+    },
+    "relic:dzwonek_owcy": {
+      "kind": "relic",
+      "id": "dzwonek_owcy",
+      "name": "Dzwonek Owcy – Przeklęty",
+      "offeredCount": 1068,
+      "acquiredCount": 4556,
+      "runsWithEntity": 1744,
+      "runsWithoutEntity": 98254,
+      "pickRate": 0.0456,
+      "winrateWithEntity": {
+        "rate": 0.0017,
+        "lo": 0,
+        "hi": 0.0037,
+        "n": 1744
+      },
+      "winrateWithout": {
+        "rate": 0.0003,
+        "lo": 0.0002,
+        "hi": 0.0004,
+        "n": 98254
+      },
+      "winrateLiftPp": 0.0014,
+      "liftCi": {
+        "lo": -0.0006,
+        "hi": 0.0033
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 10.9232,
+      "avgFloorReachedWithout": 8.521,
+      "floorReachedLift": 2.4022,
+      "floorReachedLiftCi": {
+        "lo": 2.2417,
+        "hi": 2.5626
+      },
+      "bySlice": {
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 708
+        },
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 75
+        },
+        "jedrek/normal/3": {
+          "wins": 3,
+          "total": 961
+        }
+      },
+      "acquisitionSources": {
+        "reward": 2812
+      },
+      "sampleTier": "yellow"
+    },
+    "relic:papucie_po_babci": {
+      "kind": "relic",
+      "id": "papucie_po_babci",
+      "name": "Papucie po Babci",
+      "offeredCount": 12136,
+      "acquiredCount": 56454,
+      "runsWithEntity": 21377,
+      "runsWithoutEntity": 78621,
+      "pickRate": 0.5646,
+      "winrateWithEntity": {
+        "rate": 0.0004,
+        "lo": 0.0001,
+        "hi": 0.0007,
+        "n": 21377
+      },
+      "winrateWithout": {
+        "rate": 0.0003,
+        "lo": 0.0002,
+        "hi": 0.0005,
+        "n": 78621
+      },
+      "winrateLiftPp": 0.0001,
+      "liftCi": {
+        "lo": -0.0002,
+        "hi": 0.0004
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 10.2738,
+      "avgFloorReachedWithout": 8.0977,
+      "floorReachedLift": 2.1761,
+      "floorReachedLiftCi": {
+        "lo": 2.1229,
+        "hi": 2.2294
+      },
+      "bySlice": {
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 9156
+        },
+        "jedrek/normal/3": {
+          "wins": 9,
+          "total": 10209
+        },
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 2012
+        }
+      },
+      "acquisitionSources": {
+        "reward": 33513,
+        "shop": 1564
+      },
+      "sampleTier": "green"
+    },
+    "boon:przeglad_plecaka": {
+      "kind": "boon",
+      "id": "przeglad_plecaka",
+      "name": "Przegląd Plecaka Maryny",
+      "offeredCount": 42780,
+      "acquiredCount": 28800,
+      "runsWithEntity": 14400,
+      "runsWithoutEntity": 85598,
+      "pickRate": 0.288,
+      "winrateWithEntity": {
+        "rate": 0.0008,
+        "lo": 0.0003,
+        "hi": 0.0012,
+        "n": 14400
+      },
+      "winrateWithout": {
+        "rate": 0.0003,
+        "lo": 0.0002,
+        "hi": 0.0004,
+        "n": 85598
+      },
+      "winrateLiftPp": 0.0005,
+      "liftCi": {
+        "lo": 0,
+        "hi": 0.0009
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 8.2872,
+      "avgFloorReachedWithout": 8.6093,
+      "floorReachedLift": -0.3221,
+      "floorReachedLiftCi": {
+        "lo": -0.3876,
+        "hi": -0.2567
+      },
+      "bySlice": {
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 6036
+        },
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 4238
+        },
+        "jedrek/normal/3": {
+          "wins": 11,
+          "total": 4126
+        }
+      },
+      "acquisitionSources": {
+        "maryna": 14400
+      },
+      "sampleTier": "green"
+    },
+    "card:przymusowe_morsowanie": {
+      "kind": "card",
+      "id": "przymusowe_morsowanie",
+      "name": "Przymusowe Morsowanie",
+      "offeredCount": 37703,
+      "acquiredCount": 5663,
+      "runsWithEntity": 5527,
+      "runsWithoutEntity": 94471,
+      "pickRate": 0.1502,
+      "winrateWithEntity": {
+        "rate": 0.0002,
+        "lo": 0,
+        "hi": 0.0005,
+        "n": 5527
+      },
+      "winrateWithout": {
+        "rate": 0.0004,
+        "lo": 0.0002,
+        "hi": 0.0005,
+        "n": 94471
+      },
+      "winrateLiftPp": -0.0002,
+      "liftCi": {
+        "lo": -0.0006,
+        "hi": 0.0002
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 10.1415,
+      "avgFloorReachedWithout": 8.4705,
+      "floorReachedLift": 1.671,
+      "floorReachedLiftCi": {
+        "lo": 1.5739,
+        "hi": 1.768
+      },
+      "bySlice": {
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 2166
+        },
+        "jedrek/normal/3": {
+          "wins": 1,
+          "total": 2625
+        },
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 736
+        }
+      },
+      "acquisitionSources": {
+        "reward": 3027,
+        "shop": 2636
+      },
+      "sampleTier": "green",
+      "avgPlaysPerBattle": 1.2517,
+      "damagePerEnergy": null
+    },
+    "card:barchanowe_gacie": {
+      "kind": "card",
+      "id": "barchanowe_gacie",
+      "name": "Barchanowe Gacie",
+      "offeredCount": 38397,
+      "acquiredCount": 5250,
+      "runsWithEntity": 5026,
+      "runsWithoutEntity": 94972,
+      "pickRate": 0.1367,
+      "winrateWithEntity": {
+        "rate": 0.0014,
+        "lo": 0.0004,
+        "hi": 0.0024,
+        "n": 5026
+      },
+      "winrateWithout": {
+        "rate": 0.0003,
+        "lo": 0.0002,
+        "hi": 0.0004,
+        "n": 94972
+      },
+      "winrateLiftPp": 0.0011,
+      "liftCi": {
+        "lo": 0.0001,
+        "hi": 0.0021
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 10.074,
+      "avgFloorReachedWithout": 8.4829,
+      "floorReachedLift": 1.5911,
+      "floorReachedLiftCi": {
+        "lo": 1.4871,
+        "hi": 1.6951
+      },
+      "bySlice": {
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 2018
+        },
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 695
+        },
+        "jedrek/normal/3": {
+          "wins": 7,
+          "total": 2313
+        }
+      },
+      "acquisitionSources": {
+        "shop": 2449,
+        "reward": 2801
+      },
+      "sampleTier": "green",
+      "avgPlaysPerBattle": 1.6708,
+      "damagePerEnergy": null
+    },
+    "card:redyk": {
+      "kind": "card",
+      "id": "redyk",
+      "name": "Redyk",
+      "offeredCount": 10760,
+      "acquiredCount": 4857,
+      "runsWithEntity": 5234,
+      "runsWithoutEntity": 94764,
+      "pickRate": 0.4514,
+      "winrateWithEntity": {
+        "rate": 0.0002,
+        "lo": 0,
+        "hi": 0.0006,
+        "n": 5234
+      },
+      "winrateWithout": {
+        "rate": 0.0004,
+        "lo": 0.0002,
+        "hi": 0.0005,
+        "n": 94764
+      },
+      "winrateLiftPp": -0.0002,
+      "liftCi": {
+        "lo": -0.0006,
+        "hi": 0.0002
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 9.9075,
+      "avgFloorReachedWithout": 8.4886,
+      "floorReachedLift": 1.4189,
+      "floorReachedLiftCi": {
+        "lo": 1.3167,
+        "hi": 1.5211
+      },
+      "bySlice": {
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 797
+        },
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 2056
+        },
+        "jedrek/normal/3": {
+          "wins": 1,
+          "total": 2381
+        }
+      },
+      "acquisitionSources": {
+        "shop": 1130,
+        "reward": 3727
+      },
+      "sampleTier": "green",
+      "avgPlaysPerBattle": 0.571,
+      "damagePerEnergy": null
+    },
+    "enemy:mistrz_redyku": {
+      "kind": "enemy",
+      "id": "mistrz_redyku",
+      "name": "Mistrz Redyku",
+      "offeredCount": 0,
+      "acquiredCount": 0,
+      "runsWithEntity": 22547,
+      "runsWithoutEntity": 77451,
+      "pickRate": null,
+      "winrateWithEntity": {
+        "rate": 0,
+        "lo": 0,
+        "hi": 0,
+        "n": 22547
+      },
+      "winrateWithout": {
+        "rate": 0.0005,
+        "lo": 0.0003,
+        "hi": 0.0006,
+        "n": 77451
+      },
+      "winrateLiftPp": -0.0005,
+      "liftCi": {
+        "lo": -0.0006,
+        "hi": -0.0003
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 8.1298,
+      "avgFloorReachedWithout": 8.689,
+      "floorReachedLift": -0.5592,
+      "floorReachedLiftCi": {
+        "lo": -0.6039,
+        "hi": -0.5145
+      },
+      "bySlice": {},
+      "acquisitionSources": {},
+      "sampleTier": "green",
+      "avgTurnsToKill": 7.1742,
+      "byFloor": {
+        "5": {
+          "wins": 65,
+          "total": 4830,
+          "winrate": 0.0135
+        },
+        "6": {
+          "wins": 67,
+          "total": 4062,
+          "winrate": 0.0165
+        },
+        "7": {
+          "wins": 61,
+          "total": 3219,
+          "winrate": 0.0189
+        },
+        "9": {
+          "wins": 65,
+          "total": 3008,
+          "winrate": 0.0216
+        },
+        "10": {
+          "wins": 81,
+          "total": 3071,
+          "winrate": 0.0264
+        },
+        "11": {
+          "wins": 31,
+          "total": 1225,
+          "winrate": 0.0253
+        },
+        "12": {
+          "wins": 45,
+          "total": 1691,
+          "winrate": 0.0266
+        },
+        "13": {
+          "wins": 50,
+          "total": 1485,
+          "winrate": 0.0337
+        }
+      },
+      "byWeather": {
+        "fog": {
+          "wins": 270,
+          "total": 4487,
+          "winrate": 0.0602
+        },
+        "frozen": {
+          "wins": 49,
+          "total": 3268,
+          "winrate": 0.015
+        },
+        "halny": {
+          "wins": 26,
+          "total": 3552,
+          "winrate": 0.0073
+        },
+        "clear": {
+          "wins": 30,
+          "total": 3763,
+          "winrate": 0.008
+        }
+      }
+    },
+    "event:event_karykaturzysta": {
+      "kind": "event",
+      "id": "event_karykaturzysta",
+      "name": "Uliczny Karykaturzysta",
+      "offeredCount": 0,
+      "acquiredCount": 0,
+      "runsWithEntity": 22753,
+      "runsWithoutEntity": 77245,
+      "pickRate": null,
+      "winrateWithEntity": {
+        "rate": 0.0005,
+        "lo": 0.0002,
+        "hi": 0.0008,
+        "n": 22753
+      },
+      "winrateWithout": {
+        "rate": 0.0003,
+        "lo": 0.0002,
+        "hi": 0.0004,
+        "n": 77245
+      },
+      "winrateLiftPp": 0.0002,
+      "liftCi": {
+        "lo": -0.0001,
+        "hi": 0.0006
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 10.0794,
+      "avgFloorReachedWithout": 8.1162,
+      "floorReachedLift": 1.9632,
+      "floorReachedLiftCi": {
+        "lo": 1.9118,
+        "hi": 2.0146
+      },
+      "bySlice": {},
+      "acquisitionSources": {},
+      "sampleTier": "green"
+    },
+    "weather:fog": {
+      "kind": "weather",
+      "id": "fog",
+      "name": "Gęsta Mgła",
+      "offeredCount": 0,
+      "acquiredCount": 0,
+      "runsWithEntity": 33421,
+      "runsWithoutEntity": 66577,
+      "pickRate": null,
+      "winrateWithEntity": {
+        "rate": 0.0007,
+        "lo": 0.0004,
+        "hi": 0.001,
+        "n": 33421
+      },
+      "winrateWithout": {
+        "rate": 0.0002,
+        "lo": 0.0001,
+        "hi": 0.0003,
+        "n": 66577
+      },
+      "winrateLiftPp": 0.0005,
+      "liftCi": {
+        "lo": 0.0002,
+        "hi": 0.0008
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 9.5044,
+      "avgFloorReachedWithout": 8.0903,
+      "floorReachedLift": 1.4141,
+      "floorReachedLiftCi": {
+        "lo": 1.3662,
+        "hi": 1.462
+      },
+      "bySlice": {},
+      "acquisitionSources": {},
+      "sampleTier": "green"
+    },
+    "card:dutki_na_stole": {
+      "kind": "card",
+      "id": "dutki_na_stole",
+      "name": "Dutki na Stole",
+      "offeredCount": 37953,
+      "acquiredCount": 5139,
+      "runsWithEntity": 5029,
+      "runsWithoutEntity": 94969,
+      "pickRate": 0.1354,
+      "winrateWithEntity": {
+        "rate": 0,
+        "lo": 0,
+        "hi": 0,
+        "n": 5029
+      },
+      "winrateWithout": {
+        "rate": 0.0004,
+        "lo": 0.0002,
+        "hi": 0.0005,
+        "n": 94969
+      },
+      "winrateLiftPp": -0.0004,
+      "liftCi": {
+        "lo": -0.0005,
+        "hi": -0.0002
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 9.9533,
+      "avgFloorReachedWithout": 8.4893,
+      "floorReachedLift": 1.464,
+      "floorReachedLiftCi": {
+        "lo": 1.3624,
+        "hi": 1.5656
+      },
+      "bySlice": {
+        "jedrek/normal/3": {
+          "wins": 0,
+          "total": 2236
+        },
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 640
+        },
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 2153
+        }
+      },
+      "acquisitionSources": {
+        "reward": 2661,
+        "shop": 2478
+      },
+      "sampleTier": "green",
+      "avgPlaysPerBattle": 0.3161,
+      "damagePerEnergy": null
+    },
+    "relic:goralski_zegarek": {
+      "kind": "relic",
+      "id": "goralski_zegarek",
+      "name": "Góralski Zegarek",
+      "offeredCount": 3120,
+      "acquiredCount": 13909,
+      "runsWithEntity": 5322,
+      "runsWithoutEntity": 94676,
+      "pickRate": 0.1391,
+      "winrateWithEntity": {
+        "rate": 0.0006,
+        "lo": 0,
+        "hi": 0.0012,
+        "n": 5322
+      },
+      "winrateWithout": {
+        "rate": 0.0003,
+        "lo": 0.0002,
+        "hi": 0.0005,
+        "n": 94676
+      },
+      "winrateLiftPp": 0.0003,
+      "liftCi": {
+        "lo": -0.0004,
+        "hi": 0.0009
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 10.6054,
+      "avgFloorReachedWithout": 8.4481,
+      "floorReachedLift": 2.1573,
+      "floorReachedLiftCi": {
+        "lo": 2.0597,
+        "hi": 2.255
+      },
+      "bySlice": {
+        "jedrek/normal/3": {
+          "wins": 3,
+          "total": 2763
+        },
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 2010
+        },
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 549
+        }
+      },
+      "acquisitionSources": {
+        "reward": 8442,
+        "shop": 145
+      },
+      "sampleTier": "green"
+    },
+    "relic:pas_bacowski": {
+      "kind": "relic",
+      "id": "pas_bacowski",
+      "name": "Pas Bacowski",
+      "offeredCount": 11361,
+      "acquiredCount": 52344,
+      "runsWithEntity": 20040,
+      "runsWithoutEntity": 79958,
+      "pickRate": 0.5235,
+      "winrateWithEntity": {
+        "rate": 0.0006,
+        "lo": 0.0003,
+        "hi": 0.0009,
+        "n": 20040
+      },
+      "winrateWithout": {
+        "rate": 0.0003,
+        "lo": 0.0002,
+        "hi": 0.0004,
+        "n": 79958
+      },
+      "winrateLiftPp": 0.0003,
+      "liftCi": {
+        "lo": 0,
+        "hi": 0.0007
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 10.3954,
+      "avgFloorReachedWithout": 8.1036,
+      "floorReachedLift": 2.2918,
+      "floorReachedLiftCi": {
+        "lo": 2.2373,
+        "hi": 2.3462
+      },
+      "bySlice": {
+        "jedrek/normal/3": {
+          "wins": 12,
+          "total": 9820
+        },
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 8394
+        },
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 1826
+        }
+      },
+      "acquisitionSources": {
+        "reward": 31401,
+        "shop": 903
+      },
+      "sampleTier": "green"
+    },
+    "relic:mapa_zakopanego": {
+      "kind": "relic",
+      "id": "mapa_zakopanego",
+      "name": "Mapa Zakopanego",
+      "offeredCount": 2825,
+      "acquiredCount": 12754,
+      "runsWithEntity": 4959,
+      "runsWithoutEntity": 95039,
+      "pickRate": 0.1275,
+      "winrateWithEntity": {
+        "rate": 0,
+        "lo": 0,
+        "hi": 0,
+        "n": 4959
+      },
+      "winrateWithout": {
+        "rate": 0.0004,
+        "lo": 0.0002,
+        "hi": 0.0005,
+        "n": 95039
+      },
+      "winrateLiftPp": -0.0004,
+      "liftCi": {
+        "lo": -0.0005,
+        "hi": -0.0002
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 10.3341,
+      "avgFloorReachedWithout": 8.4705,
+      "floorReachedLift": 1.8636,
+      "floorReachedLiftCi": {
+        "lo": 1.7644,
+        "hi": 1.9629
+      },
+      "bySlice": {
+        "jedrek/normal/3": {
+          "wins": 0,
+          "total": 2449
+        },
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 416
+        },
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 2094
+        }
+      },
+      "acquisitionSources": {
+        "reward": 7784,
+        "shop": 11
+      },
+      "sampleTier": "green"
+    },
+    "relic:certyfikowany_oscypek": {
+      "kind": "relic",
+      "id": "certyfikowany_oscypek",
+      "name": "Certyfikowany Oscypek",
+      "offeredCount": 3055,
+      "acquiredCount": 13121,
+      "runsWithEntity": 5024,
+      "runsWithoutEntity": 94974,
+      "pickRate": 0.1312,
+      "winrateWithEntity": {
+        "rate": 0.0004,
+        "lo": 0,
+        "hi": 0.0009,
+        "n": 5024
+      },
+      "winrateWithout": {
+        "rate": 0.0003,
+        "lo": 0.0002,
+        "hi": 0.0005,
+        "n": 94974
+      },
+      "winrateLiftPp": 0.0001,
+      "liftCi": {
+        "lo": -0.0005,
+        "hi": 0.0006
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 10.3165,
+      "avgFloorReachedWithout": 8.4701,
+      "floorReachedLift": 1.8464,
+      "floorReachedLiftCi": {
+        "lo": 1.7472,
+        "hi": 1.9455
+      },
+      "bySlice": {
+        "jedrek/normal/3": {
+          "wins": 2,
+          "total": 2441
+        },
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 2064
+        },
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 519
+        }
+      },
+      "acquisitionSources": {
+        "reward": 8079,
+        "shop": 18
+      },
+      "sampleTier": "green"
+    },
+    "boon:kiesa": {
+      "kind": "boon",
+      "id": "kiesa",
+      "name": "Kiesa na Pierwszy Dzień",
+      "offeredCount": 42210,
+      "acquiredCount": 27860,
+      "runsWithEntity": 13930,
+      "runsWithoutEntity": 86068,
+      "pickRate": 0.2786,
+      "winrateWithEntity": {
+        "rate": 0.0001,
+        "lo": 0,
+        "hi": 0.0002,
+        "n": 13930
+      },
+      "winrateWithout": {
+        "rate": 0.0004,
+        "lo": 0.0003,
+        "hi": 0.0005,
+        "n": 86068
+      },
+      "winrateLiftPp": -0.0003,
+      "liftCi": {
+        "lo": -0.0005,
+        "hi": -0.0001
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 8.3699,
+      "avgFloorReachedWithout": 8.5941,
+      "floorReachedLift": -0.2242,
+      "floorReachedLiftCi": {
+        "lo": -0.2904,
+        "hi": -0.158
+      },
+      "bySlice": {
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 5909
+        },
+        "jedrek/normal/3": {
+          "wins": 1,
+          "total": 4121
+        },
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 3900
+        }
+      },
+      "acquisitionSources": {
+        "maryna": 13930
+      },
+      "sampleTier": "green"
+    },
+    "card:przymusowy_napiwek": {
+      "kind": "card",
+      "id": "przymusowy_napiwek",
+      "name": "Przymusowy Napiwek",
+      "offeredCount": 10007,
+      "acquiredCount": 4886,
+      "runsWithEntity": 5253,
+      "runsWithoutEntity": 94745,
+      "pickRate": 0.4883,
+      "winrateWithEntity": {
+        "rate": 0.0002,
+        "lo": 0,
+        "hi": 0.0006,
+        "n": 5253
+      },
+      "winrateWithout": {
+        "rate": 0.0004,
+        "lo": 0.0002,
+        "hi": 0.0005,
+        "n": 94745
+      },
+      "winrateLiftPp": -0.0002,
+      "liftCi": {
+        "lo": -0.0006,
+        "hi": 0.0002
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 9.7459,
+      "avgFloorReachedWithout": 8.4973,
+      "floorReachedLift": 1.2486,
+      "floorReachedLiftCi": {
+        "lo": 1.1444,
+        "hi": 1.3526
+      },
+      "bySlice": {
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 1938
+        },
+        "jedrek/normal/3": {
+          "wins": 1,
+          "total": 2369
+        },
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 946
+        }
+      },
+      "acquisitionSources": {
+        "shop": 1397,
+        "reward": 3489
+      },
+      "sampleTier": "green",
+      "avgPlaysPerBattle": 1.014,
+      "damagePerEnergy": null
+    },
+    "card:wydruk_z_kasy": {
+      "kind": "card",
+      "id": "wydruk_z_kasy",
+      "name": "Wydruk z Kasy",
+      "offeredCount": 10076,
+      "acquiredCount": 5815,
+      "runsWithEntity": 6052,
+      "runsWithoutEntity": 93946,
+      "pickRate": 0.5771,
+      "winrateWithEntity": {
+        "rate": 0.001,
+        "lo": 0.0002,
+        "hi": 0.0018,
+        "n": 6052
+      },
+      "winrateWithout": {
+        "rate": 0.0003,
+        "lo": 0.0002,
+        "hi": 0.0004,
+        "n": 93946
+      },
+      "winrateLiftPp": 0.0007,
+      "liftCi": {
+        "lo": -0.0001,
+        "hi": 0.0015
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 10.2685,
+      "avgFloorReachedWithout": 8.453,
+      "floorReachedLift": 1.8155,
+      "floorReachedLiftCi": {
+        "lo": 1.7217,
+        "hi": 1.9092
+      },
+      "bySlice": {
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 2182
+        },
+        "jedrek/normal/3": {
+          "wins": 6,
+          "total": 3038
+        },
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 832
+        }
+      },
+      "acquisitionSources": {
+        "reward": 3773,
+        "shop": 2042
+      },
+      "sampleTier": "green",
+      "avgPlaysPerBattle": 1.0453,
+      "damagePerEnergy": null
+    },
+    "card:wymuszony_napiwek": {
+      "kind": "card",
+      "id": "wymuszony_napiwek",
+      "name": "Wymuszony Napiwek",
+      "offeredCount": 10450,
+      "acquiredCount": 4785,
+      "runsWithEntity": 5072,
+      "runsWithoutEntity": 94926,
+      "pickRate": 0.4579,
+      "winrateWithEntity": {
+        "rate": 0.0002,
+        "lo": 0,
+        "hi": 0.0006,
+        "n": 5072
+      },
+      "winrateWithout": {
+        "rate": 0.0004,
+        "lo": 0.0002,
+        "hi": 0.0005,
+        "n": 94926
+      },
+      "winrateLiftPp": -0.0002,
+      "liftCi": {
+        "lo": -0.0006,
+        "hi": 0.0002
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 9.9939,
+      "avgFloorReachedWithout": 8.4864,
+      "floorReachedLift": 1.5075,
+      "floorReachedLiftCi": {
+        "lo": 1.4051,
+        "hi": 1.6098
+      },
+      "bySlice": {
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 682
+        },
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 1981
+        },
+        "jedrek/normal/3": {
+          "wins": 1,
+          "total": 2409
+        }
+      },
+      "acquisitionSources": {
+        "reward": 3639,
+        "shop": 1146
+      },
+      "sampleTier": "green",
+      "avgPlaysPerBattle": 0.5832,
+      "damagePerEnergy": null
+    },
+    "card:zgubieni_we_mgle": {
+      "kind": "card",
+      "id": "zgubieni_we_mgle",
+      "name": "Zgubieni we Mgle",
+      "offeredCount": 10631,
+      "acquiredCount": 5120,
+      "runsWithEntity": 5501,
+      "runsWithoutEntity": 94497,
+      "pickRate": 0.4816,
+      "winrateWithEntity": {
+        "rate": 0.0018,
+        "lo": 0.0007,
+        "hi": 0.0029,
+        "n": 5501
+      },
+      "winrateWithout": {
+        "rate": 0.0003,
+        "lo": 0.0002,
+        "hi": 0.0004,
+        "n": 94497
+      },
+      "winrateLiftPp": 0.0015,
+      "liftCi": {
+        "lo": 0.0004,
+        "hi": 0.0027
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 10.2247,
+      "avgFloorReachedWithout": 8.4662,
+      "floorReachedLift": 1.7585,
+      "floorReachedLiftCi": {
+        "lo": 1.6584,
+        "hi": 1.8586
+      },
+      "bySlice": {
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 2102
+        },
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 709
+        },
+        "jedrek/normal/3": {
+          "wins": 10,
+          "total": 2690
+        }
+      },
+      "acquisitionSources": {
+        "reward": 3643,
+        "shop": 1477
+      },
+      "sampleTier": "green",
+      "avgPlaysPerBattle": 1.7419,
+      "damagePerEnergy": null
+    },
+    "card:list_od_maryny": {
+      "kind": "card",
+      "id": "list_od_maryny",
+      "name": "List od Maryny",
+      "offeredCount": 10386,
+      "acquiredCount": 5096,
+      "runsWithEntity": 5361,
+      "runsWithoutEntity": 94637,
+      "pickRate": 0.4907,
+      "winrateWithEntity": {
+        "rate": 0.0006,
+        "lo": 0,
+        "hi": 0.0012,
+        "n": 5361
+      },
+      "winrateWithout": {
+        "rate": 0.0003,
+        "lo": 0.0002,
+        "hi": 0.0005,
+        "n": 94637
+      },
+      "winrateLiftPp": 0.0003,
+      "liftCi": {
+        "lo": -0.0004,
+        "hi": 0.0009
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 9.3255,
+      "avgFloorReachedWithout": 8.5197,
+      "floorReachedLift": 0.8058,
+      "floorReachedLiftCi": {
+        "lo": 0.7031,
+        "hi": 0.9085
+      },
+      "bySlice": {
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 2131
+        },
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 1092
+        },
+        "jedrek/normal/3": {
+          "wins": 3,
+          "total": 2138
+        }
+      },
+      "acquisitionSources": {
+        "reward": 3750,
+        "shop": 1346
+      },
+      "sampleTier": "green",
+      "avgPlaysPerBattle": 1.5034,
+      "damagePerEnergy": null
+    },
+    "card:mocny_organizm": {
+      "kind": "card",
+      "id": "mocny_organizm",
+      "name": "Mocny Organizm",
+      "offeredCount": 12486,
+      "acquiredCount": 7218,
+      "runsWithEntity": 6945,
+      "runsWithoutEntity": 93053,
+      "pickRate": 0.5781,
+      "winrateWithEntity": {
+        "rate": 0.0001,
+        "lo": 0,
+        "hi": 0.0004,
+        "n": 6945
+      },
+      "winrateWithout": {
+        "rate": 0.0004,
+        "lo": 0.0002,
+        "hi": 0.0005,
+        "n": 93053
+      },
+      "winrateLiftPp": -0.0003,
+      "liftCi": {
+        "lo": -0.0005,
+        "hi": 0.0001
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 10.4032,
+      "avgFloorReachedWithout": 8.4256,
+      "floorReachedLift": 1.9776,
+      "floorReachedLiftCi": {
+        "lo": 1.8901,
+        "hi": 2.0651
+      },
+      "bySlice": {
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 860
+        },
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 2505
+        },
+        "jedrek/normal/3": {
+          "wins": 1,
+          "total": 3580
+        }
+      },
+      "acquisitionSources": {
+        "reward": 7218
+      },
+      "sampleTier": "green",
+      "avgPlaysPerBattle": 0.3437,
+      "damagePerEnergy": null
+    },
+    "relic:relic_boon_zloty_rozaniec": {
+      "kind": "relic",
+      "id": "relic_boon_zloty_rozaniec",
+      "name": "Złoty Różaniec Maryny",
+      "offeredCount": 0,
+      "acquiredCount": 29140,
+      "runsWithEntity": 14570,
+      "runsWithoutEntity": 85428,
+      "pickRate": 0.2914,
+      "winrateWithEntity": {
+        "rate": 0.0005,
+        "lo": 0.0001,
+        "hi": 0.0008,
+        "n": 14570
+      },
+      "winrateWithout": {
+        "rate": 0.0003,
+        "lo": 0.0002,
+        "hi": 0.0004,
+        "n": 85428
+      },
+      "winrateLiftPp": 0.0002,
+      "liftCi": {
+        "lo": -0.0002,
+        "hi": 0.0005
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 8.4482,
+      "avgFloorReachedWithout": 8.5825,
+      "floorReachedLift": -0.1343,
+      "floorReachedLiftCi": {
+        "lo": -0.1991,
+        "hi": -0.0693
+      },
+      "bySlice": {
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 6154
+        },
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 4026
+        },
+        "jedrek/normal/3": {
+          "wins": 7,
+          "total": 4390
+        }
+      },
+      "acquisitionSources": {
+        "reward": 14570
+      },
+      "sampleTier": "green"
+    },
+    "relic:ciupaga_dlugopis": {
+      "kind": "relic",
+      "id": "ciupaga_dlugopis",
+      "name": "Ciupaga-Długopis",
+      "offeredCount": 11656,
+      "acquiredCount": 54840,
+      "runsWithEntity": 20895,
+      "runsWithoutEntity": 79103,
+      "pickRate": 0.5484,
+      "winrateWithEntity": {
+        "rate": 0.0012,
+        "lo": 0.0007,
+        "hi": 0.0017,
+        "n": 20895
+      },
+      "winrateWithout": {
+        "rate": 0.0001,
+        "lo": 0,
+        "hi": 0.0002,
+        "n": 79103
+      },
+      "winrateLiftPp": 0.0011,
+      "liftCi": {
+        "lo": 0.0006,
+        "hi": 0.0015
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 10.8284,
+      "avgFloorReachedWithout": 7.9645,
+      "floorReachedLift": 2.8639,
+      "floorReachedLiftCi": {
+        "lo": 2.8107,
+        "hi": 2.9171
+      },
+      "bySlice": {
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 7789
+        },
+        "jedrek/normal/3": {
+          "wins": 25,
+          "total": 11596
+        },
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 1510
+        }
+      },
+      "acquisitionSources": {
+        "reward": 32551,
+        "shop": 1394
+      },
+      "sampleTier": "green"
+    },
+    "boon:mokra_sciera": {
+      "kind": "boon",
+      "id": "mokra_sciera",
+      "name": "Mokra Ściera Maryny",
+      "offeredCount": 42128,
+      "acquiredCount": 27798,
+      "runsWithEntity": 13899,
+      "runsWithoutEntity": 86099,
+      "pickRate": 0.278,
+      "winrateWithEntity": {
+        "rate": 0.0005,
+        "lo": 0.0001,
+        "hi": 0.0009,
+        "n": 13899
+      },
+      "winrateWithout": {
+        "rate": 0.0003,
+        "lo": 0.0002,
+        "hi": 0.0004,
+        "n": 86099
+      },
+      "winrateLiftPp": 0.0002,
+      "liftCi": {
+        "lo": -0.0002,
+        "hi": 0.0006
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 8.9874,
+      "avgFloorReachedWithout": 8.4944,
+      "floorReachedLift": 0.493,
+      "floorReachedLiftCi": {
+        "lo": 0.4268,
+        "hi": 0.5593
+      },
+      "bySlice": {
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 3114
+        },
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 5864
+        },
+        "jedrek/normal/3": {
+          "wins": 7,
+          "total": 4921
+        }
+      },
+      "acquisitionSources": {
+        "maryna": 13899
+      },
+      "sampleTier": "green"
+    },
+    "enemy:baba": {
+      "kind": "enemy",
+      "id": "baba",
+      "name": "Handlara oscypkami",
+      "offeredCount": 0,
+      "acquiredCount": 0,
+      "runsWithEntity": 22654,
+      "runsWithoutEntity": 77344,
+      "pickRate": null,
+      "winrateWithEntity": {
+        "rate": 0.0007,
+        "lo": 0.0003,
+        "hi": 0.001,
+        "n": 22654
+      },
+      "winrateWithout": {
+        "rate": 0.0003,
+        "lo": 0.0001,
+        "hi": 0.0004,
+        "n": 77344
+      },
+      "winrateLiftPp": 0.0004,
+      "liftCi": {
+        "lo": 0,
+        "hi": 0.0008
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 8.5115,
+      "avgFloorReachedWithout": 8.578,
+      "floorReachedLift": -0.0665,
+      "floorReachedLiftCi": {
+        "lo": -0.1246,
+        "hi": -0.0084
+      },
+      "bySlice": {},
+      "acquisitionSources": {},
+      "sampleTier": "green",
+      "avgTurnsToKill": 10.4445,
+      "byFloor": {
+        "3": {
+          "wins": 2058,
+          "total": 4619,
+          "winrate": 0.4456
+        },
+        "4": {
+          "wins": 2089,
+          "total": 5247,
+          "winrate": 0.3981
+        },
+        "5": {
+          "wins": 345,
+          "total": 940,
+          "winrate": 0.367
+        },
+        "6": {
+          "wins": 736,
+          "total": 1558,
+          "winrate": 0.4724
+        },
+        "7": {
+          "wins": 1029,
+          "total": 2602,
+          "winrate": 0.3955
+        },
+        "9": {
+          "wins": 740,
+          "total": 1356,
+          "winrate": 0.5457
+        },
+        "10": {
+          "wins": 1086,
+          "total": 2074,
+          "winrate": 0.5236
+        },
+        "11": {
+          "wins": 1096,
+          "total": 2343,
+          "winrate": 0.4678
+        },
+        "12": {
+          "wins": 639,
+          "total": 1431,
+          "winrate": 0.4465
+        },
+        "13": {
+          "wins": 468,
+          "total": 958,
+          "winrate": 0.4885
+        }
+      },
+      "byWeather": {
+        "fog": {
+          "wins": 2378,
+          "total": 4734,
+          "winrate": 0.5023
+        },
+        "frozen": {
+          "wins": 1501,
+          "total": 3670,
+          "winrate": 0.409
+        },
+        "clear": {
+          "wins": 1139,
+          "total": 2701,
+          "winrate": 0.4217
+        },
+        "halny": {
+          "wins": 1310,
+          "total": 3391,
+          "winrate": 0.3863
+        }
+      }
+    },
+    "card:podatek_klimatyczny": {
+      "kind": "card",
+      "id": "podatek_klimatyczny",
+      "name": "Podatek Klimatyczny",
+      "offeredCount": 12805,
+      "acquiredCount": 7467,
+      "runsWithEntity": 7173,
+      "runsWithoutEntity": 92825,
+      "pickRate": 0.5831,
+      "winrateWithEntity": {
+        "rate": 0.0007,
+        "lo": 0.0001,
+        "hi": 0.0013,
+        "n": 7173
+      },
+      "winrateWithout": {
+        "rate": 0.0003,
+        "lo": 0.0002,
+        "hi": 0.0004,
+        "n": 92825
+      },
+      "winrateLiftPp": 0.0004,
+      "liftCi": {
+        "lo": -0.0002,
+        "hi": 0.001
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 10.3654,
+      "avgFloorReachedWithout": 8.4236,
+      "floorReachedLift": 1.9418,
+      "floorReachedLiftCi": {
+        "lo": 1.8559,
+        "hi": 2.0276
+      },
+      "bySlice": {
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 2611
+        },
+        "jedrek/normal/3": {
+          "wins": 5,
+          "total": 3658
+        },
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 904
+        }
+      },
+      "acquisitionSources": {
+        "reward": 7454,
+        "shop": 13
+      },
+      "sampleTier": "green",
+      "avgPlaysPerBattle": 0.2479,
+      "damagePerEnergy": null
+    },
+    "relic:relic_boon_przeglad_plecaka": {
+      "kind": "relic",
+      "id": "relic_boon_przeglad_plecaka",
+      "name": "Przegląd Plecaka Maryny",
+      "offeredCount": 0,
+      "acquiredCount": 28800,
+      "runsWithEntity": 14400,
+      "runsWithoutEntity": 85598,
+      "pickRate": 0.288,
+      "winrateWithEntity": {
+        "rate": 0.0008,
+        "lo": 0.0003,
+        "hi": 0.0012,
+        "n": 14400
+      },
+      "winrateWithout": {
+        "rate": 0.0003,
+        "lo": 0.0002,
+        "hi": 0.0004,
+        "n": 85598
+      },
+      "winrateLiftPp": 0.0005,
+      "liftCi": {
+        "lo": 0,
+        "hi": 0.0009
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 8.2872,
+      "avgFloorReachedWithout": 8.6093,
+      "floorReachedLift": -0.3221,
+      "floorReachedLiftCi": {
+        "lo": -0.3876,
+        "hi": -0.2567
+      },
+      "bySlice": {
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 6036
+        },
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 4238
+        },
+        "jedrek/normal/3": {
+          "wins": 11,
+          "total": 4126
+        }
+      },
+      "acquisitionSources": {
+        "reward": 14400
+      },
+      "sampleTier": "green"
+    },
+    "enemy:influencerka": {
+      "kind": "enemy",
+      "id": "influencerka",
+      "name": "Influencerka",
+      "offeredCount": 0,
+      "acquiredCount": 0,
+      "runsWithEntity": 21290,
+      "runsWithoutEntity": 78708,
+      "pickRate": null,
+      "winrateWithEntity": {
+        "rate": 0.0004,
+        "lo": 0.0001,
+        "hi": 0.0007,
+        "n": 21290
+      },
+      "winrateWithout": {
+        "rate": 0.0003,
+        "lo": 0.0002,
+        "hi": 0.0005,
+        "n": 78708
+      },
+      "winrateLiftPp": 0.0001,
+      "liftCi": {
+        "lo": -0.0002,
+        "hi": 0.0004
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 10.3048,
+      "avgFloorReachedWithout": 8.0917,
+      "floorReachedLift": 2.2131,
+      "floorReachedLiftCi": {
+        "lo": 2.1592,
+        "hi": 2.2671
+      },
+      "bySlice": {},
+      "acquisitionSources": {},
+      "sampleTier": "green",
+      "avgTurnsToKill": 5.891,
+      "byFloor": {
+        "3": {
+          "wins": 4055,
+          "total": 4213,
+          "winrate": 0.9625
+        },
+        "4": {
+          "wins": 4723,
+          "total": 5424,
+          "winrate": 0.8708
+        },
+        "5": {
+          "wins": 784,
+          "total": 953,
+          "winrate": 0.8227
+        },
+        "6": {
+          "wins": 1145,
+          "total": 1415,
+          "winrate": 0.8092
+        },
+        "7": {
+          "wins": 1905,
+          "total": 2466,
+          "winrate": 0.7725
+        },
+        "9": {
+          "wins": 1195,
+          "total": 1324,
+          "winrate": 0.9026
+        },
+        "10": {
+          "wins": 1576,
+          "total": 1929,
+          "winrate": 0.817
+        },
+        "11": {
+          "wins": 1682,
+          "total": 2099,
+          "winrate": 0.8013
+        },
+        "12": {
+          "wins": 1130,
+          "total": 1420,
+          "winrate": 0.7958
+        },
+        "13": {
+          "wins": 629,
+          "total": 793,
+          "winrate": 0.7932
+        }
+      },
+      "byWeather": {
+        "fog": {
+          "wins": 3910,
+          "total": 4559,
+          "winrate": 0.8576
+        },
+        "halny": {
+          "wins": 2335,
+          "total": 2816,
+          "winrate": 0.8292
+        },
+        "frozen": {
+          "wins": 3062,
+          "total": 3576,
+          "winrate": 0.8563
+        },
+        "clear": {
+          "wins": 1807,
+          "total": 2507,
+          "winrate": 0.7208
+        }
+      }
+    },
+    "card:zadyma": {
+      "kind": "card",
+      "id": "zadyma",
+      "name": "Zadyma",
+      "offeredCount": 38654,
+      "acquiredCount": 5180,
+      "runsWithEntity": 5023,
+      "runsWithoutEntity": 94975,
+      "pickRate": 0.134,
+      "winrateWithEntity": {
+        "rate": 0.0006,
+        "lo": 0,
+        "hi": 0.0013,
+        "n": 5023
+      },
+      "winrateWithout": {
+        "rate": 0.0003,
+        "lo": 0.0002,
+        "hi": 0.0005,
+        "n": 94975
+      },
+      "winrateLiftPp": 0.0003,
+      "liftCi": {
+        "lo": -0.0004,
+        "hi": 0.0009
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 10.093,
+      "avgFloorReachedWithout": 8.482,
+      "floorReachedLift": 1.611,
+      "floorReachedLiftCi": {
+        "lo": 1.5101,
+        "hi": 1.7119
+      },
+      "bySlice": {
+        "jedrek/normal/3": {
+          "wins": 3,
+          "total": 2336
+        },
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 623
+        },
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 2064
+        }
+      },
+      "acquisitionSources": {
+        "shop": 2072,
+        "reward": 3108
+      },
+      "sampleTier": "green",
+      "avgPlaysPerBattle": 1.3481,
+      "damagePerEnergy": null
+    },
+    "card:paragon_za_gofra": {
+      "kind": "card",
+      "id": "paragon_za_gofra",
+      "name": "Paragon za Gofra",
+      "offeredCount": 38428,
+      "acquiredCount": 6248,
+      "runsWithEntity": 6093,
+      "runsWithoutEntity": 93905,
+      "pickRate": 0.1626,
+      "winrateWithEntity": {
+        "rate": 0.0002,
+        "lo": 0,
+        "hi": 0.0005,
+        "n": 6093
+      },
+      "winrateWithout": {
+        "rate": 0.0004,
+        "lo": 0.0002,
+        "hi": 0.0005,
+        "n": 93905
+      },
+      "winrateLiftPp": -0.0002,
+      "liftCi": {
+        "lo": -0.0005,
+        "hi": 0.0001
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 9.8031,
+      "avgFloorReachedWithout": 8.4824,
+      "floorReachedLift": 1.3207,
+      "floorReachedLiftCi": {
+        "lo": 1.2279,
+        "hi": 1.4133
+      },
+      "bySlice": {
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 2589
+        },
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 912
+        },
+        "jedrek/normal/3": {
+          "wins": 1,
+          "total": 2592
+        }
+      },
+      "acquisitionSources": {
+        "reward": 2662,
+        "shop": 3586
+      },
+      "sampleTier": "green",
+      "avgPlaysPerBattle": 0.2757,
+      "damagePerEnergy": null
+    },
+    "relic:relic_boon_kiesa": {
+      "kind": "relic",
+      "id": "relic_boon_kiesa",
+      "name": "Kiesa na Pierwszy Dzień",
+      "offeredCount": 0,
+      "acquiredCount": 27860,
+      "runsWithEntity": 13930,
+      "runsWithoutEntity": 86068,
+      "pickRate": 0.2786,
+      "winrateWithEntity": {
+        "rate": 0.0001,
+        "lo": 0,
+        "hi": 0.0002,
+        "n": 13930
+      },
+      "winrateWithout": {
+        "rate": 0.0004,
+        "lo": 0.0003,
+        "hi": 0.0005,
+        "n": 86068
+      },
+      "winrateLiftPp": -0.0003,
+      "liftCi": {
+        "lo": -0.0005,
+        "hi": -0.0001
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 8.3699,
+      "avgFloorReachedWithout": 8.5941,
+      "floorReachedLift": -0.2242,
+      "floorReachedLiftCi": {
+        "lo": -0.2904,
+        "hi": -0.158
+      },
+      "bySlice": {
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 5909
+        },
+        "jedrek/normal/3": {
+          "wins": 1,
+          "total": 4121
+        },
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 3900
+        }
+      },
+      "acquisitionSources": {
+        "reward": 13930
+      },
+      "sampleTier": "green"
+    },
+    "relic:krokus": {
+      "kind": "relic",
+      "id": "krokus",
+      "name": "Krokus pod Ochroną",
+      "offeredCount": 2969,
+      "acquiredCount": 13655,
+      "runsWithEntity": 5248,
+      "runsWithoutEntity": 94750,
+      "pickRate": 0.1366,
+      "winrateWithEntity": {
+        "rate": 0.001,
+        "lo": 0.0001,
+        "hi": 0.0018,
+        "n": 5248
+      },
+      "winrateWithout": {
+        "rate": 0.0003,
+        "lo": 0.0002,
+        "hi": 0.0004,
+        "n": 94750
+      },
+      "winrateLiftPp": 0.0007,
+      "liftCi": {
+        "lo": -0.0002,
+        "hi": 0.0015
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 10.0299,
+      "avgFloorReachedWithout": 8.4816,
+      "floorReachedLift": 1.5483,
+      "floorReachedLiftCi": {
+        "lo": 1.4533,
+        "hi": 1.6432
+      },
+      "bySlice": {
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 2512
+        },
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 468
+        },
+        "jedrek/normal/3": {
+          "wins": 5,
+          "total": 2268
+        }
+      },
+      "acquisitionSources": {
+        "reward": 8217,
+        "shop": 190
+      },
+      "sampleTier": "green"
+    },
+    "boon:tajny_skladnik": {
+      "kind": "boon",
+      "id": "tajny_skladnik",
+      "name": "Tajny Składnik Maryny",
+      "offeredCount": 43818,
+      "acquiredCount": 30038,
+      "runsWithEntity": 15019,
+      "runsWithoutEntity": 84979,
+      "pickRate": 0.3004,
+      "winrateWithEntity": {
+        "rate": 0.0002,
+        "lo": 0,
+        "hi": 0.0004,
+        "n": 15019
+      },
+      "winrateWithout": {
+        "rate": 0.0004,
+        "lo": 0.0002,
+        "hi": 0.0005,
+        "n": 84979
+      },
+      "winrateLiftPp": -0.0002,
+      "liftCi": {
+        "lo": -0.0004,
+        "hi": 0.0001
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 8.5112,
+      "avgFloorReachedWithout": 8.572,
+      "floorReachedLift": -0.0608,
+      "floorReachedLiftCi": {
+        "lo": -0.1243,
+        "hi": 0.0025
+      },
+      "bySlice": {
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 6515
+        },
+        "jedrek/normal/3": {
+          "wins": 3,
+          "total": 4542
+        },
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 3962
+        }
+      },
+      "acquisitionSources": {
+        "maryna": 15019
+      },
+      "sampleTier": "green"
+    },
+    "card:znajomosc_szlaku": {
+      "kind": "card",
+      "id": "znajomosc_szlaku",
+      "name": "Znajomość Szlaku",
+      "offeredCount": 10043,
+      "acquiredCount": 4563,
+      "runsWithEntity": 5073,
+      "runsWithoutEntity": 94925,
+      "pickRate": 0.4543,
+      "winrateWithEntity": {
+        "rate": 0.0006,
+        "lo": 0,
+        "hi": 0.0013,
+        "n": 5073
+      },
+      "winrateWithout": {
+        "rate": 0.0003,
+        "lo": 0.0002,
+        "hi": 0.0005,
+        "n": 94925
+      },
+      "winrateLiftPp": 0.0003,
+      "liftCi": {
+        "lo": -0.0004,
+        "hi": 0.0009
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 9.7089,
+      "avgFloorReachedWithout": 8.5017,
+      "floorReachedLift": 1.2072,
+      "floorReachedLiftCi": {
+        "lo": 1.099,
+        "hi": 1.3154
+      },
+      "bySlice": {
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 1854
+        },
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 909
+        },
+        "jedrek/normal/3": {
+          "wins": 3,
+          "total": 2310
+        }
+      },
+      "acquisitionSources": {
+        "reward": 3561,
+        "shop": 1002
+      },
+      "sampleTier": "green",
+      "avgPlaysPerBattle": 0.4779,
+      "damagePerEnergy": null
+    },
+    "card:krzesany": {
+      "kind": "card",
+      "id": "krzesany",
+      "name": "Krzesany",
+      "offeredCount": 10584,
+      "acquiredCount": 3812,
+      "runsWithEntity": 4214,
+      "runsWithoutEntity": 95784,
+      "pickRate": 0.3602,
+      "winrateWithEntity": {
+        "rate": 0.0005,
+        "lo": 0,
+        "hi": 0.0011,
+        "n": 4214
+      },
+      "winrateWithout": {
+        "rate": 0.0003,
+        "lo": 0.0002,
+        "hi": 0.0005,
+        "n": 95784
+      },
+      "winrateLiftPp": 0.0002,
+      "liftCi": {
+        "lo": -0.0005,
+        "hi": 0.0008
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 10.032,
+      "avgFloorReachedWithout": 8.4983,
+      "floorReachedLift": 1.5337,
+      "floorReachedLiftCi": {
+        "lo": 1.4184,
+        "hi": 1.6491
+      },
+      "bySlice": {
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 1538
+        },
+        "jedrek/normal/3": {
+          "wins": 2,
+          "total": 2010
+        },
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 666
+        }
+      },
+      "acquisitionSources": {
+        "reward": 3647,
+        "shop": 165
+      },
+      "sampleTier": "green",
+      "avgPlaysPerBattle": 0.4295,
+      "damagePerEnergy": null
+    },
+    "card:paragon_grozy": {
+      "kind": "card",
+      "id": "paragon_grozy",
+      "name": "Paragon Grozy",
+      "offeredCount": 12124,
+      "acquiredCount": 6818,
+      "runsWithEntity": 6532,
+      "runsWithoutEntity": 93466,
+      "pickRate": 0.5624,
+      "winrateWithEntity": {
+        "rate": 0.0008,
+        "lo": 0.0001,
+        "hi": 0.0014,
+        "n": 6532
+      },
+      "winrateWithout": {
+        "rate": 0.0003,
+        "lo": 0.0002,
+        "hi": 0.0004,
+        "n": 93466
+      },
+      "winrateLiftPp": 0.0005,
+      "liftCi": {
+        "lo": -0.0002,
+        "hi": 0.0011
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 10.7549,
+      "avgFloorReachedWithout": 8.4097,
+      "floorReachedLift": 2.3452,
+      "floorReachedLiftCi": {
+        "lo": 2.2556,
+        "hi": 2.4348
+      },
+      "bySlice": {
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 2220
+        },
+        "jedrek/normal/3": {
+          "wins": 5,
+          "total": 3625
+        },
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 687
+        }
+      },
+      "acquisitionSources": {
+        "reward": 6805,
+        "shop": 13
+      },
+      "sampleTier": "green",
+      "avgPlaysPerBattle": 0.854,
+      "damagePerEnergy": null
+    },
+    "relic:relic_boon_tajny_skladnik": {
+      "kind": "relic",
+      "id": "relic_boon_tajny_skladnik",
+      "name": "Tajny Składnik Maryny",
+      "offeredCount": 0,
+      "acquiredCount": 30038,
+      "runsWithEntity": 15019,
+      "runsWithoutEntity": 84979,
+      "pickRate": 0.3004,
+      "winrateWithEntity": {
+        "rate": 0.0002,
+        "lo": 0,
+        "hi": 0.0004,
+        "n": 15019
+      },
+      "winrateWithout": {
+        "rate": 0.0004,
+        "lo": 0.0002,
+        "hi": 0.0005,
+        "n": 84979
+      },
+      "winrateLiftPp": -0.0002,
+      "liftCi": {
+        "lo": -0.0004,
+        "hi": 0.0001
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 8.5112,
+      "avgFloorReachedWithout": 8.572,
+      "floorReachedLift": -0.0608,
+      "floorReachedLiftCi": {
+        "lo": -0.1243,
+        "hi": 0.0025
+      },
+      "bySlice": {
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 6515
+        },
+        "jedrek/normal/3": {
+          "wins": 3,
+          "total": 4542
+        },
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 3962
+        }
+      },
+      "acquisitionSources": {
+        "reward": 15019
+      },
+      "sampleTier": "green"
+    },
+    "card:nadplacony_bilet": {
+      "kind": "card",
+      "id": "nadplacony_bilet",
+      "name": "Nadplacony Bilet",
+      "offeredCount": 10654,
+      "acquiredCount": 5352,
+      "runsWithEntity": 5642,
+      "runsWithoutEntity": 94356,
+      "pickRate": 0.5023,
+      "winrateWithEntity": {
+        "rate": 0,
+        "lo": 0,
+        "hi": 0,
+        "n": 5642
+      },
+      "winrateWithout": {
+        "rate": 0.0004,
+        "lo": 0.0002,
+        "hi": 0.0005,
+        "n": 94356
+      },
+      "winrateLiftPp": -0.0004,
+      "liftCi": {
+        "lo": -0.0005,
+        "hi": -0.0002
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 10.0661,
+      "avgFloorReachedWithout": 8.473,
+      "floorReachedLift": 1.5931,
+      "floorReachedLiftCi": {
+        "lo": 1.4972,
+        "hi": 1.689
+      },
+      "bySlice": {
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 697
+        },
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 2255
+        },
+        "jedrek/normal/3": {
+          "wins": 0,
+          "total": 2690
+        }
+      },
+      "acquisitionSources": {
+        "shop": 1659,
+        "reward": 3693
+      },
+      "sampleTier": "green",
+      "avgPlaysPerBattle": 1.3055,
+      "damagePerEnergy": null
+    },
+    "relic:relic_boon_mokra_sciera": {
+      "kind": "relic",
+      "id": "relic_boon_mokra_sciera",
+      "name": "Mokra Ściera Maryny",
+      "offeredCount": 0,
+      "acquiredCount": 27798,
+      "runsWithEntity": 13899,
+      "runsWithoutEntity": 86099,
+      "pickRate": 0.278,
+      "winrateWithEntity": {
+        "rate": 0.0005,
+        "lo": 0.0001,
+        "hi": 0.0009,
+        "n": 13899
+      },
+      "winrateWithout": {
+        "rate": 0.0003,
+        "lo": 0.0002,
+        "hi": 0.0004,
+        "n": 86099
+      },
+      "winrateLiftPp": 0.0002,
+      "liftCi": {
+        "lo": -0.0002,
+        "hi": 0.0006
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 8.9874,
+      "avgFloorReachedWithout": 8.4944,
+      "floorReachedLift": 0.493,
+      "floorReachedLiftCi": {
+        "lo": 0.4268,
+        "hi": 0.5593
+      },
+      "bySlice": {
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 3114
+        },
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 5864
+        },
+        "jedrek/normal/3": {
+          "wins": 7,
+          "total": 4921
+        }
+      },
+      "acquisitionSources": {
+        "reward": 13899
+      },
+      "sampleTier": "green"
+    },
+    "relic:zepsuty_termometr": {
+      "kind": "relic",
+      "id": "zepsuty_termometr",
+      "name": "Zepsuty Termometr",
+      "offeredCount": 3087,
+      "acquiredCount": 13252,
+      "runsWithEntity": 5064,
+      "runsWithoutEntity": 94934,
+      "pickRate": 0.1325,
+      "winrateWithEntity": {
+        "rate": 0.0018,
+        "lo": 0.0006,
+        "hi": 0.0029,
+        "n": 5064
+      },
+      "winrateWithout": {
+        "rate": 0.0003,
+        "lo": 0.0002,
+        "hi": 0.0004,
+        "n": 94934
+      },
+      "winrateLiftPp": 0.0015,
+      "liftCi": {
+        "lo": 0.0003,
+        "hi": 0.0027
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 10.1759,
+      "avgFloorReachedWithout": 8.4769,
+      "floorReachedLift": 1.699,
+      "floorReachedLiftCi": {
+        "lo": 1.6007,
+        "hi": 1.7975
+      },
+      "bySlice": {
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 528
+        },
+        "jedrek/normal/3": {
+          "wins": 9,
+          "total": 2345
+        },
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 2191
+        }
+      },
+      "acquisitionSources": {
+        "reward": 8151,
+        "shop": 37
+      },
+      "sampleTier": "green"
+    },
+    "enemy:ceprzyca_vip": {
+      "kind": "enemy",
+      "id": "ceprzyca_vip",
+      "name": "Ceprzyca VIP",
+      "offeredCount": 0,
+      "acquiredCount": 0,
+      "runsWithEntity": 21032,
+      "runsWithoutEntity": 78966,
+      "pickRate": null,
+      "winrateWithEntity": {
+        "rate": 0.0009,
+        "lo": 0.0005,
+        "hi": 0.0013,
+        "n": 21032
+      },
+      "winrateWithout": {
+        "rate": 0.0002,
+        "lo": 0.0001,
+        "hi": 0.0003,
+        "n": 78966
+      },
+      "winrateLiftPp": 0.0007,
+      "liftCi": {
+        "lo": 0.0003,
+        "hi": 0.0011
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 10.3441,
+      "avgFloorReachedWithout": 8.0885,
+      "floorReachedLift": 2.2556,
+      "floorReachedLiftCi": {
+        "lo": 2.2029,
+        "hi": 2.3084
+      },
+      "bySlice": {},
+      "acquisitionSources": {},
+      "sampleTier": "green",
+      "avgTurnsToKill": 11.4209,
+      "byFloor": {
+        "5": {
+          "wins": 2564,
+          "total": 4808,
+          "winrate": 0.5333
+        },
+        "6": {
+          "wins": 2229,
+          "total": 3992,
+          "winrate": 0.5584
+        },
+        "7": {
+          "wins": 1766,
+          "total": 3308,
+          "winrate": 0.5339
+        },
+        "9": {
+          "wins": 1933,
+          "total": 2944,
+          "winrate": 0.6566
+        },
+        "10": {
+          "wins": 2016,
+          "total": 3086,
+          "winrate": 0.6533
+        },
+        "11": {
+          "wins": 713,
+          "total": 1222,
+          "winrate": 0.5835
+        },
+        "12": {
+          "wins": 882,
+          "total": 1727,
+          "winrate": 0.5107
+        },
+        "13": {
+          "wins": 911,
+          "total": 1533,
+          "winrate": 0.5943
+        }
+      },
+      "byWeather": {
+        "frozen": {
+          "wins": 2006,
+          "total": 3626,
+          "winrate": 0.5532
+        },
+        "halny": {
+          "wins": 1564,
+          "total": 3204,
+          "winrate": 0.4881
+        },
+        "fog": {
+          "wins": 3123,
+          "total": 4769,
+          "winrate": 0.6549
+        },
+        "clear": {
+          "wins": 1955,
+          "total": 3869,
+          "winrate": 0.5053
+        }
+      }
+    },
+    "card:janosik": {
+      "kind": "card",
+      "id": "janosik",
+      "name": "Janosikowe",
+      "offeredCount": 12565,
+      "acquiredCount": 7069,
+      "runsWithEntity": 6788,
+      "runsWithoutEntity": 93210,
+      "pickRate": 0.5626,
+      "winrateWithEntity": {
+        "rate": 0.0004,
+        "lo": 0,
+        "hi": 0.0009,
+        "n": 6788
+      },
+      "winrateWithout": {
+        "rate": 0.0003,
+        "lo": 0.0002,
+        "hi": 0.0005,
+        "n": 93210
+      },
+      "winrateLiftPp": 0.0001,
+      "liftCi": {
+        "lo": -0.0004,
+        "hi": 0.0006
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 10.7541,
+      "avgFloorReachedWithout": 8.4033,
+      "floorReachedLift": 2.3508,
+      "floorReachedLiftCi": {
+        "lo": 2.2644,
+        "hi": 2.4372
+      },
+      "bySlice": {
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 2430
+        },
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 599
+        },
+        "jedrek/normal/3": {
+          "wins": 3,
+          "total": 3759
+        }
+      },
+      "acquisitionSources": {
+        "reward": 7000,
+        "shop": 69
+      },
+      "sampleTier": "green",
+      "avgPlaysPerBattle": 0.5306,
+      "damagePerEnergy": null
+    },
+    "card:cios_z_telemarkiem": {
+      "kind": "card",
+      "id": "cios_z_telemarkiem",
+      "name": "Cios z Telemarkiem",
+      "offeredCount": 37812,
+      "acquiredCount": 5927,
+      "runsWithEntity": 5789,
+      "runsWithoutEntity": 94209,
+      "pickRate": 0.1567,
+      "winrateWithEntity": {
+        "rate": 0.0009,
+        "lo": 0.0001,
+        "hi": 0.0016,
+        "n": 5789
+      },
+      "winrateWithout": {
+        "rate": 0.0003,
+        "lo": 0.0002,
+        "hi": 0.0004,
+        "n": 94209
+      },
+      "winrateLiftPp": 0.0006,
+      "liftCi": {
+        "lo": -0.0002,
+        "hi": 0.0013
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 9.3812,
+      "avgFloorReachedWithout": 8.5126,
+      "floorReachedLift": 0.8686,
+      "floorReachedLiftCi": {
+        "lo": 0.7683,
+        "hi": 0.969
+      },
+      "bySlice": {
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 1170
+        },
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 2324
+        },
+        "jedrek/normal/3": {
+          "wins": 5,
+          "total": 2295
+        }
+      },
+      "acquisitionSources": {
+        "shop": 2927,
+        "reward": 3000
+      },
+      "sampleTier": "green",
+      "avgPlaysPerBattle": 1.3667,
+      "damagePerEnergy": null
+    },
+    "relic:krzywy_portret": {
+      "kind": "relic",
+      "id": "krzywy_portret",
+      "name": "Krzywy Portret",
+      "offeredCount": 0,
+      "acquiredCount": 32038,
+      "runsWithEntity": 16019,
+      "runsWithoutEntity": 83979,
+      "pickRate": 0.3204,
+      "winrateWithEntity": {
+        "rate": 0.0007,
+        "lo": 0.0003,
+        "hi": 0.0012,
+        "n": 16019
+      },
+      "winrateWithout": {
+        "rate": 0.0003,
+        "lo": 0.0002,
+        "hi": 0.0004,
+        "n": 83979
+      },
+      "winrateLiftPp": 0.0004,
+      "liftCi": {
+        "lo": 0,
+        "hi": 0.0009
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 9.95,
+      "avgFloorReachedWithout": 8.2983,
+      "floorReachedLift": 1.6517,
+      "floorReachedLiftCi": {
+        "lo": 1.5919,
+        "hi": 1.7115
+      },
+      "bySlice": {
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 6949
+        },
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 1987
+        },
+        "jedrek/normal/3": {
+          "wins": 12,
+          "total": 7083
+        }
+      },
+      "acquisitionSources": {
+        "reward": 16019
+      },
+      "sampleTier": "green"
+    },
+    "card:eksmisja_z_kwatery": {
+      "kind": "card",
+      "id": "eksmisja_z_kwatery",
+      "name": "Eksmisja z Kwatery",
+      "offeredCount": 12215,
+      "acquiredCount": 7074,
+      "runsWithEntity": 6787,
+      "runsWithoutEntity": 93211,
+      "pickRate": 0.5791,
+      "winrateWithEntity": {
+        "rate": 0.0003,
+        "lo": 0,
+        "hi": 0.0007,
+        "n": 6787
+      },
+      "winrateWithout": {
+        "rate": 0.0004,
+        "lo": 0.0002,
+        "hi": 0.0005,
+        "n": 93211
+      },
+      "winrateLiftPp": -0.0001,
+      "liftCi": {
+        "lo": -0.0005,
+        "hi": 0.0004
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 10.5757,
+      "avgFloorReachedWithout": 8.4163,
+      "floorReachedLift": 2.1594,
+      "floorReachedLiftCi": {
+        "lo": 2.0711,
+        "hi": 2.2476
+      },
+      "bySlice": {
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 2286
+        },
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 789
+        },
+        "jedrek/normal/3": {
+          "wins": 2,
+          "total": 3712
+        }
+      },
+      "acquisitionSources": {
+        "reward": 7031,
+        "shop": 43
+      },
+      "sampleTier": "green",
+      "avgPlaysPerBattle": 0.7228,
+      "damagePerEnergy": null
+    },
+    "enemy:parkingowy": {
+      "kind": "enemy",
+      "id": "parkingowy",
+      "name": "Parkingowy z Palenicy",
+      "offeredCount": 0,
+      "acquiredCount": 0,
+      "runsWithEntity": 21835,
+      "runsWithoutEntity": 78163,
+      "pickRate": null,
+      "winrateWithEntity": {
+        "rate": 0.0004,
+        "lo": 0.0001,
+        "hi": 0.0007,
+        "n": 21835
+      },
+      "winrateWithout": {
+        "rate": 0.0003,
+        "lo": 0.0002,
+        "hi": 0.0005,
+        "n": 78163
+      },
+      "winrateLiftPp": 0.0001,
+      "liftCi": {
+        "lo": -0.0002,
+        "hi": 0.0004
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 9.5672,
+      "avgFloorReachedWithout": 8.2823,
+      "floorReachedLift": 1.2849,
+      "floorReachedLiftCi": {
+        "lo": 1.2292,
+        "hi": 1.3405
+      },
+      "bySlice": {},
+      "acquisitionSources": {},
+      "sampleTier": "green",
+      "avgTurnsToKill": 8.6996,
+      "byFloor": {
+        "3": {
+          "wins": 3611,
+          "total": 4446,
+          "winrate": 0.8122
+        },
+        "4": {
+          "wins": 4046,
+          "total": 5413,
+          "winrate": 0.7475
+        },
+        "5": {
+          "wins": 503,
+          "total": 784,
+          "winrate": 0.6416
+        },
+        "6": {
+          "wins": 927,
+          "total": 1372,
+          "winrate": 0.6757
+        },
+        "7": {
+          "wins": 1601,
+          "total": 2563,
+          "winrate": 0.6247
+        },
+        "9": {
+          "wins": 810,
+          "total": 1105,
+          "winrate": 0.733
+        },
+        "10": {
+          "wins": 1488,
+          "total": 2173,
+          "winrate": 0.6848
+        },
+        "11": {
+          "wins": 1371,
+          "total": 2246,
+          "winrate": 0.6104
+        },
+        "12": {
+          "wins": 830,
+          "total": 1430,
+          "winrate": 0.5804
+        },
+        "13": {
+          "wins": 528,
+          "total": 889,
+          "winrate": 0.5939
+        }
+      },
+      "byWeather": {
+        "frozen": {
+          "wins": 2315,
+          "total": 3255,
+          "winrate": 0.7112
+        },
+        "halny": {
+          "wins": 2374,
+          "total": 3408,
+          "winrate": 0.6966
+        },
+        "fog": {
+          "wins": 3610,
+          "total": 4770,
+          "winrate": 0.7568
+        },
+        "clear": {
+          "wins": 1296,
+          "total": 2649,
+          "winrate": 0.4892
+        }
+      }
+    },
+    "card:parzenica": {
+      "kind": "card",
+      "id": "parzenica",
+      "name": "Parzenica",
+      "offeredCount": 10515,
+      "acquiredCount": 4171,
+      "runsWithEntity": 4544,
+      "runsWithoutEntity": 95454,
+      "pickRate": 0.3967,
+      "winrateWithEntity": {
+        "rate": 0.0035,
+        "lo": 0.0018,
+        "hi": 0.0052,
+        "n": 4544
+      },
+      "winrateWithout": {
+        "rate": 0.0002,
+        "lo": 0.0001,
+        "hi": 0.0003,
+        "n": 95454
+      },
+      "winrateLiftPp": 0.0033,
+      "liftCi": {
+        "lo": 0.0016,
+        "hi": 0.005
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 10.5869,
+      "avgFloorReachedWithout": 8.4665,
+      "floorReachedLift": 2.1204,
+      "floorReachedLiftCi": {
+        "lo": 2.0085,
+        "hi": 2.2322
+      },
+      "bySlice": {
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 1479
+        },
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 612
+        },
+        "jedrek/normal/3": {
+          "wins": 16,
+          "total": 2453
+        }
+      },
+      "acquisitionSources": {
+        "reward": 3726,
+        "shop": 445
+      },
+      "sampleTier": "green",
+      "avgPlaysPerBattle": 1.6308,
+      "damagePerEnergy": null
+    },
+    "card:rozped_z_rowni": {
+      "kind": "card",
+      "id": "rozped_z_rowni",
+      "name": "Rozpęd z Równi",
+      "offeredCount": 10015,
+      "acquiredCount": 4989,
+      "runsWithEntity": 5200,
+      "runsWithoutEntity": 94798,
+      "pickRate": 0.4982,
+      "winrateWithEntity": {
+        "rate": 0.001,
+        "lo": 0.0001,
+        "hi": 0.0018,
+        "n": 5200
+      },
+      "winrateWithout": {
+        "rate": 0.0003,
+        "lo": 0.0002,
+        "hi": 0.0004,
+        "n": 94798
+      },
+      "winrateLiftPp": 0.0007,
+      "liftCi": {
+        "lo": -0.0002,
+        "hi": 0.0015
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 9.9758,
+      "avgFloorReachedWithout": 8.4854,
+      "floorReachedLift": 1.4904,
+      "floorReachedLiftCi": {
+        "lo": 1.3868,
+        "hi": 1.594
+      },
+      "bySlice": {
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 1956
+        },
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 804
+        },
+        "jedrek/normal/3": {
+          "wins": 5,
+          "total": 2440
+        }
+      },
+      "acquisitionSources": {
+        "reward": 3456,
+        "shop": 1533
+      },
+      "sampleTier": "green",
+      "avgPlaysPerBattle": 0.5726,
+      "damagePerEnergy": null
+    },
+    "enemy:busiarz": {
+      "kind": "enemy",
+      "id": "busiarz",
+      "name": "Wąsaty Busiarz",
+      "offeredCount": 0,
+      "acquiredCount": 0,
+      "runsWithEntity": 21887,
+      "runsWithoutEntity": 78111,
+      "pickRate": null,
+      "winrateWithEntity": {
+        "rate": 0.0008,
+        "lo": 0.0004,
+        "hi": 0.0012,
+        "n": 21887
+      },
+      "winrateWithout": {
+        "rate": 0.0002,
+        "lo": 0.0001,
+        "hi": 0.0003,
+        "n": 78111
+      },
+      "winrateLiftPp": 0.0006,
+      "liftCi": {
+        "lo": 0.0002,
+        "hi": 0.001
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 9.4368,
+      "avgFloorReachedWithout": 8.318,
+      "floorReachedLift": 1.1188,
+      "floorReachedLiftCi": {
+        "lo": 1.0609,
+        "hi": 1.1767
+      },
+      "bySlice": {},
+      "acquisitionSources": {},
+      "sampleTier": "green",
+      "avgTurnsToKill": 5.0728,
+      "byFloor": {
+        "3": {
+          "wins": 2963,
+          "total": 4180,
+          "winrate": 0.7089
+        },
+        "4": {
+          "wins": 3388,
+          "total": 5235,
+          "winrate": 0.6472
+        },
+        "5": {
+          "wins": 606,
+          "total": 1035,
+          "winrate": 0.5855
+        },
+        "6": {
+          "wins": 955,
+          "total": 1547,
+          "winrate": 0.6173
+        },
+        "7": {
+          "wins": 1437,
+          "total": 2513,
+          "winrate": 0.5718
+        },
+        "9": {
+          "wins": 923,
+          "total": 1285,
+          "winrate": 0.7183
+        },
+        "10": {
+          "wins": 1440,
+          "total": 2113,
+          "winrate": 0.6815
+        },
+        "11": {
+          "wins": 1399,
+          "total": 2146,
+          "winrate": 0.6519
+        },
+        "12": {
+          "wins": 929,
+          "total": 1448,
+          "winrate": 0.6416
+        },
+        "13": {
+          "wins": 641,
+          "total": 995,
+          "winrate": 0.6442
+        }
+      },
+      "byWeather": {
+        "halny": {
+          "wins": 2108,
+          "total": 3345,
+          "winrate": 0.6302
+        },
+        "fog": {
+          "wins": 3040,
+          "total": 4532,
+          "winrate": 0.6708
+        },
+        "clear": {
+          "wins": 1570,
+          "total": 2724,
+          "winrate": 0.5764
+        },
+        "frozen": {
+          "wins": 2420,
+          "total": 3616,
+          "winrate": 0.6692
+        }
+      }
+    },
+    "relic:smycz_zakopane": {
+      "kind": "relic",
+      "id": "smycz_zakopane",
+      "name": "Smycz „Zakopane 2026\"",
+      "offeredCount": 3041,
+      "acquiredCount": 13389,
+      "runsWithEntity": 5105,
+      "runsWithoutEntity": 94893,
+      "pickRate": 0.1339,
+      "winrateWithEntity": {
+        "rate": 0,
+        "lo": 0,
+        "hi": 0,
+        "n": 5105
+      },
+      "winrateWithout": {
+        "rate": 0.0004,
+        "lo": 0.0002,
+        "hi": 0.0005,
+        "n": 94893
+      },
+      "winrateLiftPp": -0.0004,
+      "liftCi": {
+        "lo": -0.0005,
+        "hi": -0.0002
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 10.0574,
+      "avgFloorReachedWithout": 8.4825,
+      "floorReachedLift": 1.5749,
+      "floorReachedLiftCi": {
+        "lo": 1.4739,
+        "hi": 1.6759
+      },
+      "bySlice": {
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 634
+        },
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 2099
+        },
+        "jedrek/normal/3": {
+          "wins": 0,
+          "total": 2372
+        }
+      },
+      "acquisitionSources": {
+        "reward": 8146,
+        "shop": 138
+      },
+      "sampleTier": "green"
+    },
+    "card:lawina_z_morskiego_oka": {
+      "kind": "card",
+      "id": "lawina_z_morskiego_oka",
+      "name": "Lawina z Morskiego Oka",
+      "offeredCount": 10650,
+      "acquiredCount": 3794,
+      "runsWithEntity": 4304,
+      "runsWithoutEntity": 95694,
+      "pickRate": 0.3562,
+      "winrateWithEntity": {
+        "rate": 0.0005,
+        "lo": 0,
+        "hi": 0.0011,
+        "n": 4304
+      },
+      "winrateWithout": {
+        "rate": 0.0003,
+        "lo": 0.0002,
+        "hi": 0.0005,
+        "n": 95694
+      },
+      "winrateLiftPp": 0.0002,
+      "liftCi": {
+        "lo": -0.0005,
+        "hi": 0.0008
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 10.355,
+      "avgFloorReachedWithout": 8.4823,
+      "floorReachedLift": 1.8727,
+      "floorReachedLiftCi": {
+        "lo": 1.763,
+        "hi": 1.9824
+      },
+      "bySlice": {
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 1537
+        },
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 575
+        },
+        "jedrek/normal/3": {
+          "wins": 2,
+          "total": 2192
+        }
+      },
+      "acquisitionSources": {
+        "reward": 3641,
+        "shop": 153
+      },
+      "sampleTier": "green",
+      "avgPlaysPerBattle": 1.2073,
+      "damagePerEnergy": null
+    },
+    "card:wypozyczone_gogle": {
+      "kind": "card",
+      "id": "wypozyczone_gogle",
+      "name": "Wypożyczone Gogle",
+      "offeredCount": 10292,
+      "acquiredCount": 3861,
+      "runsWithEntity": 4422,
+      "runsWithoutEntity": 95576,
+      "pickRate": 0.3751,
+      "winrateWithEntity": {
+        "rate": 0.0002,
+        "lo": 0,
+        "hi": 0.0007,
+        "n": 4422
+      },
+      "winrateWithout": {
+        "rate": 0.0004,
+        "lo": 0.0002,
+        "hi": 0.0005,
+        "n": 95576
+      },
+      "winrateLiftPp": -0.0002,
+      "liftCi": {
+        "lo": -0.0006,
+        "hi": 0.0003
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 10.2953,
+      "avgFloorReachedWithout": 8.4827,
+      "floorReachedLift": 1.8126,
+      "floorReachedLiftCi": {
+        "lo": 1.7022,
+        "hi": 1.923
+      },
+      "bySlice": {
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 1643
+        },
+        "jedrek/normal/3": {
+          "wins": 1,
+          "total": 2191
+        },
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 588
+        }
+      },
+      "acquisitionSources": {
+        "reward": 3460,
+        "shop": 401
+      },
+      "sampleTier": "green",
+      "avgPlaysPerBattle": 0.5327,
+      "damagePerEnergy": null
+    },
+    "card:tatrzanski_szpan": {
+      "kind": "card",
+      "id": "tatrzanski_szpan",
+      "name": "Tatrzański Szpan",
+      "offeredCount": 10475,
+      "acquiredCount": 3647,
+      "runsWithEntity": 4123,
+      "runsWithoutEntity": 95875,
+      "pickRate": 0.3482,
+      "winrateWithEntity": {
+        "rate": 0.0002,
+        "lo": 0,
+        "hi": 0.0007,
+        "n": 4123
+      },
+      "winrateWithout": {
+        "rate": 0.0004,
+        "lo": 0.0002,
+        "hi": 0.0005,
+        "n": 95875
+      },
+      "winrateLiftPp": -0.0002,
+      "liftCi": {
+        "lo": -0.0006,
+        "hi": 0.0004
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 9.5836,
+      "avgFloorReachedWithout": 8.519,
+      "floorReachedLift": 1.0646,
+      "floorReachedLiftCi": {
+        "lo": 0.9474,
+        "hi": 1.1817
+      },
+      "bySlice": {
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 1653
+        },
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 753
+        },
+        "jedrek/normal/3": {
+          "wins": 1,
+          "total": 1717
+        }
+      },
+      "acquisitionSources": {
+        "reward": 3559,
+        "shop": 88
+      },
+      "sampleTier": "green",
+      "avgPlaysPerBattle": 1.2973,
+      "damagePerEnergy": null
+    },
+    "event:event_hazard_karton": {
+      "kind": "event",
+      "id": "event_hazard_karton",
+      "name": "Hazard na Kartonie",
+      "offeredCount": 0,
+      "acquiredCount": 0,
+      "runsWithEntity": 22037,
+      "runsWithoutEntity": 77961,
+      "pickRate": null,
+      "winrateWithEntity": {
+        "rate": 0.0002,
+        "lo": 0,
+        "hi": 0.0004,
+        "n": 22037
+      },
+      "winrateWithout": {
+        "rate": 0.0004,
+        "lo": 0.0002,
+        "hi": 0.0005,
+        "n": 77961
+      },
+      "winrateLiftPp": -0.0002,
+      "liftCi": {
+        "lo": -0.0004,
+        "hi": 0.0001
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 9.9722,
+      "avgFloorReachedWithout": 8.1645,
+      "floorReachedLift": 1.8077,
+      "floorReachedLiftCi": {
+        "lo": 1.7558,
+        "hi": 1.8596
+      },
+      "bySlice": {},
+      "acquisitionSources": {},
+      "sampleTier": "green"
+    },
+    "card:zdjecie_z_misiem": {
+      "kind": "card",
+      "id": "zdjecie_z_misiem",
+      "name": "Zdjęcie z Misiem",
+      "offeredCount": 11014,
+      "acquiredCount": 5271,
+      "runsWithEntity": 5729,
+      "runsWithoutEntity": 94269,
+      "pickRate": 0.4786,
+      "winrateWithEntity": {
+        "rate": 0.0005,
+        "lo": 0,
+        "hi": 0.0011,
+        "n": 5729
+      },
+      "winrateWithout": {
+        "rate": 0.0003,
+        "lo": 0.0002,
+        "hi": 0.0005,
+        "n": 94269
+      },
+      "winrateLiftPp": 0.0002,
+      "liftCi": {
+        "lo": -0.0004,
+        "hi": 0.0008
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 9.2812,
+      "avgFloorReachedWithout": 8.5192,
+      "floorReachedLift": 0.762,
+      "floorReachedLiftCi": {
+        "lo": 0.66,
+        "hi": 0.8639
+      },
+      "bySlice": {
+        "jedrek/normal/3": {
+          "wins": 3,
+          "total": 2272
+        },
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 2199
+        },
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 1258
+        }
+      },
+      "acquisitionSources": {
+        "reward": 4076,
+        "shop": 1195
+      },
+      "sampleTier": "green",
+      "avgPlaysPerBattle": 1.4789,
+      "damagePerEnergy": null
+    },
+    "card:lodolamacz": {
+      "kind": "card",
+      "id": "lodolamacz",
+      "name": "Lodołamacz",
+      "offeredCount": 10358,
+      "acquiredCount": 3820,
+      "runsWithEntity": 4391,
+      "runsWithoutEntity": 95607,
+      "pickRate": 0.3688,
+      "winrateWithEntity": {
+        "rate": 0.0005,
+        "lo": 0,
+        "hi": 0.0011,
+        "n": 4391
+      },
+      "winrateWithout": {
+        "rate": 0.0003,
+        "lo": 0.0002,
+        "hi": 0.0005,
+        "n": 95607
+      },
+      "winrateLiftPp": 0.0002,
+      "liftCi": {
+        "lo": -0.0005,
+        "hi": 0.0008
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 9.8686,
+      "avgFloorReachedWithout": 8.5029,
+      "floorReachedLift": 1.3657,
+      "floorReachedLiftCi": {
+        "lo": 1.2524,
+        "hi": 1.4789
+      },
+      "bySlice": {
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 1616
+        },
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 734
+        },
+        "jedrek/normal/3": {
+          "wins": 2,
+          "total": 2041
+        }
+      },
+      "acquisitionSources": {
+        "reward": 3732,
+        "shop": 88
+      },
+      "sampleTier": "green",
+      "avgPlaysPerBattle": 0.3445,
+      "damagePerEnergy": null
+    },
+    "card:baciarka_ciesy": {
+      "kind": "card",
+      "id": "baciarka_ciesy",
+      "name": "Baciarka Ciesy",
+      "offeredCount": 10330,
+      "acquiredCount": 3751,
+      "runsWithEntity": 4187,
+      "runsWithoutEntity": 95811,
+      "pickRate": 0.3631,
+      "winrateWithEntity": {
+        "rate": 0,
+        "lo": 0,
+        "hi": 0,
+        "n": 4187
+      },
+      "winrateWithout": {
+        "rate": 0.0004,
+        "lo": 0.0002,
+        "hi": 0.0005,
+        "n": 95811
+      },
+      "winrateLiftPp": -0.0004,
+      "liftCi": {
+        "lo": -0.0005,
+        "hi": -0.0002
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 10.374,
+      "avgFloorReachedWithout": 8.4838,
+      "floorReachedLift": 1.8902,
+      "floorReachedLiftCi": {
+        "lo": 1.776,
+        "hi": 2.0045
+      },
+      "bySlice": {
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 547
+        },
+        "jedrek/normal/3": {
+          "wins": 0,
+          "total": 2126
+        },
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 1514
+        }
+      },
+      "acquisitionSources": {
+        "reward": 3609,
+        "shop": 142
+      },
+      "sampleTier": "green",
+      "avgPlaysPerBattle": 0.4916,
+      "damagePerEnergy": null
+    },
+    "enemy:fiakier": {
+      "kind": "enemy",
+      "id": "fiakier",
+      "name": "Fiakier spod Krupówek",
+      "offeredCount": 0,
+      "acquiredCount": 0,
+      "runsWithEntity": 6528,
+      "runsWithoutEntity": 93470,
+      "pickRate": null,
+      "winrateWithEntity": {
+        "rate": 0.0054,
+        "lo": 0.0036,
+        "hi": 0.0071,
+        "n": 6528
+      },
+      "winrateWithout": {
+        "rate": 0,
+        "lo": 0,
+        "hi": 0,
+        "n": 93470
+      },
+      "winrateLiftPp": 0.0054,
+      "liftCi": {
+        "lo": 0.0036,
+        "hi": 0.0071
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 15,
+      "avgFloorReachedWithout": 8.1133,
+      "floorReachedLift": 6.8867,
+      "floorReachedLiftCi": {
+        "lo": 6.8649,
+        "hi": 6.9084
+      },
+      "bySlice": {},
+      "acquisitionSources": {},
+      "sampleTier": "green",
+      "avgTurnsToKill": 7.4,
+      "byFloor": {
+        "15": {
+          "wins": 35,
+          "total": 6528,
+          "winrate": 0.0054
+        }
+      },
+      "byWeather": {
+        "halny": {
+          "wins": 35,
+          "total": 6528,
+          "winrate": 0.0054
+        }
+      }
+    },
+    "card:duma_podhala": {
+      "kind": "card",
+      "id": "duma_podhala",
+      "name": "Duma Podhala",
+      "offeredCount": 12199,
+      "acquiredCount": 7061,
+      "runsWithEntity": 6794,
+      "runsWithoutEntity": 93204,
+      "pickRate": 0.5788,
+      "winrateWithEntity": {
+        "rate": 0.0007,
+        "lo": 0.0001,
+        "hi": 0.0014,
+        "n": 6794
+      },
+      "winrateWithout": {
+        "rate": 0.0003,
+        "lo": 0.0002,
+        "hi": 0.0004,
+        "n": 93204
+      },
+      "winrateLiftPp": 0.0004,
+      "liftCi": {
+        "lo": -0.0002,
+        "hi": 0.0011
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 10.4873,
+      "avgFloorReachedWithout": 8.4226,
+      "floorReachedLift": 2.0647,
+      "floorReachedLiftCi": {
+        "lo": 1.9747,
+        "hi": 2.1548
+      },
+      "bySlice": {
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 2351
+        },
+        "jedrek/normal/3": {
+          "wins": 5,
+          "total": 3615
+        },
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 828
+        }
+      },
+      "acquisitionSources": {
+        "reward": 7049,
+        "shop": 12
+      },
+      "sampleTier": "green",
+      "avgPlaysPerBattle": 0.4157,
+      "damagePerEnergy": null
+    },
+    "card:giewont": {
+      "kind": "card",
+      "id": "giewont",
+      "name": "Gniew Giewontu",
+      "offeredCount": 12781,
+      "acquiredCount": 7372,
+      "runsWithEntity": 7006,
+      "runsWithoutEntity": 92992,
+      "pickRate": 0.5768,
+      "winrateWithEntity": {
+        "rate": 0.0013,
+        "lo": 0.0004,
+        "hi": 0.0021,
+        "n": 7006
+      },
+      "winrateWithout": {
+        "rate": 0.0003,
+        "lo": 0.0002,
+        "hi": 0.0004,
+        "n": 92992
+      },
+      "winrateLiftPp": 0.001,
+      "liftCi": {
+        "lo": 0.0002,
+        "hi": 0.0019
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 10.9229,
+      "avgFloorReachedWithout": 8.3851,
+      "floorReachedLift": 2.5378,
+      "floorReachedLiftCi": {
+        "lo": 2.4514,
+        "hi": 2.6243
+      },
+      "bySlice": {
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 2318
+        },
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 713
+        },
+        "jedrek/normal/3": {
+          "wins": 9,
+          "total": 3975
+        }
+      },
+      "acquisitionSources": {
+        "reward": 7361,
+        "shop": 11
+      },
+      "sampleTier": "green",
+      "avgPlaysPerBattle": 0.4994,
+      "damagePerEnergy": null
+    },
+    "relic:lustrzane_gogle": {
+      "kind": "relic",
+      "id": "lustrzane_gogle",
+      "name": "Lustrzane Gogle",
+      "offeredCount": 1027,
+      "acquiredCount": 4385,
+      "runsWithEntity": 1679,
+      "runsWithoutEntity": 98319,
+      "pickRate": 0.0439,
+      "winrateWithEntity": {
+        "rate": 0.0006,
+        "lo": 0,
+        "hi": 0.0018,
+        "n": 1679
+      },
+      "winrateWithout": {
+        "rate": 0.0003,
+        "lo": 0.0002,
+        "hi": 0.0005,
+        "n": 98319
+      },
+      "winrateLiftPp": 0.0003,
+      "liftCi": {
+        "lo": -0.0009,
+        "hi": 0.0014
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 10.4937,
+      "avgFloorReachedWithout": 8.5299,
+      "floorReachedLift": 1.9638,
+      "floorReachedLiftCi": {
+        "lo": 1.7958,
+        "hi": 2.1318
+      },
+      "bySlice": {
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 643
+        },
+        "jedrek/normal/3": {
+          "wins": 1,
+          "total": 889
+        },
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 147
+        }
+      },
+      "acquisitionSources": {
+        "reward": 2706
+      },
+      "sampleTier": "yellow"
+    },
+    "card:halny": {
+      "kind": "card",
+      "id": "halny",
+      "name": "Halny",
+      "offeredCount": 10319,
+      "acquiredCount": 3748,
+      "runsWithEntity": 4234,
+      "runsWithoutEntity": 95764,
+      "pickRate": 0.3632,
+      "winrateWithEntity": {
+        "rate": 0.0002,
+        "lo": 0,
+        "hi": 0.0007,
+        "n": 4234
+      },
+      "winrateWithout": {
+        "rate": 0.0004,
+        "lo": 0.0002,
+        "hi": 0.0005,
+        "n": 95764
+      },
+      "winrateLiftPp": -0.0002,
+      "liftCi": {
+        "lo": -0.0006,
+        "hi": 0.0004
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 10.0274,
+      "avgFloorReachedWithout": 8.4982,
+      "floorReachedLift": 1.5292,
+      "floorReachedLiftCi": {
+        "lo": 1.4135,
+        "hi": 1.645
+      },
+      "bySlice": {
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 1592
+        },
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 628
+        },
+        "jedrek/normal/3": {
+          "wins": 1,
+          "total": 2014
+        }
+      },
+      "acquisitionSources": {
+        "reward": 3640,
+        "shop": 108
+      },
+      "sampleTier": "green",
+      "avgPlaysPerBattle": 1.0043,
+      "damagePerEnergy": null
+    },
+    "card:szukanie_okazji": {
+      "kind": "card",
+      "id": "szukanie_okazji",
+      "name": "Szukanie Okazji",
+      "offeredCount": 10712,
+      "acquiredCount": 3927,
+      "runsWithEntity": 4320,
+      "runsWithoutEntity": 95678,
+      "pickRate": 0.3666,
+      "winrateWithEntity": {
+        "rate": 0.0012,
+        "lo": 0.0001,
+        "hi": 0.0022,
+        "n": 4320
+      },
+      "winrateWithout": {
+        "rate": 0.0003,
+        "lo": 0.0002,
+        "hi": 0.0004,
+        "n": 95678
+      },
+      "winrateLiftPp": 0.0009,
+      "liftCi": {
+        "lo": -0.0002,
+        "hi": 0.0019
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 10.2347,
+      "avgFloorReachedWithout": 8.4874,
+      "floorReachedLift": 1.7473,
+      "floorReachedLiftCi": {
+        "lo": 1.6344,
+        "hi": 1.8602
+      },
+      "bySlice": {
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 1543
+        },
+        "jedrek/normal/3": {
+          "wins": 5,
+          "total": 2184
+        },
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 593
+        }
+      },
+      "acquisitionSources": {
+        "reward": 3810,
+        "shop": 117
+      },
+      "sampleTier": "green",
+      "avgPlaysPerBattle": 1.5875,
+      "damagePerEnergy": null
+    },
+    "card:rachunek_za_oddychanie": {
+      "kind": "card",
+      "id": "rachunek_za_oddychanie",
+      "name": "Rachunek za Oddychanie",
+      "offeredCount": 12761,
+      "acquiredCount": 7560,
+      "runsWithEntity": 7316,
+      "runsWithoutEntity": 92682,
+      "pickRate": 0.5924,
+      "winrateWithEntity": {
+        "rate": 0.0003,
+        "lo": 0,
+        "hi": 0.0007,
+        "n": 7316
+      },
+      "winrateWithout": {
+        "rate": 0.0004,
+        "lo": 0.0002,
+        "hi": 0.0005,
+        "n": 92682
+      },
+      "winrateLiftPp": -0.0001,
+      "liftCi": {
+        "lo": -0.0005,
+        "hi": 0.0003
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 10.3244,
+      "avgFloorReachedWithout": 8.4239,
+      "floorReachedLift": 1.9005,
+      "floorReachedLiftCi": {
+        "lo": 1.8148,
+        "hi": 1.9862
+      },
+      "bySlice": {
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 1022
+        },
+        "jedrek/normal/3": {
+          "wins": 2,
+          "total": 3834
+        },
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 2460
+        }
+      },
+      "acquisitionSources": {
+        "reward": 7534,
+        "shop": 26
+      },
+      "sampleTier": "green",
+      "avgPlaysPerBattle": 0.507,
+      "damagePerEnergy": null
+    },
+    "relic:pocztowka_giewont": {
+      "kind": "relic",
+      "id": "pocztowka_giewont",
+      "name": "Pocztówka z Giewontem",
+      "offeredCount": 1007,
+      "acquiredCount": 4329,
+      "runsWithEntity": 1661,
+      "runsWithoutEntity": 98337,
+      "pickRate": 0.0433,
+      "winrateWithEntity": {
+        "rate": 0.0006,
+        "lo": 0,
+        "hi": 0.0018,
+        "n": 1661
+      },
+      "winrateWithout": {
+        "rate": 0.0003,
+        "lo": 0.0002,
+        "hi": 0.0005,
+        "n": 98337
+      },
+      "winrateLiftPp": 0.0003,
+      "liftCi": {
+        "lo": -0.0009,
+        "hi": 0.0014
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 10.3606,
+      "avgFloorReachedWithout": 8.5325,
+      "floorReachedLift": 1.8281,
+      "floorReachedLiftCi": {
+        "lo": 1.6573,
+        "hi": 1.9989
+      },
+      "bySlice": {
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 675
+        },
+        "jedrek/normal/3": {
+          "wins": 1,
+          "total": 819
+        },
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 167
+        }
+      },
+      "acquisitionSources": {
+        "reward": 2668
+      },
+      "sampleTier": "yellow"
+    },
+    "card:skrupulatne_wyliczenie": {
+      "kind": "card",
+      "id": "skrupulatne_wyliczenie",
+      "name": "Skrupulatne Wyliczenie",
+      "offeredCount": 10881,
+      "acquiredCount": 5664,
+      "runsWithEntity": 6077,
+      "runsWithoutEntity": 93921,
+      "pickRate": 0.5205,
+      "winrateWithEntity": {
+        "rate": 0,
+        "lo": 0,
+        "hi": 0,
+        "n": 6077
+      },
+      "winrateWithout": {
+        "rate": 0.0004,
+        "lo": 0.0002,
+        "hi": 0.0005,
+        "n": 93921
+      },
+      "winrateLiftPp": -0.0004,
+      "liftCi": {
+        "lo": -0.0005,
+        "hi": -0.0002
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 9.401,
+      "avgFloorReachedWithout": 8.5087,
+      "floorReachedLift": 0.8923,
+      "floorReachedLiftCi": {
+        "lo": 0.7984,
+        "hi": 0.9863
+      },
+      "bySlice": {
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 2577
+        },
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 1117
+        },
+        "jedrek/normal/3": {
+          "wins": 0,
+          "total": 2383
+        }
+      },
+      "acquisitionSources": {
+        "shop": 1901,
+        "reward": 3763
+      },
+      "sampleTier": "green",
+      "avgPlaysPerBattle": 1.4341,
+      "damagePerEnergy": null
+    },
+    "relic:pekniete_liczydlo": {
+      "kind": "relic",
+      "id": "pekniete_liczydlo",
+      "name": "Pęknięte Liczydło",
+      "offeredCount": 2930,
+      "acquiredCount": 13122,
+      "runsWithEntity": 5024,
+      "runsWithoutEntity": 94974,
+      "pickRate": 0.1312,
+      "winrateWithEntity": {
+        "rate": 0.0012,
+        "lo": 0.0002,
+        "hi": 0.0021,
+        "n": 5024
+      },
+      "winrateWithout": {
+        "rate": 0.0003,
+        "lo": 0.0002,
+        "hi": 0.0004,
+        "n": 94974
+      },
+      "winrateLiftPp": 0.0009,
+      "liftCi": {
+        "lo": -0.0001,
+        "hi": 0.0019
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 10.2801,
+      "avgFloorReachedWithout": 8.4721,
+      "floorReachedLift": 1.808,
+      "floorReachedLiftCi": {
+        "lo": 1.7079,
+        "hi": 1.908
+      },
+      "bySlice": {
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 1964
+        },
+        "jedrek/normal/3": {
+          "wins": 6,
+          "total": 2502
+        },
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 558
+        }
+      },
+      "acquisitionSources": {
+        "reward": 7954,
+        "shop": 144
+      },
+      "sampleTier": "green"
+    },
+    "weather:clear": {
+      "kind": "weather",
+      "id": "clear",
+      "name": "Czyste Niebo",
+      "offeredCount": 0,
+      "acquiredCount": 0,
+      "runsWithEntity": 22116,
+      "runsWithoutEntity": 77882,
+      "pickRate": null,
+      "winrateWithEntity": {
+        "rate": 0.0004,
+        "lo": 0.0001,
+        "hi": 0.0007,
+        "n": 22116
+      },
+      "winrateWithout": {
+        "rate": 0.0003,
+        "lo": 0.0002,
+        "hi": 0.0005,
+        "n": 77882
+      },
+      "winrateLiftPp": 0.0001,
+      "liftCi": {
+        "lo": -0.0002,
+        "hi": 0.0004
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 10.7127,
+      "avgFloorReachedWithout": 7.9524,
+      "floorReachedLift": 2.7603,
+      "floorReachedLiftCi": {
+        "lo": 2.7112,
+        "hi": 2.8093
+      },
+      "bySlice": {},
+      "acquisitionSources": {},
+      "sampleTier": "green"
+    },
+    "relic:wiatr_halny": {
+      "kind": "relic",
+      "id": "wiatr_halny",
+      "name": "Wiatr Halny w Butelce",
+      "offeredCount": 2940,
+      "acquiredCount": 13000,
+      "runsWithEntity": 4934,
+      "runsWithoutEntity": 95064,
+      "pickRate": 0.13,
+      "winrateWithEntity": {
+        "rate": 0.0002,
+        "lo": 0,
+        "hi": 0.0006,
+        "n": 4934
+      },
+      "winrateWithout": {
+        "rate": 0.0004,
+        "lo": 0.0002,
+        "hi": 0.0005,
+        "n": 95064
+      },
+      "winrateLiftPp": -0.0002,
+      "liftCi": {
+        "lo": -0.0006,
+        "hi": 0.0003
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 9.7985,
+      "avgFloorReachedWithout": 8.4988,
+      "floorReachedLift": 1.2997,
+      "floorReachedLiftCi": {
+        "lo": 1.2,
+        "hi": 1.3995
+      },
+      "bySlice": {
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 613
+        },
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 2246
+        },
+        "jedrek/normal/3": {
+          "wins": 1,
+          "total": 2075
+        }
+      },
+      "acquisitionSources": {
+        "reward": 7874,
+        "shop": 192
+      },
+      "sampleTier": "green"
+    },
+    "relic:blacha_przewodnika": {
+      "kind": "relic",
+      "id": "blacha_przewodnika",
+      "name": "Blacha Przewodnika",
+      "offeredCount": 3079,
+      "acquiredCount": 13912,
+      "runsWithEntity": 5351,
+      "runsWithoutEntity": 94647,
+      "pickRate": 0.1391,
+      "winrateWithEntity": {
+        "rate": 0.0007,
+        "lo": 0,
+        "hi": 0.0015,
+        "n": 5351
+      },
+      "winrateWithout": {
+        "rate": 0.0003,
+        "lo": 0.0002,
+        "hi": 0.0004,
+        "n": 94647
+      },
+      "winrateLiftPp": 0.0004,
+      "liftCi": {
+        "lo": -0.0003,
+        "hi": 0.0012
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 10.436,
+      "avgFloorReachedWithout": 8.457,
+      "floorReachedLift": 1.979,
+      "floorReachedLiftCi": {
+        "lo": 1.8816,
+        "hi": 2.0763
+      },
+      "bySlice": {
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 2251
+        },
+        "jedrek/normal/3": {
+          "wins": 4,
+          "total": 2622
+        },
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 478
+        }
+      },
+      "acquisitionSources": {
+        "reward": 8430,
+        "shop": 131
+      },
+      "sampleTier": "green"
+    },
+    "card:czas_na_fajke": {
+      "kind": "card",
+      "id": "czas_na_fajke",
+      "name": "Czas na Fajkę",
+      "offeredCount": 12448,
+      "acquiredCount": 7230,
+      "runsWithEntity": 6948,
+      "runsWithoutEntity": 93050,
+      "pickRate": 0.5808,
+      "winrateWithEntity": {
+        "rate": 0.0001,
+        "lo": 0,
+        "hi": 0.0004,
+        "n": 6948
+      },
+      "winrateWithout": {
+        "rate": 0.0004,
+        "lo": 0.0002,
+        "hi": 0.0005,
+        "n": 93050
+      },
+      "winrateLiftPp": -0.0003,
+      "liftCi": {
+        "lo": -0.0005,
+        "hi": 0.0001
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 10.2772,
+      "avgFloorReachedWithout": 8.4349,
+      "floorReachedLift": 1.8423,
+      "floorReachedLiftCi": {
+        "lo": 1.756,
+        "hi": 1.9286
+      },
+      "bySlice": {
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 868
+        },
+        "jedrek/normal/3": {
+          "wins": 1,
+          "total": 3498
+        },
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 2582
+        }
+      },
+      "acquisitionSources": {
+        "reward": 7220,
+        "shop": 10
+      },
+      "sampleTier": "green",
+      "avgPlaysPerBattle": 0.4139,
+      "damagePerEnergy": null
+    },
+    "relic:flaszka_sliwowicy": {
+      "kind": "relic",
+      "id": "flaszka_sliwowicy",
+      "name": "Pusta Flaszka po Śliwowicy",
+      "offeredCount": 899,
+      "acquiredCount": 3947,
+      "runsWithEntity": 1524,
+      "runsWithoutEntity": 98474,
+      "pickRate": 0.0395,
+      "winrateWithEntity": {
+        "rate": 0.0157,
+        "lo": 0.0095,
+        "hi": 0.022,
+        "n": 1524
+      },
+      "winrateWithout": {
+        "rate": 0.0001,
+        "lo": 0,
+        "hi": 0.0002,
+        "n": 98474
+      },
+      "winrateLiftPp": 0.0156,
+      "liftCi": {
+        "lo": 0.0094,
+        "hi": 0.0219
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 11.4206,
+      "avgFloorReachedWithout": 8.5187,
+      "floorReachedLift": 2.9019,
+      "floorReachedLiftCi": {
+        "lo": 2.7231,
+        "hi": 3.0807
+      },
+      "bySlice": {
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 510
+        },
+        "jedrek/normal/3": {
+          "wins": 24,
+          "total": 920
+        },
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 94
+        }
+      },
+      "acquisitionSources": {
+        "reward": 2423
+      },
+      "sampleTier": "yellow"
+    },
+    "relic:papryczka_marka": {
+      "kind": "relic",
+      "id": "papryczka_marka",
+      "name": "Piekielna Papryczka Marka",
+      "offeredCount": 1156,
+      "acquiredCount": 4592,
+      "runsWithEntity": 1718,
+      "runsWithoutEntity": 98280,
+      "pickRate": 0.0459,
+      "winrateWithEntity": {
+        "rate": 0.0017,
+        "lo": 0,
+        "hi": 0.0037,
+        "n": 1718
+      },
+      "winrateWithout": {
+        "rate": 0.0003,
+        "lo": 0.0002,
+        "hi": 0.0004,
+        "n": 98280
+      },
+      "winrateLiftPp": 0.0014,
+      "liftCi": {
+        "lo": -0.0006,
+        "hi": 0.0034
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 10.5122,
+      "avgFloorReachedWithout": 8.5288,
+      "floorReachedLift": 1.9834,
+      "floorReachedLiftCi": {
+        "lo": 1.8216,
+        "hi": 2.1452
+      },
+      "bySlice": {
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 640
+        },
+        "jedrek/normal/3": {
+          "wins": 3,
+          "total": 934
+        },
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 144
+        }
+      },
+      "acquisitionSources": {
+        "reward": 2874
+      },
+      "sampleTier": "yellow"
+    },
+    "relic:zlota_karta_zakopianczyka": {
+      "kind": "relic",
+      "id": "zlota_karta_zakopianczyka",
+      "name": "Złota Karta Zakopiańczyka",
+      "offeredCount": 994,
+      "acquiredCount": 4450,
+      "runsWithEntity": 1728,
+      "runsWithoutEntity": 98270,
+      "pickRate": 0.0445,
+      "winrateWithEntity": {
+        "rate": 0,
+        "lo": 0,
+        "hi": 0,
+        "n": 1728
+      },
+      "winrateWithout": {
+        "rate": 0.0004,
+        "lo": 0.0002,
+        "hi": 0.0005,
+        "n": 98270
+      },
+      "winrateLiftPp": -0.0004,
+      "liftCi": {
+        "lo": -0.0005,
+        "hi": -0.0002
+      },
+      "matchedPairCount": 0,
+      "avgFloorReachedWith": 10.0573,
+      "avgFloorReachedWithout": 8.5366,
+      "floorReachedLift": 1.5207,
+      "floorReachedLiftCi": {
+        "lo": 1.3561,
+        "hi": 1.6852
+      },
+      "bySlice": {
+        "jedrek/normal/2": {
+          "wins": 0,
+          "total": 744
+        },
+        "jedrek/normal/3": {
+          "wins": 0,
+          "total": 788
+        },
+        "jedrek/normal/1": {
+          "wins": 0,
+          "total": 196
+        }
+      },
+      "acquisitionSources": {
+        "reward": 2722
+      },
+      "sampleTier": "yellow"
+    }
+  },
+  "synergyMatrix": {
+    "topK": 5,
+    "pairs": {}
+  },
+  "diagnostic": {
+    "ciMethodology": "paired-bootstrap-2000-resamples",
+    "sampleTierThresholds": {
+      "green": 2000,
+      "yellow": 500
+    },
+    "belowMinSample": 0,
+    "brokenPairs": 0,
+    "schemaDrift": {
+      "unknownEventKinds": []
+    },
+    "coverage": {
+      "runs": 99998,
+      "withEntityEvents": 100000
+    },
+    "overallFloorVariance": 13.68
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "_comment": "Drift thresholds for the balance-check CI gate. Any delta exceeding these on a 5k-game baseline run fails the PR. p < 0.01 significance via paired bootstrap.",
+  "winrateDrift": 0.02,
+  "liftPpDrift": 0.03,
+  "pickRateDrift": 0.1,
+  "significance": 0.01,
+  "minSample": 500,
+  "refreshProcedure": "Apply PR label 'baseline-update'. The workflow regenerates baselines/main.metrics.json from the _baseline batch at 10k games and opens a bot PR."
+}
