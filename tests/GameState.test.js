@@ -2471,7 +2471,7 @@ describe('GameState', () => {
       expect(s.enemy.currentIntent).toEqual({
         type: 'block',
         name: 'Darmowa degustacja',
-        block: 12,
+        block: 8,
       });
     });
 
@@ -2501,7 +2501,7 @@ describe('GameState', () => {
       expect(s.enemy.currentIntent).toEqual({
         type: 'attack',
         name: 'Cena z kosmosu',
-        damage: 8,
+        damage: 7,
         hits: 1,
         applyWeak: 1,
       });
@@ -2829,7 +2829,7 @@ describe('GameState', () => {
       s.resetBattle();
       expect(s.enemy.id).toBe('baba');
       expect(s.enemy.name).toBe('Handlara oscypkami');
-      expect(s.enemy.maxHp).toBe(88);
+      expect(s.enemy.maxHp).toBe(78);
     });
 
     it('can load Parkingowego from the enemy library with lowered HP', () => {
@@ -2949,7 +2949,7 @@ describe('GameState', () => {
       const s = freshState();
       const eliteState = s._createEnemyState(enemyLibrary.spekulant);
       expect(eliteState.isElite).toBe(true);
-      expect(eliteState.maxHp).toBe(Math.round(92 * 1.25));
+      expect(eliteState.maxHp).toBe(Math.round(84 * 1.25));
 
       s.enemy = eliteState;
       s.pendingBattleDutki = true;
@@ -3076,7 +3076,7 @@ describe('GameState', () => {
       s.resetBattle();
       expect(s.enemy.id).toBe('boss');
       expect(s.enemy.name).toBe('Król Krupówek - Biały Misiek (Zdzisiek)');
-      expect(s.enemy.maxHp).toBe(180);
+      expect(s.enemy.maxHp).toBe(165);
       expect(s.enemy.bossArtifact).toBe(2);
     });
 
@@ -3093,7 +3093,7 @@ describe('GameState', () => {
       s.resetBattle();
       expect(s.enemy.id).toBe('fiakier');
       expect(s.enemy.name).toBe('Fiakier spod Krupówek');
-      expect(s.enemy.maxHp).toBe(180);
+      expect(s.enemy.maxHp).toBe(165);
       expect(s.enemy.bossArtifact).toBe(0);
     });
 
@@ -3223,12 +3223,12 @@ describe('GameState', () => {
       expect(s.enemy.status.weak).toBe(2);
     });
 
-    it('Agresywne pozowanie deals 4x3', () => {
+    it('Agresywne pozowanie deals 3x3', () => {
       const s = freshBossState();
       s.endTurn();
       expect(s.enemy.currentIntent.type).toBe('attack');
       expect(s.enemy.currentIntent.name).toBe('Agresywne pozowanie');
-      expect(s.enemy.currentIntent.damage).toBe(4);
+      expect(s.enemy.currentIntent.damage).toBe(3);
       expect(s.enemy.currentIntent.hits).toBe(3);
     });
 
@@ -3238,11 +3238,11 @@ describe('GameState', () => {
       expect(s.enemy.currentIntent.name).toBe('Górski Ryk');
     });
 
-    it('Górski Ryk gives +2 strength and +10 block when executed', () => {
+    it('Górski Ryk gives +1 strength and +8 block when executed', () => {
       const s = freshBossState();
       s.endTurn();
-      expect(s.enemy.status.strength).toBe(2);
-      expect(s.enemy.block).toBeGreaterThanOrEqual(10);
+      expect(s.enemy.status.strength).toBe(1);
+      expect(s.enemy.block).toBeGreaterThanOrEqual(8);
     });
 
     it('second intent is Agresywne pozowanie (3-hit attack)', () => {
@@ -3253,14 +3253,14 @@ describe('GameState', () => {
       expect(s.enemy.currentIntent.hits).toBe(3);
     });
 
-    it('fourth intent is Uścisk Krupówek with spike damage (20)', () => {
+    it('fourth intent is Uścisk Krupówek with spike damage (17)', () => {
       const s = freshBossState();
       s.endTurn(); // execute Górski Ryk -> intent 2
       s.endTurn(); // execute Agresywne pozowanie -> intent 3
       s.endTurn(); // execute Podatek od zdjęcia -> intent 4
       expect(s.enemy.currentIntent.type).toBe('attack');
       expect(s.enemy.currentIntent.name).toBe('Uścisk Krupówek');
-      expect(s.enemy.currentIntent.damage).toBe(20);
+      expect(s.enemy.currentIntent.damage).toBe(17);
       expect(s.enemy.currentIntent.hits).toBe(1);
     });
 

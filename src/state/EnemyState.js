@@ -125,13 +125,8 @@ export function createEnemyState(state, enemyDef) {
         return { ...move, damage: Math.round(move.damage * scale * eliteDamageScale) };
       })
     : [];
-  const bossBaseHp = state.difficulty === 'hard' ? 330 : 180;
-  const baseMaxHp =
-    state.difficulty === 'hard' && isFinalBossVariant
-      ? bossBaseHp
-      : isMainBoss
-        ? bossBaseHp
-        : enemyDef.maxHp;
+  const bossBaseHp = 330;
+  const baseMaxHp = state.difficulty === 'hard' && isFinalBossVariant ? bossBaseHp : enemyDef.maxHp;
   const dzwonekMod = state.hasRelic('dzwonek_owcy') ? 0.85 : 1.0;
   const eliteHpScale = enemyDef.elite ? 1.25 : 1;
   const maxHp = Math.round(baseMaxHp * scale * dzwonekMod * eliteHpScale);
