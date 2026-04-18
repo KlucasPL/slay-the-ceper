@@ -3495,6 +3495,14 @@ describe('GameState', () => {
       expect(second).toBe(10);
     });
 
+    it('zloty_rozaniec grants 5 block at battle start', () => {
+      const s = freshState();
+      s.pickMarynaBoon('zloty_rozaniec');
+      s.startBattleWithEnemyId('cepr');
+
+      expect(s.player.block).toBe(5);
+    });
+
     it('tajny_skladnik applies 2 weak and 2 fragile at battle start', () => {
       const s = freshState();
       s.pickMarynaBoon('tajny_skladnik');

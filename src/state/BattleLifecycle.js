@@ -21,8 +21,8 @@ export function initGame(state, startingDeck) {
   state.activeRuntimeCardId = null;
   state._resetBattleScopedFlags();
   state._setCurrentWeatherFromNode();
-  state._applyBattleStartRelics();
   state.startTurn();
+  state._applyBattleStartRelics();
   state.pendingBattleDutki = true;
   state.isInputLocked = false;
 }
@@ -92,8 +92,8 @@ export function resetBattle(state) {
   state._setCurrentWeatherFromNode();
   state.pendingBattleDutki = true;
 
-  state._applyBattleStartRelics();
   state.startTurn();
+  state._applyBattleStartRelics();
 }
 
 /**

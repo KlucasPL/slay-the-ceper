@@ -211,7 +211,7 @@ export function startBattleWithEnemyId(state, enemyId, options = {}) {
   state._setCurrentWeatherFromNode();
   state.pendingBattleDutki = true;
 
-  state._applyBattleStartRelics();
   state.startTurn();
+  state._applyBattleStartRelics();
   return true;
 }

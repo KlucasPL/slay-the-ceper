@@ -24,7 +24,7 @@ export const marynaBoonLibrary = {
     relicId: 'relic_boon_kiesa',
     name: 'Kiesa na Pierwszy Dzień',
     flavor: 'Masz, ale nie przewal wszystkiego na jarmarku.',
-    effectDesc: '+50 Dutków od razu; +40 Dutków po pierwszym zwycięstwie (jednorazowo).',
+    effectDesc: '+100 Dutków od razu; +40 Dutków po pierwszym zwycięstwie (jednorazowo).',
     emoji: '💰',
   },
   przeglad_plecaka: {
@@ -33,7 +33,7 @@ export const marynaBoonLibrary = {
     name: 'Przegląd Plecaka Maryny',
     flavor: 'Ten złom wyrzuć, to ci zostawiam.',
     effectDesc:
-      'Usuń 1 losową kartę startową z talii; dodaj 1 losową kartę niepowszechną; zyskaj +40 Dutków.',
+      'Usuń 1 losową kartę startową z talii; dodaj 1 losową kartę niepowszechną; zyskaj +80 Dutków.',
     emoji: '🎒',
   },
   sloik_rosolu: {
@@ -49,7 +49,8 @@ export const marynaBoonLibrary = {
     relicId: 'relic_boon_zloty_rozaniec',
     name: 'Złoty Różaniec Maryny',
     flavor: 'Pomódl się i bij dwa razy mocniej!',
-    effectDesc: 'Pierwsze trafienie atakiem zadaje podwójne obrażenia.',
+    effectDesc:
+      'Na starcie każdej walki: +5 Garda i pierwsze trafienie atakiem zadaje podwójne obrażenia.',
     emoji: '📿',
   },
   lista_zakupow: {
