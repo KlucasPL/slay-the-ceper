@@ -2407,6 +2407,12 @@ describe('GameState', () => {
       expect(s.getEnemyIntentText()).toBe('Zamiar: Trąbienie na pieszych (⚔️ 8, 2x)');
     });
 
+    it('intent text damage changes with player Garda', () => {
+      const s = freshBusiarzState();
+      s.player.block = 5;
+      expect(s.getEnemyIntentText()).toBe('Zamiar: Trąbienie na pieszych (⚔️ 3, 2x)');
+    });
+
     it('brak_reszty: steals 3 dutki whenever a hit deals HP damage', () => {
       const s = freshBusiarzState();
       s.dutki = 30;
@@ -2462,6 +2468,29 @@ describe('GameState', () => {
       s.endTurn();
       s.endTurn();
       expect(s.discard.filter((id) => id === 'spam_tagami').length).toBeGreaterThanOrEqual(2);
+    });
+
+    it('ceprzyca_vip: Podatność increases Awantura o cenę to 20 after setup', () => {
+      const s = new GameState({ ...mockPlayer }, enemyLibrary.ceprzyca_vip);
+      s.player.energy = 3;
+      s.hand = [];
+      s.deck = [];
+      s.discard = [];
+      s.player.hp = 50;
+      s.player.block = 0;
+
+      const firstTurn = s.endTurn();
+      expect(firstTurn.enemyAttack.raw).toBe(7);
+      expect(s.player.status.vulnerable).toBe(1);
+
+      s.startTurn();
+      const secondTurn = s.endTurn();
+      expect(secondTurn.enemyAttack.raw).toBe(0);
+      expect(s.player.status.vulnerable).toBe(1);
+
+      s.startTurn();
+      const thirdTurn = s.endTurn();
+      expect(thirdTurn.enemyAttack.raw).toBe(20);
     });
   });
 

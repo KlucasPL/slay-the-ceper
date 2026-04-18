@@ -546,7 +546,11 @@ export function endTurn(state) {
     state.player.stunned = false;
   }
 
-  state._tickStatus(state.player.status);
+  // Player debuffs that naturally tick at end of player turn.
+  // Vulnerable is consumed by enemy attacks (see below), so do not tick it here.
+  if (state.player.status.weak > 0) state.player.status.weak -= 1;
+  if (state.player.status.fragile > 0) state.player.status.fragile -= 1;
+  if (state.player.status.furia_turysty > 0) state.player.status.furia_turysty -= 1;
 
   /** @type {{ amount: number, text: string } | null} */
   let playerPassiveHeal = null;
@@ -616,6 +620,11 @@ export function endTurn(state) {
   }
 
   const enemyAttack = state._applyEnemyIntent();
+
+  // Vulnerable should be consumed by enemy attack turns, not by non-attack turns.
+  if (state.enemy.currentIntent.type === 'attack' && state.player.status.vulnerable > 0) {
+    state.player.status.vulnerable -= 1;
+  }
 
   if (state.enemy.portraitShameTurns > 0) {
     state.enemy.portraitShameTurns -= 1;
