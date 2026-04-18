@@ -51,40 +51,31 @@ export function renderPileViewer(uiManager) {
     view.ids.forEach((cardId) => {
       const card = getCardDefinition(cardId);
       if (!card) return;
-
-      const cardEl = document.createElement('article');
+      const cardEl = document.createElement('div');
       cardEl.className = `card pile-viewer-card ${uiHelpers.rarityClass(card.rarity)} card-${card.type}`;
-
-      const costEl = document.createElement('div');
-      costEl.className = 'card-cost';
-      costEl.textContent = String(card.cost);
-
-      const titleEl = document.createElement('div');
-      titleEl.className = 'card-title';
-      titleEl.textContent = card.name;
-
-      const rarityEl = document.createElement('div');
-      rarityEl.className = 'card-rarity';
-      rarityEl.textContent = uiHelpers.getFullCardType(card.rarity, card.type);
-
-      const imgEl = document.createElement('div');
-      imgEl.className = 'card-img';
-      const iconEl = document.createElement('span');
-      iconEl.className = 'card-icon';
-      iconEl.textContent = card.emoji;
-      imgEl.appendChild(iconEl);
-
-      const descEl = document.createElement('div');
-      descEl.className = 'card-desc';
-      descEl.textContent = cardRenderer.getCardDescription(uiManager, card, cardId);
-
-      cardEl.append(costEl, titleEl, rarityEl, imgEl, descEl);
-
+      cardEl.innerHTML = `
+        <div class="card-header">
+          <div class="card-title">${card.name}</div>
+          <div class="card-cost-oscypek">
+            <span class="cost-value">${card.cost}</span>
+            <span class="cost-icon">🧀</span>
+          </div>
+        </div>
+        <div class="card-subtitle">${uiHelpers.getFullCardType(card.rarity, card.type)}</div>
+        <div class="card-art">
+          <span class="card-icon">${card.emoji}</span>
+        </div>
+        <div class="card-text-box">
+          <div class="card-desc">${cardRenderer.getCardDescription(uiManager, card, cardId)}</div>
+        </div>
+      `;
       if (card.exhaust) {
         cardEl.classList.add('card-exhaust');
-        cardEl.appendChild(cardRenderer.createExhaustBadge());
+        const exhaustEl = document.createElement('div');
+        exhaustEl.className = 'card-exhaust-inline';
+        exhaustEl.innerHTML = '<span class="exhaust-fire">🔥</span> PRZEPADO';
+        cardEl.querySelector('.card-text-box').appendChild(exhaustEl);
       }
-
       grid.appendChild(cardEl);
     });
   }

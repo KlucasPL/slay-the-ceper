@@ -58,16 +58,7 @@ export function openCardZoom(cardView) {
   const descEl = document.getElementById('card-zoom-desc');
   const exhaustEl = document.getElementById('card-zoom-exhaust');
 
-  if (
-    !overlay ||
-    !cardEl ||
-    !costEl ||
-    !titleEl ||
-    !rarityEl ||
-    !iconEl ||
-    !descEl ||
-    !exhaustEl
-  ) {
+  if (!overlay || !cardEl || !costEl || !titleEl || !rarityEl || !iconEl || !descEl || !exhaustEl) {
     return;
   }
 

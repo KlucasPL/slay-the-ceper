@@ -1,3 +1,319 @@
+/* --- Unified Card & Hand Layout (Modernized) --- */
+.hand-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 18px;
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto 0 auto;
+  padding: 0 0 8px 0;
+  box-sizing: border-box;
+  z-index: 10;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  width: 150px;
+  aspect-ratio: 2/3;
+  background: linear-gradient(180deg, #f4e8d2 0%, #e3cb9e 100%);
+  border: 3px solid var(--rarity-border-color, #a9a9a9);
+  border-radius: 14px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+  overflow: hidden;
+  transition: box-shadow 0.2s, border-color 0.2s;
+  cursor: pointer;
+}
+
+.card:hover {
+  box-shadow: 0 16px 32px rgba(0,0,0,0.35);
+  border-color: #ffd45e;
+}
+
+.card-header {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 8px 10px 0 10px;
+  min-height: 36px;
+  gap: 6px;
+}
+
+.card-title {
+  font-size: 1.1em;
+  font-weight: 800;
+  color: #3d2314;
+  flex: 1 1 auto;
+  text-align: left;
+  line-height: 1.1;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.card-cost-oscypek {
+  background: #fbb03b;
+  color: #2c1e16;
+  border-radius: 999px;
+  font-weight: bold;
+  padding: 3px 10px;
+  font-size: 0.95em;
+  margin-left: 8px;
+  align-self: flex-start;
+}
+
+.card-art {
+  flex: 1 1 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  max-height: 80px;
+  padding: 0 10px;
+  margin: 0;
+}
+
+.card-icon {
+  font-size: clamp(2rem, 4.5vw, 4rem);
+  max-height: 100%;
+  line-height: 1;
+  filter: drop-shadow(0 6px 10px rgba(0,0,0,0.25));
+}
+
+.card-text-box {
+  flex: 1.2 1 0%;
+  background: rgba(230, 212, 184, 0.4);
+  border-top: 2px dashed rgba(140, 90, 53, 0.4);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  overflow: hidden;
+}
+
+.card-desc {
+  font-size: clamp(0.8rem, 1.1cqw, 0.95rem);
+  font-weight: 700;
+  line-height: 1.25;
+  text-align: left;
+  color: #3d2314;
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+
+.card-exhaust-inline {
+  margin-top: 8px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #b32d1c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  letter-spacing: 0.05em;
+}
+
+/* Safety zone for mobile/fixed-canvas scaling */
+@media (max-width: 600px) {
+  .hand-container {
+    gap: 8px;
+    max-width: 100vw;
+    padding: 0 2vw 6px 2vw;
+  }
+  .card {
+    width: 90px;
+    min-width: 70px;
+    font-size: 0.92em;
+  }
+  .card-header {
+    padding: 5px 6px 0 6px;
+    min-height: 24px;
+  }
+  .card-title {
+    font-size: 0.95em;
+  }
+  .card-cost-oscypek {
+    font-size: 0.82em;
+    padding: 2px 7px;
+  }
+  .card-art {
+    min-height: 28px;
+    max-height: 44px;
+    padding: 0 4px;
+  }
+  .card-icon {
+    font-size: clamp(1.1rem, 10.8cqw, 2.4rem);
+  }
+  .card-text-box {
+    padding: 6px 7px;
+  }
+  .card-desc {
+    font-size: clamp(0.58rem, 4.4cqw, 0.78rem);
+    line-height: 1.1;
+    margin-top: 3px;
+    margin-bottom: 3px;
+    padding: 3px 4px 5px;
+  }
+}
+.hand-header {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.hand-view-btn {
+  background: linear-gradient(135deg, #8b6914, #b8860b);
+  border: 1px solid #ffd700;
+  color: #f4e8d2;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.hand-view-btn:hover {
+  background: linear-gradient(135deg, #b8860b, #daa520);
+  border-color: #ffed4e;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
+}
+
+.hand-view-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+/* Hand View Overlay */
+.hand-view-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 4750;
+  background: rgba(0, 0, 0, 0.86);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(3px);
+}
+
+.hand-view-overlay.hidden {
+  display: none;
+}
+
+.hand-view-panel {
+  background: #1a1a1a;
+  border: 2px solid #8b6914;
+  border-radius: 12px;
+  padding: 20px;
+  width: 90%;
+  height: 82%;
+  max-width: 1200px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8);
+}
+
+.hand-view-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #8b6914;
+}
+
+.hand-view-header h2 {
+  margin: 0;
+  color: #f4e8d2;
+  font-size: 1.4rem;
+  font-weight: 600;
+}
+
+.hand-view-close-btn {
+  background: none;
+  border: none;
+  color: #f4e8d2;
+  font-size: 1.8rem;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.hand-view-close-btn:hover {
+  background: rgba(139, 105, 20, 0.4);
+  color: #ffd700;
+}
+
+.hand-view-close-btn:active {
+  transform: scale(0.95);
+}
+
+.hand-view-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  overflow-y: auto;
+  padding: 8px;
+  flex: 1;
+}
+
+.hand-view-grid::-webkit-scrollbar {
+  width: 8px;
+}
+
+.hand-view-grid::-webkit-scrollbar-track {
+  background: rgba(139, 105, 20, 0.1);
+  border-radius: 4px;
+}
+
+.hand-view-grid::-webkit-scrollbar-thumb {
+  background: rgba(139, 105, 20, 0.4);
+  border-radius: 4px;
+}
+
+.hand-view-grid::-webkit-scrollbar-thumb:hover {
+  background: rgba(139, 105, 20, 0.6);
+}
+
+.hand-view-card {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 2 / 3;
+  cursor: pointer;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.hand-view-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 8px 16px rgba(255, 215, 0, 0.2);
+}
+
+.hand-view-card:active {
+  transform: translateY(-4px);
+}
+
+.hand-view-tip {
+  margin: 12px 0 0 0;
+  padding-top: 12px;
+  border-top: 1px solid #8b6914;
+  color: #f3dec2;
+}
 html {
   --user-text-scale: 1;
   height: 100%;
@@ -499,7 +815,7 @@ body.desktop-viewport-blocked #desktop-viewport-overlay {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 20px;
+  padding: 20px 20px 80px 20px;
   box-sizing: border-box;
   width: 100%;
   height: 100%;
@@ -602,16 +918,17 @@ h1 {
 .battlefield {
   position: relative;
   display: flex;
-  justify-content: space-around;
-  width: 92%;
-  max-width: 740px;
+  justify-content: space-between; /* Pushes entities to the opposite edges */
+  align-items: flex-end; /* Aligns characters to a visual "floor" line */
+  width: 95%;
+  max-width: 1180px; /* Matches the .hand-container width for perfect vertical alignment */
   box-sizing: border-box;
-  background: #4a3320;
-  padding: 22px;
-  border-radius: 15px;
-  border: 4px solid #8b5a2b;
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+  padding: 0 10px; /* Removed vertical padding to save space on landscape screens */
   margin-bottom: 16px;
+  /* Remove backgrounds, borders, and shadows to let characters blend into the world */
+  background: transparent;
+  border: none;
+  box-shadow: none;
 }
 
 .weather-banner {
@@ -625,8 +942,10 @@ h1 {
 .weather-indicator {
   border: 2px solid #d8b67b;
   border-radius: 999px;
-  padding: 6px 14px;
-  font-weight: 700;
+  padding: 8px 20px;
+  font-weight: 800;
+  font-size: 1.15rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
   color: #2f2117;
   background: linear-gradient(180deg, #f3dfbd 0%, #e3cb9e 100%);
   position: relative;
@@ -636,8 +955,9 @@ h1 {
 .weather-tooltip {
   position: absolute;
   left: 50%;
-  bottom: calc(100% + 8px);
-  transform: translateX(-50%) translateY(6px);
+  top: calc(100% + 8px);
+  bottom: auto;
+  transform: translateX(-50%) translateY(-6px);
   min-width: 230px;
   max-width: 320px;
   padding: 8px 10px;
@@ -666,10 +986,14 @@ h1 {
 
 .entity {
   text-align: center;
-  background: rgba(0, 0, 0, 0.3);
-  padding: 16px;
-  border-radius: 10px;
-  width: 33%;
+  /* Removed the rgba(0,0,0,0.3) background and heavy padding to free the characters */
+  background: transparent;
+  padding: 0;
+  width: 30%;
+  min-width: 180px;
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Keeps the sprite and health/intent text centered relative to each other */
 }
 .entity h2 {
   margin-top: 0;
@@ -708,8 +1032,8 @@ h1 {
 }
 
 .ui-bar {
-  width: 92%;
-  max-width: 740px;
+  width: 95%;
+  max-width: 1180px; /* Matches .battlefield and .hand-container */
   box-sizing: border-box;
   display: grid;
   grid-template-columns: auto 1fr auto;
@@ -772,245 +1096,68 @@ h1 {
   max-width: 1180px;
 }
 
-.hand-header {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
+.card-icon {
+  font-size: clamp(2rem, 4.5vw, 4rem); /* Allow the icon to shrink slightly more than before */
+  max-height: 100%; /* Prevent it from blowing out of its shrinking container */
+  line-height: 1;
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.25));
 }
 
-.hand-view-btn {
-  background: linear-gradient(135deg, #8b6914, #b8860b);
-  border: 1px solid #ffd700;
-  color: #f4e8d2;
-  padding: 6px 12px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 0.9rem;
-  font-weight: 600;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-}
-
-.hand-view-btn:hover {
-  background: linear-gradient(135deg, #b8860b, #daa520);
-  border-color: #ffed4e;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
-}
-
-.hand-view-btn:active {
-  transform: translateY(0);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
-}
-
-@media (max-width: 600px) {
-  .hand-view-btn {
-    padding: 8px 14px;
-    font-size: 0.85rem;
-    width: 100%;
-  }
-}
-
-.hand {
-  display: flex;
-  gap: 15px;
-  height: 292px;
-  width: 100%;
-  justify-content: center;
-  overflow-x: auto;
-  box-sizing: border-box;
-}
-
-.card {
-  background: #f4e8d2;
-  color: #2c1e16;
-  width: 188px;
-  height: 268px;
-  border-radius: 10px;
-  border: 3px solid var(--rarity-border-color, var(--rarity-common));
-  padding: 10px;
+/* 5. Dedicated Text Box (High-Contrast Sheepskin) */
+/* 5. Dedicated Text Box (Bottom Half, 50/50 Split, No Scroll) */
+.card-text-box {
+  /* Takes 1.2 shares of available space, ensuring it is slightly larger than the art area */
+  flex: 1.2 1 0%;
+  background: rgba(230, 212, 184, 0.4);
+  border-top: 2px dashed rgba(140, 90, 53, 0.4);
+  padding: 12px 14px; /* Generous padding for readability */
   display: flex;
   flex-direction: column;
-  cursor: pointer;
-  position: relative;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
-  transition: 0.2s ease-out;
-  user-select: none;
-  touch-action: manipulation;
-  flex-shrink: 0;
-  container-type: inline-size;
-  box-sizing: border-box;
-  overflow: visible;
-}
-.card:hover {
-  transform: translateY(-20px);
-  border-color: var(--rarity-border-color, var(--rarity-common));
-}
-.card.card-power {
-  border-color: #cc8a1f;
-  box-shadow:
-    0 0 0 1px rgba(204, 138, 31, 0.4) inset,
-    0 0 14px rgba(255, 190, 72, 0.35),
-    0 5px 15px rgba(0, 0, 0, 0.4);
-  background:
-    radial-gradient(circle at 50% 0%, rgba(255, 217, 142, 0.42) 0%, rgba(255, 217, 142, 0) 52%),
-    #f4e8d2;
-}
-.card.card-power .card-title {
-  border-bottom-color: #cc8a1f;
-}
-.card.disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-.card.disabled:hover {
-  transform: none;
-  border-color: var(--rarity-border-color, var(--rarity-common));
+  justify-content: flex-start; /* Align text to the top of this massive new box */
+  overflow: hidden; /* ABSOLUTELY NO SCROLLING */
 }
 
-.card-rarity,
-.reward-rarity,
-.shop-item-rarity {
-  --card-rarity-min-size: 0.5rem;
-  text-align: center;
-  font-size: 0.62rem;
-  font-weight: 600;
-  line-height: 1.05;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  color: #6f5a43;
-  opacity: 0.95;
-}
-
-.shop-item-energy {
-  align-self: flex-start;
-  padding: 3px 8px;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 220, 133, 0.45);
-  background: rgba(45, 28, 15, 0.72);
-  color: #ffe3ac;
-  font-weight: 700;
-  font-size: 0.74rem;
-  line-height: 1.1;
-}
-
-.card-rarity {
-  margin-top: 2px;
-  margin-bottom: 2px;
-}
-
-.card-cost {
-  position: absolute;
-  top: -20px;
-  left: -20px;
-  width: 55px;
-  height: 55px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-weight: bold;
-  font-size: 1.5em;
-  color: #fff;
-  text-shadow:
-    2px 2px 0 #000,
-    -2px -2px 0 #000,
-    2px -2px 0 #000,
-    -2px 2px 0 #000;
-  background-image: url("data:image/svg+xml;utf8,<svg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'><polygon points='50,5 90,50 50,95 10,50' fill='%23fbb03b' stroke='%23a67c00' stroke-width='6' stroke-linejoin='round' /><path d='M 25,35 Q 50,50 75,35 M 15,50 Q 50,65 85,50 M 25,65 Q 50,80 75,65' fill='none' stroke='%23a67c00' stroke-width='6' stroke-linecap='round'/></svg>");
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-}
-
-.card-title {
-  --card-title-min-size: 0.84rem;
-  --card-title-hard-min-size: 0.76rem;
-  text-align: center;
-  font-weight: bold;
-  margin-top: 25px;
-  margin-bottom: 2px;
-  border-bottom: 2px solid #ccc;
-  padding-bottom: 4px;
-  font-size: clamp(0.95rem, 5.8cqw, 1.18rem);
-  line-height: 1.08;
-  text-wrap: balance;
-  flex: 0 0 auto;
-}
-.card-img {
-  flex: 1 1 auto;
-  min-height: 0;
-  min-width: 0;
-  flex-shrink: 1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 1rem;
-  line-height: 1;
-  overflow: hidden;
-}
-
-.card-img > img,
-.card-img > svg,
-.card-img > span {
-  max-width: 100%;
-  width: auto;
-  height: auto;
-  max-height: 100%;
-  object-fit: contain;
-}
-
-.card-icon {
-  --card-icon-min-size: 1.02rem;
-  display: inline-block;
-  max-width: 100%;
-  width: auto;
-  height: auto;
-  font-size: clamp(1.4rem, 11.5cqw, 3.1rem);
-  line-height: 1;
-  object-fit: contain;
-}
+/* Critical Readability Fix: Left-Align Text */
 .card-desc {
-  --card-desc-base-size: clamp(0.72rem, 5.4cqw, 0.98rem);
-  --card-desc-min-size: 0.62rem;
-  --card-desc-hard-min-size: 0.46rem;
-  font-size: var(--card-desc-base-size);
+  /* Set a reliable base size. It will not shrink below 0.8rem. */
+  font-size: clamp(0.8rem, 1.1cqw, 0.95rem);
   font-weight: 700;
-  line-height: 1.15;
-  text-align: center;
-  background: rgba(0, 0, 0, 0.1);
-  display: block;
-  flex: 0 1 auto;
-  min-height: 0;
-  margin-top: 4px;
-  margin-bottom: 4px;
-  padding: 4px 5px 6px;
-  border-radius: 5px;
-  overflow: hidden;
-  word-break: break-word;
-  overflow-wrap: anywhere;
-  hyphens: auto;
-  box-sizing: border-box;
+  line-height: 1.25;
+  text-align: left;
+  color: #3d2314;
+  /* Ensure it wraps and creates vertical height naturally */
+  white-space: normal;
+  overflow-wrap: break-word;
 }
 
-.card-desc.card-desc--autoscaled {
-  letter-spacing: -0.02em;
+/* 6. Inline Highlander Exhaust (PRZEPADO) */
+.card-exhaust-inline {
+  margin-top: 8px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #b32d1c; /* Traditional deep highlander red accent */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  letter-spacing: 0.05em;
 }
 
-.card-desc.card-desc--tight {
-  line-height: 1.08;
-  letter-spacing: -0.025em;
-  padding: 2px 3px 4px;
-  margin-top: 2px;
-  margin-bottom: 2px;
-}
+/* 5. Dedicated Text Box (High-Contrast Sheepskin) */
 
-@container (max-width: 138px) {
-  .card-desc {
-    --card-desc-base-size: clamp(0.64rem, 4.8cqw, 0.86rem);
-    padding: 3px 4px 5px;
-    margin-top: 3px;
-    margin-bottom: 3px;
-  }
+/* Critical Readability Fix: Left-Align Text */
+
+/* 6. Inline Highlander Exhaust (PRZEPADO) */
+.card-exhaust-inline {
+  margin-top: 8px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #b32d1c; /* Traditional deep highlander red accent */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  letter-spacing: 0.05em;
 }
 
 .card-exhaust-badge {
@@ -1230,56 +1377,6 @@ h1 {
 
 .relic-glow-wrap {
   position: relative;
-  width: 130px;
-  height: 130px;
-  border: 3px solid var(--rarity-border-color, var(--rarity-common));
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  margin: 6px 0;
-}
-
-.relic-glow-wrap::before {
-  content: '';
-  position: absolute;
-  inset: 8px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 214, 98, 0.42), rgba(255, 214, 98, 0));
-  filter: blur(8px);
-}
-
-.reward-relic-emoji {
-  position: relative;
-  z-index: 1;
-  font-size: 4rem;
-  line-height: 1;
-}
-
-.reward-relic-name {
-  margin: 0;
-  color: #ffe1a3;
-  font-size: 1.3rem;
-}
-
-.reward-relic-desc {
-  margin: 0;
-  max-width: 560px;
-  color: #f6e8ca;
-  opacity: 0.95;
-}
-
-.reward-relic-btn {
-  border: 2px solid #ffdc72;
-  background: linear-gradient(180deg, #8f6130 0%, #6d4521 100%);
-  color: #fff3d6;
-  font-size: 1rem;
-  font-weight: bold;
-  border-radius: 999px;
-  padding: 10px 18px;
-  cursor: pointer;
-  transition:
-    transform 0.2s ease,
-    filter 0.2s ease;
 }
 
 .reward-relic-btn:hover {
@@ -2638,53 +2735,30 @@ h1 {
 
 .card-zoom-panel {
   width: 100%;
-  max-width: min(760px, 100%);
-  max-height: calc(100dvh - 28px);
+  max-width: 800px; /* Internal canvas pixels */
+  max-height: 1000px; /* Safely within the 1080px canvas height */
   overflow-y: auto;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: 20px;
 }
 
 .card.card-zoom-card {
-  width: min(690px, 92vw);
+  /* Internal canvas width - the game's JS canvas scaling handles the rest perfectly */
+  width: 480px;
   height: auto;
-  min-height: 0;
-  max-height: none;
+  max-height: none; /* Let the aspect-ratio dictate the height naturally */
   cursor: default;
   transform: none;
-  padding: 16px;
+  padding: 0; /* REMOVED: New layout manages its own internal padding */
   box-shadow:
     0 0 0 4px rgba(255, 215, 153, 0.22),
-    0 20px 48px rgba(0, 0, 0, 0.58);
+    0 20px 48px rgba(0, 0, 0, 0.65);
 }
 
 .card.card-zoom-card:hover {
   transform: none;
-}
-
-.card-zoom-card .card-title {
-  margin-top: 30px;
-  font-size: clamp(1.25rem, 3.8vw, 2rem);
-  line-height: 1.1;
-}
-
-.card-zoom-card .card-rarity {
-  font-size: clamp(0.82rem, 2.2vw, 1rem);
-}
-
-.card-zoom-card .card-icon {
-  font-size: clamp(2.6rem, 12vw, 4.5rem);
-}
-
-.card-zoom-card .card-desc {
-  font-size: clamp(1rem, 2.8vw, 1.3rem);
-  line-height: 1.35;
-  overflow: visible;
-  margin-top: 10px;
-  margin-bottom: 8px;
-  padding: 10px 12px;
 }
 
 .card-zoom-tip {
@@ -2716,10 +2790,9 @@ h1 {
   border: 2px solid #8b6914;
   border-radius: 12px;
   padding: 20px;
-  width: 95%;
-  height: 95%;
-  max-width: none;
-  max-height: none;
+  width: 90%;
+  height: 82%;
+  max-width: 1200px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -2799,7 +2872,9 @@ h1 {
   height: auto;
   aspect-ratio: 2 / 3;
   cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .hand-view-card:hover {
@@ -3571,24 +3646,7 @@ h1 {
     font-size: 0.84rem;
   }
 
-  .card-title {
-    --card-title-min-size: 1.02rem;
-    --card-title-hard-min-size: 0.92rem;
-    font-size: clamp(1.02rem, 6.7cqw, 1.34rem);
-  }
-
-  .card-rarity,
-  .reward-rarity,
-  .shop-item-rarity {
-    font-size: 0.72rem;
-  }
-
-  .card-desc {
-    --card-desc-base-size: clamp(0.78rem, 5.9cqw, 1.02rem);
-    --card-desc-min-size: 0.68rem;
-    --card-desc-hard-min-size: 0.56rem;
-    line-height: 1.16;
-  }
+  /* removed mobile overrides for .card-title, .card-desc, .card-icon */
 }
 
 /* Legacy compact mobile-Maryna override removed.

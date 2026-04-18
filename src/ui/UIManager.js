@@ -298,6 +298,20 @@ export class UIManager {
     document.getElementById('hand-view-btn')?.addEventListener('click', () => {
       this._openHandViewOverlay();
     });
+    handViewOverlay.initHandViewOverlay();
+    document.getElementById('hand-view-close-btn')?.addEventListener('click', () => {
+      handViewOverlay.closeHandView();
+    });
+    document.getElementById('hand-view-btn')?.addEventListener('click', () => {
+      this._openHandViewOverlay();
+    });
+    handViewOverlay.initHandViewOverlay();
+    document.getElementById('hand-view-close-btn')?.addEventListener('click', () => {
+      handViewOverlay.closeHandView();
+    });
+    document.getElementById('hand-view-btn')?.addEventListener('click', () => {
+      this._openHandViewOverlay();
+    });
     this._applyTextSizePreference();
     this._renderReleaseNotesButtonLabel();
     this._renderReleaseNotes();
@@ -647,8 +661,7 @@ export class UIManager {
     const textSizeBtn = document.getElementById('option-text-size-btn');
     if (textSizeBtn) {
       const preset = getTextSizePreset();
-      const label =
-        preset === 'xlarge' ? 'BARDZO DUZY' : preset === 'large' ? 'DUZY' : 'NORMALNY';
+      const label = preset === 'xlarge' ? 'BARDZO DUZY' : preset === 'large' ? 'DUZY' : 'NORMALNY';
       textSizeBtn.textContent = label;
       textSizeBtn.classList.toggle('is-on', preset !== 'normal');
       textSizeBtn.setAttribute('aria-label', `Rozmiar tekstu: ${label}`);

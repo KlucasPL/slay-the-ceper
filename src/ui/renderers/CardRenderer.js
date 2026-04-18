@@ -56,9 +56,31 @@ export function renderHand(uiManager) {
     cardEl.className = `card ${uiHelpers.rarityClass(card.rarity)} card-${card.type}${canPlay ? '' : ' disabled'}${isKept ? ' card--kept' : ''}`;
     cardEl.dataset.cardId = cardId;
 
+    // New Fluid Tatra Card Layout
+    cardEl.innerHTML = `
+      <div class="card-header">
+        <div class="card-title">${card.name}</div>
+        <div class="card-cost-oscypek">
+          <span class="cost-value">${actualCost}</span>
+          <span class="cost-icon">🧀</span>
+        </div>
+      </div>
+      <div class="card-subtitle">${uiHelpers.getFullCardType(card.rarity, card.type)}</div>
+      <div class="card-art">
+        <span class="card-icon">${card.emoji}</span>
+      </div>
+      <div class="card-text-box">
+        <div class="card-desc">${cardDescription}</div>
+      </div>
+    `;
+
+    // Inline Highlander Exhaust
     if (card.exhaust) {
       cardEl.classList.add('card-exhaust');
-      cardEl.appendChild(createExhaustBadge());
+      const exhaustEl = document.createElement('div');
+      exhaustEl.className = 'card-exhaust-inline';
+      exhaustEl.innerHTML = '<span class="exhaust-fire">🔥</span> PRZEPADO';
+      cardEl.querySelector('.card-text-box').appendChild(exhaustEl);
     }
 
     if (canPlay && player.hp > 0 && enemy.hp > 0) {
@@ -82,27 +104,6 @@ export function renderHand(uiManager) {
       exhaust: Boolean(card.exhaust),
     });
 
-    const costEl = document.createElement('div');
-    costEl.className = 'card-cost';
-    costEl.textContent = String(actualCost);
-    const titleEl = document.createElement('div');
-    titleEl.className = 'card-title';
-    titleEl.textContent = card.name;
-    const rarityEl = document.createElement('div');
-    rarityEl.className = 'card-rarity';
-    rarityEl.textContent = uiHelpers.getFullCardType(card.rarity, card.type);
-    const imgEl = document.createElement('div');
-    imgEl.className = 'card-img';
-    const iconEl = document.createElement('span');
-    iconEl.className = 'card-icon';
-    iconEl.textContent = card.emoji;
-    imgEl.appendChild(iconEl);
-    const descEl = document.createElement('div');
-    descEl.className = 'card-desc';
-    descEl.textContent = cardDescription;
-
-    cardEl.append(costEl, titleEl, rarityEl, imgEl, descEl);
-
     if (uiManager.state.hasRelic('smycz_zakopane') && player.hp > 0 && enemy.hp > 0) {
       const keepBtn = document.createElement('button');
       keepBtn.type = 'button';
@@ -121,70 +122,69 @@ export function renderHand(uiManager) {
   });
 
   attachHandTapToOpenView(handDiv, uiManager);
-}
+  /**
+   * Attaches a tap handler to the hand container on mobile to open the full hand view.
+   * Distinguishes between tapping a card (which triggers zoom/play) and tapping the background.
+   *
+   * @param {HTMLElement} handDiv
+   * @param {any} uiManager
+   */
+  function attachHandTapToOpenView(handDiv, uiManager) {
+    if (!isTouchMobileDevice()) return;
 
-/**
- * Attaches a tap handler to the hand container on mobile to open the full hand view.
- * Distinguishes between tapping a card (which triggers zoom/play) and tapping the background.
- *
- * @param {HTMLElement} handDiv
- * @param {any} uiManager
- */
-function attachHandTapToOpenView(handDiv, uiManager) {
-  if (!isTouchMobileDevice()) return;
-
-  // Remove old handler if exists
-  if (handDiv.dataset.handViewHandler === 'true') {
-    return;
-  }
-  handDiv.dataset.handViewHandler = 'true';
-
-  handDiv.addEventListener('click', (event) => {
-    const target = event.target;
-    if (!(target instanceof Element)) return;
-
-    // If clicked on a card element itself, let card's own handlers deal with it
-    if (target.closest('.card')) return;
-
-    // Only open hand view on mobile if there are cards
-    if (uiManager.state.hand.length === 0) return;
-
-    // Build card view objects for the hand view overlay
-    const cardViews = uiManager.state.hand
-      .map((cardId, index) => {
-        const card = getCardDefinition(cardId);
-        if (!card) return null;
-
-        const actualCost = uiManager.state.getCardCostInHand(cardId);
-        const cardDescription = getCardDescription(uiManager, card, cardId);
-
-        return {
-          cardId,
-          handIndex: index,
-          name: card.name,
-          emoji: card.emoji,
-          rarityLabel: uiHelpers.getFullCardType(card.rarity, card.type),
-          cost: actualCost,
-          description: cardDescription,
-          rarityClass: uiHelpers.rarityClass(card.rarity),
-          typeClass: `card-${card.type}`,
-          exhaust: Boolean(card.exhaust),
-        };
-      })
-      .filter(Boolean);
-
-    if (cardViews.length > 0) {
-      // Import at function scope to avoid circular dependency
-      import('../overlays/HandViewOverlay.js').then((handViewOverlay) => {
-        const onCardClick = (index) => {
-          if (!uiManager.isAnimating) {
-            uiManager._handlePlayCard(index);
-          }
-        };
-        handViewOverlay.openHandView(cardViews, onCardClick);
-      });
+    // Remove old handler if exists
+    if (handDiv.dataset.handViewHandler === 'true') {
+      return;
     }
-  });
+    handDiv.dataset.handViewHandler = 'true';
+
+    handDiv.addEventListener('click', (event) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+
+      // If clicked on a card element itself, let card's own handlers deal with it
+      if (target.closest('.card')) return;
+
+      // Only open hand view on mobile if there are cards
+      if (uiManager.state.hand.length === 0) return;
+
+      // Build card view objects for the hand view overlay
+      const cardViews = uiManager.state.hand
+        .map((cardId, index) => {
+          const card = getCardDefinition(cardId);
+          if (!card) return null;
+
+          const actualCost = uiManager.state.getCardCostInHand(cardId);
+          const cardDescription = getCardDescription(uiManager, card, cardId);
+
+          return {
+            cardId,
+            handIndex: index,
+            name: card.name,
+            emoji: card.emoji,
+            rarityLabel: uiHelpers.getFullCardType(card.rarity, card.type),
+            cost: actualCost,
+            description: cardDescription,
+            rarityClass: uiHelpers.rarityClass(card.rarity),
+            typeClass: `card-${card.type}`,
+            exhaust: Boolean(card.exhaust),
+          };
+        })
+        .filter(Boolean);
+
+      if (cardViews.length > 0) {
+        // Import at function scope to avoid circular dependency
+        import('../overlays/HandViewOverlay.js').then((handViewOverlay) => {
+          const onCardClick = (index) => {
+            if (!uiManager.isAnimating) {
+              uiManager._handlePlayCard(index);
+            }
+          };
+          handViewOverlay.openHandView(cardViews, onCardClick);
+        });
+      }
+    });
+  }
 }
 
 /**

@@ -500,9 +500,6 @@
         </div>
 
         <div class="hand-container">
-          <div class="hand-header">
-            <button id="hand-view-btn" class="hand-view-btn" type="button" title="Pokaż całą rękę">👁️ Podgląd ręki</button>
-          </div>
           <div class="hand" id="hand"></div>
         </div>
       </div>
@@ -522,33 +519,31 @@
           <div id="pile-viewer-grid" class="pile-viewer-grid"></div>
         </div>
       </div>
-      
-        <div id="card-zoom-overlay" class="card-zoom-overlay hidden" aria-hidden="true">
-          <div id="card-zoom-panel" class="card-zoom-panel" role="dialog" aria-modal="true">
-            <article id="card-zoom-card" class="card card-zoom-card">
-              <div id="card-zoom-cost" class="card-cost"></div>
-              <div id="card-zoom-title" class="card-title"></div>
-              <div id="card-zoom-rarity" class="card-rarity"></div>
-              <div class="card-img"><span id="card-zoom-icon" class="card-icon"></span></div>
-              <div id="card-zoom-desc" class="card-desc"></div>
-              <div id="card-zoom-exhaust" class="card-exhaust-badge hidden">
-                <span class="card-exhaust-fire">🔥</span> <b>PRZEPADO</b>
-              </div>
-            </article>
-            <p class="card-zoom-tip">Dotknij tła, aby zamknąć podgląd.</p>
-          </div>
-        </div>
 
-        <div id="hand-view-overlay" class="hand-view-overlay hidden" aria-hidden="true">
-          <div id="hand-view-panel" class="hand-view-panel" role="dialog" aria-modal="true">
-            <div id="hand-view-header" class="hand-view-header">
-              <h2>Twoja ręka</h2>
-              <button id="hand-view-close-btn" class="hand-view-close-btn" type="button" aria-label="Zamknij podgląd ręki">✕</button>
+      <div id="card-zoom-overlay" class="card-zoom-overlay hidden" aria-hidden="true">
+        <div id="card-zoom-panel" class="card-zoom-panel" role="dialog" aria-modal="true">
+          <article id="card-zoom-card" class="card card-zoom-card">
+            <div class="card-header">
+              <div id="card-zoom-title" class="card-title"></div>
+              <div class="card-cost-oscypek">
+                <span id="card-zoom-cost" class="cost-value"></span>
+                <span class="cost-icon">🧀</span>
+              </div>
             </div>
-            <div id="hand-view-grid" class="hand-view-grid"></div>
-            <p class="hand-view-tip">Dotknij tła, aby zamknąć podgląd.</p>
-          </div>
+            <div id="card-zoom-rarity" class="card-subtitle"></div>
+            <div class="card-art">
+              <span id="card-zoom-icon" class="card-icon"></span>
+            </div>
+            <div class="card-text-box">
+              <div id="card-zoom-desc" class="card-desc"></div>
+              <div id="card-zoom-exhaust" class="card-exhaust-inline hidden">
+                <span class="exhaust-fire">🔥</span> PRZEPADO
+              </div>
+            </div>
+          </article>
+          <p class="card-zoom-tip">Dotknij tła, aby zamknąć podgląd.</p>
         </div>
+      </div>
 
       <button id="tutorial-exit-btn" class="tutorial-exit-btn hidden" type="button">Wyjdź</button>
 
