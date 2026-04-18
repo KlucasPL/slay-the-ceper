@@ -10,7 +10,12 @@ export function drawPerTurn() {
  */
 export function applyBattleStartRelics(state) {
   if (state.hasRelic('flaszka_sliwowicy')) {
-    state.player.status.strength += 4;
+    state.player.status.strength += 6;
+  }
+
+  if (state.hasRelic('zepsuty_termometr')) {
+    state.applyEnemyDebuff('weak', 1);
+    state.applyEnemyDebuff('fragile', 1);
   }
 
   if (state.hasRelic('papryczka_marka')) {
@@ -26,21 +31,26 @@ export function applyBattleStartRelics(state) {
     state._refreshEnemyIntent();
   }
 
+  if (state.hasRelic('mapa_zakopanego')) {
+    state.gainPlayerBlockFromCard(3);
+  }
+
   if (state.hasRelic('relic_boon_zloty_rozaniec')) {
     state.player.status.next_double = true;
+    state.gainPlayerBlockFromCard(1);
   }
 
   if (state.hasRelic('relic_boon_tajny_skladnik')) {
-    state.applyEnemyDebuff('weak', 1);
-    state.applyEnemyDebuff('fragile', 1);
+    state.applyEnemyDebuff('weak', 3);
+    state.applyEnemyDebuff('fragile', 2);
   }
 
   if (
     state.hasRelic('relic_boon_sloik_rosolu') &&
-    (state.maryna.counters.rosolBattlesLeft ?? 3) > 0
+    (state.maryna.counters.rosolBattlesLeft ?? 4) > 0
   ) {
-    state.maryna.counters.rosolBattlesLeft = (state.maryna.counters.rosolBattlesLeft ?? 3) - 1;
-    state.gainPlayerBlockFromCard(6);
+    state.maryna.counters.rosolBattlesLeft = (state.maryna.counters.rosolBattlesLeft ?? 4) - 1;
+    state.gainPlayerBlockFromCard(8);
     state.player.status.strength += 1;
   }
 }
@@ -122,7 +132,7 @@ export function applyDamageToEnemy(state, dmg) {
       state.combat.activeSide === 'player' &&
       !state.enemy.lichwaTriggeredThisTurn
     ) {
-      state.dutki = Math.max(0, state.dutki - 3);
+      state.dutki = Math.max(0, state.dutki - 2);
       state.enemy.lichwaTriggeredThisTurn = true;
     }
 
@@ -130,10 +140,10 @@ export function applyDamageToEnemy(state, dmg) {
       state.enemy.passive === 'hart_ducha' &&
       !state.enemy.hartDuchaTriggered &&
       state.enemy.hp > 0 &&
-      state.enemy.hp < state.enemy.maxHp * 0.5
+      state.enemy.hp < state.enemy.maxHp * 0.4
     ) {
-      state.enemy.status.strength += 3;
-      state.enemy.block += 10;
+      state.enemy.status.strength += 2;
+      state.enemy.block += 6;
       state.enemy.hartDuchaTriggered = true;
     }
 
@@ -354,8 +364,12 @@ export function startTurn(state) {
     state.smyczKeptCardId = null;
   }
 
+  if (state.hasRelic('zlota_karta_zakopianczyka')) {
+    state.player.energy += 1;
+  }
+
   if (state.hasRelic('wiatr_halny')) {
-    state._drawCards(1);
+    state._drawCards(2);
   }
 
   if (state.hasRelic('flaszka_sliwowicy')) {
@@ -370,16 +384,18 @@ export function startTurn(state) {
   }
 
   if (state.hasRelic('papryczka_marka')) {
-    state.player.hp = Math.max(1, state.player.hp - 2);
+    state.gainPlayerBlockFromCard(1);
+    state.player.hp = Math.max(1, state.player.hp - 1);
   }
 
-  if (state.player.koncesja_na_oscypki && state.enemy.rachunek >= 25) {
+  if (state.player.koncesja_na_oscypki && state.enemy.rachunek >= 20) {
     state.player.energy += 1;
     state._drawCards(1);
+    state.gainPlayerBlockFromCard(3);
   }
 
   if (state.player.weather_fog_garda && state.currentWeather === 'fog') {
-    state.gainPlayerBlockFromCard(5);
+    state.gainPlayerBlockFromCard(7);
   }
 
   if (state.player.weather_frozen_vulnerable && state.currentWeather === 'frozen') {
@@ -420,9 +436,11 @@ export function playCard(state, handIndex) {
 
   state.player.energy -= actualCost;
 
-  const isFirstCardThisBattle =
-    state.hasRelic('pocztowka_giewont') && !state.pocztowkaUsedThisBattle;
-  state.pocztowkaUsedThisBattle = true;
+  const isFirstOrSecondCardThisBattle =
+    state.hasRelic('pocztowka_giewont') && state.pocztowkaCardsTriggeredThisBattle < 2;
+  if (isFirstOrSecondCardThisBattle) {
+    state.pocztowkaCardsTriggeredThisBattle += 1;
+  }
   const isAttackCard = card.type === 'attack';
 
   if (isAttackCard) {
@@ -457,19 +475,20 @@ export function playCard(state, handIndex) {
       effect = card.effect(state);
     }
 
-    if (isFirstCardThisBattle && state.enemy.hp > 0 && !activateLansOnly) {
+    if (isFirstOrSecondCardThisBattle && state.enemy.hp > 0 && !activateLansOnly) {
       card.effect(state);
+      state.gainPlayerBlockFromCard(2);
     }
   } finally {
     state.activeRuntimeCardId = null;
   }
 
   if (card.type === 'attack' && state.player.goralska_goscinnosc) {
-    state.addEnemyRachunek(2);
+    state.addEnemyRachunek(3);
   }
 
   if (state.hasRelic('ciupaga_dlugopis') && card.type === 'skill') {
-    state._applyDamageToEnemy(4);
+    state._applyDamageToEnemy(1);
   }
 
   if (state.zegarekFreeSkillAvailable && card.type === 'skill') {
@@ -535,7 +554,7 @@ export function endTurn(state) {
 
   /** @type {{ amount: number, text: string } | null} */
   let playerPassiveHeal = null;
-  if (state.hasRelic('krokus') && state.player.block > 10) {
+  if (state.hasRelic('krokus') && state.player.block >= 8) {
     const hpBefore = state.player.hp;
     state.healPlayer(2);
     const healed = state.player.hp - hpBefore;
@@ -544,9 +563,9 @@ export function endTurn(state) {
     }
   }
 
-  if (state.hasRelic('papucie_po_babci') && state._isLansActive()) {
+  if (state.hasRelic('papucie_po_babci')) {
     const hpBefore = state.player.hp;
-    state.healPlayer(2);
+    state.healPlayer(state._isLansActive() ? 2 : 1);
     const healed = state.player.hp - hpBefore;
     if (healed > 0 && !playerPassiveHeal) {
       playerPassiveHeal = { amount: healed, text: `+${healed} Krzepy (Papucie)` };

@@ -143,15 +143,16 @@ export const cardLibrary = {
     id: 'halny',
     name: 'Halny',
     type: 'skill',
-    rarity: 'uncommon',
-    cost: 2,
+    rarity: 'common',
+    cost: 1,
     price: 90,
     emoji: '🌬️',
-    desc: 'Odrzuć rękę, dobierz 3 karty.',
+    desc: 'Odrzuć rękę, dobierz 5 kart i zyskaj 6 Gardy.',
     effect(state) {
       state.discard.push(...state.hand);
       state.hand = [];
-      state._drawCards(3);
+      state._drawCards(5);
+      state.gainPlayerBlockFromCard(6);
       return { playerAnim: 'anim-block' };
     },
   },
@@ -163,10 +164,11 @@ export const cardLibrary = {
     cost: 1,
     price: 55,
     emoji: '🧾',
-    desc: 'Dodaj 10 do Rachunku wroga.',
+    desc: 'Dodaj 12 do Rachunku wroga. Dobierz 1 kartę.',
     exhaust: true,
     effect(state) {
-      state.addEnemyRachunek(10);
+      state.addEnemyRachunek(12);
+      state._drawCards(1);
       return { playerAnim: 'anim-block' };
     },
   },
@@ -209,15 +211,16 @@ export const cardLibrary = {
     id: 'zdjecie_z_misiem',
     name: 'Zdjęcie z Misiem',
     type: 'skill',
-    rarity: 'uncommon',
+    rarity: 'rare',
     tags: ['lans'],
     cost: 1,
     price: 80,
     emoji: '📸',
-    desc: 'Jeśli masz aktywny Lans, zyskaj 20 dutków. Inaczej nic się nie dzieje.',
+    desc: 'Jeśli masz aktywny Lans, zyskaj 30 dutków i dobierz 1 kartę. Inaczej nic się nie dzieje.',
     effect(state) {
       if (state.player.status.lans > 0) {
-        state.addDutki(20);
+        state.addDutki(30);
+        state._drawCards(1);
       }
       return { playerAnim: 'anim-block' };
     },
@@ -281,12 +284,13 @@ export const cardLibrary = {
     cost: 1,
     price: 95,
     emoji: '🗡️',
-    desc: 'Zadaje 9 obrażeń. Jeśli wróg pada: +30 dutków.',
+    desc: 'Zadaje 11 obrażeń. Zyskujesz +10 dutków. Jeśli wróg pada: dodatkowe +25 dutków.',
     exhaust: true,
     effect(state) {
-      const dmg = state._calcAttackDamage(state.player, 9 + state.getCardDamageBonus('janosik'));
+      const dmg = state._calcAttackDamage(state.player, 11 + state.getCardDamageBonus('janosik'));
       const damage = state._applyDamageToEnemy(dmg);
-      if (state.enemy.hp <= 0) state.addDutki(30);
+      state.addDutki(10);
+      if (state.enemy.hp <= 0) state.addDutki(25);
       return {
         playerAnim: 'anim-attack-p',
         enemyAnim: damage.dealt > 0 ? 'anim-damage' : 'anim-block',
@@ -299,7 +303,7 @@ export const cardLibrary = {
     name: 'Echo w Tatrach',
     type: 'skill',
     rarity: 'uncommon',
-    cost: 2,
+    cost: 1,
     price: 100,
     emoji: '🔊',
     desc: 'Twój następny cios zadaje podwójne obrażenia. Dobierz 1 kartę.',
@@ -314,15 +318,15 @@ export const cardLibrary = {
     id: 'sandaly',
     name: 'Sandały',
     type: 'attack',
-    rarity: 'uncommon',
+    rarity: 'rare',
     cost: 1,
     price: 70,
     emoji: '👡',
-    desc: 'Zadaje 5 obrażeń. Nakłada Słabość 2 na wroga.',
+    desc: 'Zadaje 7 obrażeń. Nakłada Słabość 1 na wroga.',
     effect(state) {
-      const dmg = state._calcAttackDamage(state.player, 5 + state.getCardDamageBonus('sandaly'));
+      const dmg = state._calcAttackDamage(state.player, 7 + state.getCardDamageBonus('sandaly'));
       const damage = state._applyDamageToEnemy(dmg);
-      state.applyEnemyDebuff('weak', 2);
+      state.applyEnemyDebuff('weak', 1);
       return {
         playerAnim: 'anim-attack-p',
         enemyAnim: damage.dealt > 0 ? 'anim-damage' : 'anim-block',
@@ -335,13 +339,13 @@ export const cardLibrary = {
     name: 'Gniew Giewontu',
     type: 'attack',
     rarity: 'rare',
-    cost: 3,
+    cost: 2,
     price: 120,
     emoji: '⛰️',
-    desc: 'Zadaje 30 obrażeń.',
+    desc: 'Zadaje 28 obrażeń.',
     exhaust: true,
     effect(state) {
-      const dmg = state._calcAttackDamage(state.player, 30 + state.getCardDamageBonus('giewont'));
+      const dmg = state._calcAttackDamage(state.player, 28 + state.getCardDamageBonus('giewont'));
       const damage = state._applyDamageToEnemy(dmg);
       return {
         playerAnim: 'anim-attack-p',
@@ -354,20 +358,20 @@ export const cardLibrary = {
     id: 'mocny_organizm',
     name: 'Mocny Organizm',
     type: 'attack',
-    rarity: 'rare',
+    rarity: 'uncommon',
     cost: 2,
     price: 130,
     emoji: '💪',
-    desc: 'Zadaje 10 obrażeń. Jeśli wróg pada: na stałe +2 do maksymalnej Krzepy.',
+    desc: 'Zadaje 12 obrażeń. Jeśli wróg pada: na stałe +3 do maksymalnej Krzepy.',
     exhaust: true,
     effect(state) {
       const dmg = state._calcAttackDamage(
         state.player,
-        10 + state.getCardDamageBonus('mocny_organizm')
+        12 + state.getCardDamageBonus('mocny_organizm')
       );
       const damage = state._applyDamageToEnemy(dmg);
       if (state.enemy.hp <= 0) {
-        state.gainMaxHp(2);
+        state.gainMaxHp(3);
       }
       return {
         playerAnim: 'anim-attack-p',
@@ -408,9 +412,9 @@ export const cardLibrary = {
     cost: 1,
     price: 65,
     emoji: '🩳',
-    desc: 'Zyskujesz 7 Gardy. Jeśli masz Lans, zyskujesz 10 Gardy.',
+    desc: 'Zyskujesz 9 Gardy. Jeśli masz Lans, zyskujesz 13 Gardy.',
     effect(state) {
-      state.gainPlayerBlockFromCard(state.player.status.lans > 0 ? 10 : 7);
+      state.gainPlayerBlockFromCard(state.player.status.lans > 0 ? 13 : 9);
       return { playerAnim: 'anim-block' };
     },
   },
@@ -479,10 +483,10 @@ export const cardLibrary = {
     cost: 2,
     price: 130,
     emoji: '⚔️',
-    desc: 'Zadaje 15 obrażeń. Jeśli to ostatnia karta na ręce, zadaje podwójne obrażenia.',
+    desc: 'Zadaje 22 obrażenia. Jeśli to ostatnia karta na ręce, zadaje podwójne obrażenia.',
     effect(state) {
       const isLastCardInHand = state.hand.length === 0;
-      const base = isLastCardInHand ? 30 : 15;
+      const base = isLastCardInHand ? 44 : 22;
       const dmg = state._calcAttackDamage(
         state.player,
         base + state.getCardDamageBonus('zemsta_gorala')
@@ -660,7 +664,7 @@ export const cardLibrary = {
     cost: 2,
     price: 100,
     emoji: '🚪',
-    desc: 'Zadaje 12 obrażeń. Jeśli wróg ma Słabość, dodaje 10 do Rachunku.',
+    desc: 'Zadaje 12 obrażeń. Jeśli wróg ma Słabość, dodaje 6 do Rachunku.',
     tags: ['rachunek'],
     effect(state) {
       const dmg = state._calcAttackDamage(
@@ -669,7 +673,7 @@ export const cardLibrary = {
       );
       const damage = state._applyDamageToEnemy(dmg);
       if (state.enemy.status.weak > 0) {
-        state.addEnemyRachunek(10);
+        state.addEnemyRachunek(6);
       }
       return {
         playerAnim: 'anim-attack-p',
@@ -710,15 +714,15 @@ export const cardLibrary = {
     id: 'skrupulatne_wyliczenie',
     name: 'Skrupulatne Wyliczenie',
     type: 'attack',
-    rarity: 'uncommon',
-    cost: 1,
+    rarity: 'rare',
+    cost: 0,
     price: 60,
     emoji: '📊',
-    desc: 'Zadaje obrażenia równe połowie Twojej aktualnej Gardy. Jeśli Rachunek > 15, dodaje +5 obrażeń.',
+    desc: 'Zadaje obrażenia równe 90% Twojej aktualnej Gardy. Jeśli Rachunek >= 8, dodaje +10 obrażeń.',
     tags: ['rachunek'],
     effect(state) {
-      const baseFromBlock = Math.floor(state.player.block / 2);
-      const bonus = state.enemy.rachunek > 15 ? 5 : 0;
+      const baseFromBlock = Math.floor(state.player.block * 0.9);
+      const bonus = state.enemy.rachunek >= 8 ? 10 : 0;
       const baseDmg = baseFromBlock + bonus + state.getCardDamageBonus('skrupulatne_wyliczenie');
       const dmg = state._calcAttackDamage(state.player, baseDmg);
       const damage = state._applyDamageToEnemy(dmg);
@@ -735,15 +739,15 @@ export const cardLibrary = {
     name: 'Tatrzański Szpan',
     type: 'attack',
     rarity: 'uncommon',
-    cost: 2,
+    cost: 1,
     price: 95,
     emoji: '👤',
-    desc: 'LANS: Zadaje 16 obrażeń.',
+    desc: 'LANS: Zadaje 18 obrażeń.',
     tags: ['lans'],
     effect(state) {
       const dmg = state._calcAttackDamage(
         state.player,
-        16 + state.getCardDamageBonus('tatrzanski_szpan')
+        18 + state.getCardDamageBonus('tatrzanski_szpan')
       );
       const damage = state._applyDamageToEnemy(dmg);
       return {
@@ -758,19 +762,19 @@ export const cardLibrary = {
     id: 'paradny_zwyrt',
     name: 'Paradny Zwyrt',
     type: 'attack',
-    rarity: 'uncommon',
+    rarity: 'rare',
     cost: 1,
     price: 75,
     emoji: '🎩',
-    desc: 'LANS: Zadaje 12 obrażeń, dobiera 1 kartę.',
+    desc: 'LANS: Zadaje 18 obrażeń, dobiera 2 karty.',
     tags: ['lans'],
     effect(state) {
       const dmg = state._calcAttackDamage(
         state.player,
-        12 + state.getCardDamageBonus('paradny_zwyrt')
+        18 + state.getCardDamageBonus('paradny_zwyrt')
       );
       const damage = state._applyDamageToEnemy(dmg);
-      state._drawCards(1);
+      state._drawCards(2);
       return {
         playerAnim: 'anim-attack-p',
         enemyAnim: damage.dealt > 0 ? 'anim-damage' : 'anim-block',
@@ -787,14 +791,15 @@ export const cardLibrary = {
     cost: 1,
     price: 60,
     emoji: '☎️',
-    desc: 'LANS: Zadaje 9 obrażeń.',
+    desc: 'LANS: Zadaje 16 obrażeń i dobiera 1 kartę.',
     tags: ['lans'],
     effect(state) {
       const dmg = state._calcAttackDamage(
         state.player,
-        9 + state.getCardDamageBonus('cios_z_telemarkiem')
+        16 + state.getCardDamageBonus('cios_z_telemarkiem')
       );
       const damage = state._applyDamageToEnemy(dmg);
+      state._drawCards(1);
       return {
         playerAnim: 'anim-attack-p',
         enemyAnim: damage.dealt > 0 ? 'anim-damage' : 'anim-block',
@@ -811,12 +816,12 @@ export const cardLibrary = {
     cost: 2,
     price: 115,
     emoji: '🌀',
-    desc: 'LANS: Atakuje 3x4 obrażenia i nakłada 2 Słabości.',
+    desc: 'LANS: Atakuje 3x3 obrażenia. Nakłada 2 Słabości, jeśli masz LANS, w przeciwnym razie 1.',
     tags: ['lans'],
     effect(state) {
       let totalDealt = 0;
       let totalBlocked = 0;
-      const baseHit = 4 + state.getCardDamageBonus('mlynek_ciupaga');
+      const baseHit = 3 + state.getCardDamageBonus('mlynek_ciupaga');
       for (let i = 0; i < 3; i++) {
         if (state.enemy.hp <= 0) break;
         const dmg = state._calcAttackDamage(state.player, baseHit);
@@ -824,7 +829,8 @@ export const cardLibrary = {
         totalDealt += damage.dealt;
         totalBlocked += damage.blocked;
       }
-      state.applyEnemyDebuff('weak', 2);
+      const weakStacks = state.player.status.lans > 0 ? 2 : 1;
+      state.applyEnemyDebuff('weak', weakStacks);
       return {
         playerAnim: 'anim-attack-p',
         enemyAnim: totalDealt > 0 ? 'anim-damage' : 'anim-block',
@@ -838,13 +844,13 @@ export const cardLibrary = {
     name: 'Wepchniecie w Kolejkę',
     type: 'attack',
     rarity: 'common',
-    cost: 1,
+    cost: 0,
     price: 65,
     emoji: '🤜',
-    desc: 'LANS: Nakłada 1 Podatność i dobiera 1 kartę.',
+    desc: 'LANS: Nakłada 2 Podatności i dobiera 1 kartę.',
     tags: ['lans'],
     effect(state) {
-      state.applyEnemyDebuff('vulnerable', 1);
+      state.applyEnemyDebuff('vulnerable', 2);
       state._drawCards(1);
       return { playerAnim: 'anim-attack-p', enemyAnim: 'anim-block' };
     },
@@ -911,12 +917,12 @@ export const cardLibrary = {
     cost: 1,
     price: 70,
     emoji: '🐏',
-    desc: 'Zadaje 5 obrażeń. Zyskuje +4 obrażenia za każdy punkt Twojej Siły.',
+    desc: 'Zadaje 9 obrażeń. Zyskuje +4 obrażenia za każdy punkt Twojej Siły.',
     effect(state) {
       const strengthBonus = Math.max(0, state.player.status.strength) * 4;
       const dmg = state._calcAttackDamage(
         state.player,
-        5 + strengthBonus + state.getCardDamageBonus('beczenie_redyku')
+        9 + strengthBonus + state.getCardDamageBonus('beczenie_redyku')
       );
       const damage = state._applyDamageToEnemy(dmg);
       return {
@@ -966,16 +972,16 @@ export const cardLibrary = {
     cost: 1,
     price: 80,
     emoji: '💰',
-    desc: 'Zadaje 9 obrażeń. Jeśli wróg padnie od tej karty, zyskujesz 15 dutków.',
+    desc: 'Zadaje 11 obrażeń. Jeśli wróg padnie od tej karty, zyskujesz 20 dutków.',
     exhaust: true,
     effect(state) {
       const dmg = state._calcAttackDamage(
         state.player,
-        9 + state.getCardDamageBonus('wymuszony_napiwek')
+        11 + state.getCardDamageBonus('wymuszony_napiwek')
       );
       const damage = state._applyDamageToEnemy(dmg);
       if (state.enemy.hp <= 0) {
-        state.addDutki(15);
+        state.addDutki(20);
       }
       return {
         playerAnim: 'anim-attack-p',
@@ -990,14 +996,14 @@ export const cardLibrary = {
     name: 'Paragon Grozy',
     type: 'attack',
     rarity: 'rare',
-    cost: 3,
+    cost: 2,
     price: 120,
     emoji: '🧨',
-    desc: 'Zadaje 25 obrażeń. Jeśli wróg ma co najmniej 25 Rachunku, kosztuje 1 Oscypek.',
+    desc: 'Zadaje 18 obrażeń. Jeśli wróg ma co najmniej 24 Rachunku, kosztuje 0 Oscypków.',
     effect(state) {
       const dmg = state._calcAttackDamage(
         state.player,
-        25 + state.getCardDamageBonus('paragon_grozy')
+        18 + state.getCardDamageBonus('paragon_grozy')
       );
       const damage = state._applyDamageToEnemy(dmg);
       return {
@@ -1032,11 +1038,11 @@ export const cardLibrary = {
     cost: 1,
     price: 70,
     emoji: '🫴',
-    desc: 'Dodaj 5 do Rachunku. Jeśli wróg ma Podatność, dodaj jeszcze 5.',
+    desc: 'Dodaj 8 do Rachunku. Jeśli wróg ma Podatność, dodaj jeszcze 8.',
     effect(state) {
-      state.addEnemyRachunek(5);
+      state.addEnemyRachunek(8);
       if (state.enemy.status.vulnerable > 0) {
-        state.addEnemyRachunek(5);
+        state.addEnemyRachunek(8);
       }
       return { playerAnim: 'anim-block' };
     },
@@ -1050,9 +1056,10 @@ export const cardLibrary = {
     cost: 1,
     price: 75,
     emoji: '💌',
-    desc: 'Dobierz 1 kartę. Jeśli wróg ma Słabość lub Kruchość, dobierz jeszcze 1.',
+    desc: 'Dobierz 2 karty i zyskaj 9 Gardy. Jeśli wróg ma Słabość lub Kruchość, dobierz jeszcze 1.',
     effect(state) {
-      state._drawCards(1);
+      state._drawCards(2);
+      state.gainPlayerBlockFromCard(9);
       if (state.enemy.status.weak > 0 || state.enemy.status.fragile > 0) {
         state._drawCards(1);
       }
@@ -1103,11 +1110,12 @@ export const cardLibrary = {
     cost: 0,
     price: 65,
     emoji: '🪙',
-    desc: 'Zyskujesz 10 dutków i dodajesz 4 do Rachunku.',
+    desc: 'Zyskujesz 14 dutków, dodajesz 6 do Rachunku i dobierasz 1 kartę.',
     exhaust: true,
     effect(state) {
-      state.addDutki(10);
-      state.addEnemyRachunek(4);
+      state.addDutki(14);
+      state.addEnemyRachunek(6);
+      state._drawCards(1);
       return { playerAnim: 'anim-block' };
     },
   },
@@ -1181,13 +1189,14 @@ export const cardLibrary = {
     name: 'Góralska Gościnność',
     type: 'power',
     rarity: 'rare',
-    cost: 2,
+    cost: 1,
     price: 120,
     emoji: '🏡',
-    desc: 'Za każdą zagraną kartę Ataku dodajesz 2 do Rachunku wroga.',
+    desc: 'Za każdą zagraną kartę Ataku dodajesz 3 do Rachunku wroga. Dobierz 1 kartę.',
     exhaust: true,
     effect(state) {
       state.player.goralska_goscinnosc = true;
+      state._drawCards(1);
       return { playerAnim: 'anim-block' };
     },
   },
@@ -1197,10 +1206,10 @@ export const cardLibrary = {
     name: 'Koncesja na Oscypki',
     type: 'power',
     rarity: 'rare',
-    cost: 2,
+    cost: 1,
     price: 125,
     emoji: '🧾',
-    desc: 'Na początku tury, jeśli wróg ma co najmniej 25 Rachunku, zyskujesz 1 Oscypek i dobierasz 1 kartę.',
+    desc: 'Na początku tury, jeśli wróg ma co najmniej 20 Rachunku, zyskujesz 1 Oscypek, dobierasz 1 kartę i zyskujesz 3 Gardy.',
     exhaust: true,
     effect(state) {
       state.player.koncesja_na_oscypki = true;
@@ -1216,7 +1225,7 @@ export const cardLibrary = {
     cost: 1,
     price: 65,
     emoji: '🌫️',
-    desc: 'Zadaje 6 obrażeń i nakłada 1 Słabość. Jeśli pogoda to mgła, nakłada też 1 Kruchość.',
+    desc: 'Zadaje 6 obrażeń i nakłada 2 Słabości. Jeśli pogoda to mgła, nakłada też 1 Kruchość.',
     tags: ['weather'],
     effect(state) {
       const dmg = state._calcAttackDamage(
@@ -1224,7 +1233,7 @@ export const cardLibrary = {
         6 + state.getCardDamageBonus('ciupaga_we_mgle')
       );
       const damage = state._applyDamageToEnemy(dmg);
-      state.applyEnemyDebuff('weak', 1);
+      state.applyEnemyDebuff('weak', 2);
       if (state.currentWeather === 'fog') {
         state.applyEnemyDebuff('fragile', 1);
       }
@@ -1298,7 +1307,7 @@ export const cardLibrary = {
     name: 'Punkt Widokowy',
     type: 'skill',
     rarity: 'common',
-    cost: 1,
+    cost: 0,
     price: 50,
     emoji: '👁️',
     desc: 'Dobierz 1 kartę. Jeśli pogoda to słonecznie, dobierz jeszcze 1 kartę.',
@@ -1336,15 +1345,16 @@ export const cardLibrary = {
     id: 'znajomosc_szlaku',
     name: 'Znajomość Szlaku',
     type: 'power',
-    rarity: 'uncommon',
+    rarity: 'rare',
     cost: 1,
     price: 80,
     emoji: '🗺️',
-    desc: 'W pogodzie mgły zyskujesz 5 Gardy na starcie swojej tury.',
+    desc: 'Zyskujesz 7 Gardy. W pogodzie mgły zyskujesz 7 Gardy na starcie swojej tury.',
     tags: ['weather'],
     exhaust: true,
     effect(state) {
       state.player.weather_fog_garda = true;
+      state.gainPlayerBlockFromCard(7);
       return { playerAnim: 'anim-block' };
     },
   },
