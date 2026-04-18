@@ -24,7 +24,7 @@ export const marynaBoonLibrary = {
     relicId: 'relic_boon_kiesa',
     name: 'Kiesa na Pierwszy Dzień',
     flavor: 'Masz, ale nie przewal wszystkiego na jarmarku.',
-    effectDesc: '+100 Dutków od razu; +40 Dutków po pierwszym zwycięstwie (jednorazowo).',
+    effectDesc: '+50 Dutków od razu; +40 Dutków po pierwszym zwycięstwie (jednorazowo).',
     emoji: '💰',
   },
   przeglad_plecaka: {
@@ -32,7 +32,8 @@ export const marynaBoonLibrary = {
     relicId: 'relic_boon_przeglad_plecaka',
     name: 'Przegląd Plecaka Maryny',
     flavor: 'Ten złom wyrzuć, to ci zostawiam.',
-    effectDesc: 'Usuń 1 losową kartę startową z talii; dodaj 1 losową kartę niepowszechną; zyskaj +80 Dutków.',
+    effectDesc:
+      'Usuń 1 losową kartę startową z talii; dodaj 1 losową kartę niepowszechną; zyskaj +40 Dutków.',
     emoji: '🎒',
   },
   sloik_rosolu: {
@@ -48,8 +49,7 @@ export const marynaBoonLibrary = {
     relicId: 'relic_boon_zloty_rozaniec',
     name: 'Złoty Różaniec Maryny',
     flavor: 'Pomódl się i bij dwa razy mocniej!',
-    effectDesc:
-      'Na starcie każdej walki: +5 Garda i pierwsze trafienie atakiem zadaje podwójne obrażenia.',
+    effectDesc: 'Pierwsze trafienie atakiem zadaje podwójne obrażenia.',
     emoji: '📿',
   },
   lista_zakupow: {
@@ -58,7 +58,7 @@ export const marynaBoonLibrary = {
     name: 'Lista Zakupów',
     flavor: 'Kup mądrze, nie jak ceper na Krupówkach.',
     effectDesc:
-      '+100 Dutków od razu. Wszystkie sklepy: karty -50%. Dwa darmowe usunięcia kart w wyprawie.',
+      '+50 Dutków od razu. Wszystkie sklepy: karty -25%. Jedno darmowe usunięcie karty w wyprawie.',
     emoji: '📜',
   },
   tajny_skladnik: {
@@ -66,7 +66,7 @@ export const marynaBoonLibrary = {
     relicId: 'relic_boon_tajny_skladnik',
     name: 'Tajny Składnik Maryny',
     flavor: 'Najpierw ich osłabi, potem ich dobij.',
-    effectDesc: 'Na starcie każdej walki wróg dostaje 3 Słabości i 2 Kruchości.',
+    effectDesc: 'Na starcie każdej walki wróg dostaje 2 Słabości i 2 Kruchości.',
     emoji: '🌿',
   },
 };

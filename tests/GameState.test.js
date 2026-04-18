@@ -1069,7 +1069,7 @@ describe('GameState', () => {
       expect(s.player.hp).toBe(46);
     });
 
-    it('certyfikowany_oscypek grants +2 max HP on shop entry up to 3 times', () => {
+    it('certyfikowany_oscypek grants +5 max HP on shop entry up to 3 times', () => {
       const s = freshState();
       s.addRelic('certyfikowany_oscypek');
       const baseMaxHp = s.player.maxHp;
@@ -1079,16 +1079,16 @@ describe('GameState', () => {
       s.generateShopStock();
       s.generateShopStock();
 
-      expect(s.player.maxHp).toBe(baseMaxHp + 6);
+      expect(s.player.maxHp).toBe(baseMaxHp + 15);
       expect(s.certyfikowanyOscypekShopProcs).toBe(3);
     });
 
-    it('flaszka_sliwowicy gives +6 strength at battle start', () => {
+    it('flaszka_sliwowicy gives +2 strength at battle start', () => {
       const s = freshState();
       s.addRelic('flaszka_sliwowicy');
       s.player.status.strength = 0;
       s.resetBattle();
-      expect(s.player.status.strength).toBe(6);
+      expect(s.player.status.strength).toBe(2);
     });
 
     it('wiatr_halny draws +2 cards each turn start', () => {
@@ -1134,14 +1134,14 @@ describe('GameState', () => {
       expect(s.player.hp).toBe(22);
     });
 
-    it('dzwonek_owcy reduces enemy maxHp by 25%', () => {
+    it('dzwonek_owcy reduces enemy maxHp by 15%', () => {
       const s = freshState();
       const baseMaxHp = s.enemy.maxHp; // cepr base = 40
       s.addRelic('dzwonek_owcy');
       s.deck = [...startingDeck, ...startingDeck];
       vi.spyOn(s, '_pickRandomEnemyDef').mockReturnValue(enemyLibrary.cepr);
       s.resetBattle();
-      expect(s.enemy.maxHp).toBe(Math.round(baseMaxHp * 0.75));
+      expect(s.enemy.maxHp).toBe(Math.round(baseMaxHp * 0.85));
     });
 
     it('kierpce_wyprzedazy draws a card when player takes HP damage', () => {
@@ -1347,25 +1347,25 @@ describe('GameState', () => {
         expect(s.getCardShopPrice('ciupaga')).toBe(basePrice);
       });
 
-      it('grants +1 energy at turn start', () => {
+      it('does not grant +1 energy at turn start', () => {
         const s = freshState();
         s.addRelic('zlota_karta_zakopianczyka');
         s.deck = [...startingDeck, ...startingDeck];
         s.hand = [];
-        const maxEnergyBefore = s.player.maxEnergy;
+        const maxEnergy = s.player.maxEnergy;
         s.startTurn();
-        expect(s.player.energy).toBe(maxEnergyBefore + 1);
+        expect(s.player.energy).toBe(maxEnergy);
       });
     });
 
-    it('pekniete_liczydlo heals player by 3 HP when rachunek is added', () => {
+    it('pekniete_liczydlo heals player by 1 HP when rachunek is added', () => {
       const s = freshState();
       s.addRelic('pekniete_liczydlo');
       s.player.hp = 40;
       s.enemy.rachunek = 0;
       s.enemy.maxRachunek = 9999;
       s.addEnemyRachunek(5);
-      expect(s.player.hp).toBe(43);
+      expect(s.player.hp).toBe(41);
     });
 
     it('pekniete_liczydlo heal does not exceed max HP', () => {
@@ -1508,7 +1508,7 @@ describe('GameState', () => {
       // ciupaga on first card: doubled (2x effect) + 2 block = -6*2 damage, +2 block
       expect(s.enemy.hp).toBe(28);
       expect(s.player.block).toBe(2);
-      
+
       s.playCard(0);
       // ciupaga on second card: doubled (2x effect) + 2 block = -6*2 damage, +2 block
       expect(s.enemy.hp).toBe(16);
@@ -1581,14 +1581,14 @@ describe('GameState', () => {
       expect(s.enemy.status.weak).toBe(1);
     });
 
-    it('zepsuty_termometr applies 1 weak and 1 fragile at battle start', () => {
+    it('zepsuty_termometr applies 2 weak and 2 fragile at battle start', () => {
       const s = freshState();
       s.addRelic('zepsuty_termometr');
       s.enemy.status.weak = 0;
       s.enemy.status.fragile = 0;
       s.resetBattle();
-      expect(s.enemy.status.weak).toBe(1);
-      expect(s.enemy.status.fragile).toBe(1);
+      expect(s.enemy.status.weak).toBe(2);
+      expect(s.enemy.status.fragile).toBe(2);
     });
 
     it('getCardCostInHand returns flaszka-seeded cost when relic equipped', () => {
@@ -2471,7 +2471,7 @@ describe('GameState', () => {
       expect(s.enemy.currentIntent).toEqual({
         type: 'block',
         name: 'Darmowa degustacja',
-        block: 8,
+        block: 12,
       });
     });
 
@@ -2501,7 +2501,7 @@ describe('GameState', () => {
       expect(s.enemy.currentIntent).toEqual({
         type: 'attack',
         name: 'Cena z kosmosu',
-        damage: 7,
+        damage: 8,
         hits: 1,
         applyWeak: 1,
       });
@@ -2829,7 +2829,7 @@ describe('GameState', () => {
       s.resetBattle();
       expect(s.enemy.id).toBe('baba');
       expect(s.enemy.name).toBe('Handlara oscypkami');
-      expect(s.enemy.maxHp).toBe(78);
+      expect(s.enemy.maxHp).toBe(88);
     });
 
     it('can load Parkingowego from the enemy library with lowered HP', () => {
@@ -2949,7 +2949,7 @@ describe('GameState', () => {
       const s = freshState();
       const eliteState = s._createEnemyState(enemyLibrary.spekulant);
       expect(eliteState.isElite).toBe(true);
-      expect(eliteState.maxHp).toBe(Math.round(84 * 1.25));
+      expect(eliteState.maxHp).toBe(Math.round(92 * 1.25));
 
       s.enemy = eliteState;
       s.pendingBattleDutki = true;
@@ -3093,7 +3093,7 @@ describe('GameState', () => {
       s.resetBattle();
       expect(s.enemy.id).toBe('fiakier');
       expect(s.enemy.name).toBe('Fiakier spod Krupówek');
-      expect(s.enemy.maxHp).toBe(165);
+      expect(s.enemy.maxHp).toBe(180);
       expect(s.enemy.bossArtifact).toBe(0);
     });
 
@@ -3223,12 +3223,12 @@ describe('GameState', () => {
       expect(s.enemy.status.weak).toBe(2);
     });
 
-    it('Agresywne pozowanie now deals 3x3', () => {
+    it('Agresywne pozowanie deals 4x3', () => {
       const s = freshBossState();
       s.endTurn();
       expect(s.enemy.currentIntent.type).toBe('attack');
       expect(s.enemy.currentIntent.name).toBe('Agresywne pozowanie');
-      expect(s.enemy.currentIntent.damage).toBe(3);
+      expect(s.enemy.currentIntent.damage).toBe(4);
       expect(s.enemy.currentIntent.hits).toBe(3);
     });
 
@@ -3238,11 +3238,11 @@ describe('GameState', () => {
       expect(s.enemy.currentIntent.name).toBe('Górski Ryk');
     });
 
-    it('Górski Ryk gives +1 strength and +8 block when executed', () => {
+    it('Górski Ryk gives +2 strength and +10 block when executed', () => {
       const s = freshBossState();
       s.endTurn();
-      expect(s.enemy.status.strength).toBe(1);
-      expect(s.enemy.block).toBeGreaterThanOrEqual(8);
+      expect(s.enemy.status.strength).toBe(2);
+      expect(s.enemy.block).toBeGreaterThanOrEqual(10);
     });
 
     it('second intent is Agresywne pozowanie (3-hit attack)', () => {
@@ -3253,14 +3253,14 @@ describe('GameState', () => {
       expect(s.enemy.currentIntent.hits).toBe(3);
     });
 
-    it('fourth intent is Uścisk Krupówek with reduced spike damage (17)', () => {
+    it('fourth intent is Uścisk Krupówek with spike damage (20)', () => {
       const s = freshBossState();
       s.endTurn(); // execute Górski Ryk -> intent 2
       s.endTurn(); // execute Agresywne pozowanie -> intent 3
       s.endTurn(); // execute Podatek od zdjęcia -> intent 4
       expect(s.enemy.currentIntent.type).toBe('attack');
       expect(s.enemy.currentIntent.name).toBe('Uścisk Krupówek');
-      expect(s.enemy.currentIntent.damage).toBe(17);
+      expect(s.enemy.currentIntent.damage).toBe(20);
       expect(s.enemy.currentIntent.hits).toBe(1);
     });
 
@@ -3455,18 +3455,18 @@ describe('GameState', () => {
       expect(s.maryna.pickedId).toBeNull();
     });
 
-    it('mokra_sciera grants +12 max HP immediately', () => {
+    it('mokra_sciera grants +7 max HP immediately', () => {
       const s = freshState();
       const before = s.player.maxHp;
       s.pickMarynaBoon('mokra_sciera');
-      expect(s.player.maxHp).toBe(before + 12);
+      expect(s.player.maxHp).toBe(before + 7);
     });
 
-    it('kiesa grants +150 dutki immediately', () => {
+    it('kiesa grants +100 dutki immediately', () => {
       const s = freshState();
       s.dutki = 0;
       s.pickMarynaBoon('kiesa');
-      expect(s.dutki).toBe(150);
+      expect(s.dutki).toBe(100);
     });
 
     it('sloik_rosolu sets rosolBattlesLeft to 4', () => {
@@ -3475,12 +3475,12 @@ describe('GameState', () => {
       expect(s.maryna.counters.rosolBattlesLeft).toBe(4);
     });
 
-    it('lista_zakupow grants +100 dutki immediately', () => {
+    it('lista_zakupow grants +50 dutki immediately', () => {
       const s = freshState();
       s.dutki = 0;
       s.pickMarynaBoon('lista_zakupow');
-      expect(s.dutki).toBe(100);
-      expect(s.maryna.counters.listaFreeRemovalsLeft).toBe(2);
+      expect(s.dutki).toBe(50);
+      expect(s.maryna.counters.listaFreeRemovalsLeft).toBe(1);
     });
 
     it('zloty_rozaniec doubles only the first attack in a battle', () => {
@@ -3495,7 +3495,16 @@ describe('GameState', () => {
       expect(second).toBe(10);
     });
 
-    it('przeglad_plecaka removes a starter, adds an uncommon card and grants 40 dutki', () => {
+    it('tajny_skladnik applies 2 weak and 2 fragile at battle start', () => {
+      const s = freshState();
+      s.pickMarynaBoon('tajny_skladnik');
+      s.startBattleWithEnemyId('cepr');
+
+      expect(s.enemy.status.weak).toBe(2);
+      expect(s.enemy.status.fragile).toBe(2);
+    });
+
+    it('przeglad_plecaka removes a starter, adds an uncommon card and grants 80 dutki', () => {
       const s = freshState();
       s.deck = ['ciupaga', 'ciupaga', 'gasior'];
       s.dutki = 0;
@@ -3506,7 +3515,7 @@ describe('GameState', () => {
       expect(remainingStarters).toHaveLength(2);
       const uncommons = s.deck.filter((id) => cardLibrary[id]?.rarity === 'uncommon');
       expect(uncommons).toHaveLength(1);
-      expect(s.dutki).toBe(40);
+      expect(s.dutki).toBe(80);
     });
 
     it('marynaOnly relics are excluded from the available relic pool', () => {
@@ -3519,42 +3528,29 @@ describe('GameState', () => {
         });
     });
 
-    it('lista_zakupow applies -50% discount to all shops while removals remain', () => {
+    it('lista_zakupow applies -25% discount to all shops while removals remain', () => {
       const s = freshState();
       s.pickMarynaBoon('lista_zakupow');
-      expect(s.maryna.counters.listaFreeRemovalsLeft).toBe(2);
+      expect(s.maryna.counters.listaFreeRemovalsLeft).toBe(1);
 
       s.generateShopStock();
       const sampleCardId = s.shopStock.cards[0];
       const firstShopPrice = s.getCardShopPrice(sampleCardId);
       const basePrice = cardLibrary[sampleCardId]?.price ?? 0;
-      expect(firstShopPrice).toBe(Math.floor(basePrice * 0.5));
+      expect(firstShopPrice).toBe(Math.floor(basePrice * 0.75));
 
       s.afterShopCardRemoval();
-      expect(s.maryna.counters.listaFreeRemovalsLeft).toBe(1);
+      expect(s.maryna.counters.listaFreeRemovalsLeft).toBe(0);
 
       s.generateShopStock();
       const secondCardId = s.shopStock.cards[0];
       const secondBasePrice = cardLibrary[secondCardId]?.price ?? 0;
-      expect(s.getCardShopPrice(secondCardId)).toBe(Math.floor(secondBasePrice * 0.5));
-
-      s.afterShopCardRemoval();
-      expect(s.maryna.counters.listaFreeRemovalsLeft).toBe(0);
-      
-      s.generateShopStock();
-      const thirdCardId = s.shopStock.cards[0];
-      const thirdBasePrice = cardLibrary[thirdCardId]?.price ?? 0;
-      expect(s.getCardShopPrice(thirdCardId)).toBe(thirdBasePrice);
+      expect(s.getCardShopPrice(secondCardId)).toBe(secondBasePrice);
     });
 
-    it('lista_zakupow free removal allows 2 removals before ending discount', () => {
+    it('lista_zakupow free removal allows 1 removal before ending discount', () => {
       const s = freshState();
       s.pickMarynaBoon('lista_zakupow');
-      expect(s.maryna.counters.listaFreeRemovalsLeft).toBe(2);
-
-      s.generateShopStock();
-      expect(s.getShopRemovalPrice()).toBe(0);
-      s.afterShopCardRemoval();
       expect(s.maryna.counters.listaFreeRemovalsLeft).toBe(1);
 
       s.generateShopStock();
@@ -3735,16 +3731,16 @@ describe('GameState', () => {
       expect(s.hand.length).toBe(handBefore);
     });
 
-    it('mlynek_ciupaga with lans inactive only activates lans', () => {
+    it('mlynek_ciupaga with lans inactive hits 3x and applies 1 weak', () => {
       const s = freshState();
       s.player.status.lans = 0;
       s.hand = ['mlynek_ciupaga'];
       const enemyHpBefore = s.enemy.hp;
       const enemyWeakBefore = s.enemy.status.weak;
       s.playCard(0);
-      expect(s.player.status.lans).toBe(1);
-      expect(s.enemy.hp).toBe(enemyHpBefore);
-      expect(s.enemy.status.weak).toBe(enemyWeakBefore);
+      expect(s.player.status.lans).toBe(0);
+      expect(s.enemy.hp).toBeLessThan(enemyHpBefore);
+      expect(s.enemy.status.weak).toBe(enemyWeakBefore + 1);
     });
 
     it('mlynek_ciupaga with lans active hits 3x and applies 2 weak', () => {

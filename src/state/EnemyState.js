@@ -78,7 +78,7 @@ export function addEnemyRachunek(state, amount) {
   }
   state.enemy.rachunek += appliedAmount;
   if (state.hasRelic('pekniete_liczydlo')) {
-    state.player.hp = Math.min(state.player.maxHp, state.player.hp + 3);
+    state.player.hp = Math.min(state.player.maxHp, state.player.hp + 1);
   }
   state._checkEnemyBankruptcy();
 }
@@ -132,7 +132,7 @@ export function createEnemyState(state, enemyDef) {
       : isMainBoss
         ? bossBaseHp
         : enemyDef.maxHp;
-  const dzwonekMod = state.hasRelic('dzwonek_owcy') ? 0.75 : 1.0;
+  const dzwonekMod = state.hasRelic('dzwonek_owcy') ? 0.85 : 1.0;
   const eliteHpScale = enemyDef.elite ? 1.25 : 1;
   const maxHp = Math.round(baseMaxHp * scale * dzwonekMod * eliteHpScale);
   /** @type {EnemyState} */

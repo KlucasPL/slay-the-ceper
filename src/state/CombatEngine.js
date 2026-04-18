@@ -10,12 +10,12 @@ export function drawPerTurn() {
  */
 export function applyBattleStartRelics(state) {
   if (state.hasRelic('flaszka_sliwowicy')) {
-    state.player.status.strength += 6;
+    state.player.status.strength += 2;
   }
 
   if (state.hasRelic('zepsuty_termometr')) {
-    state.applyEnemyDebuff('weak', 1);
-    state.applyEnemyDebuff('fragile', 1);
+    state.applyEnemyDebuff('weak', 2);
+    state.applyEnemyDebuff('fragile', 2);
   }
 
   if (state.hasRelic('papryczka_marka')) {
@@ -37,11 +37,11 @@ export function applyBattleStartRelics(state) {
 
   if (state.hasRelic('relic_boon_zloty_rozaniec')) {
     state.player.status.next_double = true;
-    state.gainPlayerBlockFromCard(1);
+    state.gainPlayerBlockFromCard(5);
   }
 
   if (state.hasRelic('relic_boon_tajny_skladnik')) {
-    state.applyEnemyDebuff('weak', 3);
+    state.applyEnemyDebuff('weak', 2);
     state.applyEnemyDebuff('fragile', 2);
   }
 
@@ -362,10 +362,6 @@ export function startTurn(state) {
   if (state.smyczKeptCardId) {
     state.hand.unshift(state.smyczKeptCardId);
     state.smyczKeptCardId = null;
-  }
-
-  if (state.hasRelic('zlota_karta_zakopianczyka')) {
-    state.player.energy += 1;
   }
 
   if (state.hasRelic('wiatr_halny')) {

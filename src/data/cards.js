@@ -816,8 +816,7 @@ export const cardLibrary = {
     cost: 2,
     price: 115,
     emoji: '🌀',
-    desc: 'LANS: Atakuje 3x3 obrażenia. Nakłada 2 Słabości, jeśli masz LANS, w przeciwnym razie 1.',
-    tags: ['lans'],
+    desc: 'Atakuje 3x3 obrażenia. Nakłada 2 Słabości, jeśli masz LANS, w przeciwnym razie 1.',
     effect(state) {
       let totalDealt = 0;
       let totalBlocked = 0;

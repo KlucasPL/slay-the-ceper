@@ -77,7 +77,7 @@ export function getCardShopPrice(state, cardId) {
     return Math.floor(base * 0.8);
   }
   if (state.maryna.flags.listaDiscountActive) {
-    return Math.floor(base * 0.5);
+    return Math.floor(base * 0.75);
   }
   return base;
 }
@@ -100,7 +100,10 @@ export function getShopRemovalPrice(state) {
 export function afterShopCardRemoval(state) {
   if (state.maryna.flags.listaFreeRemovalAvailable && !state.maryna.flags.listaFreeRemovalUsed) {
     state.maryna.flags.listaFreeRemovalUsed = true;
-    state.maryna.counters.listaFreeRemovalsLeft = Math.max(0, (state.maryna.counters.listaFreeRemovalsLeft ?? 2) - 1);
+    state.maryna.counters.listaFreeRemovalsLeft = Math.max(
+      0,
+      (state.maryna.counters.listaFreeRemovalsLeft ?? 1) - 1
+    );
     if (state.maryna.counters.listaFreeRemovalsLeft === 0) {
       state.maryna.flags.listaDiscountActive = false;
     }
