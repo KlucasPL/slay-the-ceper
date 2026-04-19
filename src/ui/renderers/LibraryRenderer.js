@@ -2,6 +2,7 @@ import { cardLibrary } from '../../data/cards.js';
 import { relicLibrary } from '../../data/relics.js';
 import * as uiHelpers from '../helpers/UIHelpers.js';
 import * as cardRenderer from './CardRenderer.js';
+import * as cardZoomOverlay from '../overlays/CardZoomOverlay.js';
 
 /**
  * @param {any} uiManager
@@ -129,6 +130,22 @@ export function renderLibrary(uiManager) {
         exhaustEl.innerHTML = '<span class="exhaust-fire">🔥</span> PRZEPADO';
         card.querySelector('.card-text-box').appendChild(exhaustEl);
       }
+
+      // Attach long-press zoom for cards
+      attachMobileLongPressZoom(
+        card,
+        {
+          name: cardDef.name,
+          emoji: cardDef.emoji,
+          rarityLabel: uiHelpers.getFullCardType(cardDef.rarity, cardDef.type),
+          cost: cardDef.cost,
+          description: cardRenderer.getCardDescription(uiManager, cardDef),
+          rarityClass: uiHelpers.rarityClass(cardDef.rarity),
+          typeClass: `card-${cardDef.type}`,
+          exhaust: Boolean(cardDef.exhaust),
+        },
+        'card'
+      );
     } else {
       // CRITICAL FIX: Restore the library-item class so relics are visible!
       card.className = `library-item ${uiHelpers.rarityClass(item.rarity)}`;
@@ -146,7 +163,66 @@ export function renderLibrary(uiManager) {
       desc.textContent = item.desc;
 
       card.append(title, rarity, desc);
+
+      // Attach long-press zoom for relics/boons
+      attachMobileLongPressZoom(
+        card,
+        {
+          name: item.name,
+          emoji: item.emoji,
+          rarityLabel: uiHelpers.rarityLabel(item.rarity, 'relic'),
+          description: item.desc,
+          rarityClass: uiHelpers.rarityClass(item.rarity),
+        },
+        'relic'
+      );
     }
     grid.appendChild(card);
   });
+  /**
+   * Adds long-press gesture to a library item.
+   */
+  function attachMobileLongPressZoom(el, viewData, itemType) {
+    const isTouch = () =>
+      typeof window !== 'undefined' &&
+      window.matchMedia('(hover: none) and (pointer: coarse)').matches;
+    if (!isTouch()) return;
+
+    const LONG_PRESS_MS = 400;
+    const MOVE_CANCEL_PX = 15;
+    let timer = null;
+    let startX = 0;
+    let startY = 0;
+
+    const clearTimer = () => {
+      if (timer) {
+        clearTimeout(timer);
+        timer = null;
+      }
+    };
+
+    el.addEventListener('pointerdown', (e) => {
+      if (e.pointerType !== 'touch') return;
+      startX = e.clientX;
+      startY = e.clientY;
+      clearTimer();
+      timer = setTimeout(() => {
+        cardZoomOverlay.openCardZoom(viewData, itemType);
+        timer = null;
+      }, LONG_PRESS_MS);
+    });
+
+    el.addEventListener('pointermove', (e) => {
+      if (!timer) return;
+      if (
+        Math.abs(e.clientX - startX) > MOVE_CANCEL_PX ||
+        Math.abs(e.clientY - startY) > MOVE_CANCEL_PX
+      )
+        clearTimer();
+    });
+
+    el.addEventListener('pointerup', clearTimer);
+    el.addEventListener('pointercancel', clearTimer);
+    el.addEventListener('pointerleave', clearTimer);
+  }
 }
