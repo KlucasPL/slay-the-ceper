@@ -1070,6 +1070,11 @@ export class UIManager {
   }
 
   _handleTreasureNode() {
+    console.log('[UI] _handleTreasureNode started.');
+    // Hide the map overlay to ensure the treasure overlay is visible
+    import('./helpers/UIHelpers.js').then(({ hideOverlay }) => hideOverlay('map-overlay'));
+    // Unlock navigation after treasure claim
+    this.state.hasStartedFirstBattle = true;
     const relicId = this.state.generateRelicReward(true);
     if (!relicId) {
       this.mapMessage = 'Skrzynia była pusta... ani jednej pamiątki.';

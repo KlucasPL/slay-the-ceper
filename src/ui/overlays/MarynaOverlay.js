@@ -15,11 +15,11 @@ export function openMarynaBoonOverlay(uiManager) {
   const choiceIds = uiManager.state.rollMarynaChoices(3);
   const choicesEl = document.getElementById('maryna-boon-choices');
   if (!choicesEl) return;
-  
+
   choicesEl.innerHTML = '';
   choicesEl.className = 'shop-cards-grid';
   choicesEl.style.marginTop = '24px';
-  choicesEl.style.paddingBottom = '16px'; 
+  choicesEl.style.paddingBottom = '16px';
 
   choiceIds.forEach((boonId) => {
     const boon = marynaBoonLibrary[boonId];
@@ -38,7 +38,8 @@ export function openMarynaBoonOverlay(uiManager) {
     const plateEl = document.createElement('div');
     plateEl.className = 'relic-plate';
     // Override fixed height to prevent text clipping, but keep min-height for consistency
-    plateEl.style.cssText = 'margin: 0; height: auto !important; min-height: 240px !important; justify-content: flex-start;';
+    plateEl.style.cssText =
+      'margin: 0; height: auto !important; min-height: 240px !important; justify-content: flex-start;';
     // Removed inline font-size overrides so layout.css clamp() can work properly
     plateEl.innerHTML = `
       <div class="relic-plate-title" style="margin-bottom: 2px;">${boon.name}</div>

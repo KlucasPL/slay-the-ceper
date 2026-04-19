@@ -1,5 +1,3 @@
-
-
 import { getBaseCardId, getCardDefinition } from '../../data/cards.js';
 import { getCardDescription } from '../renderers/CardRenderer.js';
 import * as uiHelpers from '../helpers/UIHelpers.js';
@@ -62,7 +60,6 @@ function renderCampfireMain(uiManager) {
     </div>
   `;
   panel.appendChild(header);
-
 
   // --- Modern vertical action button layout ---
   const actions = document.createElement('div');
@@ -185,7 +182,8 @@ function renderCampfireUpgrade(uiManager) {
       selectBtn.textContent = 'Naostrz';
       selectBtn.onclick = () => {
         if (!uiManager.state.cardDamageBonus) uiManager.state.cardDamageBonus = {};
-        uiManager.state.cardDamageBonus[cardId] = (uiManager.state.cardDamageBonus[cardId] || 0) + 3;
+        uiManager.state.cardDamageBonus[cardId] =
+          (uiManager.state.cardDamageBonus[cardId] || 0) + 3;
         uiManager.campfireUsed = true;
         uiManager.campfireMessage = `Naostrzono: ${cardDef.name} (+3 obr).`;
         renderCampfireMain(uiManager);
