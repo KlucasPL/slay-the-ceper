@@ -1,3 +1,31 @@
+/* Shop Buy Button (Highlander Green) */
+.shop-buy-btn {
+  background-color: #2ecc71; /* Green for buying */
+  color: white;
+  padding: 8px 16px;
+  font-size: 1rem;
+  border-radius: 8px;
+  border: 2px solid #27ae60;
+  box-shadow: 0 4px 0 #1e8449;
+  margin-top: 8px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  transition: background 0.18s, box-shadow 0.18s, filter 0.18s;
+}
+
+.shop-buy-btn:hover:not(:disabled) {
+  background-color: #27ae60;
+  filter: brightness(1.08);
+  box-shadow: 0 6px 0 #1e8449;
+}
+
+.shop-buy-btn:disabled {
+  background-color: #95a5a6;
+  border-color: #7f8c8d;
+  box-shadow: 0 4px 0 #707b7c;
+  cursor: not-allowed;
+  filter: grayscale(0.2) brightness(0.92);
+}
 /* --- Unified Card & Hand Layout (Modernized) --- */
 
 /* --- Unified Card & Hand Layout (Modernized) --- */
@@ -1395,6 +1423,33 @@ h1 {
   gap: 24px; /* Increased gap for better visual breathing room */
   padding: 20px 0;
   width: 100%;
+}
+
+/* --- Shop Cards Grid Layout --- */
+.shop-cards-grid {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap; /* CRITICAL: Forces a single row */
+  gap: 20px;
+  width: 100%;
+  padding: 10px 10px 24px 10px; /* Extra bottom padding for scrollbar */
+  overflow-x: auto; /* Allows horizontal scrolling if 4 cards don't fit */
+  justify-content: flex-start; /* Aligns left when scrolling is needed */
+  scroll-snap-type: x mandatory; /* Smooth swiping on mobile */
+  /* Scrollbar styling for aesthetics */
+  scrollbar-width: thin;
+  scrollbar-color: #f4c26a #3d2314;
+}
+
+@media (min-width: 1100px) {
+  .shop-cards-grid {
+    justify-content: center;
+  }
+}
+
+.shop-card-wrapper {
+  flex: 0 0 auto; /* CRITICAL: Prevents flexbox from squashing the wrapper */
+  scroll-snap-align: center; /* Snaps cards to center when swiping */
 }
 
 .reward-phase-card.card {
