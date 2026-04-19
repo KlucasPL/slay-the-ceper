@@ -681,10 +681,31 @@
           </div>
           <p class="shop-line">Przy watrze możesz się pokrzepić albo naostrzyć broń.</p>
           <div class="campfire-actions">
-            <button id="camp-heal-btn" class="btn shop-btn">Pieczone grule (+20% Krzepy)</button>
-            <label for="camp-card-select">Naostrz ciupagę (+3 obrażenia):</label>
-            <select id="camp-card-select" class="camp-select"></select>
-            <button id="camp-upgrade-btn" class="btn shop-btn">Naostrz wybraną kartę</button>
+          <div class="shop-cards-grid" style="justify-content: center; margin-top: 16px; margin-bottom: 24px; padding-bottom: 0;">
+            <div class="shop-card-wrapper" style="flex: 0 0 auto;">
+              <div class="relic-plate" style="margin: 0;">
+                <div class="relic-plate-title" style="font-size: 1.15rem;">Pieczone Grule</div>
+                <div style="font-size: 3.5rem; margin: 8px 0;">🥔</div>
+                <div class="relic-plate-desc" style="font-size: 0.95rem; font-weight: 700;">
+                  Odpocznij i zjedz ciepły posiłek.<br><br>
+                  <span style="color: #27ae60;">Odzyskaj 20% Krzepy</span>
+                </div>
+              </div>
+              <button id="camp-heal-btn" class="btn" style="padding: 10px 24px; font-size: 1.1rem; margin-top: auto; width: 100%;">Zjedz</button>
+            </div>
+
+            <div class="shop-card-wrapper" style="flex: 0 0 auto;">
+              <div class="relic-plate" style="margin: 0;">
+                <div class="relic-plate-title" style="font-size: 1.15rem;">Naostrz Broń</div>
+                <div style="font-size: 3.5rem; margin: 8px 0;">🪓</div>
+                <div class="relic-plate-desc" style="font-size: 0.95rem; font-weight: 700;">
+                  Zwiększ siłę jednego ataku.<br><br>
+                  <span style="color: #b32d1c;">+3 Obrażenia do karty</span>
+                </div>
+              </div>
+              <select id="camp-card-select" class="camp-select" aria-label="Wybierz kartę do ulepszenia" style="margin-top: 8px; width: 100%; padding: 8px; font-size: 0.9rem; border-radius: 8px; cursor: pointer; border: 2px solid #ad7a37; font-weight: bold;"></select>
+              <button id="camp-upgrade-btn" class="btn" style="padding: 10px 24px; font-size: 1.1rem; margin-top: 4px; width: 100%;">Naostrz</button>
+            </div>
           </div>
           <button id="camp-exit-btn" class="btn">Wróć na perć</button>
         </div>

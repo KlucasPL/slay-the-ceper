@@ -34,13 +34,16 @@ export function openMarynaBoonOverlay(uiManager) {
     wrapper.style.flex = '0 0 auto';
 
     // 1. The Plate (ONLY Mechanics, guaranteed to fit)
+    // 1. The Plate (Mechanics)
     const plateEl = document.createElement('div');
     plateEl.className = 'relic-plate';
-    plateEl.style.margin = '0';
+    // Override fixed height to prevent text clipping, but keep min-height for consistency
+    plateEl.style.cssText = 'margin: 0; height: auto !important; min-height: 240px !important; justify-content: flex-start;';
+    // Removed inline font-size overrides so layout.css clamp() can work properly
     plateEl.innerHTML = `
-      <div class="relic-plate-title" style="font-size: 1.05rem; margin-bottom: 4px;">${boon.name}</div>
-      <div style="font-size: 3rem; margin: 4px 0;">${boon.emoji}</div>
-      <div class="relic-plate-desc" style="font-size: 0.9rem; color: #2c1e16; font-weight: 700;">${boon.effectDesc}</div>
+      <div class="relic-plate-title" style="margin-bottom: 2px;">${boon.name}</div>
+      <div style="font-size: 2.4rem; margin: 4px 0 8px 0;">${boon.emoji}</div>
+      <div class="relic-plate-desc" style="color: #2c1e16; font-weight: 700;">${boon.effectDesc}</div>
     `;
 
     // 2. The Flavor Text (OUTSIDE the plate)
