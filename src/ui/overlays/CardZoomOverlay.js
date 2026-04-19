@@ -48,28 +48,60 @@ export function initCardZoomOverlay() {
  * }} cardView
  * @returns {void}
  */
-export function openCardZoom(cardView) {
+// (Removed duplicate export of openCardZoom)
+/**
+ * Opens full-screen zoom preview for a card or a relic.
+ *
+ * @param {any} itemView
+ * @param {'card' | 'relic'} itemType
+ * @returns {void}
+ */
+export function openCardZoom(itemView, itemType = 'card') {
   const overlay = document.getElementById('card-zoom-overlay');
-  const cardEl = document.getElementById('card-zoom-card');
-  const costEl = document.getElementById('card-zoom-cost');
-  const titleEl = document.getElementById('card-zoom-title');
-  const rarityEl = document.getElementById('card-zoom-rarity');
-  const iconEl = document.getElementById('card-zoom-icon');
-  const descEl = document.getElementById('card-zoom-desc');
-  const exhaustEl = document.getElementById('card-zoom-exhaust');
+  const panel = document.getElementById('card-zoom-panel');
+  if (!overlay || !panel) return;
 
-  if (!overlay || !cardEl || !costEl || !titleEl || !rarityEl || !iconEl || !descEl || !exhaustEl) {
-    return;
+  // Clear existing hardcoded DOM to allow dynamic injection of Card or Relic
+  panel.innerHTML = '';
+
+  if (itemType === 'card') {
+    const cardEl = document.createElement('article');
+    cardEl.className = `card card-zoom-card ${itemView.rarityClass} ${itemView.typeClass}`;
+    cardEl.innerHTML = `
+      <div class="card-header">
+        <div class="card-title">${itemView.name}</div>
+        <div class="card-cost-oscypek">
+          <span class="cost-value">${itemView.cost}</span>
+          <span class="cost-icon">🧀</span>
+        </div>
+      </div>
+      <div class="card-subtitle">${itemView.rarityLabel}</div>
+      <div class="card-art">
+        <span class="card-icon">${itemView.emoji}</span>
+      </div>
+      <div class="card-text-box">
+        <div class="card-desc">${itemView.description}</div>
+        ${itemView.exhaust ? '<div class="card-exhaust-inline"><span class="exhaust-fire">🔥</span> PRZEPADO</div>' : ''}
+      </div>
+    `;
+    panel.appendChild(cardEl);
+  } else {
+    // Render as a giant Relic Plaque
+    const relicEl = document.createElement('article');
+    relicEl.className = `relic-zoom-card ${itemView.rarityClass}`;
+    relicEl.innerHTML = `
+      <h3 class="library-item-title">${itemView.emoji} ${itemView.name}</h3>
+      <p class="library-item-rarity">${itemView.rarityLabel}</p>
+      <p class="library-item-desc">${itemView.description}</p>
+    `;
+    panel.appendChild(relicEl);
   }
 
-  cardEl.className = `card card-zoom-card ${cardView.rarityClass} ${cardView.typeClass}`;
-  costEl.textContent = String(cardView.cost);
-  titleEl.textContent = cardView.name;
-  rarityEl.textContent = cardView.rarityLabel;
-  iconEl.textContent = cardView.emoji;
-  descEl.textContent = cardView.description;
-
-  exhaustEl.classList.toggle('hidden', !cardView.exhaust);
+  // Append the closing tip below the zoomed item
+  const tip = document.createElement('p');
+  tip.className = 'card-zoom-tip';
+  tip.textContent = 'Dotknij tła, aby zamknąć';
+  panel.appendChild(tip);
 
   overlay.classList.remove('hidden');
   overlay.setAttribute('aria-hidden', 'false');

@@ -1705,44 +1705,141 @@ h1 {
 
 .library-grid {
   display: grid;
-  /* Use auto-fill and a wider minimum width to ensure cards don't squish */
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  /* FIX: Fixed column width to resolve container-query math correctly */
+  grid-template-columns: repeat(auto-fill, 180px);
+  justify-content: center; /* Center the grid nicely inside the panel */
   gap: 16px;
   flex: 1 1 auto;
-  min-height: 0; /* Crucial for nested flexbox scrolling */
+  min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
-  /* CRITICAL: Prevents CSS Grid from stretching cards and causing overlap */
   align-items: start;
   align-content: start;
   padding: 8px;
 }
 
-.library-item {
-  background: rgba(243, 226, 192, 0.94);
-  color: #2e1f14;
-  border: 3px solid var(--rarity-border-color, var(--rarity-common));
-  border-radius: 12px;
-  padding: 12px;
-  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.3);
-  position: relative;
-}
-
 .library-grid .library-item.card {
-  width: 100%;
-  height: auto;
-  aspect-ratio: 2 / 3.1;
+  /* FIX: Explicit fixed dimensions to bypass the aspect-ratio collapse bug */
+  width: 180px !important;
+  height: 279px !important; /* 180px width * 1.55 aspect ratio */
+  aspect-ratio: auto; /* Disable buggy aspect-ratio */
   padding: 0;
   cursor: default;
-  /* Re-assert internal flex layout to prevent child elements from collapsing */
   display: flex;
   flex-direction: column;
   position: relative;
   margin: 0;
 }
+/* --- Library-Specific Card Scaling (Protects Battle View) --- */
+.library-grid .card-header {
+  padding: 4px 6px;
+}
 
-.library-grid .library-item.card:hover {
-  transform: none;
+.library-grid .card-title {
+  /* Lowered minimum rem */
+  font-size: clamp(0.55rem, 9cqw, 0.95rem);
+  padding-right: 2px;
+}
+
+.library-grid .card-cost-oscypek {
+  padding: 1px 3px;
+  gap: 2px;
+  border-radius: 8px 8px 12px 12px;
+}
+
+.library-grid .cost-value {
+  font-size: clamp(0.7rem, 10cqw, 1rem);
+}
+
+.library-grid .card-subtitle {
+  font-size: clamp(0.5rem, 6cqw, 0.65rem);
+  padding: 2px 6px;
+}
+
+.library-grid .card-art {
+  /* Reduced from 20% to 10% to let the art compress further when text is massive */
+  min-height: 10%;
+  padding: 0;
+}
+
+.library-grid .card-icon {
+  /* Fixed invalid cqh unit and lowered bounds */
+  font-size: clamp(1.5rem, 28cqw, 3.5rem);
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.25));
+}
+
+.library-grid .card-text-box {
+  /* Ultra-tight padding to give text maximum vertical space */
+  padding: 4px 6px 2px 6px;
+}
+
+.library-grid .card-desc {
+  /* Lowered minimum bounds to 0.45rem and tightened line-height for dense thumbnails */
+  font-size: clamp(0.45rem, 7.5cqw, 0.85rem) !important;
+  line-height: 1.1;
+}
+
+.library-grid .card-exhaust-inline {
+  margin-top: 4px;
+  font-size: clamp(0.55rem, 6cqw, 0.75rem);
+  gap: 2px;
+}
+
+/* --- Library Relics & Boons (Non-Card Containers) --- */
+
+/* --- Library Relics & Boons (Non-Card Containers) --- */
+.library-grid .library-item:not(.card) {
+  width: 180px !important;
+  height: 240px !important;
+  container-type: inline-size;
+
+  background: linear-gradient(180deg, #fcf4e1 0%, #e8d9bd 100%);
+  border: 4px solid var(--rarity-border-color, #a9a9a9);
+  border-radius: 12px;
+  /* Reduced padding to give text more vertical breathing room */
+  padding: 10px 8px;
+  box-shadow:
+    0 6px 14px rgba(0, 0, 0, 0.4),
+    inset 0 0 0 2px rgba(255, 255, 255, 0.4);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  box-sizing: border-box;
+  overflow: hidden;
+  margin: 0;
+}
+
+.library-grid .library-item:not(.card) .library-item-title {
+  font-weight: 800;
+  /* Lowered minimum bounds and tightened margin */
+  font-size: clamp(0.75rem, 10cqw, 1.05rem);
+  line-height: 1.1;
+  color: #3d2314;
+  margin: 0 0 4px 0;
+}
+
+.library-grid .library-item:not(.card) .library-item-rarity {
+  /* Lowered minimum bounds and tightened margin */
+  font-size: clamp(0.5rem, 6cqw, 0.7rem);
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #8c5a35;
+  margin: 0 0 8px 0;
+  padding: 2px 6px;
+  background: rgba(140, 90, 53, 0.1);
+  border-radius: 999px;
+  border: 1px solid rgba(140, 90, 53, 0.2);
+}
+
+.library-grid .library-item:not(.card) .library-item-desc {
+  /* Severely lowered minimum bounds to 0.5rem to guarantee long text fits */
+  font-size: clamp(0.5rem, 7.5cqw, 0.9rem);
+  font-weight: 700;
+  line-height: 1.15;
+  color: #2c1e16;
+  margin: 0;
 }
 
 .library-item-title {
@@ -2772,6 +2869,56 @@ h1 {
   text-align: center;
 }
 
+/* --- Zoomed Relic Plaque --- */
+.relic-zoom-card {
+  width: min(420px, 90vw);
+  aspect-ratio: 3 / 4;
+  container-type: inline-size;
+  background: linear-gradient(180deg, #fcf4e1 0%, #e8d9bd 100%);
+  border: 6px solid var(--rarity-border-color, #a9a9a9);
+  border-radius: 18px;
+  padding: 24px 16px;
+  box-shadow:
+    0 12px 32px rgba(0, 0, 0, 0.6),
+    inset 0 0 0 3px rgba(255, 255, 255, 0.4);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  box-sizing: border-box;
+  overflow: hidden;
+  cursor: default;
+}
+
+.relic-zoom-card .library-item-title {
+  font-weight: 800;
+  font-size: clamp(1.4rem, 11cqw, 2.2rem);
+  line-height: 1.15;
+  color: #3d2314;
+  margin: 0 0 14px 0;
+}
+
+.relic-zoom-card .library-item-rarity {
+  font-size: clamp(0.85rem, 6.5cqw, 1.2rem);
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #8c5a35;
+  margin: 0 0 24px 0;
+  padding: 6px 16px;
+  background: rgba(140, 90, 53, 0.1);
+  border-radius: 999px;
+  border: 2px solid rgba(140, 90, 53, 0.2);
+}
+
+.relic-zoom-card .library-item-desc {
+  font-size: clamp(0.95rem, 7.5cqw, 1.5rem);
+  font-weight: 700;
+  line-height: 1.25;
+  color: #2c1e16;
+  margin: 0;
+}
+
 /* Hand View Overlay */
 .hand-view-overlay {
   position: fixed;
@@ -3028,7 +3175,8 @@ h1 {
   }
 
   #library-overlay .library-grid {
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    grid-template-columns: repeat(auto-fill, 150px);
+    justify-content: center;
     align-items: start;
     align-content: start;
     overflow-y: auto;
@@ -3036,12 +3184,16 @@ h1 {
     -webkit-overflow-scrolling: touch;
   }
 
-  #library-overlay .library-item-title {
-    font-size: 1.2rem;
+  #library-overlay .library-item.card {
+    width: 150px !important;
+    height: 232px !important; /* 150px width * 1.55 aspect ratio */
   }
 
-  #library-overlay .library-item-desc {
-    font-size: 1.02rem;
+  #library-overlay .library-item:not(.card) {
+    width: 150px !important;
+    height: 200px !important;
+    padding: 10px 8px;
+    border-radius: 10px;
   }
 
   .library-back-btn {
@@ -3317,7 +3469,8 @@ h1 {
   }
 
   #library-overlay .library-grid {
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    grid-template-columns: repeat(auto-fill, 150px);
+    justify-content: center;
     align-items: start;
     align-content: start;
     overflow-y: auto;
@@ -3325,12 +3478,16 @@ h1 {
     -webkit-overflow-scrolling: touch;
   }
 
-  #library-overlay .library-item-title {
-    font-size: 1.22rem;
+  #library-overlay .library-item.card {
+    width: 150px !important;
+    height: 232px !important; /* 150px width * 1.55 aspect ratio */
   }
 
-  #library-overlay .library-item-desc {
-    font-size: 1.04rem;
+  #library-overlay .library-item:not(.card) {
+    width: 150px !important;
+    height: 200px !important;
+    padding: 10px 8px;
+    border-radius: 10px;
   }
 
   #library-overlay .library-tab,
