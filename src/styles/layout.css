@@ -1,7 +1,5 @@
 /* --- Unified Card & Hand Layout (Modernized) --- */
 
-
-
 .card {
   width: 250px;
   min-width: 130px;
@@ -16,15 +14,19 @@
   flex-direction: column;
   cursor: pointer;
   position: relative;
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.4), inset 0 0 0 2px var(--rarity-border-color, #a9a9a9);
-  transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+  box-shadow:
+    0 6px 14px rgba(0, 0, 0, 0.4),
+    inset 0 0 0 2px var(--rarity-border-color, #a9a9a9);
+  transition:
+    transform 0.2s ease-out,
+    box-shadow 0.2s ease-out;
   user-select: none;
   overflow: hidden;
 }
 
 .card:hover {
   transform: translateY(-12px);
-  box-shadow: 0 16px 28px rgba(0,0,0,0.6);
+  box-shadow: 0 16px 28px rgba(0, 0, 0, 0.6);
 }
 
 /* Internal Card Layout (Tatra Highlander Design) */
@@ -61,7 +63,10 @@
   flex-shrink: 0;
 }
 
-.cost-value { font-size: clamp(1rem, 12cqw, 1.3rem); line-height: 1; }
+.cost-value {
+  font-size: clamp(1rem, 12cqw, 1.3rem);
+  line-height: 1;
+}
 
 .card-subtitle {
   font-size: 0.65rem;
@@ -70,7 +75,7 @@
   color: #8c5a35;
   padding: 4px 10px;
   text-align: center;
-  background: rgba(0,0,0,0.02);
+  background: rgba(0, 0, 0, 0.02);
 }
 
 .card-art {
@@ -1068,10 +1073,10 @@ h1 {
   flex-direction: row;
   justify-content: center;
   align-items: flex-end;
-  gap: 16px; 
+  gap: 16px;
   height: 380px; /* Internal canvas pixels */
   width: 100%;
-  padding: 10px 5px; 
+  padding: 10px 5px;
   box-sizing: border-box;
 }
 
