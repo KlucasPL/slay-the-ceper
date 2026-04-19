@@ -29,6 +29,20 @@
   box-shadow: 0 16px 28px rgba(0, 0, 0, 0.6);
 }
 
+/* --- Visual feedback for unplayable cards --- */
+.card.disabled {
+  filter: grayscale(85%) brightness(0.75);
+  cursor: not-allowed;
+}
+
+/* Prevent the floating animation and shadow expansion on unplayable cards */
+.card.disabled:hover {
+  transform: none;
+  box-shadow:
+    0 6px 14px rgba(0, 0, 0, 0.4),
+    inset 0 0 0 2px var(--rarity-border-color, #a9a9a9);
+}
+
 /* Internal Card Layout (Tatra Highlander Design) */
 .card-header {
   display: flex;
