@@ -96,11 +96,11 @@
 }
 
 .card-text-box {
-  flex: 0 1 auto;
+  flex: 0 0 auto;
   min-height: 45%;
   background: rgba(230, 212, 184, 0.5);
   border-top: 2px dashed rgba(140, 90, 53, 0.4);
-  padding: 10px 12px;
+  padding: 10px 12px 8px 12px;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
@@ -1090,15 +1090,16 @@ h1 {
 /* 5. Dedicated Text Box (High-Contrast Sheepskin) */
 /* 5. Dedicated Text Box (Bottom Half, 50/50 Split, No Scroll) */
 .card-text-box {
-  /* Takes 1.2 shares of available space, ensuring it is slightly larger than the art area */
-  flex: 1.2 1 0%;
-  background: rgba(230, 212, 184, 0.4);
+  /* flex-shrink changed to 0: The box will NEVER compress its text content */
+  flex: 0 0 auto;
+  min-height: 45%;
+  background: rgba(230, 212, 184, 0.5);
   border-top: 2px dashed rgba(140, 90, 53, 0.4);
-  padding: 12px 14px; /* Generous padding for readability */
+  padding: 10px 12px 8px 12px;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start; /* Align text to the top of this massive new box */
-  overflow: hidden; /* ABSOLUTELY NO SCROLLING */
+  justify-content: flex-start;
+  overflow: hidden;
 }
 
 /* Critical Readability Fix: Left-Align Text */
