@@ -1,17 +1,5 @@
 /* --- Unified Card & Hand Layout (Modernized) --- */
-.hand-container {
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: flex-end;
-  gap: 18px;
-  width: 100%;
-  max-width: 1180px;
-  margin: 0 auto 0 auto;
-  padding: 0 0 8px 0;
-  box-sizing: border-box;
-  z-index: 10;
-}
+
 
 .card {
   display: flex;
@@ -1094,6 +1082,20 @@ h1 {
   margin-top: auto;
   width: 95%;
   max-width: 1180px;
+  box-sizing: border-box;
+  z-index: 10;
+}
+
+.hand {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 16px; 
+  height: 380px; /* Internal canvas pixels */
+  width: 100%;
+  padding: 10px 5px; 
+  box-sizing: border-box;
 }
 
 .card-icon {
