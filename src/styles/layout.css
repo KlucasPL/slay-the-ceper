@@ -2639,9 +2639,9 @@ h1 {
 }
 
 .pile-viewer-modal {
-  width: min(1180px, calc(100vw - 36px));
-  max-width: calc(100vw - 36px);
-  max-height: calc(100dvh - 36px);
+  width: 95%;
+  max-width: 1180px; /* Internal canvas pixels - safe for desktop and mobile */
+  max-height: 900px; /* Leaves a 180px safe buffer inside the 1080px base canvas */
   background: linear-gradient(180deg, #6a4222 0%, #4b2d17 100%);
   border: 10px solid #7c4a1f;
   box-shadow:
@@ -2649,7 +2649,7 @@ h1 {
     0 12px 40px rgba(0, 0, 0, 0.65);
   border-radius: 18px;
   padding: 18px;
-  overflow: auto;
+  overflow-y: auto; /* Required for vertical scrolling of large card piles */
   box-sizing: border-box;
 }
 
@@ -3120,12 +3120,8 @@ h1 {
   }
 
   .pile-viewer-modal {
-    width: 100%;
-    max-width: calc(100vw - 16px);
-    max-height: 95dvh;
     border-width: 6px;
     padding: 12px;
-    box-sizing: border-box;
   }
 
   .event-overlay {
