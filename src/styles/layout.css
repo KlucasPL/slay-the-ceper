@@ -1,83 +1,101 @@
 /* --- Unified Card & Hand Layout (Modernized) --- */
 
 
+
 .card {
+  width: 250px;
+  min-width: 130px;
+  aspect-ratio: 2 / 3.1;
+  flex-shrink: 1;
+  container-type: inline-size;
+  background: #fdf8eb;
+  color: #2c1e16;
+  border-radius: 12px;
+  border: 4px solid #3d2314;
   display: flex;
   flex-direction: column;
-  position: relative;
-  width: 150px;
-  aspect-ratio: 2/3;
-  background: linear-gradient(180deg, #f4e8d2 0%, #e3cb9e 100%);
-  border: 3px solid var(--rarity-border-color, #a9a9a9);
-  border-radius: 14px;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.25);
-  overflow: hidden;
-  transition: box-shadow 0.2s, border-color 0.2s;
   cursor: pointer;
+  position: relative;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.4), inset 0 0 0 2px var(--rarity-border-color, #a9a9a9);
+  transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+  user-select: none;
+  overflow: hidden;
 }
 
 .card:hover {
-  box-shadow: 0 16px 32px rgba(0,0,0,0.35);
-  border-color: #ffd45e;
+  transform: translateY(-12px);
+  box-shadow: 0 16px 28px rgba(0,0,0,0.6);
 }
 
+/* Internal Card Layout (Tatra Highlander Design) */
 .card-header {
   display: flex;
-  flex-direction: row;
-  align-items: flex-start;
   justify-content: space-between;
-  padding: 8px 10px 0 10px;
-  min-height: 36px;
-  gap: 6px;
+  align-items: center;
+  padding: 8px 10px;
+  background: #4a2d16;
+  color: #f4e8d2;
+  border-bottom: 2px solid #2a1608;
 }
 
 .card-title {
-  font-size: 1.1em;
   font-weight: 800;
-  color: #3d2314;
-  flex: 1 1 auto;
-  text-align: left;
+  font-size: clamp(0.75rem, 10cqw, 1.2rem);
   line-height: 1.1;
+  text-align: left;
+  flex: 1;
+  padding-right: 8px;
   margin: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .card-cost-oscypek {
-  background: #fbb03b;
+  background: linear-gradient(135deg, #fbc953 0%, #d98a28 80%, #a65c17 100%);
   color: #2c1e16;
-  border-radius: 999px;
-  font-weight: bold;
-  padding: 3px 10px;
-  font-size: 0.95em;
-  margin-left: 8px;
-  align-self: flex-start;
+  font-weight: 900;
+  padding: 4px 8px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: 12px 12px 18px 18px;
+  border: 2px solid #5c3111;
+  flex-shrink: 0;
+}
+
+.cost-value { font-size: clamp(1rem, 12cqw, 1.3rem); line-height: 1; }
+
+.card-subtitle {
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #8c5a35;
+  padding: 4px 10px;
+  text-align: center;
+  background: rgba(0,0,0,0.02);
 }
 
 .card-art {
-  flex: 1 1 0;
+  flex: 1 1 0%;
+  min-height: 25%;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 48px;
-  max-height: 80px;
-  padding: 0 10px;
-  margin: 0;
+  overflow: hidden;
+  background: radial-gradient(circle at center, rgba(255, 235, 190, 0.6) 0%, transparent 60%);
+  padding: 4px;
 }
 
 .card-icon {
-  font-size: clamp(2rem, 4.5vw, 4rem);
-  max-height: 100%;
+  font-size: clamp(2rem, 30cqh, 4.5rem);
   line-height: 1;
-  filter: drop-shadow(0 6px 10px rgba(0,0,0,0.25));
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.25));
 }
 
 .card-text-box {
-  flex: 1.2 1 0%;
-  background: rgba(230, 212, 184, 0.4);
+  flex: 0 1 auto;
+  min-height: 45%;
+  background: rgba(230, 212, 184, 0.5);
   border-top: 2px dashed rgba(140, 90, 53, 0.4);
-  padding: 12px 14px;
+  padding: 10px 12px;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
@@ -85,13 +103,14 @@
 }
 
 .card-desc {
-  font-size: clamp(0.8rem, 1.1cqw, 0.95rem);
+  font-size: clamp(0.74rem, 9cqw, 0.85rem) !important;
   font-weight: 700;
-  line-height: 1.25;
+  line-height: 1.15;
   text-align: left;
   color: #3d2314;
   white-space: normal;
   overflow-wrap: break-word;
+  margin: 0;
 }
 
 .card-exhaust-inline {
@@ -106,48 +125,6 @@
   letter-spacing: 0.05em;
 }
 
-/* Safety zone for mobile/fixed-canvas scaling */
-@media (max-width: 600px) {
-  .hand-container {
-    gap: 8px;
-    max-width: 100vw;
-    padding: 0 2vw 6px 2vw;
-  }
-  .card {
-    width: 90px;
-    min-width: 70px;
-    font-size: 0.92em;
-  }
-  .card-header {
-    padding: 5px 6px 0 6px;
-    min-height: 24px;
-  }
-  .card-title {
-    font-size: 0.95em;
-  }
-  .card-cost-oscypek {
-    font-size: 0.82em;
-    padding: 2px 7px;
-  }
-  .card-art {
-    min-height: 28px;
-    max-height: 44px;
-    padding: 0 4px;
-  }
-  .card-icon {
-    font-size: clamp(1.1rem, 10.8cqw, 2.4rem);
-  }
-  .card-text-box {
-    padding: 6px 7px;
-  }
-  .card-desc {
-    font-size: clamp(0.58rem, 4.4cqw, 0.78rem);
-    line-height: 1.1;
-    margin-top: 3px;
-    margin-bottom: 3px;
-    padding: 3px 4px 5px;
-  }
-}
 .hand-header {
   display: flex;
   justify-content: flex-end;
@@ -3216,29 +3193,6 @@ h1 {
   .sprite svg {
     width: 90px;
     height: 90px;
-  }
-  .card {
-    width: 150px;
-    height: 214px;
-  }
-  .card-title {
-    font-size: 0.85em;
-  }
-  .card-img {
-    font-size: 1rem;
-  }
-  .card-icon {
-    font-size: clamp(1.1rem, 10.8cqw, 2.4rem);
-  }
-
-  .card-desc {
-    --card-desc-base-size: clamp(0.58rem, 4.4cqw, 0.78rem);
-    --card-desc-min-size: 0.5rem;
-    --card-desc-hard-min-size: 0.44rem;
-    line-height: 1.1;
-    margin-top: 3px;
-    margin-bottom: 3px;
-    padding: 3px 4px 5px;
   }
 
   .hand-view-grid {
