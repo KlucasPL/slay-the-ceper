@@ -1705,13 +1705,17 @@ h1 {
 
 .library-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 12px;
-  max-height: none;
+  /* Use auto-fill and a wider minimum width to ensure cards don't squish */
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 16px;
   flex: 1 1 auto;
-  min-height: 0;
-  overflow: auto;
-  padding: 4px 2px 8px;
+  min-height: 0; /* Crucial for nested flexbox scrolling */
+  overflow-y: auto;
+  overflow-x: hidden;
+  /* CRITICAL: Prevents CSS Grid from stretching cards and causing overlap */
+  align-items: start;
+  align-content: start;
+  padding: 8px;
 }
 
 .library-item {
@@ -1727,11 +1731,14 @@ h1 {
 .library-grid .library-item.card {
   width: 100%;
   height: auto;
-  /* Force aspect-ratio explicitly to prevent grid collapsing */
   aspect-ratio: 2 / 3.1;
-  padding: 0; /* Keeps the edge-to-edge layout */
+  padding: 0;
   cursor: default;
-  display: flex; /* Ensures internal flex layout survives the grid */
+  /* Re-assert internal flex layout to prevent child elements from collapsing */
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  margin: 0;
 }
 
 .library-grid .library-item.card:hover {
@@ -3021,8 +3028,9 @@ h1 {
   }
 
   #library-overlay .library-grid {
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    max-height: none;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    align-items: start;
+    align-content: start;
     overflow-y: auto;
     overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
@@ -3309,9 +3317,9 @@ h1 {
   }
 
   #library-overlay .library-grid {
-    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-    gap: 12px;
-    max-height: none;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    align-items: start;
+    align-content: start;
     overflow-y: auto;
     overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
