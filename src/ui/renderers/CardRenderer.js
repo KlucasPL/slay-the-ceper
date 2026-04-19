@@ -53,8 +53,14 @@ export function renderHand(uiManager) {
 
     const cardEl = document.createElement('div');
     const isKept = uiManager.state.smyczKeptHandIndex === index;
-    cardEl.className = `card ${uiHelpers.rarityClass(card.rarity)} card-${card.type}${canPlay ? '' : ' disabled'}${isKept ? ' card--kept' : ''}`;
+    cardEl.className = `card ${uiHelpers.rarityClass(card.rarity)} card-${card.type}`;
     cardEl.dataset.cardId = cardId;
+    if (!canPlay) {
+      cardEl.classList.add('card-disabled-state');
+    }
+    if (isKept) {
+      cardEl.classList.add('card--kept');
+    }
 
     // New Fluid Tatra Card Layout
     cardEl.innerHTML = `
@@ -83,13 +89,19 @@ export function renderHand(uiManager) {
       cardEl.querySelector('.card-text-box').appendChild(exhaustEl);
     }
 
-    if (canPlay && player.hp > 0 && enemy.hp > 0) {
+    // Always attach click handler during battle
+    if (player.hp > 0 && enemy.hp > 0) {
       cardEl.addEventListener('click', () => {
         if (cardEl.dataset.longPressZoomUsed === 'true') {
           cardEl.dataset.longPressZoomUsed = 'false';
           return;
         }
-        if (!uiManager.isAnimating) uiManager._handlePlayCard(index);
+        if (uiManager.isAnimating) return;
+        if (!canPlay) {
+          uiManager._showFloatingText('sprite-player', 'Brak oscypków!', 'floating-shame');
+          return;
+        }
+        uiManager._handlePlayCard(index);
       });
     }
 
