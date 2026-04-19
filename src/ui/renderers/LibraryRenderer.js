@@ -100,40 +100,34 @@ export function renderLibrary(uiManager) {
 
   entries.forEach((item) => {
     const card = document.createElement('article');
-    card.className = `library-item ${uiHelpers.rarityClass(item.rarity)}`;
-
     if (uiManager.libraryTab === 'cards') {
       const cardDef = /** @type {import('../../data/cards.js').CardDef} */ (item);
       card.className = `library-item card ${uiHelpers.rarityClass(cardDef.rarity)} card-${cardDef.type}`;
 
-      const cost = document.createElement('div');
-      cost.className = 'card-cost';
-      cost.textContent = String(cardDef.cost);
-
-      const title = document.createElement('div');
-      title.className = 'card-title';
-      title.textContent = cardDef.name;
-
-      const rarity = document.createElement('div');
-      rarity.className = 'card-rarity';
-      rarity.textContent = uiHelpers.getFullCardType(cardDef.rarity, cardDef.type);
-
-      const emoji = document.createElement('div');
-      emoji.className = 'card-img';
-      const iconEl = document.createElement('span');
-      iconEl.className = 'card-icon';
-      iconEl.textContent = cardDef.emoji;
-      emoji.appendChild(iconEl);
-
-      const desc = document.createElement('div');
-      desc.className = 'card-desc';
-      desc.textContent = cardRenderer.getCardDescription(uiManager, cardDef);
-
-      card.append(cost, title, rarity, emoji, desc);
+      // Use the new Fluid 50/50 Tatra Card Layout
+      card.innerHTML = `
+        <div class="card-header">
+          <div class="card-title">${cardDef.name}</div>
+          <div class="card-cost-oscypek">
+            <span class="cost-value">${cardDef.cost}</span>
+            <span class="cost-icon">🧀</span>
+          </div>
+        </div>
+        <div class="card-subtitle">${uiHelpers.getFullCardType(cardDef.rarity, cardDef.type)}</div>
+        <div class="card-art">
+          <span class="card-icon">${cardDef.emoji}</span>
+        </div>
+        <div class="card-text-box">
+          <div class="card-desc">${cardRenderer.getCardDescription(uiManager, cardDef)}</div>
+        </div>
+      `;
 
       if (cardDef.exhaust) {
         card.classList.add('card-exhaust');
-        card.appendChild(cardRenderer.createExhaustBadge());
+        const exhaustEl = document.createElement('div');
+        exhaustEl.className = 'card-exhaust-inline';
+        exhaustEl.innerHTML = '<span class="exhaust-fire">🔥</span> PRZEPADO';
+        card.querySelector('.card-text-box').appendChild(exhaustEl);
       }
     } else {
       const title = document.createElement('h3');
@@ -150,7 +144,6 @@ export function renderLibrary(uiManager) {
 
       card.append(title, rarity, desc);
     }
-
     grid.appendChild(card);
   });
 }
