@@ -1,4 +1,5 @@
 import './styles/layout.css';
+import { DebugOverlay } from './ui/debug/DebugOverlay.js';
 import './styles/animations.css';
 
 import { AudioManager } from './logic/AudioManager.js';
@@ -247,9 +248,13 @@ async function bootstrap() {
   const ui = new UIManager(state, audioManager);
   ui.init();
 
-  const { DebugOverlay } = await import('./ui/debug/DebugOverlay.js');
-  const debugOverlay = new DebugOverlay({ state, ui });
+  // Restore Debug Overlay
+  const debugOverlay = new DebugOverlay({
+    state: state,
+    ui: ui,
+  });
   debugOverlay.mount();
+  console.log('Debug overlay ready. Use ~ or F9 to toggle.');
 }
 
 /** @type {number} Internal game width authored for 16:9 layout. */

@@ -78,9 +78,15 @@ export function showRelicScreen(uiManager, relicId, source) {
   glowWrap.classList.add(uiHelpers.rarityClass(relic.rarity));
 
   titleEl.textContent = source === 'treasure' ? 'Znalazłeś Skarb!' : 'Łup z wroga!';
-  rewardRelic.textContent = relic.emoji;
-  rewardRelicName.textContent = relic.name;
-  rewardRelicDesc.textContent = relic.desc;
+
+  // Inject standardized relic plate
+  glowWrap.innerHTML = `
+    <div class="relic-plate ${uiHelpers.rarityClass(relic.rarity)}">
+      <h3 class="relic-plate-title">${relic.emoji} ${relic.name}</h3>
+      <p class="relic-plate-rarity">${uiHelpers.rarityLabel(relic.rarity, 'relic')}</p>
+      <p class="relic-plate-desc">${relic.desc}</p>
+    </div>
+  `;
 
   claimBtn.onclick = () => {
     uiManager.state.addRelic(relicId);
@@ -148,18 +154,33 @@ export function showCardRewardScreen(
     const cardDesc = cardRenderer.getCardDescription(uiManager, card);
     const cardEl = document.createElement('button');
     cardEl.type = 'button';
-    cardEl.className = `reward-card ${uiHelpers.rarityClass(card.rarity)}`;
+    // CRITICAL: Added 'reward-phase-card' class for specific CSS sizing
+    cardEl.className = `card reward-phase-card ${uiHelpers.rarityClass(card.rarity)} card-${card.type}`;
     cardEl.innerHTML = `
-        <div class="reward-cost">${card.cost} Osc.</div>
-        <div class="reward-emoji">${card.emoji}</div>
-        <div class="reward-name">${card.name}</div>
-        <div class="reward-rarity">${uiHelpers.getFullCardType(card.rarity, card.type)}</div>
-        <div class="reward-desc">${cardDesc}</div>
+        <div class="card-header">
+          <div class="card-title">${card.name}</div>
+          <div class="card-cost-oscypek">
+            <span class="cost-value">${card.cost}</span>
+            <span class="cost-icon">🧀</span>
+          </div>
+        </div>
+        <div class="card-subtitle">${uiHelpers.getFullCardType(card.rarity, card.type)}</div>
+        <div class="card-art">
+          <span class="card-icon">${card.emoji}</span>
+        </div>
+        <div class="card-text-box">
+          <div class="card-desc">${cardDesc}</div>
+        </div>
       `;
+
     if (card.exhaust) {
       cardEl.classList.add('card-exhaust');
-      cardEl.prepend(cardRenderer.createExhaustBadge());
+      const exhaustEl = document.createElement('div');
+      exhaustEl.className = 'card-exhaust-inline';
+      exhaustEl.innerHTML = '<span class="exhaust-fire">🔥</span> PRZEPADO';
+      cardEl.querySelector('.card-text-box').appendChild(exhaustEl);
     }
+
     cardEl.addEventListener('click', () => {
       uiManager.state.deck.push(cardId);
       closeRewardScreens(uiManager, isBossFight);
@@ -368,13 +389,12 @@ export function showEliteRewardOverlay(uiManager, droppedDutki) {
     if (!relic) return;
     const relicEl = document.createElement('button');
     relicEl.type = 'button';
-    relicEl.className = `reward-card reward-relic-choice ${uiHelpers.rarityClass(relic.rarity)}`;
+    relicEl.className = `reward-card reward-relic-choice relic-plate ${uiHelpers.rarityClass(relic.rarity)}`;
     relicEl.innerHTML = `
-        <div class="reward-emoji">${relic.emoji}</div>
-        <div class="reward-name">${relic.name}</div>
-        <div class="reward-rarity">${uiHelpers.rarityLabel(relic.rarity, 'relic')}</div>
-        <div class="reward-desc">${relic.desc}</div>
-      `;
+      <h3 class="relic-plate-title">${relic.emoji} ${relic.name}</h3>
+      <p class="relic-plate-rarity">${uiHelpers.rarityLabel(relic.rarity, 'relic')}</p>
+      <p class="relic-plate-desc">${relic.desc}</p>
+    `;
     relicEl.addEventListener('click', () => {
       uiManager.state.addRelic(relicId);
       goToCardPhase();

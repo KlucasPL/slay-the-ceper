@@ -666,78 +666,7 @@
       </div>
 
       <div id="shop-overlay" class="event-overlay hidden" aria-hidden="true">
-        <div class="event-panel shop-panel">
-          <h2 class="event-title">Jarmark u Bacy</h2>
-          <div class="shop-header">
-            <div class="baca-sprite" id="baca-sprite">
-              <svg viewBox="0 0 120 100" width="160" height="120" aria-label="Baca za ladą">
-                <rect
-                  x="5"
-                  y="62"
-                  width="110"
-                  height="28"
-                  rx="6"
-                  fill="#6e4a2b"
-                  stroke="#3d2716"
-                  stroke-width="4"
-                />
-                <rect x="8" y="70" width="104" height="6" fill="#8f673f" />
-                <circle cx="60" cy="34" r="16" fill="#f2c8a6" />
-                <path d="M 44,25 Q 60,8 76,25" fill="#1d1d1d" />
-                <rect
-                  x="43"
-                  y="49"
-                  width="34"
-                  height="18"
-                  rx="6"
-                  fill="#f7efe0"
-                  stroke="#bca88a"
-                  stroke-width="2"
-                />
-                <path d="M 46,50 L 74,50 M 46,56 L 74,56" stroke="#ba2d2d" stroke-width="2" />
-                <path d="M 52,39 Q 60,45 68,39" fill="none" stroke="#5a2f16" stroke-width="3" />
-                <circle cx="54" cy="33" r="2" fill="#111" />
-                <circle cx="66" cy="33" r="2" fill="#111" />
-              </svg>
-            </div>
-            <p class="shop-line">"Patrzcie no! Mom towar i ciepłe oscypki!"</p>
-          </div>
-          <div class="camp-resource-strip" aria-live="polite">
-            <span class="camp-resource-pill"
-              >💰 Dutki: <span id="shop-dutki-current">50</span></span
-            >
-            <span class="camp-resource-pill"
-              >❤️ Krzepa: <span id="shop-hp-current">50</span>/<span id="shop-hp-max"
-                >50</span
-              ></span
-            >
-          </div>
-          <div class="shop-sections">
-            <div>
-              <h3>Karty od Bacy</h3>
-              <div id="shop-cards" class="shop-cards"></div>
-            </div>
-            <div>
-              <h3>Pamiątka</h3>
-              <div id="shop-relic" class="shop-relic"></div>
-            </div>
-            <div>
-              <h3>Usługi Bacy</h3>
-              <div class="shop-actions">
-                <button id="shop-heal-btn" class="btn shop-btn">
-                  Oscypek na ratunek (+15 Krzepy) - 75 💰
-                </button>
-                <div class="remove-card-box">
-                  <label for="shop-remove-select">Usuń kartę z talii - 100 💰</label>
-                  <select id="shop-remove-select" class="camp-select"></select>
-                  <button id="shop-remove-btn" class="btn shop-btn">Usuń wybraną kartę</button>
-                </div>
-              </div>
-            </div>
-          </div>
-          <p id="shop-message" class="shop-message" aria-live="polite"></p>
-          <button id="shop-exit-btn" class="btn">Wróć na perć</button>
-        </div>
+        <div class="event-panel shop-panel" id="shop-panel"></div>
       </div>
 
       <div id="campfire-overlay" class="event-overlay hidden" aria-hidden="true">

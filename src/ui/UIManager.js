@@ -153,10 +153,10 @@ export class UIManager {
     });
     document
       .getElementById('option-menu-music-btn')
-      .addEventListener('click', () => this._toggleMenuMusicOption());
+      ?.addEventListener('click', () => this._toggleMenuMusicOption());
     document
       .getElementById('option-game-music-btn')
-      .addEventListener('click', () => this._toggleGameMusicOption());
+      ?.addEventListener('click', () => this._toggleGameMusicOption());
     document
       .getElementById('option-skip-intro-btn')
       ?.addEventListener('click', () => this._toggleSkipIntroOption());
@@ -179,11 +179,6 @@ export class UIManager {
     document
       .getElementById('map-continue-btn')
       .addEventListener('click', () => this._handleMapAdvance());
-    document.getElementById('shop-exit-btn').addEventListener('click', () => this._closeShop());
-    document.getElementById('shop-heal-btn').addEventListener('click', () => this._buyShopHeal());
-    document
-      .getElementById('shop-remove-btn')
-      .addEventListener('click', () => this._buyCardRemoval());
     document.getElementById('camp-exit-btn').addEventListener('click', () => this._closeCampfire());
     document
       .getElementById('random-event-continue-btn')

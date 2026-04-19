@@ -1,24 +1,25 @@
-import { getBaseCardId, getCardDefinition } from '../../data/cards.js';
-import { relicLibrary } from '../../data/relics.js';
 import * as uiHelpers from '../helpers/UIHelpers.js';
-import * as cardRenderer from './CardRenderer.js';
 
 /**
- * @param {any} uiManager
+ * Entry point to open the shop.
  */
 export function openShop(uiManager) {
   if (uiManager._isInputLocked()) return;
   uiHelpers.hideOverlay('map-overlay');
   const overlay = document.getElementById('shop-overlay');
+  if (!overlay) return;
+
   overlay.classList.remove('hidden');
   overlay.setAttribute('aria-hidden', 'false');
+
+  // Initialize stock for the current node
   uiManager.state.generateShopStock();
   renderShopOffers(uiManager);
   uiManager.audioManager.playShopMusic();
 }
 
 /**
- * @param {any} uiManager
+ * Entry point to close the shop.
  */
 export function closeShop(uiManager) {
   if (uiManager._isInputLocked()) return;
@@ -29,202 +30,82 @@ export function closeShop(uiManager) {
 }
 
 /**
- * @param {any} uiManager
+ * Renders the Main Shop Category Menu (Step 1).
  */
 export function renderShopOffers(uiManager) {
-  const cardContainer = document.getElementById('shop-cards');
-  const relicContainer = document.getElementById('shop-relic');
-  const healBtn = document.getElementById('shop-heal-btn');
-  const removeBtn = document.getElementById('shop-remove-btn');
-  const message = document.getElementById('shop-message');
-  const dutkiCurrent = document.getElementById('shop-dutki-current');
-  const hpCurrent = document.getElementById('shop-hp-current');
-  const hpMax = document.getElementById('shop-hp-max');
-  const cards = uiManager.state.shopStock.cards;
+  const panel = document.getElementById('shop-panel');
+  if (!panel) return;
+  panel.innerHTML = '';
 
-  if (dutkiCurrent) {
-    dutkiCurrent.textContent = String(uiManager.state.dutki);
-  }
-  if (hpCurrent) {
-    hpCurrent.textContent = String(uiManager.state.player.hp);
-  }
-  if (hpMax) {
-    hpMax.textContent = String(uiManager.state.player.maxHp);
-  }
+  // 1. Header with ORIGINAL SVG and Specific Greeting
+  const header = document.createElement('div');
+  header.className = 'shop-header';
+  header.innerHTML = `
+    <h2 class="event-title">Jarmark u Bacy</h2>
+    <div class="baca-sprite" id="baca-sprite">
+      <svg viewBox="0 0 120 100" width="160" height="120" aria-label="Baca za ladą">
+        <rect x="5" y="62" width="110" height="28" rx="6" fill="#6e4a2b" stroke="#3d2716" stroke-width="4" />
+        <rect x="8" y="70" width="104" height="6" fill="#8f673f" />
+        <circle cx="60" cy="34" r="16" fill="#f2c8a6" />
+        <path d="M 44,25 Q 60,8 76,25" fill="#1d1d1d" />
+        <rect x="43" y="49" width="34" height="18" rx="6" fill="#f7efe0" stroke="#bca88a" stroke-width="2" />
+        <path d="M 46,50 L 74,50 M 46,56 L 74,56" stroke="#ba2d2d" stroke-width="2" />
+        <path d="M 52,39 Q 60,45 68,39" fill="none" stroke="#5a2f16" stroke-width="3" />
+        <circle cx="54" cy="33" r="2" fill="#111" />
+        <circle cx="66" cy="33" r="2" fill="#111" />
+      </svg>
+    </div>
+    <p class="shop-line">"Patrzcie no! Mom towar i ciepłe oscypki!"</p>
+    <div class="map-resource-strip">
+       <div class="map-resource-pill">💰 ${uiManager.state.dutki} Dutków</div>
+       <div class="map-resource-pill">❤️ ${uiManager.state.player.hp} / ${uiManager.state.player.maxHp} HP</div>
+    </div>
+  `;
+  panel.appendChild(header);
 
-  cardContainer.innerHTML = '';
-  cards.forEach((cardId) => {
-    const card = getCardDefinition(cardId);
-    if (!card) return;
-    const cardDesc = cardRenderer.getCardDescription(uiManager, card, cardId);
+  // 2. Main Menu Grid
+  const menuGrid = document.createElement('div');
+  menuGrid.className = 'shop-main-menu';
 
-    const cardBox = document.createElement('div');
-    cardBox.className = `shop-item ${uiHelpers.rarityClass(card.rarity)}`;
-    if (card.exhaust) {
-      cardBox.classList.add('card-exhaust');
-      cardBox.appendChild(cardRenderer.createExhaustBadge());
-    }
-
-    const title = document.createElement('div');
-    title.className = 'shop-item-title';
-    title.textContent = `${card.emoji} ${card.name}`;
-    title.title = cardDesc;
-    title.setAttribute('aria-label', `${card.name}: ${cardDesc}`);
-
-    const desc = document.createElement('div');
-    desc.className = 'shop-item-desc';
-    desc.textContent = cardDesc;
-
-    const rarity = document.createElement('div');
-    rarity.className = 'shop-item-rarity';
-    rarity.textContent = uiHelpers.getFullCardType(card.rarity, card.type);
-
-    const energyCost = document.createElement('div');
-    energyCost.className = 'shop-item-energy';
-    energyCost.textContent = `${card.cost} Osc.`;
-    energyCost.setAttribute('aria-label', `Koszt zagrania: ${card.cost} Oscypków`);
-
-    const price = document.createElement('div');
-    price.className = 'shop-item-price';
-    const cardShopPrice = uiManager.state.getCardShopPrice(cardId);
-    price.textContent = `${cardShopPrice} 💰`;
-
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'shop-card-btn';
-    btn.textContent = 'Kup';
-    btn.title = `${card.name}: ${cardDesc}`;
-    btn.setAttribute('aria-label', `Kup kartę ${card.name}. ${cardDesc}`);
-    btn.disabled = uiManager.state.dutki < cardShopPrice;
-    btn.addEventListener('click', () => {
-      if (uiManager._isInputLocked()) return;
-      const cardWithPrice = { ...card, price: cardShopPrice };
-      const result = uiManager.state.buyItem(cardWithPrice, 'card');
-      message.textContent = result.message;
-      renderShopOffers(uiManager);
-      uiManager.updateUI();
-    });
-
-    cardBox.append(title, rarity, energyCost, desc, price, btn);
-    cardContainer.appendChild(cardBox);
-  });
-
-  relicContainer.innerHTML = '';
-  if (uiManager.state.shopStock.relic) {
-    const relic = relicLibrary[uiManager.state.shopStock.relic];
-    if (relic) {
-      const relicBox = document.createElement('div');
-      relicBox.className = `shop-item ${uiHelpers.rarityClass(relic.rarity)}`;
-
-      const title = document.createElement('div');
-      title.className = 'shop-item-title';
-      title.textContent = `${relic.emoji} ${relic.name}`;
-      title.title = relic.desc;
-      title.setAttribute('aria-label', `${relic.name}: ${relic.desc}`);
-
-      const desc = document.createElement('div');
-      desc.className = 'shop-item-desc';
-      desc.textContent = relic.desc;
-
-      const rarity = document.createElement('div');
-      rarity.className = 'shop-item-rarity';
-      rarity.textContent = uiHelpers.rarityLabel(relic.rarity, 'relic');
-
-      const price = document.createElement('div');
-      price.className = 'shop-item-price';
-      price.textContent = `${relic.price} 💰`;
-
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'shop-card-btn';
-      btn.textContent = 'Kup';
-      btn.title = `${relic.name}: ${relic.desc}`;
-      btn.setAttribute('aria-label', `Kup pamiątkę ${relic.name}. ${relic.desc}`);
-      btn.disabled = uiManager.state.dutki < relic.price;
-      btn.addEventListener('click', () => {
-        if (uiManager._isInputLocked()) return;
-        const result = uiManager.state.buyItem(relic, 'relic');
-        message.textContent = result.message;
-        renderShopOffers(uiManager);
-        uiManager.updateUI();
-      });
-
-      relicBox.append(title, rarity, desc, price, btn);
-      relicContainer.appendChild(relicBox);
-    }
-  }
-
-  healBtn.disabled =
-    uiManager.state.dutki < 75 || uiManager.state.player.hp >= uiManager.state.player.maxHp;
-  populateRemoveCardSelect(uiManager);
-  const select = document.getElementById('shop-remove-select');
-  const removalPrice = uiManager.state.getShopRemovalPrice();
-  removeBtn.textContent = `Usuń kartę (${removalPrice} 💰)`;
-  removeBtn.disabled = uiManager.state.dutki < removalPrice || !select.value;
-
-  if (!message.textContent) {
-    message.textContent = uiManager.state.lastShopMessage;
-  }
-}
-
-/**
- * @param {any} uiManager
- */
-export function buyShopHeal(uiManager) {
-  if (uiManager._isInputLocked()) return;
-  const message = document.getElementById('shop-message');
-  if (!uiManager.state.spendDutki(75)) {
-    message.textContent = 'Ni mos tela dutków, synek!';
-    return;
-  }
-  uiManager.state.healPlayer(15);
-  message.textContent = 'Baca dał oscypek na ratunek.';
-  renderShopOffers(uiManager);
-  uiManager.updateUI();
-}
-
-/**
- * @param {any} uiManager
- */
-export function buyCardRemoval(uiManager) {
-  if (uiManager._isInputLocked()) return;
-  const select = document.getElementById('shop-remove-select');
-  const message = document.getElementById('shop-message');
-  const cardId = select.value;
-  if (!cardId) return;
-  const removalPrice = uiManager.state.getShopRemovalPrice();
-  if (!uiManager.state.spendDutki(removalPrice)) {
-    message.textContent = 'Ni mos tela dutków, synek!';
-    return;
-  }
-  const removed = uiManager.state.removeCardFromDeck(cardId);
-  if (!removed) {
-    message.textContent = 'Nie ma tej karty do usunięcia.';
-    return;
-  }
-  message.textContent = `Usunięto kartę: ${getCardDefinition(cardId)?.name ?? getBaseCardId(cardId)}`;
-  uiManager.state.afterShopCardRemoval();
-  renderShopOffers(uiManager);
-  uiManager.updateUI();
-}
-
-/**
- * @param {any} uiManager
- */
-export function populateRemoveCardSelect(uiManager) {
-  const select = document.getElementById('shop-remove-select');
-  const pool = [
-    ...uiManager.state.deck,
-    ...uiManager.state.hand,
-    ...uiManager.state.discard,
-    ...uiManager.state.exhaust,
+  const categories = [
+    { id: 'cards', label: 'Kup Karty', icon: '🃏' },
+    { id: 'relics', label: 'Pamiątki', icon: '🏔️' },
+    { id: 'services', label: 'Usługi Bacy', icon: '🧀' },
+    { id: 'removal', label: 'Usuwanie Kart', icon: '🔥' },
   ];
-  const unique = [...new Set(pool.map((cardId) => getBaseCardId(cardId)))];
-  select.innerHTML = '';
-  unique.forEach((cardId) => {
-    const option = document.createElement('option');
-    option.value = cardId;
-    option.textContent = getCardDefinition(cardId)?.name ?? cardId;
-    select.appendChild(option);
+
+  categories.forEach((cat) => {
+    const btn = document.createElement('button');
+    btn.className = 'shop-category-btn';
+    btn.innerHTML = `
+      <span class="category-icon">${cat.icon}</span>
+      <span class="category-label">${cat.label}</span>
+    `;
+    btn.onclick = () => renderShopSubView(uiManager, cat.id);
+    menuGrid.appendChild(btn);
   });
+  panel.appendChild(menuGrid);
+
+  // 3. Status Message Area
+  const message = document.createElement('div');
+  message.id = 'shop-message';
+  message.className = 'shop-message';
+  message.textContent = uiManager.state.lastShopMessage || '';
+  panel.appendChild(message);
+
+  // 4. Exit Button
+  const exitBtn = document.createElement('button');
+  exitBtn.className = 'btn shop-exit-btn';
+  exitBtn.style.marginTop = 'auto';
+  exitBtn.textContent = 'Wróć na szlak';
+  exitBtn.onclick = () => closeShop(uiManager);
+  panel.appendChild(exitBtn);
+}
+
+/**
+ * Placeholder for category subviews (to be implemented in next steps).
+ */
+function renderShopSubView(uiManager, viewId) {
+  const message = document.getElementById('shop-message');
+  if (message) message.textContent = `Wybrano kategorię: ${viewId}. (Wkrótce dostępne)`;
 }

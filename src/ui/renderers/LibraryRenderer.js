@@ -147,22 +147,15 @@ export function renderLibrary(uiManager) {
         'card'
       );
     } else {
-      // CRITICAL FIX: Restore the library-item class so relics are visible!
-      card.className = `library-item ${uiHelpers.rarityClass(item.rarity)}`;
+      // Use standardized relic plate style
+      card.className = `library-item relic-plate ${uiHelpers.rarityClass(item.rarity)}`;
 
-      const title = document.createElement('h3');
-      title.className = 'library-item-title';
-      title.textContent = `${item.emoji} ${item.name}`;
-
-      const rarity = document.createElement('p');
-      rarity.className = 'library-item-rarity';
-      rarity.textContent = uiHelpers.rarityLabel(item.rarity, 'relic');
-
-      const desc = document.createElement('p');
-      desc.className = 'library-item-desc';
-      desc.textContent = item.desc;
-
-      card.append(title, rarity, desc);
+      // Build the plate structure
+      card.innerHTML = `
+        <h3 class="relic-plate-title">${item.emoji} ${item.name}</h3>
+        <p class="relic-plate-rarity">${uiHelpers.rarityLabel(item.rarity, 'relic')}</p>
+        <p class="relic-plate-desc">${item.desc}</p>
+      `;
 
       // Attach long-press zoom for relics/boons
       attachMobileLongPressZoom(
