@@ -1726,14 +1726,12 @@ h1 {
 
 .library-grid .library-item.card {
   width: 100%;
-  max-width: none;
-  min-width: 0;
   height: auto;
-  min-height: auto; /* Let aspect-ratio dictate height */
-  padding: 0; /* CRITICAL: Remove legacy padding so header and text-box touch edges */
-  justify-self: stretch;
+  /* Force aspect-ratio explicitly to prevent grid collapsing */
+  aspect-ratio: 2 / 3.1;
+  padding: 0; /* Keeps the edge-to-edge layout */
   cursor: default;
-  box-sizing: border-box;
+  display: flex; /* Ensures internal flex layout survives the grid */
 }
 
 .library-grid .library-item.card:hover {

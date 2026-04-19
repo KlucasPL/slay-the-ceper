@@ -130,6 +130,9 @@ export function renderLibrary(uiManager) {
         card.querySelector('.card-text-box').appendChild(exhaustEl);
       }
     } else {
+      // CRITICAL FIX: Restore the library-item class so relics are visible!
+      card.className = `library-item ${uiHelpers.rarityClass(item.rarity)}`;
+
       const title = document.createElement('h3');
       title.className = 'library-item-title';
       title.textContent = `${item.emoji} ${item.name}`;
