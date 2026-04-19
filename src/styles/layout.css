@@ -2682,13 +2682,15 @@ h1 {
 
 .pile-viewer-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(150px, 100%), 1fr));
-  gap: 14px;
+  /* Increased minimum width to 200px so the 50/50 layout text is highly readable */
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
 }
 
 .pile-viewer-card {
   width: 100%;
-  height: 210px;
+  height: auto; /* CRITICAL: Removes legacy fixed height, allowing aspect-ratio to work */
+  max-height: none;
   cursor: default;
 }
 
@@ -3126,15 +3128,6 @@ h1 {
     border-width: 6px;
     padding: 12px;
     box-sizing: border-box;
-  }
-
-  .pile-viewer-grid {
-    grid-template-columns: repeat(auto-fill, minmax(min(138px, 100%), 1fr));
-    gap: 10px;
-  }
-
-  .pile-viewer-card {
-    height: 190px;
   }
 
   .event-overlay {
