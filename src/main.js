@@ -1,5 +1,6 @@
 import './styles/layout.css';
 import './styles/overlays.css';
+import { registerSW } from 'virtual:pwa-register';
 import { DebugOverlay } from './ui/debug/DebugOverlay.js';
 import './styles/animations.css';
 
@@ -31,6 +32,37 @@ const isDebugEnemyAllowed =
   !enemyLibrary[debugBoss]?.tutorialOnly;
 const hasValidDebugBoss =
   debugBoss === 'random-boss' || debugBoss === 'random-elite' || isDebugEnemyAllowed;
+
+const PWA_UPDATE_EVENT = 'stc-pwa-update';
+const FORCE_NEXT_PWA_UPDATE = true;
+
+/**
+ * @param {boolean} isUpdateAvailable
+ * @param {(() => Promise<void>) | null} applyUpdate
+ * @returns {void}
+ */
+function publishPwaUpdateState(isUpdateAvailable, applyUpdate) {
+  const detail = {
+    isUpdateAvailable,
+    applyUpdate,
+    shouldForceUpdate: isUpdateAvailable && FORCE_NEXT_PWA_UPDATE,
+  };
+  window.__stcPwaUpdateState = detail;
+  window.dispatchEvent(new CustomEvent(PWA_UPDATE_EVENT, { detail }));
+}
+
+publishPwaUpdateState(false, null);
+
+const updateServiceWorker = registerSW({
+  onNeedRefresh() {
+    publishPwaUpdateState(true, async () => {
+      await updateServiceWorker(true);
+    });
+  },
+  onOfflineReady() {
+    publishPwaUpdateState(false, null);
+  },
+});
 
 /** @type {import('./data/enemies.js').EnemyDef} */
 let initialEnemy = enemyLibrary.cepr;

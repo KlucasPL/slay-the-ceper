@@ -6,6 +6,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
+    "icons": "node scripts/generate-pwa-icons.mjs",
     "lhci": "lhci autorun",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
