@@ -20,16 +20,6 @@
   </head>
   <body>
     <div id="game-canvas">
-      <button
-        id="corner-options-btn"
-        class="corner-options-btn hidden"
-        type="button"
-        aria-label="Opcje"
-        aria-hidden="true"
-        disabled
-      >
-        ⚙️
-      </button>
 
       <div id="title-screen" class="title-screen" aria-hidden="false">
         <div class="title-backdrop">
@@ -187,6 +177,11 @@
               aria-label="Rozmiar tekstu"
             >
               NORMALNY
+            </button>
+          </div>
+          <div class="options-action-row">
+            <button id="option-back-main-btn" class="option-back-main-btn" type="button">
+              Wróć do menu głównego
             </button>
           </div>
         </div>
@@ -746,5 +741,15 @@
       </div>
       <!-- #game-canvas -->
     </div>
+    <button
+      id="corner-options-btn"
+      class="corner-options-btn hidden"
+      type="button"
+      aria-label="Opcje"
+      aria-hidden="true"
+      disabled
+    >
+      ⚙️
+    </button>
   </body>
 </html>

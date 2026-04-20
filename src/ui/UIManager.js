@@ -168,6 +168,9 @@ export class UIManager {
       .getElementById('option-text-size-btn')
       ?.addEventListener('click', () => this._cycleTextSizeOption());
     document
+      .getElementById('option-back-main-btn')
+      ?.addEventListener('click', () => this._returnToMainMenuFromOptions());
+    document
       .getElementById('tutorial-ack-btn')
       ?.addEventListener('click', () => this._handleTutorialAcknowledge());
     document.getElementById('tutorial-exit-btn')?.addEventListener('click', () => {
@@ -650,6 +653,7 @@ Po instalacji gra działa offline i bez paska przeglądarki.`;
     this.mapMessage = '';
     this.audioManager.setContext('inGame');
     this._openMapOverlay();
+    this._syncScreenState();
     this._onActChange();
     titleScreen.classList.add('is-hiding');
     titleScreen.setAttribute('aria-hidden', 'true');
@@ -777,6 +781,35 @@ Po instalacji gra działa offline i bez paska przeglądarki.`;
     setTextSizePreset(next);
     this._applyTextSizePreference();
     this._renderAudioOptions();
+  }
+
+  _returnToMainMenuFromOptions() {
+    if (this._isInputLocked()) return;
+    const shouldExit = window.confirm(
+      'Wrócić do menu głównego? Bieżąca wyprawa zostanie zresetowana.'
+    );
+    if (!shouldExit) return;
+
+    this._closeOptionsModal();
+    this.audioManager.clearDefeatThemeLock();
+    this.state.resetForNewRun(startingDeck);
+    this.state.currentScreen = 'title';
+    this.mapMessage = '';
+
+    this._hideOverlay('run-summary-overlay');
+    this._hideOverlay('map-overlay');
+    this._hideOverlay('shop-overlay');
+    this._hideOverlay('campfire-overlay');
+    this._hideOverlay('random-event-overlay');
+    this._hideOverlay('maryna-boon-overlay');
+    this._hideOverlay('library-overlay');
+    this._hideOverlay('pile-viewer-overlay');
+    this._hideOverlay('card-zoom-overlay');
+    this._hideOverlay('relic-reward-screen');
+    this._hideOverlay('card-reward-screen');
+
+    this.updateUI();
+    this._syncScreenState();
   }
 
   _applyTextSizePreference() {
