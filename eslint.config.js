@@ -28,6 +28,7 @@ export default [
       'vite.config.js',
       'eslint.config.js',
       'scripts/**/*.js',
+      'scripts/**/*.mjs',
       'bench/**/*.js',
       'playwright.config.js',
     ],

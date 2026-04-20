@@ -890,7 +890,7 @@ body.desktop-viewport-blocked #desktop-viewport-overlay {
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 4200;
+  z-index: 6000;
 }
 
 .modal.hidden {
@@ -987,6 +987,31 @@ body.desktop-viewport-blocked #desktop-viewport-overlay {
   border-color: #2f7a43;
   background: #3c9d55;
   color: #f4fff6;
+}
+
+.options-action-row {
+  margin-top: 16px;
+}
+
+.option-back-main-btn {
+  width: 100%;
+  border: 2px solid #9a2f26;
+  border-radius: 10px;
+  background: #b43a2e;
+  color: #fff3e8;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  padding: 10px 14px;
+  cursor: pointer;
+  transition:
+    filter 0.15s ease,
+    transform 0.15s ease;
+}
+
+.option-back-main-btn:hover,
+.option-back-main-btn:focus-visible {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
 }
 
 .title-btn-row {
@@ -1087,6 +1112,135 @@ body.desktop-viewport-blocked #desktop-viewport-overlay {
 
 .title-pwa-panel li {
   margin-bottom: 3px;
+}
+
+.pwa-update-widget {
+  position: fixed;
+  left: 14px;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 14px);
+  z-index: 5600;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  width: auto;
+  max-width: min(92vw, 360px);
+  box-sizing: border-box;
+}
+
+.pwa-update-btn {
+  border: 1px solid rgba(255, 205, 120, 0.95);
+  background: linear-gradient(180deg, rgba(124, 40, 12, 0.95), rgba(71, 20, 10, 0.96));
+  color: #fff1cf;
+  border-radius: 999px;
+  padding: 9px 14px;
+  font-size: 0.8rem;
+  line-height: 1;
+  letter-spacing: 0.03em;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.42);
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.pwa-update-btn:hover,
+.pwa-update-btn:focus-visible {
+  filter: brightness(1.12);
+}
+
+.pwa-update-btn:disabled {
+  cursor: default;
+}
+
+.pwa-update-panel {
+  margin: 0;
+  width: min(92vw, 360px);
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 208, 145, 0.36);
+  background: rgba(20, 10, 7, 0.95);
+  color: #f6e8ca;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  text-align: left;
+  pointer-events: auto;
+  user-select: none;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.32);
+}
+
+.pwa-update-action-btn {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 7px 14px;
+  background: #d98a2b;
+  color: #fff8e8;
+  border: none;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.pwa-update-action-btn:hover,
+.pwa-update-action-btn:focus-visible {
+  filter: brightness(1.1);
+}
+
+.pwa-update-action-btn:disabled {
+  opacity: 0.78;
+  cursor: progress;
+}
+
+.pwa-update-required {
+  position: fixed;
+  inset: 0;
+  z-index: 6100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(9, 4, 2, 0.82);
+}
+
+.pwa-update-required-card {
+  width: min(92vw, 430px);
+  padding: 24px 22px;
+  border-radius: 22px;
+  border: 1px solid rgba(255, 205, 120, 0.34);
+  background: linear-gradient(180deg, rgba(41, 16, 10, 0.98), rgba(20, 9, 7, 0.98));
+  color: #fff1cf;
+  text-align: center;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.44);
+}
+
+.pwa-update-required-icon {
+  width: 58px;
+  height: 58px;
+  margin: 0 auto 14px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 1.8rem;
+  background: radial-gradient(circle at 30% 30%, #f2ae55, #a84d1d);
+  color: #fff8eb;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
+}
+
+.pwa-update-required-title {
+  margin: 0 0 10px;
+  font-size: 1.28rem;
+  color: #fff0ca;
+}
+
+.pwa-update-required-text {
+  margin: 0 0 16px;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: #f4dfb8;
+}
+
+body.pwa-update-required-active {
+  overflow: hidden;
 }
 
 .title-disclaimer-widget {

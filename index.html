@@ -7,40 +7,23 @@
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover"
     />
     <title>Usiec Cepra (ang. Slay the Ceper)</title>
-    <link rel="icon" type="image/png" href="/src/pictures/favicon.png" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
     <meta name="application-name" content="Usiec Cepra" />
     <meta name="description" content="Góralska gra karciana roguelike – Slay the Ceper" />
     <meta name="theme-color" content="#1a0a00" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; frame-ancestors 'none'; base-uri 'self';"
+    />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Usiec Cepra" />
-    <link rel="apple-touch-icon" href="/slay-the-ceper/icon-192x192.png" />
+    <link rel="apple-touch-icon" href="/icon-192x192.png" />
     <script type="module" src="/src/main.js"></script>
   </head>
   <body>
     <div id="game-canvas">
-      <button
-        id="corner-options-btn"
-        class="corner-options-btn hidden"
-        type="button"
-        aria-label="Opcje"
-        aria-hidden="true"
-        disabled
-      >
-        ⚙️
-      </button>
-
-      <button
-        id="seed-hud"
-        class="seed-hud hidden"
-        type="button"
-        aria-label="Skopiuj seed"
-        title="Kliknij, aby skopiować seed"
-      >
-        seed: <span id="seed-hud-value"></span>
-      </button>
-
       <div id="title-screen" class="title-screen" aria-hidden="false">
         <div class="title-backdrop">
           <svg
@@ -187,57 +170,6 @@
           <span class="close-btn" role="button" tabindex="0" aria-label="Zamknij">&times;</span>
           <h2>Dziennik Zmian</h2>
           <div id="release-notes-container"></div>
-        </div>
-      </div>
-
-      <div id="options-modal" class="modal hidden" aria-hidden="true">
-        <div class="modal-content options-content">
-          <span class="close-btn" role="button" tabindex="0" aria-label="Zamknij">&times;</span>
-          <h2>Opcje</h2>
-          <div class="options-row">
-            <span>Muzyka w Menu</span>
-            <button
-              id="option-menu-music-btn"
-              class="option-toggle"
-              type="button"
-              aria-pressed="true"
-            >
-              ON
-            </button>
-          </div>
-          <div class="options-row">
-            <span>Muzyka w Grze</span>
-            <button
-              id="option-game-music-btn"
-              class="option-toggle"
-              type="button"
-              aria-pressed="true"
-            >
-              ON
-            </button>
-          </div>
-          <div class="options-row">
-            <span>Pomiń Wstęp</span>
-            <button
-              id="option-skip-intro-btn"
-              class="option-toggle"
-              type="button"
-              aria-pressed="false"
-            >
-              OFF
-            </button>
-          </div>
-          <div class="options-row">
-            <span>Rozmiar Tekstu</span>
-            <button
-              id="option-text-size-btn"
-              class="option-toggle"
-              type="button"
-              aria-label="Rozmiar tekstu"
-            >
-              NORMALNY
-            </button>
-          </div>
         </div>
       </div>
 
@@ -809,6 +741,113 @@
         </div>
       </div>
       <!-- #game-canvas -->
+    </div>
+    <button
+      id="corner-options-btn"
+      class="corner-options-btn hidden"
+      type="button"
+      aria-label="Opcje"
+      aria-hidden="true"
+      disabled
+    >
+      ⚙️
+    </button>
+    <button
+      id="seed-hud"
+      class="seed-hud hidden"
+      type="button"
+      aria-label="Skopiuj seed"
+      title="Kliknij, aby skopiować seed"
+    >
+      seed: <span id="seed-hud-value"></span>
+    </button>
+    <div class="pwa-update-widget">
+      <button
+        id="pwa-update-btn"
+        class="pwa-update-btn hidden"
+        type="button"
+        aria-expanded="false"
+        aria-hidden="true"
+        disabled
+      >
+        ⬆ Aktualizacja
+      </button>
+      <div id="pwa-update-panel" class="pwa-update-panel hidden" role="note"></div>
+    </div>
+    <div
+      id="pwa-update-required"
+      class="pwa-update-required hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-live="polite"
+      aria-hidden="true"
+    >
+      <div class="pwa-update-required-card">
+        <div class="pwa-update-required-icon" aria-hidden="true">⬆</div>
+        <h2 class="pwa-update-required-title">Dostępna jest obowiązkowa aktualizacja</h2>
+        <p class="pwa-update-required-text">
+          Ta wersja aplikacji jest już nieaktualna. Zaktualizuj Usiec Cepra teraz, aby kontynuować
+          grę na najnowszym wydaniu.
+        </p>
+        <button id="pwa-update-required-btn" class="pwa-update-action-btn" type="button">
+          ⬆ Zaktualizuj aplikację
+        </button>
+      </div>
+    </div>
+    <div id="options-modal" class="modal hidden" aria-hidden="true">
+      <div class="modal-content options-content">
+        <span class="close-btn" role="button" tabindex="0" aria-label="Zamknij">&times;</span>
+        <h2>Opcje</h2>
+        <div class="options-row">
+          <span>Muzyka w Menu</span>
+          <button
+            id="option-menu-music-btn"
+            class="option-toggle"
+            type="button"
+            aria-pressed="true"
+          >
+            ON
+          </button>
+        </div>
+        <div class="options-row">
+          <span>Muzyka w Grze</span>
+          <button
+            id="option-game-music-btn"
+            class="option-toggle"
+            type="button"
+            aria-pressed="true"
+          >
+            ON
+          </button>
+        </div>
+        <div class="options-row">
+          <span>Pomiń Wstęp</span>
+          <button
+            id="option-skip-intro-btn"
+            class="option-toggle"
+            type="button"
+            aria-pressed="false"
+          >
+            OFF
+          </button>
+        </div>
+        <div class="options-row">
+          <span>Rozmiar Tekstu</span>
+          <button
+            id="option-text-size-btn"
+            class="option-toggle"
+            type="button"
+            aria-label="Rozmiar tekstu"
+          >
+            NORMALNY
+          </button>
+        </div>
+        <div class="options-action-row">
+          <button id="option-back-main-btn" class="option-back-main-btn" type="button">
+            Wróć do menu głównego
+          </button>
+        </div>
+      </div>
     </div>
   </body>
 </html>

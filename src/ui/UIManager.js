@@ -130,6 +130,7 @@ export class UIManager {
     });
 
     this._initPwaWidget();
+    this._initPwaUpdateWidget();
 
     document
       .querySelector('#release-notes-modal .close-btn')
@@ -167,6 +168,9 @@ export class UIManager {
     document
       .getElementById('option-text-size-btn')
       ?.addEventListener('click', () => this._cycleTextSizeOption());
+    document
+      .getElementById('option-back-main-btn')
+      ?.addEventListener('click', () => this._returnToMainMenuFromOptions());
     document
       .getElementById('tutorial-ack-btn')
       ?.addEventListener('click', () => this._handleTutorialAcknowledge());
@@ -740,6 +744,113 @@ Po instalacji gra działa offline i bez paska przeglądarki.`;
   }
 
   /**
+   * Shows a global update prompt inside the installed PWA when a newer build is waiting.
+   */
+  _initPwaUpdateWidget() {
+    const btn = document.getElementById('pwa-update-btn');
+    const panel = document.getElementById('pwa-update-panel');
+    const requiredOverlay = document.getElementById('pwa-update-required');
+    const requiredBtn = document.getElementById('pwa-update-required-btn');
+    if (!btn || !panel || !requiredOverlay || !requiredBtn) return;
+
+    const isInStandaloneMode =
+      'standalone' in navigator
+        ? /** @type {any} */ (navigator).standalone
+        : window.matchMedia('(display-mode: standalone)').matches;
+
+    /**
+     * @returns {{ isUpdateAvailable?: boolean, applyUpdate?: (() => Promise<void>) | null, shouldForceUpdate?: boolean }}
+     */
+    const getUpdateState = () => {
+      return /** @type {any} */ (window).__stcPwaUpdateState ?? {};
+    };
+
+    /**
+     * @param {HTMLButtonElement | null} actionBtn
+     * @returns {void}
+     */
+    const bindUpdateAction = (actionBtn) => {
+      actionBtn?.addEventListener('click', async () => {
+        const { applyUpdate } = getUpdateState();
+        if (!applyUpdate) return;
+        actionBtn.setAttribute('disabled', 'true');
+        actionBtn.textContent = 'Aktualizowanie...';
+        await applyUpdate();
+      });
+    };
+
+    const renderPanel = () => {
+      panel.innerHTML = `
+        <strong>Nowa wersja aplikacji jest gotowa</strong><br>
+        Zaktualizuj Usiec Cepra, aby pobrać najnowsze poprawki i zawartość.<br>
+        <button class="pwa-update-action-btn" id="pwa-update-action-btn" type="button">⬆ Zaktualizuj teraz</button>
+      `;
+
+      bindUpdateAction(
+        /** @type {HTMLButtonElement | null} */ (document.getElementById('pwa-update-action-btn'))
+      );
+    };
+
+    const syncVisibility = () => {
+      const { isUpdateAvailable, shouldForceUpdate } = getUpdateState();
+      const shouldShow = Boolean(isUpdateAvailable) && isInStandaloneMode;
+      const isMandatory = shouldShow && Boolean(shouldForceUpdate);
+
+      btn.classList.toggle('hidden', !shouldShow || isMandatory);
+      btn.disabled = !shouldShow || isMandatory;
+      btn.setAttribute('aria-hidden', String(!shouldShow || isMandatory));
+
+      requiredOverlay.classList.toggle('hidden', !isMandatory);
+      requiredOverlay.setAttribute('aria-hidden', String(!isMandatory));
+      document.body.classList.toggle('pwa-update-required-active', isMandatory);
+
+      if (!shouldShow) {
+        panel.classList.add('hidden');
+        btn.setAttribute('aria-expanded', 'false');
+        requiredBtn.removeAttribute('disabled');
+        requiredBtn.textContent = '⬆ Zaktualizuj aplikację';
+        return;
+      }
+
+      if (isMandatory) {
+        panel.classList.add('hidden');
+        btn.setAttribute('aria-expanded', 'false');
+        requiredBtn.removeAttribute('disabled');
+        requiredBtn.textContent = '⬆ Zaktualizuj aplikację';
+      }
+
+      btn.textContent = '⬆ Aktualizacja';
+    };
+
+    btn.addEventListener('click', (event) => {
+      event.stopPropagation();
+      if (btn.classList.contains('hidden')) return;
+
+      const isHidden = panel.classList.contains('hidden');
+      if (isHidden) {
+        renderPanel();
+        panel.classList.remove('hidden');
+        btn.setAttribute('aria-expanded', 'true');
+      } else {
+        panel.classList.add('hidden');
+        btn.setAttribute('aria-expanded', 'false');
+      }
+    });
+
+    window.addEventListener('stc-pwa-update', syncVisibility);
+    bindUpdateAction(/** @type {HTMLButtonElement} */ (requiredBtn));
+
+    document.addEventListener('click', (event) => {
+      if (!(event.target instanceof Element)) return;
+      if (event.target.closest('.pwa-update-widget')) return;
+      panel.classList.add('hidden');
+      btn.setAttribute('aria-expanded', 'false');
+    });
+
+    syncVisibility();
+  }
+
+  /**
    * @param {'normal' | 'hard'} difficulty
    */
   _handleTitleStart(difficulty) {
@@ -762,6 +873,7 @@ Po instalacji gra działa offline i bez paska przeglądarki.`;
     this.mapMessage = '';
     this.audioManager.setContext('inGame');
     this._openMapOverlay();
+    this._syncScreenState();
     this._onActChange();
     titleScreen.classList.add('is-hiding');
     titleScreen.setAttribute('aria-hidden', 'true');
@@ -889,6 +1001,35 @@ Po instalacji gra działa offline i bez paska przeglądarki.`;
     setTextSizePreset(next);
     this._applyTextSizePreference();
     this._renderAudioOptions();
+  }
+
+  _returnToMainMenuFromOptions() {
+    if (this._isInputLocked()) return;
+    const shouldExit = window.confirm(
+      'Wrócić do menu głównego? Bieżąca wyprawa zostanie zresetowana.'
+    );
+    if (!shouldExit) return;
+
+    this._closeOptionsModal();
+    this.audioManager.clearDefeatThemeLock();
+    this.state.resetForNewRun(startingDeck);
+    this.state.currentScreen = 'title';
+    this.mapMessage = '';
+
+    this._hideOverlay('run-summary-overlay');
+    this._hideOverlay('map-overlay');
+    this._hideOverlay('shop-overlay');
+    this._hideOverlay('campfire-overlay');
+    this._hideOverlay('random-event-overlay');
+    this._hideOverlay('maryna-boon-overlay');
+    this._hideOverlay('library-overlay');
+    this._hideOverlay('pile-viewer-overlay');
+    this._hideOverlay('card-zoom-overlay');
+    this._hideOverlay('relic-reward-screen');
+    this._hideOverlay('card-reward-screen');
+
+    this.updateUI();
+    this._syncScreenState();
   }
 
   _applyTextSizePreference() {
