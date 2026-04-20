@@ -37,13 +37,30 @@ export function getReachableNodes(state) {
  * @returns {boolean}
  */
 export function canTravelTo(state, level, nodeIndex) {
-  if (!state.hasStartedFirstBattle) return false;
-  if (level !== state.currentLevel + 1) return false;
+  if (!state.hasStartedFirstBattle) {
+    console.warn('[NAV] canTravelTo: Denied - First battle not started.');
+    return false;
+  }
+  if (level !== state.currentLevel + 1) {
+    console.warn(
+      `[NAV] canTravelTo: Denied - Wrong level. Target: ${level}, Current: ${state.currentLevel}`
+    );
+    return false;
+  }
   const nextLevel = state.map[level];
-  if (!nextLevel || !nextLevel[nodeIndex]) return false;
+  if (!nextLevel || !nextLevel[nodeIndex]) {
+    console.warn(`[NAV] canTravelTo: Denied - No such node at L:${level} I:${nodeIndex}`);
+    return false;
+  }
   const currentNode = state.getCurrentMapNode();
-  if (!currentNode) return false;
-  return currentNode.connections.includes(nodeIndex);
+  if (!currentNode) {
+    console.warn('[NAV] canTravelTo: Denied - No current node.');
+    return false;
+  }
+  const isConnected = currentNode.connections.includes(nodeIndex);
+  if (!isConnected)
+    console.warn(`[NAV] canTravelTo: Denied - Node ${nodeIndex} not connected to current node.`);
+  return isConnected;
 }
 
 /**
@@ -62,7 +79,9 @@ export function canTravelTo(state, level, nodeIndex) {
  * @returns {MapNode | null}
  */
 export function travelTo(state, level, nodeIndex) {
-  if (!state.canTravelTo(level, nodeIndex)) return null;
+  if (!state.canTravelTo(level, nodeIndex)) {
+    return null;
+  }
   state.currentLevel = level;
   state.currentNodeIndex = nodeIndex;
   state.currentNode = { x: nodeIndex, y: level };

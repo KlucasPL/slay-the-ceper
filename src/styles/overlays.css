@@ -1,0 +1,46 @@
+/* --- Run Summary UI (Victory/Defeat) --- */
+.run-summary-section {
+  margin: 24px 0;
+  padding: 16px;
+  background: rgba(20, 10, 5, 0.6);
+  border: 2px solid #5a3800;
+  border-radius: 12px;
+}
+
+.run-summary-title {
+  color: #e0b85a;
+  font-size: 1.2rem;
+  margin-top: 0;
+  margin-bottom: 12px;
+  border-bottom: 1px dashed #5a3800;
+  padding-bottom: 8px;
+}
+
+.run-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+}
+
+.run-summary-item {
+  background: #2c1e16;
+  border: 1px solid #4a2e15;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 1.05rem;
+  color: #fdf8eb;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+.run-summary-item.rarity-uncommon {
+  color: #5bc0eb;
+  border-color: #2b6a8c;
+}
+
+.run-summary-item.rarity-rare {
+  color: #f3c13a;
+  border-color: #8c6a1c;
+}

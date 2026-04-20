@@ -51,18 +51,20 @@ export function spendDutki(state, cost) {
  */
 export function generateShopStock(state) {
   if (state.hasRelic('certyfikowany_oscypek') && state.certyfikowanyOscypekShopProcs < 3) {
-    state.gainMaxHp(2);
+    state.gainMaxHp(5);
     state.certyfikowanyOscypekShopProcs += 1;
   }
 
-  const isListaFirstShopVisit =
-    state.hasRelic('relic_boon_lista_zakupow') && !state.maryna.flags.listaFirstShopUsed;
-  if (isListaFirstShopVisit) {
-    state.maryna.flags.listaFirstShopUsed = true;
+  const isListaActive =
+    state.hasRelic('relic_boon_lista_zakupow') &&
+    (state.maryna.counters.listaFreeRemovalsLeft ?? 0) > 0;
+  if (isListaActive) {
     state.maryna.flags.listaDiscountActive = true;
     state.maryna.flags.listaFreeRemovalAvailable = true;
+    state.maryna.flags.listaFreeRemovalUsed = false;
   } else {
     state.maryna.flags.listaDiscountActive = false;
+    state.maryna.flags.listaFreeRemovalAvailable = false;
   }
 
   const baseCardPool = Object.keys(cardLibrary).filter(
@@ -167,8 +169,11 @@ export function buyItem(state, item, type) {
 export function grantBattleDutki(state) {
   if (!state.pendingBattleDutki) return 0;
   const base = 28 + Math.floor(state.rng() * 9);
-  let drop =
-    state.enemy.isBankrupt && state.hasRelic('magnes_na_lodowke') ? Math.floor(base * 1.5) : base;
+  let drop = base;
+  if (state.hasRelic('magnes_na_lodowke')) {
+    const multiplier = state.enemy.isBankrupt ? 1.5 : 1.2;
+    drop = Math.floor(base * multiplier);
+  }
 
   if (state.enemy.isElite) {
     drop = Math.floor(drop * 1.5);
@@ -203,8 +208,8 @@ export function grantBattleDutki(state) {
     !state.maryna.flags.kiesaFirstWinClaimed &&
     state.battleContext !== 'event'
   ) {
-    state.addDutki(20);
-    drop += 20;
+    state.addDutki(40);
+    drop += 40;
     state.maryna.flags.kiesaFirstWinClaimed = true;
   }
 

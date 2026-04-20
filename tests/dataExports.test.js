@@ -155,4 +155,10 @@ describe('data exports', () => {
       }
     }
   });
+
+  it('Maryna boon descriptions match current rebalance values', () => {
+    expect(marynaBoonLibrary.kiesa.effectDesc).toContain('+100 Dutków od razu');
+    expect(marynaBoonLibrary.przeglad_plecaka.effectDesc).toContain('+80 Dutków');
+    expect(marynaBoonLibrary.zloty_rozaniec.effectDesc).toContain('+5 Garda');
+  });
 });

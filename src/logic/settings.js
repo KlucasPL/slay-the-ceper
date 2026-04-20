@@ -4,6 +4,22 @@ const SKIP_INTRO_KEY = 'stc_skip_intro';
 const MENU_MUSIC_KEY = 'slay-the-ceper:menu-music';
 /** @type {string} localStorage key for the in-game music preference. */
 const GAME_MUSIC_KEY = 'slay-the-ceper:game-music';
+/** @type {string} localStorage key for global text size preference. */
+const TEXT_SIZE_KEY = 'slay-the-ceper:text-size';
+/** @type {string} localStorage key for text-size schema version. */
+const TEXT_SIZE_SCHEMA_KEY = 'slay-the-ceper:text-size-schema';
+/** @type {string} current text-size schema version. */
+const TEXT_SIZE_SCHEMA_VERSION = '2';
+
+/** @typedef {'normal' | 'large' | 'xlarge'} TextSizePreset */
+
+/** @type {Readonly<Record<TextSizePreset, number>>} */
+const TEXT_SIZE_SCALE = {
+  // New baseline: previous "large" is now the default readable size.
+  normal: 1.15,
+  large: 1.3,
+  xlarge: 1.45,
+};
 
 /**
  * Generic localStorage boolean reader with fallback.
@@ -83,4 +99,51 @@ export function getGameMusicEnabled() {
  */
 export function setGameMusicEnabled(value) {
   writeBool(GAME_MUSIC_KEY, value);
+}
+
+/**
+ * Reads and validates the persisted global text-size preset.
+ * Defaults to `normal` when storage is unavailable or value is invalid.
+ * @returns {TextSizePreset}
+ */
+export function getTextSizePreset() {
+  try {
+    const schema = localStorage.getItem(TEXT_SIZE_SCHEMA_KEY);
+    const raw = localStorage.getItem(TEXT_SIZE_KEY);
+
+    if (schema === TEXT_SIZE_SCHEMA_VERSION) {
+      if (raw === 'normal' || raw === 'large' || raw === 'xlarge') return raw;
+      return 'normal';
+    }
+
+    // One-time migration for presets saved before the scale shift.
+    const migrated = raw === 'xlarge' ? 'large' : 'normal';
+    localStorage.setItem(TEXT_SIZE_KEY, migrated);
+    localStorage.setItem(TEXT_SIZE_SCHEMA_KEY, TEXT_SIZE_SCHEMA_VERSION);
+    return migrated;
+  } catch {
+    return 'normal';
+  }
+}
+
+/**
+ * Persists global text-size preset.
+ * @param {TextSizePreset} value
+ */
+export function setTextSizePreset(value) {
+  try {
+    localStorage.setItem(TEXT_SIZE_KEY, value);
+    localStorage.setItem(TEXT_SIZE_SCHEMA_KEY, TEXT_SIZE_SCHEMA_VERSION);
+  } catch {
+    // Ignore — localStorage may be blocked by browser privacy settings.
+  }
+}
+
+/**
+ * Returns numeric scale factor for a text-size preset.
+ * @param {TextSizePreset} preset
+ * @returns {number}
+ */
+export function getTextSizeScale(preset) {
+  return TEXT_SIZE_SCALE[preset] ?? TEXT_SIZE_SCALE.normal;
 }

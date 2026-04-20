@@ -16,7 +16,7 @@ export const marynaBoonLibrary = {
     relicId: 'relic_boon_mokra_sciera',
     name: 'Mokra Ściera Maryny',
     flavor: 'Wstawaj. Najpierw zimny okład, potem wielkie czyny.',
-    effectDesc: '+12 maks. Krzepy i +12 Krzepy (do nowego limitu).',
+    effectDesc: '+7 maks. Krzepy i +7 Krzepy (do nowego limitu).',
     emoji: '🧹',
   },
   kiesa: {
@@ -24,7 +24,7 @@ export const marynaBoonLibrary = {
     relicId: 'relic_boon_kiesa',
     name: 'Kiesa na Pierwszy Dzień',
     flavor: 'Masz, ale nie przewal wszystkiego na jarmarku.',
-    effectDesc: '+80 Dutków od razu; +20 Dutków po pierwszym zwycięstwie (jednorazowo).',
+    effectDesc: '+100 Dutków od razu; +40 Dutków po pierwszym zwycięstwie (jednorazowo).',
     emoji: '💰',
   },
   przeglad_plecaka: {
@@ -32,7 +32,8 @@ export const marynaBoonLibrary = {
     relicId: 'relic_boon_przeglad_plecaka',
     name: 'Przegląd Plecaka Maryny',
     flavor: 'Ten złom wyrzuć, to ci zostawiam.',
-    effectDesc: 'Usuń 1 losową kartę startową z talii; dodaj 1 losową kartę niepowszechną.',
+    effectDesc:
+      'Usuń 1 losową kartę startową z talii; dodaj 1 losową kartę niepowszechną; zyskaj +80 Dutków.',
     emoji: '🎒',
   },
   sloik_rosolu: {
@@ -40,7 +41,7 @@ export const marynaBoonLibrary = {
     relicId: 'relic_boon_sloik_rosolu',
     name: 'Słoik Rosołu na Drogę',
     flavor: 'Na trzy pierwsze bitki starczy ci mocy i ciepła.',
-    effectDesc: 'Przez pierwsze 3 walki na starcie: +6 Gardy i +1 Siły.',
+    effectDesc: 'Przez pierwsze 4 walki na starcie: +8 Gardy i +1 Siły.',
     emoji: '🍲',
   },
   zloty_rozaniec: {
@@ -48,7 +49,8 @@ export const marynaBoonLibrary = {
     relicId: 'relic_boon_zloty_rozaniec',
     name: 'Złoty Różaniec Maryny',
     flavor: 'Pomódl się i bij dwa razy mocniej!',
-    effectDesc: 'Na starcie każdej walki: pierwsze trafienie atakiem zadaje podwójne obrażenia.',
+    effectDesc:
+      'Na starcie każdej walki: +5 Garda i pierwsze trafienie atakiem zadaje podwójne obrażenia.',
     emoji: '📿',
   },
   lista_zakupow: {
@@ -56,7 +58,8 @@ export const marynaBoonLibrary = {
     relicId: 'relic_boon_lista_zakupow',
     name: 'Lista Zakupów',
     flavor: 'Kup mądrze, nie jak ceper na Krupówkach.',
-    effectDesc: 'Pierwszy sklep: karty -30%. Pierwsze usunięcie karty w wyprawie za 0 Dutków.',
+    effectDesc:
+      '+50 Dutków od razu. Wszystkie sklepy: karty -25%. Jedno darmowe usunięcie karty w wyprawie.',
     emoji: '📜',
   },
   tajny_skladnik: {
@@ -64,7 +67,7 @@ export const marynaBoonLibrary = {
     relicId: 'relic_boon_tajny_skladnik',
     name: 'Tajny Składnik Maryny',
     flavor: 'Najpierw ich osłabi, potem ich dobij.',
-    effectDesc: 'Na starcie każdej walki wróg dostaje 1 Słabość i 1 Kruchość.',
+    effectDesc: 'Na starcie każdej walki wróg dostaje 2 Słabości i 2 Kruchości.',
     emoji: '🌿',
   },
 };

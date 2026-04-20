@@ -39,8 +39,8 @@ export function gainMaxHp(state, amount) {
  * @param {number} amount
  */
 export function healPlayer(state, amount) {
-  if (state.hasRelic('dzwonek_owcy')) return;
-  state.player.hp = Math.min(state.player.maxHp, state.player.hp + amount);
+  const effectiveAmount = state.hasRelic('dzwonek_owcy') ? Math.min(2, amount) : amount;
+  state.player.hp = Math.min(state.player.maxHp, state.player.hp + effectiveAmount);
 }
 
 /**
@@ -60,8 +60,8 @@ export function getCardCostInHand(state, cardId) {
   if (baseCardId === 'lawina_z_morskiego_oka' && state.currentWeather === 'frozen') {
     return 1;
   }
-  if (baseCardId === 'paragon_grozy' && state.enemy?.rachunek >= 25) {
-    return 1;
+  if (baseCardId === 'paragon_grozy' && state.enemy?.rachunek >= 24) {
+    return 0;
   }
   return card?.cost ?? 0;
 }
@@ -74,10 +74,10 @@ export function getCardCostInHand(state, cardId) {
 export function getCardShopPrice(state, cardId) {
   const base = getCardDefinition(cardId)?.price ?? 0;
   if (state.hasRelic('zlota_karta_zakopianczyka')) {
-    return Math.floor(base * 0.85);
+    return Math.floor(base * 0.8);
   }
   if (state.maryna.flags.listaDiscountActive) {
-    return Math.floor(base * 0.7);
+    return Math.floor(base * 0.75);
   }
   return base;
 }
@@ -87,7 +87,7 @@ export function getCardShopPrice(state, cardId) {
  * @returns {number}
  */
 export function getShopRemovalPrice(state) {
-  if (state.hasRelic('zlota_karta_zakopianczyka')) return 25;
+  if (state.hasRelic('zlota_karta_zakopianczyka')) return 0;
   if (state.maryna.flags.listaFreeRemovalAvailable && !state.maryna.flags.listaFreeRemovalUsed) {
     return 0;
   }
@@ -100,7 +100,13 @@ export function getShopRemovalPrice(state) {
 export function afterShopCardRemoval(state) {
   if (state.maryna.flags.listaFreeRemovalAvailable && !state.maryna.flags.listaFreeRemovalUsed) {
     state.maryna.flags.listaFreeRemovalUsed = true;
-    state.maryna.flags.listaDiscountActive = false;
+    state.maryna.counters.listaFreeRemovalsLeft = Math.max(
+      0,
+      (state.maryna.counters.listaFreeRemovalsLeft ?? 1) - 1
+    );
+    if (state.maryna.counters.listaFreeRemovalsLeft === 0) {
+      state.maryna.flags.listaDiscountActive = false;
+    }
   }
 }
 
@@ -248,6 +254,7 @@ export function takeDamage(state, amount) {
   state.player.hp -= dealt;
   if (dealt > 0 && state.hasRelic('kierpce_wyprzedazy')) {
     state._drawCards(1);
+    state.gainPlayerBlockFromCard(3);
   }
   if (dealt > 0 && state.enemy.passive === 'brak_reszty') {
     state.dutki = Math.max(0, state.dutki - 3);

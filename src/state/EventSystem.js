@@ -220,7 +220,7 @@ export function startBattleWithEnemyId(state, enemyId, options = {}) {
 
   state.emit('battle_started', { enemy: { kind: 'enemy', id: state.enemy.id } });
 
-  state._applyBattleStartRelics();
   state.startTurn();
+  state._applyBattleStartRelics();
   return true;
 }

@@ -5,6 +5,27 @@
 /** @type {ReleaseNoteEntry[]} */
 export const releaseNotesData = [
   {
+    version: 'v1.7.0 - Szlify interfejsu',
+    date: 'kwiecień 2026',
+    changes: [
+      '📲 GRA JAKO APLIKACJA (PWA): Usiec Cepra można teraz zainstalować na telefonie lub komputerze jak prawdziwą aplikację – bez sklepu z aplikacjami, działa w pełni offline. Na Android/Chrome kliknij „Zainstaluj" w menu przeglądarki. Na iPhone/iPad otwórz w Safari → Udostępnij □↑ → „Dodaj do ekranu głównego". Na komputerze (Chrome/Edge) kliknij ikonę ⊕ w pasku adresu. Przycisk „📲 Zainstaluj" w lewym dolnym rogu menu głównego prowadzi przez cały proces.',
+      '📱 LANDSCAPE WRACA NA TELEFONY: Gra znów działa w orientacji poziomej na urządzeniach mobilnych – blokada z poprzedniej wersji została zniesiona. Interfejs automatycznie dopasowuje się do szerokiego ekranu, a tytuł i przyciski menu są czytelne niezależnie od orientacji.',
+      '🔍 PODGLĄD KART I PAMIĄTEK: Przytrzymanie palcem (lub kliknięcie i przytrzymanie myszą) na dowolnej karcie lub pamiątce – w nagrodach, Jarmarku, Watrze, Bibliotece Tatrzańskiej, stosach kart i u Maryny – otwiera pełnoekranowy podgląd z pełnym opisem.',
+      '🃏 PODGLĄD DARÓW MARYNY: Przytrzymanie bonu błogosławieństwa Maryny poprawnie pokazuje teraz okno podglądu ponad nakładką wyboru.',
+    ],
+  },
+  {
+    version: 'v1.6.0 - Wielki Rebalans Kart i Pamiątek',
+    date: 'kwiecień 2026',
+    changes: [
+      '⚖️ DUŻA AKTUALIZACJA BALANSU: Przestrojono najsłabsze i najsilniejsze elementy jednocześnie, z naciskiem na większą grywalność słabych wyborów i uspokojenie najbardziej dominujących opcji.',
+      '🃏 KARTY (ATAK/UMIEJĘTNOŚĆ): Wzmocniono m.in. Zemstę Górala, Punkt Widokowy i List od Maryny, a osłabiono m.in. Młynek Ciupagą, Eksmisję z Kwatery i Paragon Grozy; poprawiono też opisy, by 1:1 zgadzały się z nowymi wartościami.',
+      '🎒 PAMIĄTKI: Zrebalansowano kluczowe pamiątki ekonomiczne i bojowe (m.in. Flaszka po Śliwowicy, Dzwonek Owcy, Zepsuty Termometr, Certyfikowany Oscypek, Pęknięte Liczydło, Złota Karta Zakopiańczyka).',
+      '👵 WYPRAWKI MARYNY: Dostosowano moc i ekonomię startowych darów (Mokra Ściera, Kiesa, Złoty Różaniec, Przegląd Plecaka), a opisy wyprawek i odpowiadających im pamiątek zostały zsynchronizowane z nowym balansem.',
+      '🧾 CZYTELNOŚĆ I SPÓJNOŚĆ: Ujednolicono wartości liczbowe w opisach kart i pamiątek, żeby decyzje dotyczące budowy talii były bardziej przewidywalne już na etapie wyboru.',
+    ],
+  },
+  {
     version: 'v1.5.3 - Wygodniejsza gra na telefonach',
     date: 'kwiecień 2026',
     changes: [

@@ -1,7 +1,14 @@
-import { cardLibrary, startingDeck } from '../data/cards.js';
+import { cardLibrary, startingDeck, getCardDefinition } from '../data/cards.js';
+import { relicLibrary } from '../data/relics.js';
 import { releaseNotesData } from '../data/releaseNotes.js';
 import { ActIntroOverlay } from './overlays/ActIntroOverlay.js';
-import { getSkipIntro, setSkipIntro } from '../logic/settings.js';
+import {
+  getSkipIntro,
+  setSkipIntro,
+  getTextSizePreset,
+  setTextSizePreset,
+  getTextSizeScale,
+} from '../logic/settings.js';
 import * as uiHelpers from './helpers/UIHelpers.js';
 import * as cardRenderer from './renderers/CardRenderer.js';
 import * as statusRenderer from './renderers/StatusRenderer.js';
@@ -15,6 +22,8 @@ import * as campfireOverlay from './overlays/CampfireOverlay.js';
 import * as marynaOverlay from './overlays/MarynaOverlay.js';
 import * as combatUI from './combat/CombatUI.js';
 import * as tutorialUI from './tutorial/TutorialUI.js';
+import * as cardZoomOverlay from './overlays/CardZoomOverlay.js';
+import * as handViewOverlay from './overlays/HandViewOverlay.js';
 
 export class UIManager {
   /**
@@ -119,6 +128,9 @@ export class UIManager {
       titleDisclaimerPanel.classList.add('hidden');
       titleDisclaimerBtn.setAttribute('aria-expanded', 'false');
     });
+
+    this._initPwaWidget();
+
     document
       .querySelector('#release-notes-modal .close-btn')
       .addEventListener('click', () => this._closeReleaseNotesModal());
@@ -145,13 +157,16 @@ export class UIManager {
     });
     document
       .getElementById('option-menu-music-btn')
-      .addEventListener('click', () => this._toggleMenuMusicOption());
+      ?.addEventListener('click', () => this._toggleMenuMusicOption());
     document
       .getElementById('option-game-music-btn')
-      .addEventListener('click', () => this._toggleGameMusicOption());
+      ?.addEventListener('click', () => this._toggleGameMusicOption());
     document
       .getElementById('option-skip-intro-btn')
       ?.addEventListener('click', () => this._toggleSkipIntroOption());
+    document
+      .getElementById('option-text-size-btn')
+      ?.addEventListener('click', () => this._cycleTextSizeOption());
     document
       .getElementById('tutorial-ack-btn')
       ?.addEventListener('click', () => this._handleTutorialAcknowledge());
@@ -168,21 +183,11 @@ export class UIManager {
     document
       .getElementById('map-continue-btn')
       .addEventListener('click', () => this._handleMapAdvance());
-    document.getElementById('shop-exit-btn').addEventListener('click', () => this._closeShop());
-    document.getElementById('shop-heal-btn').addEventListener('click', () => this._buyShopHeal());
-    document
-      .getElementById('shop-remove-btn')
-      .addEventListener('click', () => this._buyCardRemoval());
-    document.getElementById('camp-exit-btn').addEventListener('click', () => this._closeCampfire());
+    // Removed legacy campfire button listeners (now handled dynamically)
     document
       .getElementById('random-event-continue-btn')
       .addEventListener('click', () => this._continueAfterRandomEvent());
-    document
-      .getElementById('camp-heal-btn')
-      .addEventListener('click', () => this._useCampfireHeal());
-    document
-      .getElementById('camp-upgrade-btn')
-      .addEventListener('click', () => this._useCampfireUpgrade());
+    // Removed legacy campfire button listeners (now handled dynamically)
     document
       .getElementById('library-tab-cards')
       .addEventListener('click', () => this._setLibraryTab('cards'));
@@ -247,7 +252,7 @@ export class UIManager {
     document.addEventListener(
       'click',
       (event) => {
-        if (!this._isInputLocked()) return;
+        if (!this._isInputLocked() || !this.isActIntroPlaying) return;
         const target = event.target;
         if (!(target instanceof Element)) return;
         if (target.closest('#act-intro-overlay')) return;
@@ -276,11 +281,32 @@ export class UIManager {
       },
       true
     );
-    window.addEventListener('resize', () => this._scaleGame());
     window.addEventListener('resize', () => this._renderTutorialOverlay());
     window.addEventListener('resize', () => this._queueCardDescFit());
-    this._scaleGame();
     this._setupCardDescriptionAutoFit();
+    cardZoomOverlay.initCardZoomOverlay();
+    handViewOverlay.initHandViewOverlay();
+    document.getElementById('hand-view-close-btn')?.addEventListener('click', () => {
+      handViewOverlay.closeHandView();
+    });
+    document.getElementById('hand-view-btn')?.addEventListener('click', () => {
+      this._openHandViewOverlay();
+    });
+    handViewOverlay.initHandViewOverlay();
+    document.getElementById('hand-view-close-btn')?.addEventListener('click', () => {
+      handViewOverlay.closeHandView();
+    });
+    document.getElementById('hand-view-btn')?.addEventListener('click', () => {
+      this._openHandViewOverlay();
+    });
+    handViewOverlay.initHandViewOverlay();
+    document.getElementById('hand-view-close-btn')?.addEventListener('click', () => {
+      handViewOverlay.closeHandView();
+    });
+    document.getElementById('hand-view-btn')?.addEventListener('click', () => {
+      this._openHandViewOverlay();
+    });
+    this._applyTextSizePreference();
     this._renderReleaseNotesButtonLabel();
     this._renderReleaseNotes();
     this._renderAudioOptions();
@@ -624,6 +650,96 @@ export class UIManager {
   }
 
   /**
+   * Initialises the PWA install tooltip widget on the title screen.
+   */
+  _initPwaWidget() {
+    const btn = document.getElementById('title-pwa-btn');
+    const panel = document.getElementById('title-pwa-panel');
+    if (!btn || !panel) return;
+
+    /** @type {BeforeInstallPromptEvent | null} */
+    let deferredPrompt = null;
+
+    const isIos =
+      /iphone|ipad|ipod/i.test(navigator.userAgent) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const isInStandaloneMode =
+      'standalone' in navigator
+        ? /** @type {any} */ (navigator).standalone
+        : window.matchMedia('(display-mode: standalone)').matches;
+
+    if (isInStandaloneMode) {
+      btn.style.display = 'none';
+      return;
+    }
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = /** @type {BeforeInstallPromptEvent} */ (e);
+    });
+
+    window.addEventListener('appinstalled', () => {
+      btn.style.display = 'none';
+      panel.classList.add('hidden');
+    });
+
+    /** @returns {string} */
+    const buildPanelHtml = () => {
+      if (deferredPrompt) {
+        return `<strong>Zainstaluj jako aplikację</strong><br>
+Kliknij poniższy przycisk, aby dodać Usiec Cepra do pulpitu – bez sklepu z aplikacjami, działa offline.
+<br><button class="pwa-install-btn" id="pwa-native-install-btn">⬇ Zainstaluj</button>`;
+      }
+      if (isIos) {
+        return `<strong>Zainstaluj na iPhone / iPad</strong><ul>
+<li>Otwórz w <strong>Safari</strong> (nie Chrome/Firefox)</li>
+<li>Stuknij ikonę Udostępnij <strong>□↑</strong> na dole</li>
+<li>Wybierz <strong>„Dodaj do ekranu głównego"</strong></li>
+<li>Stuknij <strong>„Dodaj"</strong></li>
+</ul>
+Gra pojawi się jako ikona i będzie działać bez przeglądarki.`;
+      }
+      return `<strong>Zainstaluj jako aplikację</strong><ul>
+<li><strong>Android (Chrome):</strong> menu ⋮ → „Dodaj do ekranu głównego" / „Zainstaluj"</li>
+<li><strong>Android (Firefox):</strong> menu ⋮ → „Zainstaluj"</li>
+<li><strong>Komputer (Chrome/Edge):</strong> ikona ⊕ w pasku adresu → „Zainstaluj"</li>
+</ul>
+Po instalacji gra działa offline i bez paska przeglądarki.`;
+    };
+
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isHidden = panel.classList.contains('hidden');
+      if (isHidden) {
+        panel.innerHTML = buildPanelHtml();
+        panel.classList.remove('hidden');
+        btn.setAttribute('aria-expanded', 'true');
+        const nativeBtn = document.getElementById('pwa-native-install-btn');
+        if (nativeBtn && deferredPrompt) {
+          nativeBtn.addEventListener('click', async () => {
+            if (!deferredPrompt) return;
+            deferredPrompt.prompt();
+            await deferredPrompt.userChoice;
+            deferredPrompt = null;
+            panel.classList.add('hidden');
+            btn.setAttribute('aria-expanded', 'false');
+          });
+        }
+      } else {
+        panel.classList.add('hidden');
+        btn.setAttribute('aria-expanded', 'false');
+      }
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!(e.target instanceof Element)) return;
+      if (e.target.closest('.title-pwa-widget')) return;
+      panel.classList.add('hidden');
+      btn.setAttribute('aria-expanded', 'false');
+    });
+  }
+
+  /**
    * @param {'normal' | 'hard'} difficulty
    */
   _handleTitleStart(difficulty) {
@@ -737,6 +853,15 @@ export class UIManager {
       skipIntroBtn.classList.toggle('is-on', skipOn);
       skipIntroBtn.setAttribute('aria-pressed', String(skipOn));
     }
+
+    const textSizeBtn = document.getElementById('option-text-size-btn');
+    if (textSizeBtn) {
+      const preset = getTextSizePreset();
+      const label = preset === 'xlarge' ? 'BARDZO DUZY' : preset === 'large' ? 'DUZY' : 'NORMALNY';
+      textSizeBtn.textContent = label;
+      textSizeBtn.classList.toggle('is-on', preset !== 'normal');
+      textSizeBtn.setAttribute('aria-label', `Rozmiar tekstu: ${label}`);
+    }
   }
 
   _toggleMenuMusicOption() {
@@ -755,6 +880,21 @@ export class UIManager {
     if (this._isInputLocked()) return;
     setSkipIntro(!getSkipIntro());
     this._renderAudioOptions();
+  }
+
+  _cycleTextSizeOption() {
+    if (this._isInputLocked()) return;
+    const current = getTextSizePreset();
+    const next = current === 'normal' ? 'large' : current === 'large' ? 'xlarge' : 'normal';
+    setTextSizePreset(next);
+    this._applyTextSizePreference();
+    this._renderAudioOptions();
+  }
+
+  _applyTextSizePreference() {
+    const preset = getTextSizePreset();
+    const scale = getTextSizeScale(preset);
+    document.documentElement.style.setProperty('--user-text-scale', String(scale));
   }
 
   _syncScreenState() {
@@ -1118,7 +1258,6 @@ export class UIManager {
   }
 
   _handleMapAdvance() {
-    if (this._isInputLocked()) return;
     const isOnBoss = this.state.currentLevel === this.state.map.length - 1;
     if (!isOnBoss) return;
 
@@ -1134,15 +1273,27 @@ export class UIManager {
   }
 
   _handleTreasureNode() {
-    const relicId = this.state.generateRelicReward(true);
-    if (!relicId) {
-      this.mapMessage = 'Skrzynia była pusta... ani jednej pamiątki.';
-      this._openMapOverlay();
-      return;
-    }
+    try {
+      this.state.currentScreen = 'treasure';
+      this._hideOverlay('map-overlay');
+      this.state.hasStartedFirstBattle = true;
 
-    this.showRelicScreen(relicId, 'treasure');
-    this.updateUI();
+      const relicId = this.state.generateRelicReward(true);
+      if (!relicId) {
+        this.mapMessage = 'Skrzynia była pusta...';
+        this.state.currentScreen = 'map';
+        this._openMapOverlay();
+        return;
+      }
+
+      this.showRelicScreen(relicId, 'treasure');
+      this.updateUI();
+    } catch (error) {
+      console.error('[UI] BŁĄD SKRZYNI:', error);
+      this.mapMessage = 'BŁĄD SKRZYNI: ' + (error.message || 'Nieznany błąd');
+      this.state.currentScreen = 'map';
+      this._openMapOverlay();
+    }
   }
 
   /**
@@ -1220,20 +1371,77 @@ export class UIManager {
     libraryRenderer.setLibraryFilter(this, rarity);
   }
 
+  /**
+   * @param {string} cardId
+   */
+  showCardZoom(cardId) {
+    const cardDef = getCardDefinition(cardId);
+    if (!cardDef) return;
+    const cardView = {
+      name: cardDef.name,
+      emoji: cardDef.emoji,
+      rarityLabel: uiHelpers.getFullCardType(cardDef.rarity, cardDef.type),
+      cost: this.state.getCardCostInHand ? this.state.getCardCostInHand(cardId) : cardDef.cost,
+      description: cardRenderer.getCardDescription(this, cardDef, cardId),
+      rarityClass: uiHelpers.rarityClass(cardDef.rarity),
+      typeClass: `card-${cardDef.type}`,
+      exhaust: Boolean(cardDef.exhaust),
+    };
+    cardZoomOverlay.openCardZoom(cardView, 'card');
+  }
+
+  /**
+   * @param {string} relicId
+   */
+  showRelicZoom(relicId) {
+    const relicDef = relicLibrary[relicId];
+    if (!relicDef) return;
+    const relicView = {
+      name: relicDef.name,
+      emoji: relicDef.emoji,
+      rarityLabel: uiHelpers.rarityLabel(relicDef.rarity, 'relic'),
+      description: relicDef.desc,
+      rarityClass: uiHelpers.rarityClass(relicDef.rarity),
+    };
+    cardZoomOverlay.openCardZoom(relicView, 'relic');
+  }
+
   _renderLibrary() {
     libraryRenderer.renderLibrary(this);
   }
 
-  _closeCampfire() {
-    campfireOverlay.closeCampfire(this);
-  }
+  _openHandViewOverlay() {
+    const cardViews = this.state.hand
+      .map((cardId, index) => {
+        const card = getCardDefinition(cardId);
+        if (!card) return null;
 
-  _useCampfireHeal() {
-    campfireOverlay.useCampfireHeal(this);
-  }
+        const actualCost = this.state.getCardCostInHand(cardId);
+        const cardDescription = cardRenderer.getCardDescription(this, card, cardId);
 
-  _useCampfireUpgrade() {
-    campfireOverlay.useCampfireUpgrade(this);
+        return {
+          cardId,
+          handIndex: index,
+          name: card.name,
+          emoji: card.emoji,
+          rarityLabel: uiHelpers.getFullCardType(card.rarity, card.type),
+          cost: actualCost,
+          description: cardDescription,
+          rarityClass: uiHelpers.rarityClass(card.rarity),
+          typeClass: `card-${card.type}`,
+          exhaust: Boolean(card.exhaust),
+        };
+      })
+      .filter(Boolean);
+
+    if (cardViews.length > 0) {
+      const onCardClick = (index) => {
+        if (!this.isAnimating) {
+          this._handlePlayCard(index);
+        }
+      };
+      handViewOverlay.openHandView(cardViews, onCardClick);
+    }
   }
 
   /**
@@ -1413,13 +1621,6 @@ export class UIManager {
 
   _showLansDutkiSpentFeedback() {
     combatUI.showLansDutkiSpentFeedback(this);
-  }
-
-  /**
-   * Scales the game wrapper to fit the viewport height on small screens.
-   */
-  _scaleGame() {
-    uiHelpers.scaleGame();
   }
 
   _isInputLocked() {

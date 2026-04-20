@@ -88,7 +88,7 @@ export function addEnemyRachunek(state, amount) {
   }
   state.enemy.rachunek += appliedAmount;
   if (state.hasRelic('pekniete_liczydlo')) {
-    state.player.hp = Math.min(state.player.maxHp, state.player.hp + 2);
+    state.player.hp = Math.min(state.player.maxHp, state.player.hp + 1);
   }
   state._checkEnemyBankruptcy();
 }
@@ -141,14 +141,9 @@ export function createEnemyState(state, enemyDef) {
         return { ...move, damage: Math.round(move.damage * scale * eliteDamageScale) };
       })
     : [];
-  const bossBaseHp = state.difficulty === 'hard' ? 330 : 180;
-  const baseMaxHp =
-    state.difficulty === 'hard' && isFinalBossVariant
-      ? bossBaseHp
-      : isMainBoss
-        ? bossBaseHp
-        : enemyDef.maxHp;
-  const dzwonekMod = state.hasRelic('dzwonek_owcy') ? 0.8 : 1.0;
+  const bossBaseHp = 330;
+  const baseMaxHp = state.difficulty === 'hard' && isFinalBossVariant ? bossBaseHp : enemyDef.maxHp;
+  const dzwonekMod = state.hasRelic('dzwonek_owcy') ? 0.85 : 1.0;
   const eliteHpScale = enemyDef.elite ? 1.25 : 1;
   const maxHp = Math.round(baseMaxHp * scale * dzwonekMod * eliteHpScale);
   /** @type {EnemyState} */

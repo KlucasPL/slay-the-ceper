@@ -19,7 +19,7 @@ export function initGame(state, startingDeck) {
   state._shuffle(state.deck);
   emitS(state, 'battle_started', { enemy: { kind: 'enemy', id: state.enemy.id } });
   state.attackCardsPlayedThisBattle = 0;
-  state.pocztowkaUsedThisBattle = false;
+  state.pocztowkaCardsTriggeredThisBattle = 0;
   state.smyczKeptCardId = null;
   state.flaszkaCostSeed = {};
   state.termometerTurnParity = 0;
@@ -28,8 +28,8 @@ export function initGame(state, startingDeck) {
   state.activeRuntimeCardId = null;
   state._resetBattleScopedFlags();
   state._setCurrentWeatherFromNode();
-  state._applyBattleStartRelics();
   state.startTurn();
+  state._applyBattleStartRelics();
   state.pendingBattleDutki = true;
   state.isInputLocked = false;
 }
@@ -47,7 +47,7 @@ export function resetBattle(state) {
   state.player.block = 0;
 
   state.attackCardsPlayedThisBattle = 0;
-  state.pocztowkaUsedThisBattle = false;
+  state.pocztowkaCardsTriggeredThisBattle = 0;
   state.smyczKeptCardId = null;
   state.smyczKeptHandIndex = null;
   state.flaszkaCostSeed = {};
@@ -96,14 +96,18 @@ export function resetBattle(state) {
   }
   state._battleEndedEmitted = false;
   state.enemy = state._createEnemyState(nextEnemy);
+  // Telemetry: record which boss variant was actually selected.
+  if (isBossNode) {
+    state.bossEncountered = state.enemy.id;
+  }
   state.battleContext = 'map';
   state._setCurrentWeatherFromNode();
   state.pendingBattleDutki = true;
 
   emitS(state, 'battle_started', { enemy: { kind: 'enemy', id: state.enemy.id } });
 
-  state._applyBattleStartRelics();
   state.startTurn();
+  state._applyBattleStartRelics();
 }
 
 /**
@@ -164,6 +168,14 @@ export function captureRunSummary(state, outcome) {
     .filter(Boolean)
     .map((relic) => ({ ...relic }));
   const killerName = outcome === 'enemy_win' ? `${state.enemy.name} ${state.enemy.emoji}` : null;
+  const snapshotDutki = state.dutki;
+  const snapshotTotalDutkiEarned = state.totalDutkiEarned;
+
+  // Telemetry: record death level and finalise the current floor log.
+  if (outcome === 'enemy_win') {
+    state.deathLevel = state.currentLevel;
+  }
+  if (state.endFloorLog) state.endFloorLog();
 
   // hpAtDeath is the player's HP at run-end, clamped to ≥0 (engine_win runs
   // reach this with hp ≤ 0 but we report 0 as the floor, not a negative value).
@@ -177,6 +189,9 @@ export function captureRunSummary(state, outcome) {
     finalDeck,
     finalRelics,
     killerName,
+    // Snapshot dutki values at run-end to keep telemetry immutable.
+    snapshotDutki,
+    snapshotTotalDutkiEarned,
     runStats: {
       totalDutkiEarned: state.totalDutkiEarned,
       floorReached: Math.max(state.maxFloorReached, state.currentLevel + 1),
@@ -240,7 +255,7 @@ export function resetForNewRun(state, startingDeck) {
   state.isInputLocked = false;
   state.enemyScaleFactor = 1.0;
   state.attackCardsPlayedThisBattle = 0;
-  state.pocztowkaUsedThisBattle = false;
+  state.pocztowkaCardsTriggeredThisBattle = 0;
   state.smyczKeptCardId = null;
   state.smyczKeptHandIndex = null;
   state.flaszkaCostSeed = {};
@@ -282,6 +297,13 @@ export function resetForNewRun(state, startingDeck) {
   state.pendingEventBattleEnemyId = null;
   state.pendingEventVictoryRelicId = null;
   state.runSummary = null;
+  // Telemetry: reset run-level tracking for the new run.
+  state.runLog = [];
+  state.currentFloorLog = null;
+  // runSeed is set by the caller (UIManager regular run, beginSeededRun for seeded runs);
+  // do NOT overwrite it here or seeded runs lose their seed.
+  state.bossEncountered = null;
+  state.deathLevel = null;
 
   state.enemy = state._createEnemyState(enemyLibrary.cepr);
   state.generateMap();
