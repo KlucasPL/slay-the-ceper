@@ -21,7 +21,7 @@
     "rpc": "node scripts/rpc-server.js",
     "mcp": "node scripts/mcp-server.js",
     "bench:sim": "node bench/runOneGame.bench.js",
-    "dashboard:vendor": "cp node_modules/chart.js/dist/chart.umd.min.js tools/dashboard/vendor/chart.umd.min.js"
+    "dashboard:vendor": "mkdir -p tools/dashboard/vendor && cp node_modules/chart.js/dist/chart.umd.min.js tools/dashboard/vendor/chart.umd.min.js"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.1",
