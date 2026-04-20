@@ -155,7 +155,7 @@ export function showRelicScreen(uiManager, relicId, source) {
 
   // Inject standardized relic plate
   glowWrap.innerHTML = `
-    <div class="relic-plate ${uiHelpers.rarityClass(relic.rarity)}">
+    <div id="reward-relic" class="relic-plate ${uiHelpers.rarityClass(relic.rarity)}">
       <h3 class="relic-plate-title">${relic.emoji} ${relic.name}</h3>
       <p class="relic-plate-rarity">${uiHelpers.rarityLabel(relic.rarity, 'relic')}</p>
       <p class="relic-plate-desc">${relic.desc}</p>

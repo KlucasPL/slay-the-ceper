@@ -100,6 +100,7 @@ export function renderShopOffers(uiManager) {
 
   // 4. Global Exit Button
   const exitBtn = document.createElement('button');
+  exitBtn.id = 'shop-exit-btn';
   exitBtn.className = 'btn shop-exit-btn';
   exitBtn.style.marginTop = 'auto';
   exitBtn.textContent = 'Wróć na szlak';
