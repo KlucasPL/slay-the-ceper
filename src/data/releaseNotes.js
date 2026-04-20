@@ -4,6 +4,13 @@
 
 /** @type {ReleaseNoteEntry[]} */
 export const releaseNotesData = [
+   {
+    version: 'v1.7.1 - Przypomnienie o aktualizacji aplikacji',
+    date: 'kwiecień 2026',
+    changes: [
+      '📲 AKTUALIZACJE GRY W WERSJI APLIKACYJNEJ (PWA): na ekranie menu głównego dodano przypomnienie o aktualizacji aplikacji do najnowszej wersji.',
+    ],
+  },
   {
     version: 'v1.7.0 - Szlify interfejsu',
     date: 'kwiecień 2026',
