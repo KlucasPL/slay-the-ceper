@@ -49,7 +49,7 @@ export function renderMapTrack(uiManager) {
   const canStartFirstFight =
     !uiManager.state.hasStartedFirstBattle && uiManager.state.currentLevel === 0;
   const revealAllMap = uiManager.state.debugRevealAllMap;
-  const isLocked = uiManager._isInputLocked();
+  const isActIntroPlaying = Boolean(uiManager.isActIntroPlaying);
   /** @type {HTMLElement[][]} */
   const nodeButtons = [];
 
@@ -89,13 +89,14 @@ export function renderMapTrack(uiManager) {
 
       if (isCurrent) btn.classList.add('current');
       if (isDone) btn.classList.add('done');
-      if (isSelectable && !isLocked) {
-        btn.classList.add('available');
+      const canClickNode = isSelectable || isCurrent;
+      if (canClickNode && !isActIntroPlaying) {
+        if (isSelectable) btn.classList.add('available');
         btn.addEventListener('click', () => handleMapNodeSelect(uiManager, levelIndex, nodeIndex));
       } else {
         btn.classList.add('locked');
         btn.disabled = !isCurrent;
-        if (isLocked) btn.disabled = true;
+        if (isActIntroPlaying) btn.disabled = true;
       }
 
       const revealedEmoji =
@@ -149,7 +150,7 @@ export function renderMapTrack(uiManager) {
   const isOnBoss = uiManager.state.currentLevel === uiManager.state.map.length - 1;
   continueBtn.textContent = isOnBoss ? 'Nowa perć' : 'Idź dalej';
   continueBtn.classList.toggle('hidden', !isOnBoss);
-  continueBtn.disabled = isLocked;
+  continueBtn.disabled = isActIntroPlaying;
 
   requestAnimationFrame(() => drawMapConnections(uiManager, nodeButtons));
 }
@@ -172,20 +173,24 @@ export function drawMapConnections(uiManager, nodeButtons) {
   const revealAllMap = uiManager.state.debugRevealAllMap;
 
   const treeRect = tree.getBoundingClientRect();
+  // map-tree is rendered inside a globally scaled canvas; convert visual (scaled)
+  // rect deltas back to map-tree local coordinates for correct SVG alignment.
+  const scaleX = treeRect.width > 0 ? treeRect.width / width : 1;
+  const scaleY = treeRect.height > 0 ? treeRect.height / height : 1;
   for (let level = 0; level < uiManager.state.map.length - 1; level++) {
     uiManager.state.map[level].forEach((node, nodeIndex) => {
       const fromEl = nodeButtons[level]?.[nodeIndex];
       if (!fromEl) return;
       const fromRect = fromEl.getBoundingClientRect();
-      const x1 = fromRect.left - treeRect.left + fromRect.width / 2;
-      const y1 = fromRect.top - treeRect.top + fromRect.height / 2;
+      const x1 = (fromRect.left - treeRect.left + fromRect.width / 2) / scaleX;
+      const y1 = (fromRect.top - treeRect.top + fromRect.height / 2) / scaleY;
 
       node.connections.forEach((targetIndex) => {
         const toEl = nodeButtons[level + 1]?.[targetIndex];
         if (!toEl) return;
         const toRect = toEl.getBoundingClientRect();
-        const x2 = toRect.left - treeRect.left + toRect.width / 2;
-        const y2 = toRect.top - treeRect.top + toRect.height / 2;
+        const x2 = (toRect.left - treeRect.left + toRect.width / 2) / scaleX;
+        const y2 = (toRect.top - treeRect.top + toRect.height / 2) / scaleY;
 
         const curve = document.createElementNS('http://www.w3.org/2000/svg', 'path');
         const dy = Math.max(14, Math.abs(y2 - y1) * 0.35);
@@ -225,7 +230,6 @@ export function drawMapConnections(uiManager, nodeButtons) {
  * @param {number} nodeIndex
  */
 export function handleMapNodeSelect(uiManager, level, nodeIndex) {
-  if (uiManager._isInputLocked()) return;
   const isInitialFight =
     !uiManager.state.hasStartedFirstBattle &&
     level === 0 &&
@@ -249,8 +253,15 @@ export function handleMapNodeSelect(uiManager, level, nodeIndex) {
   }
 
   const node = uiManager.state.travelTo(level, nodeIndex);
-  if (!node) return;
+  if (!node) {
+    console.warn(`[MAP] Travel rejected by NavigationState for node at L:${level} I:${nodeIndex}`);
+    return;
+  }
   uiManager.mapMessage = '';
+
+  // Telemetry: close previous floor log and open a new one for this node.
+  if (uiManager.state.currentFloorLog) uiManager.state.endFloorLog();
+  uiManager.state.startFloorLog(node);
 
   if (node.type === 'fight' || node.type === 'elite' || node.type === 'boss') {
     uiManager.state.hasStartedFirstBattle = true;
@@ -292,11 +303,11 @@ export function handleMapNodeSelect(uiManager, level, nodeIndex) {
   }
 
   if (node.type === 'treasure') {
-    uiManager.state.currentScreen = 'map';
+    uiManager.state.currentScreen = 'treasure';
     uiManager._handleTreasureNode();
     return;
   }
 
-  uiManager.state.currentScreen = 'map';
+  uiManager.state.currentScreen = 'campfire';
   uiManager._openCampfire();
 }

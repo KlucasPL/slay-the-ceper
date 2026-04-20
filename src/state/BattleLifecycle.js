@@ -88,6 +88,10 @@ export function resetBattle(state) {
     state.forceMainBossNextBattle = false;
   }
   state.enemy = state._createEnemyState(nextEnemy);
+  // Telemetry: record which boss variant was actually selected.
+  if (isBossNode) {
+    state.bossEncountered = state.enemy.id;
+  }
   state.battleContext = 'map';
   state._setCurrentWeatherFromNode();
   state.pendingBattleDutki = true;
@@ -140,12 +144,23 @@ export function captureRunSummary(state, outcome) {
     .filter(Boolean)
     .map((relic) => ({ ...relic }));
   const killerName = outcome === 'enemy_win' ? `${state.enemy.name} ${state.enemy.emoji}` : null;
+  const snapshotDutki = state.dutki;
+  const snapshotTotalDutkiEarned = state.totalDutkiEarned;
+
+  // Telemetry: record death level and finalise the current floor log.
+  if (outcome === 'enemy_win') {
+    state.deathLevel = state.currentLevel;
+  }
+  if (state.endFloorLog) state.endFloorLog();
 
   state.runSummary = {
     outcome,
     finalDeck,
     finalRelics,
     killerName,
+    // Snapshot dutki values at run-end to keep telemetry immutable.
+    snapshotDutki,
+    snapshotTotalDutkiEarned,
     runStats: {
       totalDutkiEarned: state.totalDutkiEarned,
       floorReached: Math.max(state.maxFloorReached, state.currentLevel + 1),
@@ -244,6 +259,12 @@ export function resetForNewRun(state, startingDeck) {
   state.pendingEventBattleEnemyId = null;
   state.pendingEventVictoryRelicId = null;
   state.runSummary = null;
+  // Telemetry: reset run-level tracking for the new run.
+  state.runLog = [];
+  state.currentFloorLog = null;
+  state.runSeed = Math.random().toString(36).substring(2, 9);
+  state.bossEncountered = null;
+  state.deathLevel = null;
 
   state.enemy = state._createEnemyState(enemyLibrary.cepr);
   state.generateMap();

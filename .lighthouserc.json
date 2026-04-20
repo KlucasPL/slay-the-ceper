@@ -30,6 +30,12 @@
           {
             "minScore": 0.85
           }
+        ],
+        "categories:pwa": [
+          "warn",
+          {
+            "minScore": 0.9
+          }
         ]
       }
     },

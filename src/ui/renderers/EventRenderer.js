@@ -1,4 +1,5 @@
 import { enemyLibrary } from '../../data/enemies.js';
+import { cardLibrary, getCardDefinition } from '../../data/cards.js';
 import * as uiHelpers from '../helpers/UIHelpers.js';
 
 /**
@@ -80,22 +81,60 @@ export function openRandomEvent(uiManager, forcedEventId = null) {
 
   choicesContainer.innerHTML = '';
   eventDef.choices.forEach((choice, choiceIndex) => {
+    const row = document.createElement('div');
+    row.className = 'event-choice-row';
+
     const choiceBtn = document.createElement('button');
     choiceBtn.type = 'button';
-    choiceBtn.className = 'random-event-choice';
+    choiceBtn.className = 'event-choice-btn';
     choiceBtn.disabled = uiManager.state.dutki < choice.cost;
+
     const fallbackConsequence =
       choice.cost > 0
         ? `Koszt: ${choice.cost} ${uiManager.state.getDutkiLabel(choice.cost)}.`
         : 'Koszt: brak.';
     const consequence = choice.consequence ?? fallbackConsequence;
+
     choiceBtn.innerHTML = `
-        <span class="random-event-choice-title">${choice.text}</span>
-        <span class="random-event-choice-desc">${choice.description}</span>
-        <span class="random-event-choice-impact">Skutek: ${consequence}</span>
-      `;
+      <div style="display: flex; flex-direction: column; gap: 4px; width: 100%;">
+        <span class="event-choice-title" style="font-size: 1.15rem; font-weight: bold; color: #2c1e16;">${choice.text}</span>
+        <span class="event-choice-desc" style="font-size: 0.95rem; font-weight: normal; color: #4a3625;">${choice.description}</span>
+        <span class="event-choice-extra" style="font-size: 0.95rem; font-weight: bold; margin-top: 4px; color: #783614;">Skutek: ${consequence}</span>
+      </div>
+    `;
+
     choiceBtn.addEventListener('click', () => handleRandomEventChoice(uiManager, choiceIndex));
-    choicesContainer.appendChild(choiceBtn);
+    row.appendChild(choiceBtn);
+
+    // --- MAGIC FIX: DYNAMICALLY DETECT CARD REWARDS ---
+    // Instead of guessing the property name, we scan the consequence text for any existing card names!
+    let previewCardId = choice.cardRewardId || choice.targetCardId;
+    if (!previewCardId && consequence) {
+      for (const [id, card] of Object.entries(cardLibrary)) {
+        if (consequence.includes(`karta ${card.name}`) || consequence.includes(card.name)) {
+          previewCardId = id;
+          break;
+        }
+      }
+    }
+
+    if (previewCardId) {
+      const cardDef = getCardDefinition(previewCardId);
+      if (cardDef) {
+        const previewBtn = document.createElement('button');
+        previewBtn.className = 'event-preview-btn';
+        previewBtn.innerHTML = '👁️';
+        previewBtn.title = 'Podejrzyj kartę';
+        previewBtn.onclick = (e) => {
+          e.stopPropagation();
+          uiManager.showCardZoom(previewCardId);
+        };
+        uiHelpers.attachLongPressZoom(previewBtn, () => uiManager.showCardZoom(previewCardId));
+        row.appendChild(previewBtn);
+      }
+    }
+
+    choicesContainer.appendChild(row);
   });
 
   uiHelpers.hideOverlay('map-overlay');
@@ -110,6 +149,8 @@ export function openRandomEvent(uiManager, forcedEventId = null) {
  */
 export function handleRandomEventChoice(uiManager, choiceIndex) {
   if (uiManager._isInputLocked()) return;
+  const eventDef = uiManager.state.getActiveEventDef();
+  const choiceLabel = eventDef?.choices?.[choiceIndex]?.text ?? 'Unknown Choice';
   const result = uiManager.state.applyActiveEventChoice(choiceIndex);
   const resultEl = document.getElementById('random-event-result');
   const continueBtn = document.getElementById('random-event-continue-btn');
@@ -118,7 +159,10 @@ export function handleRandomEventChoice(uiManager, choiceIndex) {
   resultEl.textContent = result.message;
   if (!result.success) return;
 
-  document.querySelectorAll('#random-event-choices .random-event-choice').forEach((btn) => {
+  uiManager.state.logAction('events', { choiceLabel, eventId: eventDef?.id ?? null });
+
+  // Disable ALL buttons in the choices container (both choices and preview eyes)
+  document.querySelectorAll('#random-event-choices button').forEach((btn) => {
     if (btn instanceof HTMLButtonElement) {
       btn.disabled = true;
     }

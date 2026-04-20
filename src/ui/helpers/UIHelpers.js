@@ -64,20 +64,52 @@ export function getFullCardType(rarity, type) {
 }
 
 /**
- * Scales the game wrapper to fit the viewport height on small screens.
- */
-export function scaleGame() {
-  const wrapper = document.getElementById('game-wrapper');
-  if (!wrapper) return;
-  wrapper.style.zoom = '';
-  const scale = Math.min(1, window.innerHeight / wrapper.offsetHeight);
-  if (scale < 1) wrapper.style.zoom = scale;
-}
-
-/**
  * @param {{ isInputLocked: boolean }} state
  * @returns {boolean}
  */
 export function isInputLocked(state) {
   return Boolean(state.isInputLocked);
+}
+
+/**
+ * Attaches a robust long-press listener to an element to trigger zoom overlays.
+ * Prevents the default mobile browser context menu.
+ * @param {HTMLElement} element
+ * @param {() => void} onLongPress
+ */
+export function attachLongPressZoom(element, onLongPress) {
+  let pressTimer;
+  let isDragging = false;
+
+  const start = (e) => {
+    if (e.type === 'touchstart' && e.touches.length > 1) return;
+    if (e.button !== 0 && e.type === 'mousedown') return;
+    isDragging = false;
+    pressTimer = setTimeout(() => {
+      if (!isDragging) onLongPress();
+    }, 450);
+  };
+
+  const cancel = () => {
+    if (pressTimer) clearTimeout(pressTimer);
+  };
+
+  const move = () => {
+    isDragging = true;
+    cancel();
+  };
+
+  element.addEventListener('mousedown', start);
+  element.addEventListener('touchstart', start, { passive: true });
+  element.addEventListener('mouseup', cancel);
+  element.addEventListener('mouseleave', cancel);
+  element.addEventListener('touchend', cancel);
+  element.addEventListener('touchcancel', cancel);
+  element.addEventListener('touchmove', move, { passive: true });
+  element.addEventListener('mousemove', move);
+
+  element.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+    cancel();
+  });
 }

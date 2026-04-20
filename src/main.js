@@ -1,4 +1,6 @@
 import './styles/layout.css';
+import './styles/overlays.css';
+import { DebugOverlay } from './ui/debug/DebugOverlay.js';
 import './styles/animations.css';
 
 import { AudioManager } from './logic/AudioManager.js';
@@ -90,6 +92,34 @@ function setupMobilePortraitLock() {
   window.addEventListener('orientationchange', requestLock);
   window.addEventListener('resize', requestLock);
   window.addEventListener('pointerdown', requestLock, { once: true });
+}
+
+/**
+ * Prevents browser-level zoom gestures on mobile devices.
+ * Keeps in-game taps and drags functional while blocking pinch-to-zoom.
+ *
+ * @returns {void}
+ */
+function setupMobileZoomGuards() {
+  const isMobileLike = window.matchMedia('(hover: none) and (pointer: coarse)').matches;
+  if (!isMobileLike) return;
+
+  const preventGesture = (event) => {
+    event.preventDefault();
+  };
+
+  document.addEventListener('gesturestart', preventGesture, { passive: false });
+  document.addEventListener('gesturechange', preventGesture, { passive: false });
+  document.addEventListener('gestureend', preventGesture, { passive: false });
+  document.addEventListener(
+    'touchmove',
+    (event) => {
+      if (event.touches.length > 1) {
+        event.preventDefault();
+      }
+    },
+    { passive: false }
+  );
 }
 
 /**
@@ -219,12 +249,78 @@ async function bootstrap() {
   const ui = new UIManager(state, audioManager);
   ui.init();
 
-  const { DebugOverlay } = await import('./ui/debug/DebugOverlay.js');
-  const debugOverlay = new DebugOverlay({ state, ui });
+  // Restore Debug Overlay
+  const debugOverlay = new DebugOverlay({
+    state: state,
+    ui: ui,
+  });
   debugOverlay.mount();
 }
 
-setupMobilePortraitViewportFallback();
-setupDesktopViewportGuard();
+/** @type {number} Internal game width authored for 16:9 layout. */
+const GAME_BASE_WIDTH = 1920;
+
+/** @type {number} Internal game height authored for 16:9 layout. */
+const GAME_BASE_HEIGHT = 1080;
+
+/** @type {ReturnType<typeof setTimeout> | null} */
+let _resizeDebounceId = null;
+
+/** @type {boolean} Toggle for the temporary desktop low-height blocking overlay. */
+const ENABLE_DESKTOP_VIEWPORT_GUARD = false;
+
+/** @type {boolean} Toggle for the mobile portrait blocking overlay. */
+const ENABLE_MOBILE_ORIENTATION_OVERLAY = false;
+
+/** @type {boolean} Toggle for mobile orientation lock attempts. */
+const ENABLE_MOBILE_PORTRAIT_LOCK = false;
+
+/**
+ * Scales #game-canvas uniformly so it fits the current browser window.
+ * Uses position: fixed + explicit top/left offsets so the transform does not
+ * disturb document layout flow.
+ *
+ * @returns {void}
+ */
+function scaleGameContainer() {
+  const container = document.getElementById('game-canvas');
+  if (!container) return;
+  container.style.width = `${GAME_BASE_WIDTH}px`;
+  container.style.height = `${GAME_BASE_HEIGHT}px`;
+
+  const scale = Math.min(
+    window.innerWidth / GAME_BASE_WIDTH,
+    window.innerHeight / GAME_BASE_HEIGHT
+  );
+  const offsetX = (window.innerWidth - GAME_BASE_WIDTH * scale) / 2;
+  const offsetY = (window.innerHeight - GAME_BASE_HEIGHT * scale) / 2;
+  container.style.transform = `scale(${scale})`;
+  container.style.left = `${offsetX}px`;
+  container.style.top = `${offsetY}px`;
+}
+
+/**
+ * Debounced resize handler — avoids thrashing layout recalculations on every
+ * pixel change while the user drags the window edge.
+ *
+ * @returns {void}
+ */
+function onWindowResize() {
+  if (_resizeDebounceId !== null) clearTimeout(_resizeDebounceId);
+  _resizeDebounceId = setTimeout(scaleGameContainer, 50);
+}
+
+window.addEventListener('resize', onWindowResize);
+scaleGameContainer();
+setupMobileZoomGuards();
+
+if (ENABLE_MOBILE_ORIENTATION_OVERLAY) {
+  setupMobilePortraitViewportFallback();
+}
+if (ENABLE_DESKTOP_VIEWPORT_GUARD) {
+  setupDesktopViewportGuard();
+}
 bootstrap();
-setupMobilePortraitLock();
+if (ENABLE_MOBILE_PORTRAIT_LOCK) {
+  setupMobilePortraitLock();
+}

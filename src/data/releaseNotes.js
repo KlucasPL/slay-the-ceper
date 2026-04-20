@@ -5,6 +5,16 @@
 /** @type {ReleaseNoteEntry[]} */
 export const releaseNotesData = [
   {
+    version: 'v1.7.0 - Szlify interfejsu',
+    date: 'kwiecień 2026',
+    changes: [
+      '📲 GRA JAKO APLIKACJA (PWA): Usiec Cepra można teraz zainstalować na telefonie lub komputerze jak prawdziwą aplikację – bez sklepu z aplikacjami, działa w pełni offline. Na Android/Chrome kliknij „Zainstaluj" w menu przeglądarki. Na iPhone/iPad otwórz w Safari → Udostępnij □↑ → „Dodaj do ekranu głównego". Na komputerze (Chrome/Edge) kliknij ikonę ⊕ w pasku adresu. Przycisk „📲 Zainstaluj" w lewym dolnym rogu menu głównego prowadzi przez cały proces.',
+      '📱 LANDSCAPE WRACA NA TELEFONY: Gra znów działa w orientacji poziomej na urządzeniach mobilnych – blokada z poprzedniej wersji została zniesiona. Interfejs automatycznie dopasowuje się do szerokiego ekranu, a tytuł i przyciski menu są czytelne niezależnie od orientacji.',
+      '🔍 PODGLĄD KART I PAMIĄTEK: Przytrzymanie palcem (lub kliknięcie i przytrzymanie myszą) na dowolnej karcie lub pamiątce – w nagrodach, Jarmarku, Watrze, Bibliotece Tatrzańskiej, stosach kart i u Maryny – otwiera pełnoekranowy podgląd z pełnym opisem.',
+      '🃏 PODGLĄD DARÓW MARYNY: Przytrzymanie bonu błogosławieństwa Maryny poprawnie pokazuje teraz okno podglądu ponad nakładką wyboru.',
+    ],
+  },
+  {
     version: 'v1.6.0 - Wielki Rebalans Kart i Pamiątek',
     date: 'kwiecień 2026',
     changes: [
