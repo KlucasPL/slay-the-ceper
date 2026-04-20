@@ -242,39 +242,72 @@ if (!isMainThread && workerData?._isWorker) {
 
   if (_isPaired && pairedSpecs) {
     for (const spec of pairedSpecs) {
-      const result = runOneGame({
-        characterId: character,
-        seed: spec.seed,
-        difficulty,
-        bot,
-        agentName,
-        agentParams,
-        batchName,
-        verbosity,
-        marynaEnabled: marynaEnabled ?? false,
-        pairKey: spec.pairKey,
-        world: spec.world,
-        pairStatus: 'ok',
-        ...spec.overrides,
-      });
+      let result;
+      try {
+        result = runOneGame({
+          characterId: character,
+          seed: spec.seed,
+          difficulty,
+          bot,
+          agentName,
+          agentParams,
+          batchName,
+          verbosity,
+          marynaEnabled: marynaEnabled ?? false,
+          pairKey: spec.pairKey,
+          world: spec.world,
+          pairStatus: 'ok',
+          ...spec.overrides,
+        });
+      } catch (err) {
+        result = _errorResult({
+          seed: spec.seed,
+          character,
+          agentName,
+          batchName,
+          pairKey: spec.pairKey,
+          err,
+        });
+      }
       parentPort?.postMessage(result);
     }
   } else {
     for (const seed of seeds) {
-      const result = runOneGame({
-        characterId: character,
-        seed,
-        difficulty,
-        bot,
-        agentName,
-        agentParams,
-        batchName,
-        verbosity,
-        marynaEnabled: marynaEnabled ?? false,
-      });
+      let result;
+      try {
+        result = runOneGame({
+          characterId: character,
+          seed,
+          difficulty,
+          bot,
+          agentName,
+          agentParams,
+          batchName,
+          verbosity,
+          marynaEnabled: marynaEnabled ?? false,
+        });
+      } catch (err) {
+        result = _errorResult({ seed, character, agentName, batchName, err });
+      }
       parentPort?.postMessage(result);
     }
   }
+}
+
+/**
+ * Synthesize a minimal crashed-game record so analyze.js can skip it via the
+ * existing `if (rec.errorStack) continue;` guard without losing the partition.
+ */
+function _errorResult({ seed, character, agentName, batchName, pairKey, err }) {
+  return {
+    seed,
+    characterId: character,
+    agent: agentName,
+    batch: batchName,
+    outcome: 'error',
+    errorStack: err instanceof Error ? (err.stack ?? err.message) : String(err),
+    ...(pairKey ? { pairKey } : {}),
+  };
 }
 
 /**

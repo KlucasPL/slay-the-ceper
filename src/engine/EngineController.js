@@ -177,12 +177,19 @@ export class EngineController {
    * @returns {ActionResult}
    */
   applyAction(action) {
-    const result = dispatch(
-      this._state,
-      action,
-      (s) => buildObservation(s, this._rules),
-      (s) => drain(s)
-    );
+    let result;
+    try {
+      result = dispatch(
+        this._state,
+        action,
+        (s) => buildObservation(s, this._rules),
+        (s) => drain(s)
+      );
+    } catch (err) {
+      // Restore Math.random before rethrowing so downstream batch runs aren't poisoned.
+      this.dispose();
+      throw err;
+    }
     if (result.done) this.dispose();
     return result;
   }

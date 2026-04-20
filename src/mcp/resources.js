@@ -20,6 +20,17 @@ export function registerResources(server, registry) {
 
   // balance://metrics/{batchId} — read arbitrary committed metrics.json
   server.resource('metrics-batch', 'balance://metrics/{batchId}', async (uri, { batchId }) => {
+    if (!/^[a-zA-Z0-9._-]+$/.test(String(batchId))) {
+      return {
+        contents: [
+          {
+            uri: uri.href,
+            mimeType: 'application/json',
+            text: JSON.stringify({ error: `invalid batchId: ${batchId}` }),
+          },
+        ],
+      };
+    }
     const candidates = [
       join(ROOT, 'baselines', `${batchId}.metrics.json`),
       join(ROOT, 'baselines', `${batchId}.json`),

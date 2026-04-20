@@ -50,8 +50,17 @@ export class RunRegistry {
    * @returns {string} runId
    */
   create(opts) {
+    return this.createFromEngine(EngineController.create(opts));
+  }
+
+  /**
+   * Register an already-constructed EngineController (used by `engine.restore`).
+   * Single source of truth for RUN_CAP + GC scheduling.
+   * @param {EngineController} engine
+   * @returns {string} runId
+   */
+  createFromEngine(engine) {
     if (this._runs.size >= RUN_CAP) throw new RunCapExceeded();
-    const engine = EngineController.create(opts);
     const runId = crypto.randomUUID();
     this._runs.set(runId, {
       engine,

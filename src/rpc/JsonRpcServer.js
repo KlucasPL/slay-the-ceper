@@ -5,6 +5,7 @@ import { IllegalActionError } from '../engine/LegalActions.js';
 const PARSE_ERROR = -32700;
 const INVALID_REQUEST = -32600;
 const METHOD_NOT_FOUND = -32601;
+const MAX_MESSAGE_BYTES = 10 * 1024 * 1024;
 
 /**
  * Parse Content-Length framed JSON-RPC messages from a readable stream.
@@ -17,6 +18,11 @@ export function attachFramedReader(readable, onMessage) {
   let buf = Buffer.alloc(0);
 
   readable.on('data', (/** @type {Buffer} */ chunk) => {
+    if (buf.length + chunk.length > MAX_MESSAGE_BYTES) {
+      onMessage({ _parseError: true, _raw: 'message too large' });
+      buf = Buffer.alloc(0);
+      return;
+    }
     buf = Buffer.concat([buf, chunk]);
     while (true) {
       // Look for header terminator \r\n\r\n

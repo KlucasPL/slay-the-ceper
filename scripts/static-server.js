@@ -4,7 +4,7 @@
  */
 import { createServer } from 'node:http';
 import { createReadStream, statSync } from 'node:fs';
-import { join, extname } from 'node:path';
+import { join, extname, resolve, sep } from 'node:path';
 
 const MIME = {
   '.html': 'text/html; charset=utf-8',
@@ -20,11 +20,18 @@ const MIME = {
 
 const root = process.argv[2] ?? '.';
 const port = parseInt(process.argv[3] ?? '5174', 10);
+const rootAbs = resolve(root);
 
 createServer((req, res) => {
   let urlPath = req.url.split('?')[0];
   if (urlPath === '/') urlPath = '/index.html';
-  const filePath = join(root, urlPath);
+  const resolved = resolve(join(rootAbs, urlPath));
+  if (!resolved.startsWith(rootAbs + sep) && resolved !== rootAbs) {
+    res.writeHead(403, { 'Content-Type': 'text/plain' });
+    res.end('Forbidden');
+    return;
+  }
+  const filePath = resolved;
 
   try {
     const stat = statSync(filePath);

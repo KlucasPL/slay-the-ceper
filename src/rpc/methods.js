@@ -1,7 +1,6 @@
 import { EngineController } from '../engine/EngineController.js';
 import { IllegalActionError } from '../engine/LegalActions.js';
 import { renderObservation } from '../engine/text/AgentText.js';
-import { RunCapExceeded } from './RunRegistry.js';
 
 /**
  * @typedef {{ name: string, summary: string, handler: (registry: RunRegistry, params: any, write: (msg: object) => void) => any }} MethodDef
@@ -85,17 +84,8 @@ export const methods = [
     name: 'engine.restore',
     summary: 'Restore a run from snapshot, returns new { runId }.',
     handler(registry, params) {
-      if (registry._runs.size >= 16) throw new RunCapExceeded();
       const engine = EngineController.restore(params.snapshot);
-      const runId = crypto.randomUUID();
-      registry._runs.set(runId, {
-        engine,
-        errored: false,
-        lastTouched: Date.now(),
-        gcTimer: null,
-        subscribers: new Set(),
-      });
-      registry._scheduleGc(runId);
+      const runId = registry.createFromEngine(engine);
       return { runId };
     },
   },

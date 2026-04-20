@@ -19,7 +19,7 @@ import * as shopSystem from './ShopSystem.js';
 import { defaultStatus, tickStatus } from './StatusEffects.js';
 import { createEventBuffer, emit as engineEmit } from '../engine/EngineEvents.js';
 import { applyPoolFilter } from '../engine/PoolOverrides.js';
-import { parseSeed, withSeededRng } from '../engine/Rng.js';
+import { mulberry32, parseSeed } from '../engine/Rng.js';
 
 const RARITY_WEIGHTS = {
   common: 0.7,
@@ -1335,9 +1335,12 @@ export class GameState {
   beginSeededRun(seedHex, startingDeck) {
     const normalised = seedHex.toLowerCase().padStart(8, '0');
     this.runSeed = normalised;
-    withSeededRng(parseSeed(normalised), () => {
-      this.resetForNewRun(startingDeck);
-    });
+    // Install the seeded RNG directly on state.rng so every post-init call
+    // (combat, rewards, shop rolls) consumes the same deterministic stream.
+    // withSeededRng only patches Math.random for the duration of its callback,
+    // which left state.rng delegating back to the unseeded global.
+    this.rng = mulberry32(parseSeed(normalised));
+    this.resetForNewRun(startingDeck);
   }
 
   /**

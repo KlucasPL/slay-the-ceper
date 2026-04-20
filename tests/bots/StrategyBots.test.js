@@ -282,7 +282,7 @@ describe('StatusStackBot', () => {
     // given
     const obs = makeObs({ legalActions: [{ type: 'end_turn' }] });
     // when / then
-    expect(DefensiveBot(obs)).toEqual({ type: 'end_turn' });
+    expect(StatusStackBot(obs)).toEqual({ type: 'end_turn' });
   });
 });
 

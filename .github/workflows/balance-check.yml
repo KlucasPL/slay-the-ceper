@@ -11,6 +11,7 @@ jobs:
   balance-check:
     if: github.event.label.name == 'balance-check'
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     permissions:
       pull-requests: write
 
@@ -43,19 +44,24 @@ jobs:
             --output metrics/ci-diff.md
         continue-on-error: true
 
+      - name: Build diff comment body
+        run: |
+          {
+            printf '## Balance Drift Report\n\n'
+            if [ -f metrics/ci-diff.md ]; then
+              cat metrics/ci-diff.md
+            else
+              printf '_No diff output produced._\n'
+            fi
+          } > metrics/ci-comment.md
+
       - name: Post diff comment to PR
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          BODY="## Balance Drift Report"$'\n\n'
-          if [ -f metrics/ci-diff.md ]; then
-            BODY="${BODY}$(cat metrics/ci-diff.md)"
-          else
-            BODY="${BODY}_No diff output produced._"
-          fi
           gh pr comment "${{ github.event.pull_request.number }}" \
             --repo "${{ github.repository }}" \
-            --body "$BODY"
+            --body-file metrics/ci-comment.md
 
       - name: Fail on drift
         if: steps.diff.outcome == 'failure'

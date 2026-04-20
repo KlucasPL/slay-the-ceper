@@ -60,11 +60,13 @@ const PICK_RATE_HIDDEN_KINDS = new Set(['enemy', 'weather', 'character']);
 
 /**
  * Paired bootstrap CI for lift (presentWins - absentWins) / pairs.
+ * Uses a seeded LCG so confidence intervals are reproducible across CI runs.
  * @param {number[]} deltas - array of per-pair deltas (+1 win, -1 loss, 0 draw)
  * @param {number} resamples
+ * @param {number} [seed] - 32-bit seed for reproducible resampling
  * @returns {{ lo: number, hi: number }}
  */
-function bootstrapLiftCi(deltas, resamples = BOOTSTRAP_RESAMPLES) {
+function bootstrapLiftCi(deltas, resamples = BOOTSTRAP_RESAMPLES, seed = 0xb001c0de) {
   const n = deltas.length;
   if (n === 0) return { lo: 0, hi: 0 };
 
@@ -72,10 +74,16 @@ function bootstrapLiftCi(deltas, resamples = BOOTSTRAP_RESAMPLES) {
   const centred = deltas.map((d) => d - observed);
   const boots = new Float64Array(resamples);
 
+  let s = seed >>> 0;
+  const rng = () => {
+    s = (Math.imul(1664525, s) + 1013904223) >>> 0;
+    return s / 0x100000000;
+  };
+
   for (let r = 0; r < resamples; r++) {
     let sum = 0;
     for (let i = 0; i < n; i++) {
-      sum += centred[Math.floor(Math.random() * n)];
+      sum += centred[Math.floor(rng() * n)];
     }
     boots[r] = sum / n;
   }
@@ -288,6 +296,7 @@ export function analyze(records) {
 
   // Diagnostic
   let belowMinSample = 0;
+  let runsWithEntityEvents = 0;
 
   function getEntityAcc(kind, id) {
     const key = `${kind}:${id}`;
@@ -331,6 +340,9 @@ export function analyze(records) {
   ]);
 
   for (const rec of records) {
+    // Count coverage before skipping crashed runs — matches original filter semantics
+    // (the pre-refactor `records.filter(...).length` counted every record).
+    if (Array.isArray(rec.entityEvents)) runsWithEntityEvents += 1;
     if (rec.errorStack) continue; // crashed run — skip entirely
 
     const win = rec.outcome === 'player_win' ? 1 : 0;
@@ -575,7 +587,7 @@ export function analyze(records) {
       schemaDrift,
       coverage: {
         runs: totalValid,
-        withEntityEvents: records.filter((r) => Array.isArray(r.entityEvents)).length,
+        withEntityEvents: runsWithEntityEvents,
       },
       overallFloorVariance: round4(overallFloorVar),
     },
