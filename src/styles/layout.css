@@ -1434,7 +1434,7 @@ h1 {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 5500;
+  z-index: 5500; /* FIXED: Must be higher than map-overlay (5000) */
   padding: 0;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;

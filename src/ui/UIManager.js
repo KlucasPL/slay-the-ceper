@@ -179,16 +179,11 @@ export class UIManager {
     document
       .getElementById('map-continue-btn')
       .addEventListener('click', () => this._handleMapAdvance());
-    document.getElementById('camp-exit-btn').addEventListener('click', () => this._closeCampfire());
+    // Removed legacy campfire button listeners (now handled dynamically)
     document
       .getElementById('random-event-continue-btn')
       .addEventListener('click', () => this._continueAfterRandomEvent());
-    document
-      .getElementById('camp-heal-btn')
-      .addEventListener('click', () => this._useCampfireHeal());
-    document
-      .getElementById('camp-upgrade-btn')
-      .addEventListener('click', () => this._useCampfireUpgrade());
+    // Removed legacy campfire button listeners (now handled dynamically)
     document
       .getElementById('library-tab-cards')
       .addEventListener('click', () => this._setLibraryTab('cards'));
@@ -1070,13 +1065,15 @@ export class UIManager {
   }
 
   _handleTreasureNode() {
-    console.log('[UI] _handleTreasureNode started.');
-    // Hide the map overlay to ensure the treasure overlay is visible
-    import('./helpers/UIHelpers.js').then(({ hideOverlay }) => hideOverlay('map-overlay'));
-    // Unlock navigation after treasure claim
-    this.state.hasStartedFirstBattle = true;
+    console.log("[UI] _handleTreasureNode started.");
+    // CRITICAL: Hide the map so the reward screen is visible
+    uiHelpers.hideOverlay('map-overlay'); 
+    // CRITICAL: Set this to true so NavigationState allows moving to the next level
+    this.state.hasStartedFirstBattle = true; 
+
     const relicId = this.state.generateRelicReward(true);
     if (!relicId) {
+      console.warn("[UI] Treasure node: No relic generated.");
       this.mapMessage = 'Skrzynia była pusta... ani jednej pamiątki.';
       this._openMapOverlay();
       return;
@@ -1199,17 +1196,7 @@ export class UIManager {
     }
   }
 
-  _closeCampfire() {
-    campfireOverlay.closeCampfire(this);
-  }
 
-  _useCampfireHeal() {
-    campfireOverlay.useCampfireHeal(this);
-  }
-
-  _useCampfireUpgrade() {
-    campfireOverlay.useCampfireUpgrade(this);
-  }
 
   /**
    * @param {string} overlayId
