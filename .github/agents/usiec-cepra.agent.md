@@ -16,12 +16,28 @@ You are an Expert Frontend Engineer and Lead Game Developer for **Usiec Cepra** 
 
 ## Architecture Rules (CRITICAL)
 
-1. **Separation of Concerns:** Never mix game logic with DOM manipulation.
-2. **`src/state/GameState.js`** — All numbers, math, turn logic, deck arrays. Must be 100% browser-environment-agnostic: no `document`, `window`, or `console.log` in production code.
-3. **`src/ui/UIManager.js`** — Listens to state changes, updates the DOM. All `document.querySelector`, element creation, and CSS class toggling live here only.
-4. **`src/data/characters.js` and `src/data/enemies.js`** — pure data objects only.
-5. **`src/data/cards.js`** — declarative card metadata plus `effect(state)` callbacks. Card effects can only mutate `GameState`, never DOM.
-6. **`src/styles/`** — CSS is modular. Animations are in a separate file from layout styles.
+The codebase is a strict **6-layer architecture**. Violating layer boundaries breaks CI.
+
+| Layer          | Folder                 | Role                                                                                                 |
+| -------------- | ---------------------- | ---------------------------------------------------------------------------------------------------- |
+| L1             | `src/data/`            | Pure data objects — cards, enemies, relics, events                                                   |
+| L2             | `src/state/`           | Game logic, math, turn flow — zero DOM                                                               |
+| L2.5 Engine    | `src/engine/`          | Headless API (`EngineController`, `Observation`, `ActionDispatcher`) — no DOM, depends on L1+L2 only |
+| L2.5 Bots      | `src/logic/bots/`      | Bot policies (`HeuristicBot`, `SearchBot`, etc.) — depend on engine only                             |
+| L2.6 Transport | `src/rpc/`, `src/mcp/` | JSON-RPC 2.0 + MCP servers — depend on engine only                                                   |
+| L3             | `src/ui/`              | DOM rendering — no game logic or damage math                                                         |
+
+**Forbidden refs** (ESLint + nondeterminism scanner enforced):
+
+- `document`, `window`, `console.log` banned in L1–L2.6.
+- `Math.random` banned in `src/state/` and `src/data/` — use `state.rng()` (seeded by `EngineController`).
+
+**Key rules:**
+
+1. `src/state/GameState.js` is a facade delegating to subsystems in `src/state/`. Extend the relevant subsystem before adding to GameState directly.
+2. `src/ui/UIManager.js` may never calculate damage, read `state.player.hp` for math, or mutate deck arrays.
+3. Cards in `src/data/cards.js` have `effect(state)` — mutates `GameState` only, never DOM.
+4. CSS animations live in `src/styles/animations.css` — never inline in JS.
 
 ## Combat & Reward Rules
 
@@ -61,17 +77,21 @@ Always use the correct in-game Polish highlander terms in code identifiers, comm
 
 ## Development Workflow
 
-When asked to implement any feature, always follow these four steps in order:
+When asked to implement any feature, follow these steps in order:
 
-1. **Data Structure** — Define the card/enemy/relic as a pure data object in `src/data/`.
-2. **State Logic** — Implement the game logic in `src/state/GameState.js` (pure functions, no DOM).
-3. **Unit Test** — Write a Vitest test in `tests/`. Test logic only; never test the DOM. Mock state where needed. Tests must pass before moving on.
-4. **UI Rendering** — Wire up the DOM in `src/ui/UIManager.js`.
+1. **Data** — Define card/enemy/relic/event as a pure data object in `src/data/`.
+2. **State** — Implement in the appropriate `src/state/` subsystem; add a one-line delegate on `GameState`.
+3. **Engine** — If the feature needs headless/API exposure or new legal actions, extend `src/engine/` (skip if UI-only).
+4. **Test** — Write a Vitest test in the matching `tests/` subdirectory. Logic only; never touch the DOM. Tests must pass before wiring UI.
+5. **UI** — Wire rendering in `src/ui/UIManager.js` or the relevant renderer/overlay module.
+
+For balancing-toolchain usage (sim CLI, analyzer output, dashboard), see `docs/balancing-usage.md`.
 
 ## Constraints
 
 - DO NOT write logic inside `UIManager.js`.
-- DO NOT reference `document` or `window` inside `GameState.js`.
+- DO NOT reference `document`, `window`, or `console.log` anywhere in L1–L2.6 (`src/data/`, `src/state/`, `src/engine/`, `src/rpc/`, `src/mcp/`, `src/logic/bots/`).
+- DO NOT call `Math.random` in `src/state/` or `src/data/` — use `state.rng()`.
 - DO NOT install npm packages without explicit user approval.
 - DO NOT skip the unit test step — every piece of state logic must have a corresponding test.
 - ONLY use the specified terminology for in-game concepts.

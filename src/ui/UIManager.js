@@ -320,6 +320,11 @@ export class UIManager {
       this._playEncounterMusic();
     }
     this._renderCornerOptionsButton();
+    this._initSeedHud();
+    this._initSeededRunModal();
+    document
+      .getElementById('run-summary-replay-seed-btn')
+      ?.addEventListener('click', () => this._handleRunSummaryReplaySeed());
   }
 
   _renderReleaseNotesButtonLabel() {
@@ -340,6 +345,112 @@ export class UIManager {
     btn.classList.toggle('hidden', !showOutsideTitle);
     btn.setAttribute('aria-hidden', String(!showOutsideTitle));
     btn.disabled = !showOutsideTitle;
+    this._renderSeedHud();
+  }
+
+  _renderSeedHud() {
+    const hud = document.getElementById('seed-hud');
+    const val = document.getElementById('seed-hud-value');
+    if (!hud || !val) return;
+    const show = this.state.currentScreen !== 'title' && !!this.state.runSeed;
+    hud.classList.toggle('hidden', !show);
+    if (show) val.textContent = this.state.runSeed;
+  }
+
+  _initSeedHud() {
+    document.getElementById('seed-hud')?.addEventListener('click', () => {
+      const seed = this.state.runSeed;
+      if (!seed) return;
+      navigator.clipboard?.writeText(seed).catch(() => {});
+      const hud = document.getElementById('seed-hud');
+      if (!hud) return;
+      hud.classList.add('seed-hud--copied');
+      setTimeout(() => hud.classList.remove('seed-hud--copied'), 1200);
+    });
+  }
+
+  _initSeededRunModal() {
+    document.getElementById('title-btn-seeded')?.addEventListener('click', () => {
+      const modal = document.getElementById('seeded-run-modal');
+      if (!modal) return;
+      modal.classList.remove('hidden');
+      document.getElementById('seeded-run-input')?.focus();
+    });
+    document.getElementById('seeded-run-cancel-btn')?.addEventListener('click', () => {
+      document.getElementById('seeded-run-modal')?.classList.add('hidden');
+    });
+    document.getElementById('seeded-run-confirm-btn')?.addEventListener('click', () => {
+      this._startSeededRun();
+    });
+    document.getElementById('seeded-run-input')?.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') this._startSeededRun();
+      if (event.key === 'Escape')
+        document.getElementById('seeded-run-modal')?.classList.add('hidden');
+    });
+  }
+
+  _startSeededRun(difficulty = 'normal') {
+    const input = /** @type {HTMLInputElement | null} */ (
+      document.getElementById('seeded-run-input')
+    );
+    const errorEl = document.getElementById('seeded-run-error');
+    const raw = input?.value?.trim() ?? '';
+    if (!/^[0-9a-fA-F]{1,8}$/.test(raw)) {
+      errorEl?.classList.remove('hidden');
+      input?.focus();
+      return;
+    }
+    errorEl?.classList.add('hidden');
+    // Move focus out of the soon-to-be aria-hidden title-screen subtree.
+    input?.blur();
+    document.getElementById('seeded-run-modal')?.classList.add('hidden');
+    this.startSeededRun(raw, difficulty);
+  }
+
+  /**
+   * Start a seeded run with a pre-validated hex seed. Used by the modal input path
+   * and by the ?seed=<hex> URL param handler in main.js.
+   * @param {string} seedHex  1–8 hex characters
+   * @param {'normal'|'hard'} [difficulty]
+   */
+  startSeededRun(seedHex, difficulty = 'normal') {
+    if (this._isInputLocked()) return;
+    if (this.isTutorialMode) {
+      this._disableTutorialGuidance();
+      this.isTutorialMode = false;
+    }
+    this._closeReleaseNotesModal();
+    this.state.difficulty = difficulty;
+    this.state.enemyScaleFactor = 1.0;
+    this.mapMessage = '';
+    this.state.beginSeededRun(seedHex, startingDeck);
+    this.state.currentScreen = 'map';
+    this.state.hasStartedFirstBattle = false;
+    this.audioManager.setContext('inGame');
+    this._openMapOverlay();
+    this._onActChange();
+    const titleScreen = document.getElementById('title-screen');
+    if (!titleScreen || titleScreen.classList.contains('hidden')) return;
+    titleScreen.classList.add('is-hiding');
+    titleScreen.setAttribute('aria-hidden', 'true');
+    setTimeout(() => titleScreen.classList.add('hidden'), 450);
+  }
+
+  _handleRunSummaryReplaySeed() {
+    if (this._isInputLocked()) return;
+    const seed = this.state.runSeed;
+    if (!seed) return;
+    this._hideOverlay('run-summary-overlay');
+    this.audioManager.clearDefeatThemeLock();
+    this.state.difficulty = this.state.difficulty ?? 'normal';
+    this.state.enemyScaleFactor = 1.0;
+    this.state.hasStartedFirstBattle = false;
+    this.state.currentScreen = 'map';
+    this.mapMessage = '';
+    this.state.beginSeededRun(seed, startingDeck);
+    this._openMapOverlay();
+    this.updateUI();
+    this._onActChange();
   }
 
   /**
@@ -755,6 +866,7 @@ Po instalacji gra działa offline i bez paska przeglądarki.`;
 
     this.state.difficulty = difficulty;
     this.state.enemyScaleFactor = 1.0;
+    this.state.runSeed = _generateRandomSeed();
     this.state.generateMap();
     this.state.hasStartedFirstBattle = false;
     this.state.currentScreen = 'map';
@@ -1095,6 +1207,7 @@ Po instalacji gra działa offline i bez paska przeglądarki.`;
     if (this._isInputLocked()) return;
     this._hideOverlay('run-summary-overlay');
     this.audioManager.clearDefeatThemeLock();
+    this.state.runSeed = _generateRandomSeed();
     this.state.resetForNewRun(startingDeck);
     this.state.currentScreen = 'map';
     this.mapMessage = '';
@@ -1107,6 +1220,7 @@ Po instalacji gra działa offline i bez paska przeglądarki.`;
     this._hideOverlay('run-summary-overlay');
     this._hideOverlay('map-overlay');
     this.audioManager.clearDefeatThemeLock();
+    this.state.runSeed = null;
     this.state.resetForNewRun(startingDeck);
     this.state.currentScreen = 'title';
     this.mapMessage = '';
@@ -1695,4 +1809,9 @@ Po instalacji gra działa offline i bez paska przeglądarki.`;
       title: this.state.currentActName || 'NIEZNANY SZLAK',
     };
   }
+}
+
+/** @returns {string} 8-char hex seed */
+function _generateRandomSeed() {
+  return (Math.floor(Math.random() * 0xffffffff) >>> 0).toString(16).padStart(8, '0');
 }

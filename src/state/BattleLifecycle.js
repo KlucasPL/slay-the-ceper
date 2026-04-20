@@ -4,13 +4,20 @@ import { relicLibrary } from '../data/relics.js';
 import { getRunDeckCardIds as getDeckRunCardIds } from './DeckManager.js';
 import { defaultStatus } from './StatusEffects.js';
 
+/** @param {any} state @param {string} kind @param {Record<string, unknown>} payload */
+function emitS(state, kind, payload) {
+  state.emit(kind, payload);
+}
+
 /**
  * @param {any} state
  * @param {string[]} startingDeck
  */
 export function initGame(state, startingDeck) {
+  state._battleEndedEmitted = false;
   state.deck = [...startingDeck];
   state._shuffle(state.deck);
+  emitS(state, 'battle_started', { enemy: { kind: 'enemy', id: state.enemy.id } });
   state.attackCardsPlayedThisBattle = 0;
   state.pocztowkaCardsTriggeredThisBattle = 0;
   state.smyczKeptCardId = null;
@@ -87,6 +94,7 @@ export function resetBattle(state) {
   if (isBossNode) {
     state.forceMainBossNextBattle = false;
   }
+  state._battleEndedEmitted = false;
   state.enemy = state._createEnemyState(nextEnemy);
   // Telemetry: record which boss variant was actually selected.
   if (isBossNode) {
@@ -95,6 +103,8 @@ export function resetBattle(state) {
   state.battleContext = 'map';
   state._setCurrentWeatherFromNode();
   state.pendingBattleDutki = true;
+
+  emitS(state, 'battle_started', { enemy: { kind: 'enemy', id: state.enemy.id } });
 
   state.startTurn();
   state._applyBattleStartRelics();
@@ -119,9 +129,23 @@ export function clearStatusCardsFromPiles(state) {
  * @returns {'player_win' | 'enemy_win' | null}
  */
 export function checkWinCondition(state) {
-  if (state.enemyBankruptFlag || state.enemy.hp <= 0) return 'player_win';
-  if (state.player.hp <= 0) return 'enemy_win';
-  return null;
+  if (state._battleEndedEmitted) {
+    if (state.enemyBankruptFlag || state.enemy.hp <= 0) return 'player_win';
+    if (state.player.hp <= 0) return 'enemy_win';
+    return null;
+  }
+  let outcome = null;
+  if (state.enemyBankruptFlag || state.enemy.hp <= 0) outcome = 'player_win';
+  else if (state.player.hp <= 0) outcome = 'enemy_win';
+  if (outcome) {
+    state._battleEndedEmitted = true;
+    emitS(state, 'battle_ended', {
+      outcome,
+      enemy: { kind: 'enemy', id: state.enemy.id },
+      turnCount: state.battleTurnsElapsed ?? 0,
+    });
+  }
+  return outcome;
 }
 
 /**
@@ -153,6 +177,13 @@ export function captureRunSummary(state, outcome) {
   }
   if (state.endFloorLog) state.endFloorLog();
 
+  // hpAtDeath is the player's HP at run-end, clamped to ≥0 (engine_win runs
+  // reach this with hp ≤ 0 but we report 0 as the floor, not a negative value).
+  // maxHp is captured separately so downstream analysis can build a survival
+  // score `floorReached + hpAtDeath/maxHp` even when hpAtDeath is 0.
+  const hpAtDeath = Math.max(0, state.player?.hp ?? 0);
+  const maxHp = Math.max(1, state.player?.maxHp ?? state.baseCharacter?.maxHp ?? 1);
+
   state.runSummary = {
     outcome,
     finalDeck,
@@ -165,8 +196,15 @@ export function captureRunSummary(state, outcome) {
       totalDutkiEarned: state.totalDutkiEarned,
       floorReached: Math.max(state.maxFloorReached, state.currentLevel + 1),
       totalTurnsPlayed: state.totalTurnsPlayed,
+      hpAtDeath,
+      maxHp,
     },
   };
+
+  emitS(state, 'run_ended', {
+    outcome,
+    killerEnemy: killerName ? { kind: 'enemy', id: state.enemy.id } : null,
+  });
 
   return state.runSummary;
 }
@@ -262,11 +300,16 @@ export function resetForNewRun(state, startingDeck) {
   // Telemetry: reset run-level tracking for the new run.
   state.runLog = [];
   state.currentFloorLog = null;
-  state.runSeed = Math.random().toString(36).substring(2, 9);
+  // runSeed is set by the caller (UIManager regular run, beginSeededRun for seeded runs);
+  // do NOT overwrite it here or seeded runs lose their seed.
   state.bossEncountered = null;
   state.deathLevel = null;
 
   state.enemy = state._createEnemyState(enemyLibrary.cepr);
   state.generateMap();
+  emitS(state, 'run_started', {
+    character: { kind: 'character', id: state.baseCharacter.id ?? 'jedrek' },
+    difficulty: state.difficulty,
+  });
   state.initGame(startingDeck);
 }

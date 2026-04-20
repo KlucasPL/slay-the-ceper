@@ -66,6 +66,11 @@
                 </button>
               </li>
               <li class="title-menu-item">
+                <button id="title-btn-seeded" class="title-start-btn" type="button">
+                  Podany Seed 🌱
+                </button>
+              </li>
+              <li class="title-menu-item">
                 <button id="title-btn-tutorial" class="title-start-btn" type="button">
                   Samouczek
                 </button>
@@ -123,6 +128,40 @@
             humorystyczny i nie ma na celu nikogo obrazić, ani nie przedstawia prawdziwych ludzi i
             wydarzeń.
           </p>
+        </div>
+        <div
+          id="seeded-run-modal"
+          class="seeded-run-modal hidden"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="seeded-run-modal-title"
+        >
+          <div class="seeded-run-modal-inner">
+            <h3 id="seeded-run-modal-title" class="seeded-run-modal-title">Podany Seed</h3>
+            <p class="seeded-run-modal-hint">
+              Podaj seed (1–8 znaków hex), aby zagrać identyczny przebieg z innym graczem.
+            </p>
+            <input
+              id="seeded-run-input"
+              class="seeded-run-input"
+              type="text"
+              maxlength="8"
+              placeholder="np. deadbeef"
+              autocomplete="off"
+              spellcheck="false"
+            />
+            <p id="seeded-run-error" class="seeded-run-error hidden">
+              Nieprawidłowy seed — użyj 1–8 znaków hex (0–9, a–f).
+            </p>
+            <div class="seeded-run-actions">
+              <button id="seeded-run-confirm-btn" class="title-start-btn" type="button">
+                Start
+              </button>
+              <button id="seeded-run-cancel-btn" class="reward-skip-btn" type="button">
+                Anuluj
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -569,6 +608,18 @@
             <div class="run-summary-stat">Tury: <span id="run-summary-turns">0</span></div>
           </div>
 
+          <div class="run-summary-seed-row hidden" id="run-summary-seed-row">
+            <span class="run-summary-seed-label">Seed:</span>
+            <button
+              id="run-summary-seed-copy"
+              class="run-summary-seed-btn"
+              type="button"
+              title="Kliknij, aby skopiować"
+            >
+              <span id="run-summary-seed-value"></span>
+            </button>
+          </div>
+
           <section class="run-summary-section">
             <h3 class="run-summary-title">Pamiątki</h3>
             <div id="run-summary-relics" class="run-summary-grid"></div>
@@ -581,6 +632,9 @@
 
           <div class="run-summary-actions">
             <button id="run-summary-replay-btn" class="btn" type="button">Zagraj ponownie</button>
+            <button id="run-summary-replay-seed-btn" class="reward-relic-btn hidden" type="button">
+              Powtórz ten seed
+            </button>
             <button id="run-summary-exit-btn" class="btn" type="button">Menu Główne</button>
           </div>
         </div>
@@ -697,6 +751,15 @@
       disabled
     >
       ⚙️
+    </button>
+    <button
+      id="seed-hud"
+      class="seed-hud hidden"
+      type="button"
+      aria-label="Skopiuj seed"
+      title="Kliknij, aby skopiować seed"
+    >
+      seed: <span id="seed-hud-value"></span>
     </button>
     <div class="pwa-update-widget">
       <button

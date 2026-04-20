@@ -412,6 +412,30 @@ export function showRunSummaryOverlay(uiManager) {
   relics.innerHTML = '';
   relics.appendChild(relicFragment);
 
+  // Seed display
+  const seedRow = document.getElementById('run-summary-seed-row');
+  const seedVal = document.getElementById('run-summary-seed-value');
+  const replaySeedBtn = document.getElementById('run-summary-replay-seed-btn');
+  const runSeed = uiManager.state.runSeed ?? null;
+  if (seedRow && seedVal) {
+    if (runSeed) {
+      seedVal.textContent = runSeed;
+      seedRow.classList.remove('hidden');
+      document.getElementById('run-summary-seed-copy')?.addEventListener(
+        'click',
+        () => {
+          navigator.clipboard?.writeText(runSeed).catch(() => {});
+        },
+        { once: true }
+      );
+    } else {
+      seedRow.classList.add('hidden');
+    }
+  }
+  if (replaySeedBtn) {
+    replaySeedBtn.classList.toggle('hidden', !runSeed);
+  }
+
   uiHelpers.hideOverlay('relic-reward-screen');
   uiHelpers.hideOverlay('card-reward-screen');
   uiHelpers.hideOverlay('map-overlay');

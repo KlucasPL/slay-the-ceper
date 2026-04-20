@@ -18,10 +18,11 @@ function getCurrentAct(state) {
  */
 export function pickRandomEventDef(state) {
   const currentAct = getCurrentAct(state);
-  const allEventIds = Object.keys(eventLibrary).filter((id) => {
+  const baseEventIds = Object.keys(eventLibrary).filter((id) => {
     const eventDef = eventLibrary[id];
     return !eventDef?.act || eventDef.act === currentAct;
   });
+  const allEventIds = state.filterPool('events', baseEventIds);
   if (allEventIds.length === 0) return null;
 
   const historyWindow = Math.max(0, allEventIds.length - 1);
@@ -29,7 +30,7 @@ export function pickRandomEventDef(state) {
   const filtered = allEventIds.filter((id) => !recentSlice.includes(id));
   const pool = filtered.length > 0 ? filtered : allEventIds;
 
-  const eventId = pool[Math.floor(Math.random() * pool.length)];
+  const eventId = pool[Math.floor(state.rng() * pool.length)];
   state.recentEventIds.push(eventId);
   if (state.recentEventIds.length > historyWindow) {
     state.recentEventIds = state.recentEventIds.slice(-historyWindow);
@@ -43,6 +44,9 @@ export function pickRandomEventDef(state) {
  */
 export function setActiveEvent(state, eventId) {
   state.activeEventId = eventId;
+  if (eventId) {
+    state.emit('event_entered', { event: { kind: 'event', id: eventId } });
+  }
 }
 
 /**
@@ -82,7 +86,9 @@ export function applyActiveEventChoice(state, choiceIndex) {
   }
 
   state.dutki -= choice.cost;
-  return { success: true, message: choice.effect(state) };
+  const result = choice.effect(state);
+  state.emit('event_resolved', { event: { kind: 'event', id: state.activeEventId }, choiceIndex });
+  return { success: true, message: result };
 }
 
 /**
@@ -205,11 +211,14 @@ export function startBattleWithEnemyId(state, enemyId, options = {}) {
   state.exhaust = [];
   state._shuffle(state.deck);
 
+  state._battleEndedEmitted = false;
   state.enemy = state._createEnemyState(enemyDef);
   state.battleContext = battleContext;
   state.pendingEventVictoryRelicId = rewardRelicId;
   state._setCurrentWeatherFromNode();
   state.pendingBattleDutki = true;
+
+  state.emit('battle_started', { enemy: { kind: 'enemy', id: state.enemy.id } });
 
   state.startTurn();
   state._applyBattleStartRelics();

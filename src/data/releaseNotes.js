@@ -4,7 +4,7 @@
 
 /** @type {ReleaseNoteEntry[]} */
 export const releaseNotesData = [
-   {
+  {
     version: 'v1.7.1 - Przypomnienie o aktualizacji aplikacji',
     date: 'kwiecień 2026',
     changes: [

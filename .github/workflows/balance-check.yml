@@ -1,0 +1,70 @@
+name: Balance Drift Check
+
+on:
+  pull_request:
+    types: [labeled]
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  balance-check:
+    if: github.event.label.name == 'balance-check'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      pull-requests: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
+
+      - name: Setup Node
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run baseline simulation (5k games)
+        run: npm run sim -- --games 5000 --out metrics/ci-candidate.jsonl --verbosity summary
+
+      - name: Analyze simulation output
+        run: node scripts/analyze.js metrics/ci-candidate.jsonl metrics/ci-candidate.metrics.json
+
+      - name: Diff against main baseline
+        id: diff
+        run: |
+          node scripts/sim/tools/diff-baseline.js \
+            --baseline baselines/main.metrics.json \
+            --candidate metrics/ci-candidate.metrics.json \
+            --thresholds baselines/thresholds.json \
+            --output metrics/ci-diff.md
+        continue-on-error: true
+
+      - name: Build diff comment body
+        run: |
+          {
+            printf '## Balance Drift Report\n\n'
+            if [ -f metrics/ci-diff.md ]; then
+              cat metrics/ci-diff.md
+            else
+              printf '_No diff output produced._\n'
+            fi
+          } > metrics/ci-comment.md
+
+      - name: Post diff comment to PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh pr comment "${{ github.event.pull_request.number }}" \
+            --repo "${{ github.repository }}" \
+            --body-file metrics/ci-comment.md
+
+      - name: Fail on drift
+        if: steps.diff.outcome == 'failure'
+        run: |
+          echo "Balance drift detected — one or more entities exceeded thresholds."
+          exit 2

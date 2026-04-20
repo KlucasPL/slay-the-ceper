@@ -17,6 +17,9 @@ import * as playerState from './PlayerState.js';
 import * as relicSystem from './RelicSystem.js';
 import * as shopSystem from './ShopSystem.js';
 import { defaultStatus, tickStatus } from './StatusEffects.js';
+import { createEventBuffer, emit as engineEmit } from '../engine/EngineEvents.js';
+import { applyPoolFilter } from '../engine/PoolOverrides.js';
+import { mulberry32, parseSeed } from '../engine/Rng.js';
 
 const RARITY_WEIGHTS = {
   common: 0.7,
@@ -210,12 +213,21 @@ export class GameState {
     this.midCampfireLevel = null;
     /** @type {{ outcome: 'player_win' | 'enemy_win', finalDeck: import('../data/cards.js').CardDef[], finalRelics: import('../data/relics.js').RelicDef[], killerName: string | null, runStats: { totalDutkiEarned: number, floorReached: number, totalTurnsPlayed: number } } | null} */
     this.runSummary = null;
+    /** @type {{ buffer: import('../engine/EngineEvents.js').EngineEvent[], seq: number }} */
+    this._engineEvents = createEventBuffer();
+    /** @type {import('../engine/PoolOverrides.js').PoolOverrides | null} */
+    this._poolOverrides = null;
+    /** @type {'summary' | 'full'} */
+    this._eventVerbosity = 'summary';
+    /** @type {() => number} Seeded PRNG for this run; defaults to Math.random until EngineController seeds it */
+    // eslint-disable-next-line no-restricted-syntax
+    this.rng = () => Math.random(); // nondeterminism-ok: unseeded default, replaced by EngineController.startRun
     /** @type {Array<Object>} Telemetry: per-floor log entries for this run */
     this.runLog = [];
     /** @type {Object | null} Telemetry: log being built for the current floor */
     this.currentFloorLog = null;
-    /** @type {string} Telemetry: lightweight run identifier */
-    this.runSeed = Math.random().toString(36).substring(2, 9);
+    /** @type {string | null} Telemetry: run identifier; set by UIManager or beginSeededRun, stays null until a run starts */
+    this.runSeed = null;
     /** @type {string | null} Telemetry: id/type of boss encountered */
     this.bossEncountered = null;
     /** @type {number | null} Telemetry: floor level where the player died */
@@ -223,6 +235,26 @@ export class GameState {
     /** @type {EnemyState} */
     this.enemy = this._createEnemyState(enemy);
     this.generateMap();
+  }
+
+  /**
+   * Emit one engine event into the buffer.
+   * S-tier kinds always emit; F-tier kinds only emit when verbosity is 'full'.
+   * @param {import('../engine/EngineEvents.js').EngineEventKind} kind
+   * @param {Record<string, unknown>} payload
+   */
+  emit(kind, payload) {
+    engineEmit(this, kind, payload);
+  }
+
+  /**
+   * Filter a pool of entity IDs using the current pool overrides.
+   * @param {'cards'|'relics'|'boons'|'events'|'enemy_regular'|'enemy_elite'|'enemy_boss'} kind
+   * @param {string[]} ids
+   * @returns {string[]}
+   */
+  filterPool(kind, ids) {
+    return applyPoolFilter(this._poolOverrides, kind, ids);
   }
 
   /** @returns {(MapNode | null)[][]} */
@@ -285,7 +317,7 @@ export class GameState {
 
   /** @returns {MapNodeType} */
   _rollMidNodeType(level = MIN_ELITE_LEVEL) {
-    return mapEngine.rollMidNodeType(level);
+    return mapEngine.rollMidNodeType(level, this.rng);
   }
 
   /**
@@ -293,7 +325,7 @@ export class GameState {
    * @returns {WeatherId}
    */
   _rollNodeWeather(nodeType) {
-    return mapEngine.rollNodeWeather(nodeType);
+    return mapEngine.rollNodeWeather(nodeType, this);
   }
 
   /**
@@ -481,7 +513,7 @@ export class GameState {
 
   /** @returns {'event' | 'fight' | 'shop'} */
   rollEventNodeOutcome() {
-    const roll = Math.random();
+    const roll = this.rng();
     if (roll < EVENT_OUTCOME_EVENT_CHANCE) return 'event';
     if (roll < EVENT_OUTCOME_EVENT_CHANCE + EVENT_OUTCOME_FIGHT_CHANCE) return 'fight';
     return 'shop';
@@ -778,6 +810,37 @@ export class GameState {
   }
 
   /**
+   * Emit reward_picked for a card or relic chosen from a reward screen.
+   * Called by ActionDispatcher after the player accepts a reward.
+   * @param {'card'|'relic'} kind
+   * @param {string} id
+   */
+  notifyRewardPicked(kind, id) {
+    this.emit('reward_picked', { entity: { kind, id } });
+  }
+
+  /**
+   * Emit campfire_choice.
+   * Called by ActionDispatcher after a campfire option is taken.
+   * @param {'rest'|'upgrade'|'leave'} option
+   * @param {string | null} [cardId]
+   */
+  notifyCampfireChoice(option, cardId = null) {
+    this.emit('campfire_choice', { option, card: cardId ? { kind: 'card', id: cardId } : null });
+  }
+
+  /**
+   * Emit deck_mutation add + reward_picked for a card added via reward screen.
+   * Called by ActionDispatcher after the player takes a card reward.
+   * @param {string} cardId
+   */
+  notifyCardRewardPicked(cardId) {
+    this.deck.push(cardId);
+    this.emit('deck_mutation', { mutation: 'add', card: { kind: 'card', id: cardId } });
+    this.emit('reward_picked', { entity: { kind: 'card', id: cardId } });
+  }
+
+  /**
    * @returns {string[]}
    */
   _buildAvailableRelicPool() {
@@ -798,7 +861,7 @@ export class GameState {
    * @returns {string | null}
    */
   getRandomItem(pool, library, rarityWeights = RARITY_WEIGHTS) {
-    return relicSystem.getRandomItem(pool, library, rarityWeights);
+    return relicSystem.getRandomItem(pool, library, rarityWeights, this.rng);
   }
 
   /**
@@ -1006,7 +1069,7 @@ export class GameState {
 
   /** @returns {import('../data/enemies.js').EnemyDef} */
   _pickFinalBossDef() {
-    return enemyState.pickFinalBossDef();
+    return enemyState.pickFinalBossDef(this);
   }
 
   /**
@@ -1022,7 +1085,7 @@ export class GameState {
    */
   _shuffle(array) {
     for (let i = array.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
+      const j = Math.floor(this.rng() * (i + 1));
       [array[i], array[j]] = [array[j], array[i]];
     }
   }
@@ -1350,10 +1413,28 @@ export class GameState {
 
   /**
    * Resets all run-wide progress and prepares a fresh run state.
+   * Callers should set state.runSeed before calling this when a specific seed is desired.
    * @param {string[]} startingDeck
    */
   resetForNewRun(startingDeck) {
     battleLifecycle.resetForNewRun(this, startingDeck);
+  }
+
+  /**
+   * Start a new run under a specific hex seed — all RNG (map, enemies, rewards) will
+   * be deterministic for that seed. Stores the seed as state.runSeed.
+   * @param {string} seedHex  1–8 hex characters
+   * @param {string[]} startingDeck
+   */
+  beginSeededRun(seedHex, startingDeck) {
+    const normalised = seedHex.toLowerCase().padStart(8, '0');
+    this.runSeed = normalised;
+    // Install the seeded RNG directly on state.rng so every post-init call
+    // (combat, rewards, shop rolls) consumes the same deterministic stream.
+    // withSeededRng only patches Math.random for the duration of its callback,
+    // which left state.rng delegating back to the unseeded global.
+    this.rng = mulberry32(parseSeed(normalised));
+    this.resetForNewRun(startingDeck);
   }
 
   /**

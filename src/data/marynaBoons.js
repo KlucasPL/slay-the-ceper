@@ -75,15 +75,16 @@ export const marynaBoonLibrary = {
 /**
  * Returns `count` unique random boon IDs from the library.
  * @param {number} [count]
+ * @param {() => number} [rng]
  * @returns {string[]}
  */
-export function rollMarynaChoices(count = 3) {
+export function rollMarynaChoices(count = 3, rng = Math.random) {
   const ids = Object.keys(marynaBoonLibrary);
   const result = [];
   const pool = [...ids];
   const n = Math.min(count, pool.length);
   for (let i = 0; i < n; i += 1) {
-    const idx = Math.floor(Math.random() * pool.length);
+    const idx = Math.floor(rng() * pool.length);
     result.push(pool.splice(idx, 1)[0]);
   }
   return result;

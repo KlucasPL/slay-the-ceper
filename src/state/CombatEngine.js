@@ -1,5 +1,15 @@
 import { getBaseCardId, getCardDefinition } from '../data/cards.js';
 
+/** @param {any} state @param {string} kind @param {Record<string, unknown>} payload */
+function emitS(state, kind, payload) {
+  state.emit(kind, payload);
+}
+
+/** @param {any} state @param {string} kind @param {Record<string, unknown>} payload */
+function emitF(state, kind, payload) {
+  if (state._eventVerbosity === 'full') state.emit(kind, payload);
+}
+
 /** @returns {number} */
 export function drawPerTurn() {
   return 5;
@@ -74,6 +84,7 @@ export function drawCards(state, amount) {
     if (typeof cardId === 'string') {
       state.hand.push(cardId);
       drawn.push(cardId);
+      emitF(state, 'card_drawn', { card: { kind: 'card', id: getBaseCardId(cardId) } });
     }
   }
   return drawn;
@@ -102,7 +113,7 @@ export function applyDamageToEnemy(state, dmg) {
   ) {
     if (!state.combat.playerAttackMissRolled) {
       state.combat.playerAttackMissRolled = true;
-      state.combat.playerAttackMissed = Math.random() < 0.25;
+      state.combat.playerAttackMissed = state.rng() < 0.25;
       if (state.combat.playerAttackMissed) {
         state._registerWeatherMiss('enemy');
       }
@@ -222,7 +233,7 @@ export function applyEnemyIntent(state) {
 
   if (!state.combat.firstAttackUsed) {
     state.combat.firstAttackUsed = true;
-    if (state.currentWeather === 'fog' && Math.random() < 0.25) {
+    if (state.currentWeather === 'fog' && state.rng() < 0.25) {
       state._registerWeatherMiss('player');
       return { raw: 0, blocked: 0, dealt: 0 };
     }
@@ -246,14 +257,25 @@ export function applyEnemyIntent(state) {
 
   if (intent.applyWeak && intent.applyWeak > 0) {
     state.player.status.weak += intent.applyWeak;
+    emitF(state, 'status_applied', { target: 'player', status: 'weak', amount: intent.applyWeak });
   }
 
   if (intent.applyFrail && intent.applyFrail > 0) {
     state.player.status.fragile += intent.applyFrail;
+    emitF(state, 'status_applied', {
+      target: 'player',
+      status: 'fragile',
+      amount: intent.applyFrail,
+    });
   }
 
   if (intent.applyVulnerable && intent.applyVulnerable > 0) {
     state.player.status.vulnerable += intent.applyVulnerable;
+    emitF(state, 'status_applied', {
+      target: 'player',
+      status: 'vulnerable',
+      amount: intent.applyVulnerable,
+    });
   }
 
   if (intent.gainPed && intent.gainPed > 0) {
@@ -372,7 +394,7 @@ export function startTurn(state) {
     state.flaszkaCostSeed = {};
     for (const cardId of state.hand) {
       if (!(cardId in state.flaszkaCostSeed)) {
-        state.flaszkaCostSeed[cardId] = Math.floor(Math.random() * 4);
+        state.flaszkaCostSeed[cardId] = Math.floor(state.rng() * 4);
       }
     }
   } else {
@@ -397,6 +419,8 @@ export function startTurn(state) {
   if (state.player.weather_frozen_vulnerable && state.currentWeather === 'frozen') {
     state.applyEnemyDebuff('vulnerable', 1);
   }
+
+  emitF(state, 'turn_started', { battleTurn: state.battleTurnsElapsed });
 }
 
 /**
@@ -456,6 +480,7 @@ export function playCard(state, handIndex) {
   state.hand.splice(handIndex, 1);
   if (card.exhaust) {
     state.exhaust.push(cardId);
+    emitF(state, 'card_exhausted', { card: { kind: 'card', id: getBaseCardId(cardId) } });
   } else {
     state.discard.push(cardId);
   }
@@ -505,6 +530,11 @@ export function playCard(state, handIndex) {
 
   state.player.cardsPlayedThisTurn += 1;
 
+  emitS(state, 'card_played', {
+    card: { kind: 'card', id: getBaseCardId(cardId) },
+    cost: actualCost,
+  });
+
   return { success: true, effect };
 }
 
@@ -539,6 +569,9 @@ export function endTurn(state) {
     };
   }
 
+  for (const skippedId of state.hand) {
+    emitF(state, 'card_skipped', { card: { kind: 'card', id: getBaseCardId(skippedId) } });
+  }
   state.discard.push(...state.hand);
   state.hand = [];
 
@@ -654,6 +687,13 @@ export function endTurn(state) {
   state._applyHalnyBlockDrain(state.enemy);
 
   state._refreshEnemyIntent();
+
+  emitF(state, 'turn_ended', { battleTurn: state.battleTurnsElapsed });
+  emitF(state, 'enemy_move', {
+    enemy: { kind: 'enemy', id: state.enemy.id },
+    intentType: state.enemy.currentIntent.type,
+    intentName: state.enemy.currentIntent.name,
+  });
 
   return { enemyAttack, enemyPassiveHeal, playerPassiveHeal };
 }

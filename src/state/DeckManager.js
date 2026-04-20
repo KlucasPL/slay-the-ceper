@@ -17,11 +17,16 @@ const CARD_REWARD_RARITY_WEIGHTS = {
  * @returns {string[]}
  */
 export function generateCardRewardChoices(state, count) {
-  const pool = Object.keys(cardLibrary).filter(
+  const basePool = Object.keys(cardLibrary).filter(
     (id) =>
       !cardLibrary[id]?.isStarter && !cardLibrary[id]?.eventOnly && !cardLibrary[id]?.tutorialOnly
   );
-  return state._pickUniqueItems(pool, cardLibrary, count, CARD_REWARD_RARITY_WEIGHTS);
+  const pool = state.filterPool('cards', basePool);
+  const choices = state._pickUniqueItems(pool, cardLibrary, count, CARD_REWARD_RARITY_WEIGHTS);
+  if (choices.length > 0) {
+    state.emit('reward_offered', { entities: choices.map((id) => ({ kind: 'card', id })) });
+  }
+  return choices;
 }
 
 /**
@@ -41,12 +46,16 @@ export function removeCardFromDeck(state, cardId) {
     return false;
   };
 
-  return (
+  const removed =
     removeFrom(state.deck) ||
     removeFrom(state.hand) ||
     removeFrom(state.discard) ||
-    removeFrom(state.exhaust)
-  );
+    removeFrom(state.exhaust);
+
+  if (removed) {
+    state.emit('deck_mutation', { mutation: 'remove', card: { kind: 'card', id: targetBaseId } });
+  }
+  return removed;
 }
 
 /**
@@ -77,6 +86,11 @@ export function upgradeCardDamage(state, cardId, amount = 3) {
   if (!runtimeCardId) return;
 
   state.cardDamageBonus[runtimeCardId] = (state.cardDamageBonus[runtimeCardId] ?? 0) + amount;
+  state.emit('deck_mutation', {
+    mutation: 'upgrade',
+    card: { kind: 'card', id: getBaseCardId(runtimeCardId) },
+    amount,
+  });
 }
 
 /**
