@@ -187,7 +187,7 @@ function renderCampfireUpgrade(uiManager) {
           <div class="card-art"><span class="card-icon">${cardDef.emoji}</span></div>
           <div class="card-text-box"><div class="card-desc">${getCardDescription(uiManager, cardDef, cardId)}</div></div>
       `;
-          uiHelpers.attachLongPressZoom(cardEl, () => uiManager.showCardZoom(cardId));
+      uiHelpers.attachLongPressZoom(cardEl, () => uiManager.showCardZoom(cardId));
 
       const selectBtn = document.createElement('button');
       selectBtn.className = 'btn shop-buy-btn';

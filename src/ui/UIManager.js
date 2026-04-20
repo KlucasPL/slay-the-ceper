@@ -1175,9 +1175,7 @@ export class UIManager {
       name: cardDef.name,
       emoji: cardDef.emoji,
       rarityLabel: uiHelpers.getFullCardType(cardDef.rarity, cardDef.type),
-      cost: this.state.getCardCostInHand
-        ? this.state.getCardCostInHand(cardId)
-        : cardDef.cost,
+      cost: this.state.getCardCostInHand ? this.state.getCardCostInHand(cardId) : cardDef.cost,
       description: cardRenderer.getCardDescription(this, cardDef, cardId),
       rarityClass: uiHelpers.rarityClass(cardDef.rarity),
       typeClass: `card-${cardDef.type}`,

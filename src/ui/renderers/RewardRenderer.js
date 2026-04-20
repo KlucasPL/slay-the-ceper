@@ -433,8 +433,7 @@ export function showRunSummaryOverlay(uiManager) {
     downloadLogBtn.textContent = '\uD83D\uDCBE Pobierz Log (JSON)';
     downloadLogBtn.onclick = () => {
       const dataStr =
-        'data:text/json;charset=utf-8,' +
-        encodeURIComponent(uiManager.state.getRunTelemetryJSON());
+        'data:text/json;charset=utf-8,' + encodeURIComponent(uiManager.state.getRunTelemetryJSON());
       const downloadAnchorNode = document.createElement('a');
       downloadAnchorNode.setAttribute('href', dataStr);
       downloadAnchorNode.setAttribute('download', 'usiec_cepra_run_log.json');

@@ -652,7 +652,10 @@ export class GameState {
    * @param {any} item
    */
   logAction(category, item) {
-    if (this.currentFloorLog && Object.prototype.hasOwnProperty.call(this.currentFloorLog, category)) {
+    if (
+      this.currentFloorLog &&
+      Object.prototype.hasOwnProperty.call(this.currentFloorLog, category)
+    ) {
       this.currentFloorLog[category].push(item);
     }
   }

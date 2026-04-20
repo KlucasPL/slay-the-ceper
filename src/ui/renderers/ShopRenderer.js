@@ -364,7 +364,7 @@ function renderRemovalShop(uiManager) {
           <div class="card-art"><span class="card-icon">${cardDef.emoji}</span></div>
           <div class="card-text-box"><div class="card-desc">${cardRenderer.getCardDescription(uiManager, cardDef)}</div></div>
       `;
-          uiHelpers.attachLongPressZoom(cardEl, () => uiManager.showCardZoom(cardId));
+      uiHelpers.attachLongPressZoom(cardEl, () => uiManager.showCardZoom(cardId));
 
       const removeBtn = document.createElement('button');
       removeBtn.className = 'btn shop-buy-btn';
@@ -468,7 +468,7 @@ function renderCardShop(uiManager) {
         <div class="card-art"><span class="card-icon">${cardDef.emoji}</span></div>
         <div class="card-text-box"><div class="card-desc">${cardDesc}</div></div>
     `;
-      uiHelpers.attachLongPressZoom(cardEl, () => uiManager.showCardZoom(cardId));
+    uiHelpers.attachLongPressZoom(cardEl, () => uiManager.showCardZoom(cardId));
 
     const buyBtn = document.createElement('button');
     buyBtn.className = 'btn shop-buy-btn';
