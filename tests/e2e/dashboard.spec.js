@@ -20,22 +20,19 @@ test.beforeEach(async ({ page }) => {
 /** Load metrics fixture into the dashboard via the file input. */
 async function loadFixture(page) {
   const fixture = readFileSync(FIXTURE_PATH, 'utf8');
-  // Inject metrics directly via JS to avoid needing a real file picker
-  await page.evaluate((json) => {
-    const data = JSON.parse(json);
-    // Dispatch a custom event or set window-level variable the app reads
-    window.__e2eMetrics = data;
-  }, fixture);
 
-  // Use the file input via Playwright's setInputFiles approach
   await page.locator('#metrics-file-input').setInputFiles({
     name: 'metrics.fixture.json',
     mimeType: 'application/json',
     buffer: Buffer.from(fixture),
   });
 
-  // Wait for the load status to confirm data loaded
-  await expect(page.locator('#load-status')).not.toBeEmpty({ timeout: 5_000 });
+  // Wait for our specific upload to be confirmed — loadDefault's status message
+  // would otherwise satisfy a generic non-empty check and mask a race where
+  // loadDefault's failed fetch resolves after setInputFiles and reverts #main-content.
+  await expect(page.locator('#load-status')).toContainText('metrics.fixture.json', {
+    timeout: 5_000,
+  });
 }
 
 test('shouldLoadDashboardAndShowHeader', async ({ page }) => {
@@ -60,11 +57,11 @@ test('shouldRenderBatchSummaryAfterLoadingFixture', async ({ page }) => {
   await page.goto(DASHBOARD_BASE);
   await loadFixture(page);
 
-  // Batch summary view should render with key stats
+  // Batch summary view should render with key stats from the fixture:
+  // batchName "baseline" appears in the view header and runCount 5,968 in the meta row.
   const main = page.locator('#main-content');
-  await expect(main).not.toBeEmpty({ timeout: 5_000 });
-  // Fixture has winrate 0.612 = 61.2%
-  await expect(main).toContainText('61', { timeout: 5_000 });
+  await expect(main).toContainText('baseline', { timeout: 5_000 });
+  await expect(main).toContainText('5,968', { timeout: 5_000 });
 });
 
 test('shouldNavigateToLeaderboardView', async ({ page }) => {
