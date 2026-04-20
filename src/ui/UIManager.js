@@ -128,6 +128,9 @@ export class UIManager {
       titleDisclaimerPanel.classList.add('hidden');
       titleDisclaimerBtn.setAttribute('aria-expanded', 'false');
     });
+
+    this._initPwaWidget();
+
     document
       .querySelector('#release-notes-modal .close-btn')
       .addEventListener('click', () => this._closeReleaseNotesModal());
@@ -533,6 +536,96 @@ export class UIManager {
     if (currentFontPx < baseFontPx) {
       descNode.classList.add('card-desc--autoscaled');
     }
+  }
+
+  /**
+   * Initialises the PWA install tooltip widget on the title screen.
+   */
+  _initPwaWidget() {
+    const btn = document.getElementById('title-pwa-btn');
+    const panel = document.getElementById('title-pwa-panel');
+    if (!btn || !panel) return;
+
+    /** @type {BeforeInstallPromptEvent | null} */
+    let deferredPrompt = null;
+
+    const isIos =
+      /iphone|ipad|ipod/i.test(navigator.userAgent) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const isInStandaloneMode =
+      'standalone' in navigator
+        ? /** @type {any} */ (navigator).standalone
+        : window.matchMedia('(display-mode: standalone)').matches;
+
+    if (isInStandaloneMode) {
+      btn.style.display = 'none';
+      return;
+    }
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = /** @type {BeforeInstallPromptEvent} */ (e);
+    });
+
+    window.addEventListener('appinstalled', () => {
+      btn.style.display = 'none';
+      panel.classList.add('hidden');
+    });
+
+    /** @returns {string} */
+    const buildPanelHtml = () => {
+      if (deferredPrompt) {
+        return `<strong>Zainstaluj jako aplikację</strong><br>
+Kliknij poniższy przycisk, aby dodać Usiec Cepra do pulpitu – bez sklepu z aplikacjami, działa offline.
+<br><button class="pwa-install-btn" id="pwa-native-install-btn">⬇ Zainstaluj</button>`;
+      }
+      if (isIos) {
+        return `<strong>Zainstaluj na iPhone / iPad</strong><ul>
+<li>Otwórz w <strong>Safari</strong> (nie Chrome/Firefox)</li>
+<li>Stuknij ikonę Udostępnij <strong>□↑</strong> na dole</li>
+<li>Wybierz <strong>„Dodaj do ekranu głównego"</strong></li>
+<li>Stuknij <strong>„Dodaj"</strong></li>
+</ul>
+Gra pojawi się jako ikona i będzie działać bez przeglądarki.`;
+      }
+      return `<strong>Zainstaluj jako aplikację</strong><ul>
+<li><strong>Android (Chrome):</strong> menu ⋮ → „Dodaj do ekranu głównego" / „Zainstaluj"</li>
+<li><strong>Android (Firefox):</strong> menu ⋮ → „Zainstaluj"</li>
+<li><strong>Komputer (Chrome/Edge):</strong> ikona ⊕ w pasku adresu → „Zainstaluj"</li>
+</ul>
+Po instalacji gra działa offline i bez paska przeglądarki.`;
+    };
+
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isHidden = panel.classList.contains('hidden');
+      if (isHidden) {
+        panel.innerHTML = buildPanelHtml();
+        panel.classList.remove('hidden');
+        btn.setAttribute('aria-expanded', 'true');
+        const nativeBtn = document.getElementById('pwa-native-install-btn');
+        if (nativeBtn && deferredPrompt) {
+          nativeBtn.addEventListener('click', async () => {
+            if (!deferredPrompt) return;
+            deferredPrompt.prompt();
+            await deferredPrompt.userChoice;
+            deferredPrompt = null;
+            panel.classList.add('hidden');
+            btn.setAttribute('aria-expanded', 'false');
+          });
+        }
+      } else {
+        panel.classList.add('hidden');
+        btn.setAttribute('aria-expanded', 'false');
+      }
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!(e.target instanceof Element)) return;
+      if (e.target.closest('.title-pwa-widget')) return;
+      panel.classList.add('hidden');
+      btn.setAttribute('aria-expanded', 'false');
+    });
   }
 
   /**
@@ -1066,7 +1159,6 @@ export class UIManager {
   }
 
   _handleTreasureNode() {
-    console.log('[UI] _handleTreasureNode started.');
     try {
       this.state.currentScreen = 'treasure';
       this._hideOverlay('map-overlay');

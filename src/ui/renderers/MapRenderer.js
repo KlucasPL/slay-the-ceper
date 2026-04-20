@@ -230,7 +230,6 @@ export function drawMapConnections(uiManager, nodeButtons) {
  * @param {number} nodeIndex
  */
 export function handleMapNodeSelect(uiManager, level, nodeIndex) {
-  console.log(`[MAP] Attempting to select node: Level ${level}, Index ${nodeIndex}`);
   const isInitialFight =
     !uiManager.state.hasStartedFirstBattle &&
     level === 0 &&
@@ -258,7 +257,6 @@ export function handleMapNodeSelect(uiManager, level, nodeIndex) {
     console.warn(`[MAP] Travel rejected by NavigationState for node at L:${level} I:${nodeIndex}`);
     return;
   }
-  console.log(`[MAP] Travel successful. Node type: ${node.type}`);
   uiManager.mapMessage = '';
 
   // Telemetry: close previous floor log and open a new one for this node.
@@ -305,7 +303,6 @@ export function handleMapNodeSelect(uiManager, level, nodeIndex) {
   }
 
   if (node.type === 'treasure') {
-    console.log('[MAP] Triggering _handleTreasureNode...');
     uiManager.state.currentScreen = 'treasure';
     uiManager._handleTreasureNode();
     return;

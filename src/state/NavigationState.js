@@ -79,9 +79,7 @@ export function canTravelTo(state, level, nodeIndex) {
  * @returns {MapNode | null}
  */
 export function travelTo(state, level, nodeIndex) {
-  console.log(`[NAV] travelTo: Attempting travel to L:${level} I:${nodeIndex}`);
   if (!state.canTravelTo(level, nodeIndex)) {
-    console.warn(`[NAV] travelTo: Travel denied to L:${level} I:${nodeIndex}`);
     return null;
   }
   state.currentLevel = level;
@@ -93,7 +91,6 @@ export function travelTo(state, level, nodeIndex) {
     state._setNodeType(node, state.debugForcedNextNodeType);
     state.debugForcedNextNodeType = null;
   }
-  console.log(`[NAV] travelTo: Arrived at node type: ${node?.type}`);
   return node;
 }
 

@@ -8,6 +8,14 @@
     />
     <title>Usiec Cepra (ang. Slay the Ceper)</title>
     <link rel="icon" type="image/png" href="/src/pictures/favicon.png" />
+    <meta name="application-name" content="Usiec Cepra" />
+    <meta name="description" content="Góralska gra karciana roguelike – Slay the Ceper" />
+    <meta name="theme-color" content="#1a0a00" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Usiec Cepra" />
+    <link rel="apple-touch-icon" href="/slay-the-ceper/icon-192x192.png" />
     <script type="module" src="/src/main.js"></script>
   </head>
   <body>
@@ -96,6 +104,17 @@
             <span>🪓</span>
             <span>👞</span>
           </div>
+        </div>
+        <div class="title-pwa-widget">
+          <button
+            id="title-pwa-btn"
+            class="title-disclaimer-btn"
+            type="button"
+            aria-expanded="false"
+          >
+            📲 Zainstaluj
+          </button>
+          <div id="title-pwa-panel" class="title-pwa-panel hidden" role="note"></div>
         </div>
         <div class="title-disclaimer-widget">
           <button

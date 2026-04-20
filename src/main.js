@@ -54,7 +54,6 @@ if (debugBoss === 'random-boss') {
 
 const state = new GameState(characters.jedrek, initialEnemy);
 state.initGame(startingDeck);
-window.gameState = state;
 
 /**
  * Attempts to lock the screen orientation to portrait on supported mobile browsers.
@@ -256,7 +255,6 @@ async function bootstrap() {
     ui: ui,
   });
   debugOverlay.mount();
-  console.log('Debug overlay ready. Use ~ or F9 to toggle.');
 }
 
 /** @type {number} Internal game width authored for 16:9 layout. */
@@ -326,7 +324,3 @@ bootstrap();
 if (ENABLE_MOBILE_PORTRAIT_LOCK) {
   setupMobilePortraitLock();
 }
-
-// Expose telemetry helper globally so devs can pull the log at any time from the console.
-window.downloadRunLog = () =>
-  console.log(window.gameState?.getRunTelemetryJSON() ?? 'GameState not linked globally yet.');

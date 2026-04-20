@@ -419,10 +419,6 @@ export function showRunSummaryOverlay(uiManager) {
   uiHelpers.hideOverlay('campfire-overlay');
   uiHelpers.hideOverlay('random-event-overlay');
 
-  // Telemetry: output run log to developer console for balancing.
-  console.log('=== RUN TELEMETRY FOR BALANCING ===');
-  console.log(uiManager.state.getRunTelemetryJSON());
-
   // Inject download button next to the existing action buttons.
   const actionsContainer = overlay.querySelector('.run-summary-actions');
   if (actionsContainer && !actionsContainer.querySelector('.run-summary-download-btn')) {

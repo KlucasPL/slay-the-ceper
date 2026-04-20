@@ -35,3 +35,9 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      - name: Verify PWA artifacts
+        run: |
+          test -f dist/sw.js || (echo "Missing dist/sw.js" && exit 1)
+          test -f dist/manifest.webmanifest || (echo "Missing dist/manifest.webmanifest" && exit 1)
+          test -f dist/icon-512x512.png || (echo "Missing dist/icon-512x512.png" && exit 1)
