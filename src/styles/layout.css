@@ -790,7 +790,7 @@ body.desktop-viewport-blocked #desktop-viewport-overlay {
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 4200;
+  z-index: 6000;
 }
 
 .modal.hidden {
@@ -887,6 +887,31 @@ body.desktop-viewport-blocked #desktop-viewport-overlay {
   border-color: #2f7a43;
   background: #3c9d55;
   color: #f4fff6;
+}
+
+.options-action-row {
+  margin-top: 16px;
+}
+
+.option-back-main-btn {
+  width: 100%;
+  border: 2px solid #9a2f26;
+  border-radius: 10px;
+  background: #b43a2e;
+  color: #fff3e8;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  padding: 10px 14px;
+  cursor: pointer;
+  transition:
+    filter 0.15s ease,
+    transform 0.15s ease;
+}
+
+.option-back-main-btn:hover,
+.option-back-main-btn:focus-visible {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
 }
 
 .title-btn-row {
