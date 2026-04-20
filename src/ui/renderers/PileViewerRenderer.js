@@ -76,6 +76,7 @@ export function renderPileViewer(uiManager) {
         exhaustEl.innerHTML = '<span class="exhaust-fire">🔥</span> PRZEPADO';
         cardEl.querySelector('.card-text-box').appendChild(exhaustEl);
       }
+      uiHelpers.attachLongPressZoom(cardEl, () => uiManager.showCardZoom(cardId));
       grid.appendChild(cardEl);
     });
   }

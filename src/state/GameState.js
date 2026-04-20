@@ -210,6 +210,16 @@ export class GameState {
     this.midCampfireLevel = null;
     /** @type {{ outcome: 'player_win' | 'enemy_win', finalDeck: import('../data/cards.js').CardDef[], finalRelics: import('../data/relics.js').RelicDef[], killerName: string | null, runStats: { totalDutkiEarned: number, floorReached: number, totalTurnsPlayed: number } } | null} */
     this.runSummary = null;
+    /** @type {Array<Object>} Telemetry: per-floor log entries for this run */
+    this.runLog = [];
+    /** @type {Object | null} Telemetry: log being built for the current floor */
+    this.currentFloorLog = null;
+    /** @type {string} Telemetry: lightweight run identifier */
+    this.runSeed = Math.random().toString(36).substring(2, 9);
+    /** @type {string | null} Telemetry: id/type of boss encountered */
+    this.bossEncountered = null;
+    /** @type {number | null} Telemetry: floor level where the player died */
+    this.deathLevel = null;
     /** @type {EnemyState} */
     this.enemy = this._createEnemyState(enemy);
     this.generateMap();
@@ -612,6 +622,87 @@ export class GameState {
   consumePendingEventVictoryRelicReward() {
     return eventSystem.consumePendingEventVictoryRelicReward(this);
   }
+
+  // ── Telemetry ─────────────────────────────────────────────────────────────
+
+  /**
+   * Starts a new per-floor telemetry log for the given map node.
+   * @param {{ type?: string, label?: string }} node
+   */
+  startFloorLog(node) {
+    this.currentFloorLog = {
+      level: this.currentLevel || 1,
+      act: this.currentAct || 1,
+      nodeType: node.type || 'unknown',
+      nodeLabel: node.label || '',
+      startingHp: this.player.hp,
+      startingDutki: this.dutki,
+      purchases: [],
+      rewards: [],
+      events: [],
+      campfire: [],
+      upgrades: [],
+      removals: [],
+    };
+  }
+
+  /**
+   * Records an action item into the current floor log under the given category.
+   * @param {'purchases'|'rewards'|'events'|'campfire'|'upgrades'|'removals'} category
+   * @param {any} item
+   */
+  logAction(category, item) {
+    if (this.currentFloorLog && Object.prototype.hasOwnProperty.call(this.currentFloorLog, category)) {
+      this.currentFloorLog[category].push(item);
+    }
+  }
+
+  /**
+   * Finalises the current floor log and appends it to runLog.
+   */
+  endFloorLog() {
+    if (this.currentFloorLog) {
+      this.currentFloorLog.endingHp = this.player.hp;
+      this.currentFloorLog.endingDutki = this.dutki;
+      this.runLog.push({ ...this.currentFloorLog });
+      this.currentFloorLog = null;
+    }
+  }
+
+  /**
+   * Returns the complete run telemetry as a JSON string.
+   * @returns {string}
+   */
+  getRunTelemetryJSON() {
+    const summary = this.runSummary;
+    const currentDutki = summary?.snapshotDutki ?? this.dutki;
+    const finalDutki =
+      summary?.snapshotTotalDutkiEarned ?? summary?.runStats?.totalDutkiEarned ?? currentDutki;
+    const finalDeck = summary?.finalDeck ?? [...this.deck];
+    const finalRelics = summary?.finalRelics ?? [...this.relics];
+    const finalHp = summary ? this.player.hp : this.player.hp;
+    const maxHp = this.player.maxHp;
+
+    return JSON.stringify(
+      {
+        seed: this.runSeed,
+        bossEncountered: this.bossEncountered,
+        deathLevel: this.deathLevel,
+        finalHp,
+        maxHp,
+        finalDutki,
+        currentDutki,
+        deckSize: finalDeck.length,
+        finalDeck,
+        finalRelics,
+        floorHistory: this.runLog,
+      },
+      null,
+      2
+    );
+  }
+
+  // ── End Telemetry ──────────────────────────────────────────────────────────
 
   _checkEnemyBankruptcy() {
     enemyState.checkEnemyBankruptcy(this);

@@ -261,6 +261,10 @@ export function handleMapNodeSelect(uiManager, level, nodeIndex) {
   console.log(`[MAP] Travel successful. Node type: ${node.type}`);
   uiManager.mapMessage = '';
 
+  // Telemetry: close previous floor log and open a new one for this node.
+  if (uiManager.state.currentFloorLog) uiManager.state.endFloorLog();
+  uiManager.state.startFloorLog(node);
+
   if (node.type === 'fight' || node.type === 'elite' || node.type === 'boss') {
     uiManager.state.hasStartedFirstBattle = true;
     uiManager.state.currentScreen = 'battle';
@@ -302,11 +306,11 @@ export function handleMapNodeSelect(uiManager, level, nodeIndex) {
 
   if (node.type === 'treasure') {
     console.log('[MAP] Triggering _handleTreasureNode...');
-    uiManager.state.currentScreen = 'map';
+    uiManager.state.currentScreen = 'treasure';
     uiManager._handleTreasureNode();
     return;
   }
 
-  uiManager.state.currentScreen = 'map';
+  uiManager.state.currentScreen = 'campfire';
   uiManager._openCampfire();
 }

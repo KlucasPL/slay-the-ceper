@@ -1,4 +1,5 @@
 import { cardLibrary, startingDeck, getCardDefinition } from '../data/cards.js';
+import { relicLibrary } from '../data/relics.js';
 import { releaseNotesData } from '../data/releaseNotes.js';
 import { ActIntroOverlay } from './overlays/ActIntroOverlay.js';
 import {
@@ -1066,21 +1067,27 @@ export class UIManager {
 
   _handleTreasureNode() {
     console.log('[UI] _handleTreasureNode started.');
-    // CRITICAL: Hide the map so the reward screen is visible
-    uiHelpers.hideOverlay('map-overlay');
-    // CRITICAL: Set this to true so NavigationState allows moving to the next level
-    this.state.hasStartedFirstBattle = true;
+    try {
+      this.state.currentScreen = 'treasure';
+      this._hideOverlay('map-overlay');
+      this.state.hasStartedFirstBattle = true;
 
-    const relicId = this.state.generateRelicReward(true);
-    if (!relicId) {
-      console.warn('[UI] Treasure node: No relic generated.');
-      this.mapMessage = 'Skrzynia była pusta... ani jednej pamiątki.';
+      const relicId = this.state.generateRelicReward(true);
+      if (!relicId) {
+        this.mapMessage = 'Skrzynia była pusta...';
+        this.state.currentScreen = 'map';
+        this._openMapOverlay();
+        return;
+      }
+
+      this.showRelicScreen(relicId, 'treasure');
+      this.updateUI();
+    } catch (error) {
+      console.error('[UI] BŁĄD SKRZYNI:', error);
+      this.mapMessage = 'BŁĄD SKRZYNI: ' + (error.message || 'Nieznany błąd');
+      this.state.currentScreen = 'map';
       this._openMapOverlay();
-      return;
     }
-
-    this.showRelicScreen(relicId, 'treasure');
-    this.updateUI();
   }
 
   /**
@@ -1156,6 +1163,43 @@ export class UIManager {
    */
   _setLibraryFilter(rarity) {
     libraryRenderer.setLibraryFilter(this, rarity);
+  }
+
+  /**
+   * @param {string} cardId
+   */
+  showCardZoom(cardId) {
+    const cardDef = getCardDefinition(cardId);
+    if (!cardDef) return;
+    const cardView = {
+      name: cardDef.name,
+      emoji: cardDef.emoji,
+      rarityLabel: uiHelpers.getFullCardType(cardDef.rarity, cardDef.type),
+      cost: this.state.getCardCostInHand
+        ? this.state.getCardCostInHand(cardId)
+        : cardDef.cost,
+      description: cardRenderer.getCardDescription(this, cardDef, cardId),
+      rarityClass: uiHelpers.rarityClass(cardDef.rarity),
+      typeClass: `card-${cardDef.type}`,
+      exhaust: Boolean(cardDef.exhaust),
+    };
+    cardZoomOverlay.openCardZoom(cardView, 'card');
+  }
+
+  /**
+   * @param {string} relicId
+   */
+  showRelicZoom(relicId) {
+    const relicDef = relicLibrary[relicId];
+    if (!relicDef) return;
+    const relicView = {
+      name: relicDef.name,
+      emoji: relicDef.emoji,
+      rarityLabel: uiHelpers.rarityLabel(relicDef.rarity, 'relic'),
+      description: relicDef.desc,
+      rarityClass: uiHelpers.rarityClass(relicDef.rarity),
+    };
+    cardZoomOverlay.openCardZoom(relicView, 'relic');
   }
 
   _renderLibrary() {

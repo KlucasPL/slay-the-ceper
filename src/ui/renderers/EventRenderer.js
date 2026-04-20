@@ -1,7 +1,5 @@
 import { enemyLibrary } from '../../data/enemies.js';
 import { cardLibrary, getCardDefinition } from '../../data/cards.js';
-import { getCardDescription } from './CardRenderer.js';
-import * as cardZoomOverlay from '../overlays/CardZoomOverlay.js';
 import * as uiHelpers from '../helpers/UIHelpers.js';
 
 /**
@@ -129,20 +127,9 @@ export function openRandomEvent(uiManager, forcedEventId = null) {
         previewBtn.title = 'Podejrzyj kartę';
         previewBtn.onclick = (e) => {
           e.stopPropagation();
-          const cardView = {
-            name: cardDef.name,
-            emoji: cardDef.emoji,
-            rarityLabel: uiHelpers.getFullCardType(cardDef.rarity, cardDef.type),
-            cost: uiManager.state.getCardCostInHand
-              ? uiManager.state.getCardCostInHand(previewCardId)
-              : cardDef.cost,
-            description: getCardDescription(uiManager, cardDef, previewCardId),
-            rarityClass: uiHelpers.rarityClass(cardDef.rarity),
-            typeClass: `card-${cardDef.type}`,
-            exhaust: Boolean(cardDef.exhaust),
-          };
-          cardZoomOverlay.openCardZoom(cardView);
+          uiManager.showCardZoom(previewCardId);
         };
+        uiHelpers.attachLongPressZoom(previewBtn, () => uiManager.showCardZoom(previewCardId));
         row.appendChild(previewBtn);
       }
     }
@@ -162,6 +149,8 @@ export function openRandomEvent(uiManager, forcedEventId = null) {
  */
 export function handleRandomEventChoice(uiManager, choiceIndex) {
   if (uiManager._isInputLocked()) return;
+  const eventDef = uiManager.state.getActiveEventDef();
+  const choiceLabel = eventDef?.choices?.[choiceIndex]?.text ?? 'Unknown Choice';
   const result = uiManager.state.applyActiveEventChoice(choiceIndex);
   const resultEl = document.getElementById('random-event-result');
   const continueBtn = document.getElementById('random-event-continue-btn');
@@ -169,6 +158,8 @@ export function handleRandomEventChoice(uiManager, choiceIndex) {
 
   resultEl.textContent = result.message;
   if (!result.success) return;
+
+  uiManager.state.logAction('events', { choiceLabel, eventId: eventDef?.id ?? null });
 
   // Disable ALL buttons in the choices container (both choices and preview eyes)
   document.querySelectorAll('#random-event-choices button').forEach((btn) => {

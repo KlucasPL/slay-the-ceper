@@ -1,4 +1,6 @@
 import { marynaBoonLibrary, marynaSvg } from '../../data/marynaBoons.js';
+import * as cardZoomOverlay from './CardZoomOverlay.js';
+import * as uiHelpers from '../helpers/UIHelpers.js';
 
 /**
  * @param {any} uiManager
@@ -46,6 +48,18 @@ export function openMarynaBoonOverlay(uiManager) {
       <div style="font-size: 2.4rem; margin: 4px 0 8px 0;">${boon.emoji}</div>
       <div class="relic-plate-desc" style="color: #2c1e16; font-weight: 700;">${boon.effectDesc}</div>
     `;
+    uiHelpers.attachLongPressZoom(plateEl, () => {
+      cardZoomOverlay.openCardZoom(
+        {
+          name: boon.name,
+          emoji: boon.emoji,
+          rarityLabel: 'Błogosławieństwo Maryny',
+          description: boon.effectDesc,
+          rarityClass: 'rarity-rare',
+        },
+        'relic'
+      );
+    });
 
     // 2. The Flavor Text (OUTSIDE the plate)
     const flavorEl = document.createElement('div');

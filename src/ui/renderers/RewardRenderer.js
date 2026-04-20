@@ -89,23 +89,36 @@ export function showRelicScreen(uiManager, relicId, source) {
 
   const relicScreen = document.getElementById('relic-reward-screen');
   const cardScreen = document.getElementById('card-reward-screen');
-  const titleEl = relicScreen?.querySelector('.victory-title');
-  const glowWrap = relicScreen?.querySelector('.relic-glow-wrap');
-  const rewardRelic = document.getElementById('reward-relic');
-  const rewardRelicName = document.getElementById('reward-relic-name');
-  const rewardRelicDesc = document.getElementById('reward-relic-desc');
-  const claimBtn = document.getElementById('claim-relic-btn');
-  if (
-    !relicScreen ||
-    !cardScreen ||
-    !titleEl ||
-    !glowWrap ||
-    !rewardRelic ||
-    !rewardRelicName ||
-    !rewardRelicDesc ||
-    !claimBtn
-  ) {
-    return;
+  if (!relicScreen || !cardScreen) return;
+
+  let panel = relicScreen.querySelector('.victory-panel');
+  if (!(panel instanceof HTMLElement)) {
+    panel = document.createElement('div');
+    panel.className = 'victory-panel relic-reward-panel';
+    relicScreen.appendChild(panel);
+  }
+
+  let titleEl = panel.querySelector('.victory-title');
+  if (!(titleEl instanceof HTMLElement)) {
+    titleEl = document.createElement('h2');
+    titleEl.className = 'victory-title';
+    panel.prepend(titleEl);
+  }
+
+  let glowWrap = panel.querySelector('.relic-glow-wrap');
+  if (!(glowWrap instanceof HTMLElement)) {
+    glowWrap = document.createElement('div');
+    glowWrap.className = 'relic-glow-wrap';
+    panel.appendChild(glowWrap);
+  }
+
+  let claimBtn = panel.querySelector('#claim-relic-btn');
+  if (!(claimBtn instanceof HTMLButtonElement)) {
+    claimBtn = document.createElement('button');
+    claimBtn.id = 'claim-relic-btn';
+    claimBtn.className = 'reward-relic-btn';
+    claimBtn.textContent = 'Zgarnij Pamiątkę';
+    panel.appendChild(claimBtn);
   }
 
   glowWrap.classList.remove('rarity-common', 'rarity-uncommon', 'rarity-rare');
@@ -114,6 +127,7 @@ export function showRelicScreen(uiManager, relicId, source) {
   titleEl.textContent = source === 'treasure' ? 'Znalazłeś Skarb!' : 'Łup z wroga!';
   // Conditionally inject the treasure chest banner for treasure nodes
   const currentNode = uiManager.state.getCurrentMapNode();
+  panel.querySelector('.treasure-banner-container')?.remove();
   if (currentNode && currentNode.type === 'treasure') {
     const bannerContainer = document.createElement('div');
     bannerContainer.className = 'treasure-banner-container';
@@ -130,7 +144,6 @@ export function showRelicScreen(uiManager, relicId, source) {
     bannerContainer.style.alignItems = 'center';
     bannerContainer.innerHTML = treasureSvg;
     // CRITICAL FIX: The title class is .victory-title, NOT .event-title
-    const panel = relicScreen;
     const titleElement = panel.querySelector('.victory-title');
     if (titleElement) {
       titleElement.insertAdjacentElement('afterend', bannerContainer);
@@ -148,6 +161,10 @@ export function showRelicScreen(uiManager, relicId, source) {
       <p class="relic-plate-desc">${relic.desc}</p>
     </div>
   `;
+  const rewardRelicEl = glowWrap.querySelector('.relic-plate');
+  if (rewardRelicEl instanceof HTMLElement) {
+    uiHelpers.attachLongPressZoom(rewardRelicEl, () => uiManager.showRelicZoom(relicId));
+  }
 
   claimBtn.onclick = () => {
     uiManager.state.addRelic(relicId);
@@ -159,6 +176,10 @@ export function showRelicScreen(uiManager, relicId, source) {
       uiManager.pendingBattleRelicClaimAction = null;
       if (goToCardPhase) {
         goToCardPhase();
+      } else {
+        // Defensive fallback: never leave the player on a finished battle screen.
+        uiManager.state.currentScreen = 'map';
+        uiManager._openMapOverlay();
       }
     } else {
       uiManager.pendingBattleRelicClaimAction = null;
@@ -246,6 +267,7 @@ export function showCardRewardScreen(
       uiManager.state.deck.push(cardId);
       closeRewardScreens(uiManager, isBossFight);
     });
+    uiHelpers.attachLongPressZoom(cardEl, () => uiManager.showCardZoom(cardId));
     rewardCards.appendChild(cardEl);
   });
 
@@ -298,6 +320,8 @@ export function closeRewardScreens(uiManager, isBossFight = false) {
     return;
   }
 
+  uiManager.pendingBattleRelicClaimAction = null;
+  uiManager.state.currentScreen = 'map';
   uiManager._openMapOverlay();
   uiManager.updateUI();
 }
@@ -347,47 +371,46 @@ export function showRunSummaryOverlay(uiManager) {
   dutki.textContent = String(summary.runStats.totalDutkiEarned);
   turns.textContent = String(summary.runStats.totalTurnsPlayed);
 
-  relics.innerHTML = '';
-  summary.finalRelics.forEach((relic, index) => {
-    const chip = document.createElement('button');
-    chip.type = 'button';
-    chip.className = `relic-chip run-summary-relic ${uiHelpers.rarityClass(relic.rarity)}`;
-    chip.textContent = relic.emoji;
-    chip.title = `${relic.name}: ${relic.desc}`;
-    chip.style.animationDelay = `${index * 60}ms`;
-    const tip = document.createElement('span');
-    tip.className = 'relic-tooltip';
-    tip.textContent = `${relic.name}: ${relic.desc}`;
-    chip.appendChild(tip);
-    relics.appendChild(chip);
-  });
-
-  deck.innerHTML = '';
-  /** @type {Map<string, { card: import('../../data/cards.js').CardDef, count: number }>} */
-  const grouped = new Map();
+  /** @type {Map<string, number>} */
+  const cardCounts = new Map();
   summary.finalDeck.forEach((card) => {
-    const existing = grouped.get(card.id);
-    if (existing) {
-      existing.count += 1;
-    } else {
-      grouped.set(card.id, { card, count: 1 });
-    }
+    const next = (cardCounts.get(card.id) ?? 0) + 1;
+    cardCounts.set(card.id, next);
   });
 
-  [...grouped.values()].forEach(({ card, count }, index) => {
-    const cardEl = document.createElement('div');
-    cardEl.className = `run-summary-card ${uiHelpers.rarityClass(card.rarity)}`;
-    cardEl.style.animationDelay = `${index * 40}ms`;
-    cardEl.innerHTML = `
-        <div class="run-summary-card-head">
-          <span class="run-summary-card-emoji">${card.emoji}</span>
-          <span class="run-summary-card-name">${card.name}</span>
-          <span class="run-summary-card-count">x${count}</span>
-        </div>
-        <div class="run-summary-card-desc">${card.desc}</div>
-      `;
-    deck.appendChild(cardEl);
+  const deckFragment = document.createDocumentFragment();
+  cardCounts.forEach((count, cardId) => {
+    const cardDef = cardLibrary[cardId];
+    if (!cardDef) return;
+    const item = document.createElement('div');
+    item.className = `run-summary-item ${uiHelpers.rarityClass(cardDef.rarity)}`;
+    item.textContent = `${count}x ${cardDef.emoji} ${cardDef.name}`;
+    deckFragment.appendChild(item);
   });
+  if (deckFragment.childNodes.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'run-summary-item';
+    empty.textContent = 'Brak kart w talii końcowej.';
+    deckFragment.appendChild(empty);
+  }
+  deck.innerHTML = '';
+  deck.appendChild(deckFragment);
+
+  const relicFragment = document.createDocumentFragment();
+  summary.finalRelics.forEach((relic) => {
+    const item = document.createElement('div');
+    item.className = `run-summary-item ${uiHelpers.rarityClass(relic.rarity)}`;
+    item.textContent = `${relic.emoji} ${relic.name}`;
+    relicFragment.appendChild(item);
+  });
+  if (relicFragment.childNodes.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'run-summary-item';
+    empty.textContent = 'Brak zebranych pamiątek.';
+    relicFragment.appendChild(empty);
+  }
+  relics.innerHTML = '';
+  relics.appendChild(relicFragment);
 
   uiHelpers.hideOverlay('relic-reward-screen');
   uiHelpers.hideOverlay('card-reward-screen');
@@ -395,6 +418,32 @@ export function showRunSummaryOverlay(uiManager) {
   uiHelpers.hideOverlay('shop-overlay');
   uiHelpers.hideOverlay('campfire-overlay');
   uiHelpers.hideOverlay('random-event-overlay');
+
+  // Telemetry: output run log to developer console for balancing.
+  console.log('=== RUN TELEMETRY FOR BALANCING ===');
+  console.log(uiManager.state.getRunTelemetryJSON());
+
+  // Inject download button next to the existing action buttons.
+  const actionsContainer = overlay.querySelector('.run-summary-actions');
+  if (actionsContainer && !actionsContainer.querySelector('.run-summary-download-btn')) {
+    const downloadLogBtn = document.createElement('button');
+    downloadLogBtn.className = 'btn run-summary-download-btn';
+    downloadLogBtn.style.backgroundColor = '#2c3e50';
+    downloadLogBtn.style.color = '#ecf0f1';
+    downloadLogBtn.textContent = '\uD83D\uDCBE Pobierz Log (JSON)';
+    downloadLogBtn.onclick = () => {
+      const dataStr =
+        'data:text/json;charset=utf-8,' +
+        encodeURIComponent(uiManager.state.getRunTelemetryJSON());
+      const downloadAnchorNode = document.createElement('a');
+      downloadAnchorNode.setAttribute('href', dataStr);
+      downloadAnchorNode.setAttribute('download', 'usiec_cepra_run_log.json');
+      document.body.appendChild(downloadAnchorNode);
+      downloadAnchorNode.click();
+      downloadAnchorNode.remove();
+    };
+    actionsContainer.appendChild(downloadLogBtn);
+  }
 
   overlay.classList.remove('hidden');
   overlay.setAttribute('aria-hidden', 'false');

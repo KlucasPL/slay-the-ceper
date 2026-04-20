@@ -36,6 +36,16 @@ export function openCampfire(uiManager) {
   uiManager.campfireMessage = '';
   uiHelpers.hideOverlay('map-overlay');
   const overlay = document.getElementById('campfire-overlay');
+  if (!overlay) return;
+
+  // Keep campfire functional even if markup is missing the panel container.
+  let panel = overlay.querySelector('.event-panel');
+  if (!panel) {
+    panel = document.createElement('div');
+    panel.className = 'event-panel campfire-panel';
+    overlay.appendChild(panel);
+  }
+
   overlay.classList.remove('hidden');
   overlay.setAttribute('aria-hidden', 'false');
   uiManager.audioManager.playCampfireMusic();
@@ -44,6 +54,7 @@ export function openCampfire(uiManager) {
 
 function renderCampfireMain(uiManager) {
   const overlay = document.getElementById('campfire-overlay');
+  if (!overlay) return;
   const panel = overlay.querySelector('.event-panel');
   if (!panel) return;
   panel.innerHTML = '';
@@ -85,6 +96,7 @@ function renderCampfireMain(uiManager) {
   healBtn.onclick = () => {
     const healAmount = Math.max(1, Math.floor(uiManager.state.player.maxHp * 0.2));
     uiManager.state.healPlayer(healAmount);
+    uiManager.state.logAction('campfire', { action: 'heal', amount: healAmount });
     uiManager.campfireUsed = true;
     uiManager.campfireMessage = `Zjedzono grule. Odzyskano ${healAmount} Krzepy.`;
     renderCampfireMain(uiManager);
@@ -124,7 +136,9 @@ function renderCampfireMain(uiManager) {
 
 function renderCampfireUpgrade(uiManager) {
   const overlay = document.getElementById('campfire-overlay');
+  if (!overlay) return;
   const panel = overlay.querySelector('.event-panel');
+  if (!panel) return;
   panel.innerHTML = '';
 
   const header = document.createElement('div');
@@ -173,6 +187,7 @@ function renderCampfireUpgrade(uiManager) {
           <div class="card-art"><span class="card-icon">${cardDef.emoji}</span></div>
           <div class="card-text-box"><div class="card-desc">${getCardDescription(uiManager, cardDef, cardId)}</div></div>
       `;
+          uiHelpers.attachLongPressZoom(cardEl, () => uiManager.showCardZoom(cardId));
 
       const selectBtn = document.createElement('button');
       selectBtn.className = 'btn shop-buy-btn';
@@ -184,6 +199,7 @@ function renderCampfireUpgrade(uiManager) {
         if (!uiManager.state.cardDamageBonus) uiManager.state.cardDamageBonus = {};
         uiManager.state.cardDamageBonus[cardId] =
           (uiManager.state.cardDamageBonus[cardId] || 0) + 3;
+        uiManager.state.logAction('campfire', { action: 'upgrade', cardId });
         uiManager.campfireUsed = true;
         uiManager.campfireMessage = `Naostrzono: ${cardDef.name} (+3 obr).`;
         renderCampfireMain(uiManager);

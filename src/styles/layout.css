@@ -724,41 +724,46 @@ body.desktop-viewport-blocked #desktop-viewport-overlay {
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
 }
 
+/* --- Responsive Title Menu Layout --- */
 .title-menu-nav {
-  width: 100%;
-  max-width: 100vw;
-  padding: clamp(6px, 1.4dvh, 20px);
-  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  gap: clamp(12px, 3dvh, 24px);
+  width: 90%;
+  max-width: 480px;
+  margin: 0 auto;
+  padding-bottom: env(safe-area-inset-bottom, 20px);
+  box-sizing: border-box;
+  z-index: 10;
 }
 
 .title-menu-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  width: 100%;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: clamp(0.45rem, 1.25dvh, 1.5rem);
+  width: 100%;
+  gap: clamp(10px, 2dvh, 16px);
+  padding: 0;
+  margin: 0;
+  list-style: none;
 }
 
-.title-menu-item {
+.title-menu-item,
+.title-start-btn {
   width: 100%;
-  max-width: 100%;
-  text-align: center;
+  box-sizing: border-box;
+  margin: 0;
+}
+
+.title-btn-row .title-menu-item {
+  flex: 1 1 auto;
+  min-width: 140px;
 }
 
 .title-start-btn {
   border: 0;
   background: transparent;
   padding: 0.1rem 0.2rem;
-  width: 100%;
-  max-width: 100%;
   font-size: clamp(0.95rem, min(4.2vw, 4.8dvh), 2.5rem);
   font-weight: 800;
   line-height: 1.04;
@@ -885,7 +890,11 @@ body.desktop-viewport-blocked #desktop-viewport-overlay {
 }
 
 .title-btn-row {
-  display: none;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: clamp(10px, 2vw, 16px);
+  width: 100%;
 }
 
 .title-difficulty-hint {
@@ -3158,12 +3167,23 @@ h1 {
 .card-zoom-overlay {
   position: fixed;
   inset: 0;
-  z-index: 4700;
+  z-index: 6200;
   background: rgba(0, 0, 0, 0.86);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 14px;
+}
+
+/* Title menu readability boost for touch portrait.
+   Keep the values large enough after canvas downscaling, but avoid layout blowups. */
+@media (hover: none) and (pointer: coarse) and (max-aspect-ratio: 5/4) {
+  .title-menu-list .title-start-btn {
+    font-size: clamp(1.2rem, 5.6vw, 1.9rem);
+    padding: 10px 14px;
+    min-height: 54px;
+    line-height: 1.14;
+  }
 }
 
 .card-zoom-overlay.hidden {
@@ -3564,11 +3584,11 @@ h1 {
   }
 
   .title-menu-nav {
-    padding: 8px;
+    padding-bottom: env(safe-area-inset-bottom, 8px);
   }
 
   .title-menu-list {
-    gap: 0.95rem;
+    gap: clamp(8px, 1.8dvh, 14px);
   }
 
   .title-start-btn {
@@ -3739,11 +3759,12 @@ h1 {
   }
 
   .title-menu-nav {
-    padding: clamp(4px, 0.9dvh, 10px);
+    gap: clamp(8px, 2dvh, 18px);
+    padding-bottom: env(safe-area-inset-bottom, 6px);
   }
 
   .title-menu-list {
-    gap: clamp(0.3rem, 0.95dvh, 0.85rem);
+    gap: clamp(6px, 1.4dvh, 12px);
   }
 
   .title-start-btn {
@@ -3774,7 +3795,7 @@ h1 {
   }
 
   .title-menu-list {
-    gap: clamp(0.22rem, 0.7dvh, 0.6rem);
+    gap: clamp(4px, 1dvh, 10px);
   }
 
   .title-start-btn {
@@ -3878,7 +3899,7 @@ h1 {
   }
 
   .title-menu-list {
-    gap: 0.72rem;
+    gap: clamp(8px, 1.8vw, 14px);
   }
 
   .title-start-btn {
@@ -4095,6 +4116,50 @@ h1 {
   }
 
   /* removed mobile overrides for .card-title, .card-desc, .card-icon */
+}
+
+/* Mobile landscape title readability fix.
+   Increase readability while preserving stable layout on small-height phones. */
+@media (hover: none) and (pointer: coarse) and (orientation: landscape) {
+  .title-panel {
+    width: min(920px, 100%);
+    padding: 14px 14px 12px;
+  }
+
+  .title-kicker {
+    font-size: clamp(0.78rem, 1.8vw, 1rem);
+  }
+
+  .title-main {
+    font-size: clamp(2rem, 5.8vw, 3.4rem);
+    line-height: 0.98;
+  }
+
+  .title-subtitle {
+    max-width: 700px;
+    font-size: clamp(1rem, 2.8vw, 1.5rem);
+    margin: 10px auto 14px;
+  }
+
+  .title-menu-list {
+    gap: 8px;
+  }
+
+  #title-btn-normal,
+  #title-btn-tutorial,
+  #title-btn-hard,
+  #title-btn-options,
+  #title-btn-library,
+  #btn-release-notes {
+    font-size: clamp(0.96rem, 2.35vw, 1.35rem) !important;
+    line-height: 1.12 !important;
+    padding: 6px 10px !important;
+  }
+
+  .title-difficulty-hint {
+    max-width: 760px;
+    font-size: clamp(0.68rem, 1.8vw, 0.95rem);
+  }
 }
 
 /* Legacy compact mobile-Maryna override removed.

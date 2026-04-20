@@ -186,6 +186,7 @@ function renderShopSubView(uiManager, viewId) {
       <div class="relic-plate-rarity">${uiHelpers.rarityLabel(relicDef.rarity, 'relic')}</div>
       <div class="relic-plate-desc">${relicDef.desc}</div>
     `;
+      uiHelpers.attachLongPressZoom(relicEl, () => uiManager.showRelicZoom(relicId));
 
       const buyBtn = document.createElement('button');
       buyBtn.className = 'btn shop-buy-btn';
@@ -363,6 +364,7 @@ function renderRemovalShop(uiManager) {
           <div class="card-art"><span class="card-icon">${cardDef.emoji}</span></div>
           <div class="card-text-box"><div class="card-desc">${cardRenderer.getCardDescription(uiManager, cardDef)}</div></div>
       `;
+          uiHelpers.attachLongPressZoom(cardEl, () => uiManager.showCardZoom(cardId));
 
       const removeBtn = document.createElement('button');
       removeBtn.className = 'btn shop-buy-btn';
@@ -375,6 +377,7 @@ function renderRemovalShop(uiManager) {
       removeBtn.onclick = () => {
         if (uiManager.state.spendDutki(price)) {
           uiManager.state.removeCardFromDeck(cardId);
+          uiManager.state.logAction('removals', cardId);
           uiManager.state.afterShopCardRemoval();
           uiManager.state.lastShopMessage = `Usunięto z talii: ${cardDef.name}`;
           renderRemovalShop(uiManager);
@@ -465,6 +468,7 @@ function renderCardShop(uiManager) {
         <div class="card-art"><span class="card-icon">${cardDef.emoji}</span></div>
         <div class="card-text-box"><div class="card-desc">${cardDesc}</div></div>
     `;
+      uiHelpers.attachLongPressZoom(cardEl, () => uiManager.showCardZoom(cardId));
 
     const buyBtn = document.createElement('button');
     buyBtn.className = 'btn shop-buy-btn';
