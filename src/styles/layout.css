@@ -790,7 +790,7 @@ body.desktop-viewport-blocked #desktop-viewport-overlay {
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 4200;
+  z-index: 6000;
 }
 
 .modal.hidden {
