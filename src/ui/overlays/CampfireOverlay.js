@@ -1,4 +1,4 @@
-import { getBaseCardId, getCardDefinition } from '../../data/cards.js';
+import { getCardDefinition } from '../../data/cards.js';
 import { getCardDescription } from '../renderers/CardRenderer.js';
 import * as uiHelpers from '../helpers/UIHelpers.js';
 
