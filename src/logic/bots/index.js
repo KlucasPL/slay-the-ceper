@@ -20,6 +20,8 @@ import { EconomyBot } from './EconomyBot.js';
 import { BerserkerBot } from './BerserkerBot.js';
 import { DrawEngineBot } from './DrawEngineBot.js';
 import { ElitistBot } from './ElitistBot.js';
+import { LansBot } from './LansBot.js';
+import { RachunekBot } from './RachunekBot.js';
 import { makeSearchBot } from './SearchBot.js';
 
 /**
@@ -48,6 +50,8 @@ export const BOT_REGISTRY = {
   berserker: BerserkerBot,
   'draw-engine': DrawEngineBot,
   elitist: ElitistBot,
+  lans: LansBot,
+  rachunek: RachunekBot,
   // Search-based bots — engine-bound, produced by a factory after engine creation.
   search: {
     factory: (engine) => makeSearchBot(engine, { mctsN: 0 }),

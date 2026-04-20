@@ -5,6 +5,8 @@ import { StatusStackBot } from '../../src/logic/bots/StatusStackBot.js';
 import { GreedyRewardBot } from '../../src/logic/bots/GreedyRewardBot.js';
 import { MinimalistBot } from '../../src/logic/bots/MinimalistBot.js';
 import { EconomyBot } from '../../src/logic/bots/EconomyBot.js';
+import { LansBot } from '../../src/logic/bots/LansBot.js';
+import { RachunekBot } from '../../src/logic/bots/RachunekBot.js';
 import { BOT_REGISTRY, resolveBot, isBotFactory } from '../../src/logic/bots/index.js';
 
 // ---------------------------------------------------------------------------
@@ -457,6 +459,8 @@ describe('BOT_REGISTRY', () => {
     expect(names).toContain('greedy');
     expect(names).toContain('minimalist');
     expect(names).toContain('economy');
+    expect(names).toContain('lans');
+    expect(names).toContain('rachunek');
   });
 
   it('shouldResolveBotByName', () => {
@@ -467,6 +471,8 @@ describe('BOT_REGISTRY', () => {
     expect(resolveBot('greedy')).toBe(GreedyRewardBot);
     expect(resolveBot('minimalist')).toBe(MinimalistBot);
     expect(resolveBot('economy')).toBe(EconomyBot);
+    expect(resolveBot('lans')).toBe(LansBot);
+    expect(resolveBot('rachunek')).toBe(RachunekBot);
   });
 
   it('shouldThrowWhenResolvingUnknownBot', () => {

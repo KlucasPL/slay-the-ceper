@@ -92,7 +92,30 @@ npm run sim -- --games 1000 --agent search --out metrics/search.jsonl
 
 # MCTS with 20 rollouts per action — even stronger, much slower
 npm run sim -- --games 500 --agent search-mcts --agentParams '{"mctsN":20}'
+
+# Lans archetype — prefers lans-tagged cards and raises damage threshold
+npm run sim -- --games 1000 --agent lans --out metrics/lans.jsonl
+
+# Rachunek archetype — races enemy bankruptcy instead of HP
+npm run sim -- --games 1000 --agent rachunek --out metrics/rachunek.jsonl
 ```
+
+### Memory for large batches
+
+The default Node heap (~4 GB on 64-bit hosts) is fine up to a few thousand
+games but will OOM on 25k-game batches with full-verbosity JSONL. Raise the
+old-generation cap via `NODE_OPTIONS` before running the sim:
+
+```bash
+# 25k games at summary verbosity — raise to 8 GB
+NODE_OPTIONS=--max-old-space-size=8192 npm run sim -- --games 25000
+
+# 10k games of search-mcts with full verbosity — 12 GB is safer
+NODE_OPTIONS=--max-old-space-size=12288 \
+  npm run sim -- --games 10000 --agent search-mcts --verbosity full
+```
+
+Workers inherit `NODE_OPTIONS`, so the cap applies to each parallel worker.
 
 ---
 

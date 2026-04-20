@@ -24,6 +24,15 @@ export const HEURISTIC_WEIGHTS = {
     drawPerEnergy: 2.5,
     exhaustPenalty: 0.5,
     lethalBonus: 1000,
+    // Rachunek (enemy bankruptcy) is a second win condition. Adding X to
+    // rachunek closes the gap to enemy.hp by X, so treat each point as a
+    // fraction of a damage point toward lethal.
+    rachunekPerEnergy: 1.0,
+    // First play of a lans-tagged card only activates Lans; the card effect
+    // fires on subsequent plays. When lans is inactive, pay this score as
+    // "lans bootstrap value" to keep the bot willing to spend the first card
+    // as a setup rather than skipping the archetype entirely.
+    lansActivationValue: 4,
   },
   mapScore: {
     eliteHealthyHp: 10,

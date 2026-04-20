@@ -338,4 +338,159 @@ describe('HeuristicBot', () => {
     // then — pinned to ciupaga (handIndex 0) per scoring above
     expect(result).toEqual({ type: 'play_card', handIndex: 0 });
   });
+
+  it('shouldPreferRachunekAdditionWhenBankruptcyIsLethal', () => {
+    // given — enemy HP 12, rachunek 10; a +4-to-rachunek card bankrupts them
+    // on the spot (rachunek 14 ≥ hp 12). A plain 6-damage attack can't.
+    const rachunekCard = makeCard({
+      id: 'paragon_za_gofra',
+      type: 'skill',
+      desc: 'Dodaje 10 do Rachunku wroga.',
+      tags: ['rachunek'],
+      cost: 1,
+      effectiveCost: 1,
+    });
+    const plainAttack = makeCard({
+      id: 'ciupaga',
+      type: 'attack',
+      desc: 'Zadaje 6 obrażeń.',
+      cost: 1,
+      effectiveCost: 1,
+    });
+    const obs = makeObs({
+      enemy: makeEnemy({ hp: 12, maxHp: 30, rachunek: 5 }),
+      hand: [plainAttack, rachunekCard],
+      legalActions: [
+        { type: 'play_card', handIndex: 0 },
+        { type: 'play_card', handIndex: 1 },
+        { type: 'end_turn' },
+      ],
+    });
+    // when
+    const result = HeuristicBot(obs);
+    // then — rachunek-lethal card wins over the non-lethal direct attack
+    expect(result).toEqual({ type: 'play_card', handIndex: 1 });
+  });
+
+  it('shouldIgnoreRachunekCardWhenEnemyIsImmune', () => {
+    // given — Gaździna (targowanie_sie) is rachunek-immune; a 6-damage attack
+    // must beat the rachunek card because the rachunek never applies.
+    const rachunekCard = makeCard({
+      id: 'paragon_za_gofra',
+      type: 'skill',
+      desc: 'Dodaje 10 do Rachunku wroga.',
+      tags: ['rachunek'],
+      cost: 1,
+      effectiveCost: 1,
+    });
+    const plainAttack = makeCard({
+      id: 'ciupaga',
+      type: 'attack',
+      desc: 'Zadaje 6 obrażeń.',
+      cost: 1,
+      effectiveCost: 1,
+    });
+    const obs = makeObs({
+      enemy: makeEnemy({ hp: 20, rachunekImmune: true, passive: 'targowanie_sie' }),
+      hand: [plainAttack, rachunekCard],
+      legalActions: [
+        { type: 'play_card', handIndex: 0 },
+        { type: 'play_card', handIndex: 1 },
+        { type: 'end_turn' },
+      ],
+    });
+    // when
+    const result = HeuristicBot(obs);
+    // then — attack wins, rachunek card scores 0 via immunity short-circuit
+    expect(result).toEqual({ type: 'play_card', handIndex: 0 });
+  });
+
+  it('shouldPlayLansCardToBootstrapActivationEvenWhenLansInactive', () => {
+    // given — lans inactive; lans-tagged attack's effect won't fire, but we
+    // still prefer it over end_turn so the *next* lans card pays off.
+    const lansAttack = makeCard({
+      id: 'tatrzanski_szpan',
+      type: 'attack',
+      desc: 'LANS: Zadaje 16 obrażeń.',
+      tags: ['lans'],
+      cost: 2,
+      effectiveCost: 2,
+    });
+    const obs = makeObs({
+      player: makePlayer({ status: { lans: 0 } }),
+      hand: [lansAttack],
+      legalActions: [{ type: 'play_card', handIndex: 0 }, { type: 'end_turn' }],
+    });
+    // when
+    const result = HeuristicBot(obs);
+    // then — play the setup rather than ending turn
+    expect(result).toEqual({ type: 'play_card', handIndex: 0 });
+  });
+
+  it('shouldScoreLansCardHigherWhenLansActive', () => {
+    // given — lans active; a lans-tagged 16-damage attack at cost 2 beats a
+    // vanilla 6-damage attack at cost 1 on raw damage, not just bootstrap value.
+    const lansAttack = makeCard({
+      id: 'tatrzanski_szpan',
+      type: 'attack',
+      desc: 'LANS: Zadaje 16 obrażeń.',
+      tags: ['lans'],
+      cost: 2,
+      effectiveCost: 2,
+    });
+    const plainAttack = makeCard({
+      id: 'ciupaga',
+      type: 'attack',
+      desc: 'Zadaje 6 obrażeń.',
+      cost: 1,
+      effectiveCost: 1,
+    });
+    const obs = makeObs({
+      player: makePlayer({ status: { lans: 1 } }),
+      enemy: makeEnemy({ hp: 50, maxHp: 50 }),
+      hand: [plainAttack, lansAttack],
+      legalActions: [
+        { type: 'play_card', handIndex: 0 },
+        { type: 'play_card', handIndex: 1 },
+        { type: 'end_turn' },
+      ],
+    });
+    // when
+    const result = HeuristicBot(obs);
+    // then — lans attack (16/2 = 8 dmg-per-energy) beats plain (6/1 = 6)
+    expect(result).toEqual({ type: 'play_card', handIndex: 1 });
+  });
+
+  it('shouldPreferZeroCostCardOverIdenticalOneCostCard', () => {
+    // given — two cards do the same 5-damage attack; one costs 0, other 1.
+    // Clamping effectiveCost to 0.5 (not 1) gives the free card ~2x the
+    // damage-per-energy score, so a rational bot picks the free one.
+    const freeAttack = makeCard({
+      id: 'wdech_halnego',
+      type: 'attack',
+      desc: 'Zadaje 5 obrażeń.',
+      cost: 0,
+      effectiveCost: 0,
+    });
+    const paidAttack = makeCard({
+      id: 'ciupaga',
+      type: 'attack',
+      desc: 'Zadaje 5 obrażeń.',
+      cost: 1,
+      effectiveCost: 1,
+    });
+    const obs = makeObs({
+      enemy: makeEnemy({ hp: 50, maxHp: 50 }),
+      hand: [paidAttack, freeAttack],
+      legalActions: [
+        { type: 'play_card', handIndex: 0 },
+        { type: 'play_card', handIndex: 1 },
+        { type: 'end_turn' },
+      ],
+    });
+    // when
+    const result = HeuristicBot(obs);
+    // then — free attack wins on dmg-per-energy
+    expect(result).toEqual({ type: 'play_card', handIndex: 1 });
+  });
 });

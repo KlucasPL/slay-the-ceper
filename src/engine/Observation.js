@@ -34,7 +34,7 @@ import { getLegalActions } from './LegalActions.js';
  *   outcome?: string,
  * }} Observation
  *
- * @typedef {{ id: string, name: string, type: string, cost: number, effectiveCost: number, desc: string, emoji: string, unplayable: boolean, exhaust?: boolean }} CardView
+ * @typedef {{ id: string, name: string, type: string, cost: number, effectiveCost: number, desc: string, emoji: string, unplayable: boolean, exhaust?: boolean, tags: string[] }} CardView
  */
 
 /**
@@ -61,6 +61,7 @@ export function buildObservation(state, rules = {}) {
       emoji: def?.emoji ?? '',
       unplayable: !!def?.unplayable,
       exhaust: !!def?.exhaust,
+      tags: def?.tags ? [...def.tags] : [],
     };
   });
 
@@ -145,6 +146,7 @@ function _buildEnemyView(state) {
     isElite: e.isElite,
     isBoss: e.isBoss,
     rachunek: e.rachunek,
+    rachunekImmune: e.passive === 'targowanie_sie',
     ped: e.ped ?? 0,
     intent: {
       type: e.currentIntent?.type ?? 'unknown',

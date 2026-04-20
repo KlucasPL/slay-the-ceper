@@ -55,6 +55,40 @@ export function makeHeuristicBot(overrides = {}) {
     return Math.max(dmg, 1);
   }
 
+  /**
+   * Rachunek-tagged cards either add to or scale with the enemy's bankruptcy
+   * counter. Additive cards close the gap toward `enemy.hp` (bankruptcy win);
+   * we score the min of the added amount and the remaining gap so the card
+   * stops being worth much past the threshold. Cards that don't actually add
+   * rachunek (synergy-only) return 0 here — their bonus damage is already
+   * captured by estimateDamage via the desc regex.
+   * @param {CardView} card @param {Observation['enemy']} enemy @returns {number}
+   */
+  function estimateRachunekValue(card, enemy) {
+    if (!enemy || enemy.rachunekImmune) return 0;
+    if (!card.tags?.includes('rachunek')) return 0;
+    const desc = card.desc ?? '';
+    // Match "Dodaje X do Rachunku" pattern; non-additive synergy cards score 0.
+    const addMatch = desc.match(/Dodaj[ea]\s+(\d+)\s+do\s+Rachunk/i);
+    if (!addMatch) return 0;
+    const added = Number(addMatch[1]);
+    const gap = Math.max(0, enemy.hp - enemy.rachunek);
+    return Math.min(added, gap);
+  }
+
+  /**
+   * Lans-tagged cards only fire their listed effect once Lans is active. The
+   * very first lans play merely activates the status, so a bot that never
+   * plays the setup never gets the payoff. We pay `lansActivationValue`
+   * for the activation spend and the full score afterwards.
+   * @param {CardView} card @param {Observation['player']} player @returns {number}
+   */
+  function lansScoreMultiplier(card, player) {
+    if (!card.tags?.includes('lans')) return 1;
+    const active = (player.status?.lans ?? 0) > 0;
+    return active ? 1 : 0;
+  }
+
   /** @param {CardView} card @returns {number} */
   function estimateBlock(card) {
     const desc = card.desc ?? '';
@@ -94,20 +128,30 @@ export function makeHeuristicBot(overrides = {}) {
    */
   function scoreCard(card, player, enemy) {
     if (!enemy) return 0;
-    const energy = Math.max(card.effectiveCost, 1);
+    // 0-cost cards are strictly cheaper than 1-cost cards with identical effect;
+    // clamping to 0.5 (not 1) gives them the 2x valuation they deserve without
+    // dividing by zero.
+    const energy = Math.max(card.effectiveCost, 0.5);
     const hpRatio = player.hp / player.maxHp;
     const incoming = enemy.intent?.expectedDamageToPlayer ?? 0;
     const lethalThreat = incoming > 0 && incoming >= player.hp;
     const twoTurnThreat = incoming * 2 > player.hp + player.block + 5;
     const panic = lethalThreat || twoTurnThreat || hpRatio < W.blockUrgency.panicThreshold;
 
+    // Lans cards need one setup play before their effect fires; multiplier is 0
+    // when lans is inactive so we only count the activation-value line below.
+    const lansMult = lansScoreMultiplier(card, player);
+    const lansInactive = card.tags?.includes('lans') && lansMult === 0;
+    const rachunekValue = estimateRachunekValue(card, enemy);
+    const rachunekLethal = rachunekValue > 0 && enemy.rachunek + rachunekValue >= enemy.hp;
+
     let score = 0;
 
     if (card.type === 'attack') {
       const dmg = estimateDamage(card, player, enemy);
       const lethal = dmg >= enemy.hp + enemy.block;
-      score = (dmg / energy) * W.cardScore.damagePerEnergy;
-      if (lethal) score += W.cardScore.lethalBonus;
+      score = lansMult * (dmg / energy) * W.cardScore.damagePerEnergy;
+      if (lethal && !lansInactive) score += W.cardScore.lethalBonus;
     } else if (card.type === 'skill') {
       const block = estimateBlock(card);
       const draw = estimateDraw(card);
@@ -116,9 +160,10 @@ export function makeHeuristicBot(overrides = {}) {
         ? W.cardScore.blockPerEnergy * (1 + W.blockUrgency.hpDiscount)
         : W.cardScore.blockPerEnergy;
       score =
-        (block / energy) * blockMult +
-        (draw / energy) * W.cardScore.drawPerEnergy +
-        (status / energy) * W.cardScore.statusPerEnergy;
+        lansMult *
+        ((block / energy) * blockMult +
+          (draw / energy) * W.cardScore.drawPerEnergy +
+          (status / energy) * W.cardScore.statusPerEnergy);
       // Glass-cannon archetypes (blockPerEnergy = 0) opt out of self-preservation;
       // for everyone else, a card that survives lethal damage gets the same
       // weight as a finishing attack — saving HP is strictly more valuable.
@@ -126,13 +171,29 @@ export function makeHeuristicBot(overrides = {}) {
         lethalThreat &&
         block > 0 &&
         W.cardScore.blockPerEnergy > 0 &&
-        player.block + block > incoming - player.hp
+        player.block + block > incoming - player.hp &&
+        !lansInactive
       ) {
         score += W.cardScore.lethalBonus;
       }
     } else if (card.type === 'power') {
       const status = estimateStatus(card);
-      score = (Math.max(status, 4) / energy) * W.cardScore.statusPerEnergy;
+      score = lansMult * (Math.max(status, 4) / energy) * W.cardScore.statusPerEnergy;
+    }
+
+    // Rachunek contribution is independent of card.type and lans gating (most
+    // rachunek cards are attacks that don't rely on lans). Lethal via rachunek
+    // is identical to lethal via damage.
+    if (rachunekValue > 0) {
+      score += (rachunekValue / energy) * W.cardScore.rachunekPerEnergy;
+      if (rachunekLethal) score += W.cardScore.lethalBonus;
+    }
+
+    // Bootstrap play: if the card is lans-tagged and lans is off, we still
+    // want to play it so the setup fires. Pay a fixed activation value rather
+    // than 0 to keep lans archetypes off-the-ground.
+    if (lansInactive) {
+      score += W.cardScore.lansActivationValue / energy;
     }
 
     if (card.exhaust) score -= W.cardScore.exhaustPenalty;

@@ -68,25 +68,28 @@ function _pickBattle(obs) {
  */
 function _scoreCard(card, player, enemy) {
   if (!enemy) return 0;
-  const energy = Math.max(card.effectiveCost, 1);
+  // 0-cost cards are strictly cheaper than 1-cost cards with identical effect;
+  // clamping to 0.5 (not 1) gives them the 2x valuation they deserve without
+  // dividing by zero.
+  const energy = Math.max(card.effectiveCost, 0.5);
   const hpRatio = player.hp / player.maxHp;
   const incoming = enemy.intent?.expectedDamageToPlayer ?? 0;
-  // intent damage is already block-subtracted; lethalThreat means the player
-  // dies this turn unless they gain block before the swing lands.
   const lethalThreat = incoming > 0 && incoming >= player.hp;
-  // Two-turn lookahead: assume the next intent ≈ current and the player
-  // regains roughly a starter card's worth of block. If they still can't
-  // survive, treat as panic mode so block cards stay in scope.
   const twoTurnThreat = incoming * 2 > player.hp + player.block + 5;
   const panic = lethalThreat || twoTurnThreat || hpRatio < W.blockUrgency.panicThreshold;
+
+  const lansMult = _lansScoreMultiplier(card, player);
+  const lansInactive = card.tags?.includes('lans') && lansMult === 0;
+  const rachunekValue = _estimateRachunekValue(card, enemy);
+  const rachunekLethal = rachunekValue > 0 && enemy.rachunek + rachunekValue >= enemy.hp;
 
   let score = 0;
 
   if (card.type === 'attack') {
     const dmg = _estimateDamage(card, player, enemy);
     const lethal = dmg >= enemy.hp + enemy.block;
-    score = (dmg / energy) * W.cardScore.damagePerEnergy;
-    if (lethal) score += W.cardScore.lethalBonus;
+    score = lansMult * (dmg / energy) * W.cardScore.damagePerEnergy;
+    if (lethal && !lansInactive) score += W.cardScore.lethalBonus;
   } else if (card.type === 'skill') {
     const block = _estimateBlock(card);
     const draw = _estimateDraw(card);
@@ -95,22 +98,47 @@ function _scoreCard(card, player, enemy) {
       ? W.cardScore.blockPerEnergy * (1 + W.blockUrgency.hpDiscount)
       : W.cardScore.blockPerEnergy;
     score =
-      (block / energy) * blockMult +
-      (draw / energy) * W.cardScore.drawPerEnergy +
-      (status / energy) * W.cardScore.statusPerEnergy;
-    // Block that turns lethal incoming into survivable gets the same
-    // lethalBonus weight as a finishing attack — saving your own life is
-    // strictly more valuable than any other play this turn.
-    if (lethalThreat && block > 0 && player.block + block > incoming - player.hp) {
+      lansMult *
+      ((block / energy) * blockMult +
+        (draw / energy) * W.cardScore.drawPerEnergy +
+        (status / energy) * W.cardScore.statusPerEnergy);
+    if (lethalThreat && block > 0 && player.block + block > incoming - player.hp && !lansInactive) {
       score += W.cardScore.lethalBonus;
     }
   } else if (card.type === 'power') {
     const status = _estimateStatus(card);
-    score = (Math.max(status, 4) / energy) * W.cardScore.statusPerEnergy;
+    score = lansMult * (Math.max(status, 4) / energy) * W.cardScore.statusPerEnergy;
+  }
+
+  if (rachunekValue > 0) {
+    score += (rachunekValue / energy) * W.cardScore.rachunekPerEnergy;
+    if (rachunekLethal) score += W.cardScore.lethalBonus;
+  }
+
+  if (lansInactive) {
+    score += W.cardScore.lansActivationValue / energy;
   }
 
   if (card.exhaust) score -= W.cardScore.exhaustPenalty;
   return score;
+}
+
+/** @param {CardView} card @param {Observation['enemy']} enemy @returns {number} */
+function _estimateRachunekValue(card, enemy) {
+  if (!enemy || enemy.rachunekImmune) return 0;
+  if (!card.tags?.includes('rachunek')) return 0;
+  const desc = card.desc ?? '';
+  const addMatch = desc.match(/Dodaj[ea]\s+(\d+)\s+do\s+Rachunk/i);
+  if (!addMatch) return 0;
+  const added = Number(addMatch[1]);
+  const gap = Math.max(0, enemy.hp - enemy.rachunek);
+  return Math.min(added, gap);
+}
+
+/** @param {CardView} card @param {Observation['player']} player @returns {number} */
+function _lansScoreMultiplier(card, player) {
+  if (!card.tags?.includes('lans')) return 1;
+  return (player.status?.lans ?? 0) > 0 ? 1 : 0;
 }
 
 /** @param {CardView} card @param {Observation['player']} player @param {Observation['enemy']} enemy @returns {number} */

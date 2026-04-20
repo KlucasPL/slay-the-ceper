@@ -242,13 +242,13 @@ describe('openJsonlWriter', () => {
   });
 
   it('shouldCleanUpStaleTmpFileOnOpen', async () => {
-    // given: pre-create a stale .tmp
+    // given: a stale .tmp lying around from a previous crashed run.
+    // Use writeFileSync (synchronous, self-contained) rather than a second
+    // openJsonlWriter: that WriteStream's open() is async and its buffered
+    // flush can race with both the writeFileSync and the new writer's
+    // unlinkSync+createWriteStream, leaving mismatched content in the file.
     const path = track(tmpPath('stale.jsonl'));
     const staleTmp = `${path}.tmp`;
-    // Write stale content
-    const staleWriter = openJsonlWriter({ path: staleTmp.replace('.tmp', ''), verbosity: 'off' });
-    staleWriter.write(makeRecord());
-    // Deliberately don't close — just simulate stale file by writing directly
     const { writeFileSync } = await import('node:fs');
     writeFileSync(staleTmp, 'stale\n', 'utf8');
 
