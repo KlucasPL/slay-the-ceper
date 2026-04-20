@@ -12,7 +12,7 @@ export function initGame(state, startingDeck) {
   state.deck = [...startingDeck];
   state._shuffle(state.deck);
   state.attackCardsPlayedThisBattle = 0;
-  state.pocztowkaUsedThisBattle = false;
+  state.pocztowkaCardsTriggeredThisBattle = 0;
   state.smyczKeptCardId = null;
   state.flaszkaCostSeed = {};
   state.termometerTurnParity = 0;
@@ -21,8 +21,8 @@ export function initGame(state, startingDeck) {
   state.activeRuntimeCardId = null;
   state._resetBattleScopedFlags();
   state._setCurrentWeatherFromNode();
-  state._applyBattleStartRelics();
   state.startTurn();
+  state._applyBattleStartRelics();
   state.pendingBattleDutki = true;
   state.isInputLocked = false;
 }
@@ -40,7 +40,7 @@ export function resetBattle(state) {
   state.player.block = 0;
 
   state.attackCardsPlayedThisBattle = 0;
-  state.pocztowkaUsedThisBattle = false;
+  state.pocztowkaCardsTriggeredThisBattle = 0;
   state.smyczKeptCardId = null;
   state.smyczKeptHandIndex = null;
   state.flaszkaCostSeed = {};
@@ -96,8 +96,8 @@ export function resetBattle(state) {
   state._setCurrentWeatherFromNode();
   state.pendingBattleDutki = true;
 
-  state._applyBattleStartRelics();
   state.startTurn();
+  state._applyBattleStartRelics();
 }
 
 /**
@@ -217,7 +217,7 @@ export function resetForNewRun(state, startingDeck) {
   state.isInputLocked = false;
   state.enemyScaleFactor = 1.0;
   state.attackCardsPlayedThisBattle = 0;
-  state.pocztowkaUsedThisBattle = false;
+  state.pocztowkaCardsTriggeredThisBattle = 0;
   state.smyczKeptCardId = null;
   state.smyczKeptHandIndex = null;
   state.flaszkaCostSeed = {};

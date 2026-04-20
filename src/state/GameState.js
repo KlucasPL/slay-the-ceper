@@ -112,8 +112,8 @@ export class GameState {
     this.enemyScaleFactor = 1.0;
     /** @type {number} Attack cards played this battle (bilet_tpn) */
     this.attackCardsPlayedThisBattle = 0;
-    /** @type {boolean} Whether pocztowka_giewont effect has fired this battle */
-    this.pocztowkaUsedThisBattle = false;
+    /** @type {number} Count of cards triggered by pocztowka_giewont this battle (max 2) */
+    this.pocztowkaCardsTriggeredThisBattle = 0;
     /** @type {number} */
     this.currentAct = 1;
     /** @type {string} */

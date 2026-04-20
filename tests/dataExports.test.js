@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { characters } from '../src/data/characters.js';
+import { marynaBoonLibrary } from '../src/data/marynaBoons.js';
 import { releaseNotesData } from '../src/data/releaseNotes.js';
 
 describe('data exports', () => {
@@ -55,5 +56,11 @@ describe('data exports', () => {
         expect(change.length).toBeGreaterThan(0);
       }
     }
+  });
+
+  it('Maryna boon descriptions match current rebalance values', () => {
+    expect(marynaBoonLibrary.kiesa.effectDesc).toContain('+100 Dutków od razu');
+    expect(marynaBoonLibrary.przeglad_plecaka.effectDesc).toContain('+80 Dutków');
+    expect(marynaBoonLibrary.zloty_rozaniec.effectDesc).toContain('+5 Garda');
   });
 });
