@@ -131,7 +131,7 @@ export function showRelicScreen(uiManager, relicId, source) {
     bannerContainer.innerHTML = treasureSvg;
     // CRITICAL FIX: The title class is .victory-title, NOT .event-title
     const panel = relicScreen;
-    const titleElement = panel.querySelector('.victory-title'); 
+    const titleElement = panel.querySelector('.victory-title');
     if (titleElement) {
       titleElement.insertAdjacentElement('afterend', bannerContainer);
     } else {

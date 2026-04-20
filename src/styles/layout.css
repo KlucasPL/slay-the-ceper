@@ -1,3 +1,58 @@
+/* --- Fix for Event Button Text Overflow --- */
+.event-choice-row {
+  align-items: stretch !important; /* Ensures the 'eye' button grows to match the choice button */
+}
+
+.event-choice-btn {
+  height: auto !important; /* Forces the button to wrap tall content instead of letting it bleed out */
+  overflow: visible !important;
+}
+
+/* Ensure the eye button keeps its content centered even when stretched vertically */
+.event-preview-btn {
+  height: auto !important;
+  align-self: stretch !important;
+}
+/* --- Missing Event Preview Styles --- */
+.event-choice-row {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  margin-bottom: 12px;
+}
+
+.event-choice-row .event-choice-btn {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.event-preview-btn {
+  background: #2c1e16;
+  border: 3px solid #bfa16a;
+  border-radius: 16px;
+  color: #fdf8eb;
+  padding: 0 18px;
+  font-size: 1.6rem;
+  cursor: pointer;
+  transition: all 0.18s ease-out;
+  box-shadow: 0 2px 12px rgba(69, 40, 22, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.event-preview-btn:hover:not(:disabled) {
+  background: #3d2314;
+  border-color: #e0b85a;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 18px rgba(69, 40, 22, 0.18);
+}
+
+.event-preview-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  filter: grayscale(100%);
+}
 /* --- Event Choice Button (Campfire, Events) --- */
 .event-choice-btn {
   display: flex;
@@ -1807,50 +1862,72 @@ h1 {
   gap: 10px;
 }
 
-.random-event-choice {
-  text-align: left;
-  border: 1px solid rgba(255, 220, 140, 0.35);
-  border-radius: 12px;
-  background: rgba(47, 28, 14, 0.88);
-  color: #f7ebd4;
-  padding: 10px 12px;
+/* --- Modern Event Choice Button (Campfire, Events) --- */
+.event-choice-btn {
+  display: flex;
+  align-items: flex-start;
+  gap: 18px;
+  width: 100%;
+  background: linear-gradient(90deg, #f7e3c1 0%, #e8d9bd 100%);
+  border: 3px solid #bfa16a;
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(69, 40, 22, 0.1);
+  padding: 18px 22px 18px 18px;
+  margin: 0;
+  font-family: inherit;
+  font-size: 1.13rem;
+  font-weight: 700;
+  color: #3d2314;
   cursor: pointer;
   transition:
-    transform 0.15s ease,
-    filter 0.15s ease;
+    box-shadow 0.18s,
+    border-color 0.18s,
+    background 0.18s;
+  outline: none;
+  position: relative;
+  text-align: left;
+  min-height: 72px;
 }
-
-.random-event-choice:hover {
-  transform: translateY(-1px);
-  filter: brightness(1.05);
-}
-
-.random-event-choice:disabled {
-  opacity: 0.48;
+.event-choice-btn:disabled {
+  opacity: 0.55;
   cursor: not-allowed;
-  transform: none;
-  filter: none;
+  background: #e8d9bd;
+  color: #a89b8b;
+  border-color: #cfc2a2;
 }
-
-.random-event-choice-title {
-  display: block;
-  font-weight: 700;
-  color: #ffdd96;
-  margin-bottom: 4px;
+.event-choice-btn:not(:disabled):hover,
+.event-choice-btn:not(:disabled):focus {
+  box-shadow: 0 4px 18px rgba(69, 40, 22, 0.18);
+  border-color: #e0b85a;
+  background: linear-gradient(90deg, #fbe7b2 0%, #f3e2c2 100%);
 }
-
-.random-event-choice-desc {
-  display: block;
-  font-size: 0.9rem;
-  color: #f2dfbe;
+.event-choice-emoji {
+  font-size: 2.2rem;
+  margin-right: 8px;
+  flex-shrink: 0;
+  line-height: 1;
+  filter: drop-shadow(0 1px 0 #fff6e0);
 }
-
-.random-event-choice-impact {
+.event-choice-title {
+  font-size: 1.18rem;
+  font-weight: 800;
+  margin-bottom: 2px;
   display: block;
-  margin-top: 6px;
-  font-size: 0.84rem;
-  color: #ffd27f;
-  font-weight: 700;
+  color: #3d2314;
+}
+.event-choice-desc {
+  font-size: 0.98rem;
+  font-weight: 600;
+  color: #6b4a2b;
+  display: block;
+  margin-bottom: 0;
+}
+.event-choice-extra {
+  display: block;
+  font-size: 0.92rem;
+  color: #a89b8b;
+  margin-top: 4px;
+  font-weight: 600;
 }
 
 .random-event-result {
@@ -4098,4 +4175,89 @@ h1 {
     font-size: 1.18rem;
     padding: 12px 18px;
   }
+}
+
+.random-event-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  /* Ensures children (choices, result, button) stack vertically */
+}
+
+#random-event-result {
+  margin-bottom: 18px;
+}
+
+#random-event-continue-btn {
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  z-index: 20;
+  display: block;
+  margin: 0 auto;
+  background: linear-gradient(180deg, #f7e3c1 0%, #e8d9bd 100%);
+  border: 3px solid #bfa16a;
+  border-radius: 16px 16px 12px 12px;
+  box-shadow: 0 2px 12px rgba(69, 40, 22, 0.1);
+  font-size: 1.13rem;
+  font-weight: 700;
+  color: #3d2314;
+  cursor: pointer;
+  transition:
+    box-shadow 0.18s,
+    border-color 0.18s,
+    background 0.18s;
+  outline: none;
+  min-height: 54px;
+  margin-bottom: 0;
+  /* Padding to avoid overlap with panel border */
+  padding-bottom: env(safe-area-inset-bottom, 8px);
+}
+
+#random-event-continue-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  background: #e8d9bd;
+  color: #a89b8b;
+  border-color: #cfc2a2;
+}
+
+#random-event-continue-btn:not(:disabled):hover,
+#random-event-continue-btn:not(:disabled):focus {
+  box-shadow: 0 4px 18px rgba(69, 40, 22, 0.18);
+  border-color: #e0b85a;
+  background: linear-gradient(90deg, #fbe7b2 0%, #f3e2c2 100%);
+}
+
+/* --- Bulletproof Modal Layout (Fixed Footer) --- */
+.random-event-panel {
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  padding-bottom: 24px !important;
+}
+
+#random-event-choices {
+  overflow-y: auto !important;
+  flex-grow: 1 !important;
+  flex-shrink: 1 !important;
+  min-height: 0 !important;
+  padding-right: 8px !important;
+  margin-bottom: 12px !important;
+}
+
+#random-event-result {
+  flex-shrink: 0 !important;
+  margin-top: 0 !important;
+  margin-bottom: 16px !important;
+}
+
+#random-event-continue-btn {
+  position: relative !important;
+  bottom: auto !important;
+  margin-top: 0 !important;
+  flex-shrink: 0 !important;
+  z-index: 10 !important;
 }

@@ -1065,15 +1065,15 @@ export class UIManager {
   }
 
   _handleTreasureNode() {
-    console.log("[UI] _handleTreasureNode started.");
+    console.log('[UI] _handleTreasureNode started.');
     // CRITICAL: Hide the map so the reward screen is visible
-    uiHelpers.hideOverlay('map-overlay'); 
+    uiHelpers.hideOverlay('map-overlay');
     // CRITICAL: Set this to true so NavigationState allows moving to the next level
-    this.state.hasStartedFirstBattle = true; 
+    this.state.hasStartedFirstBattle = true;
 
     const relicId = this.state.generateRelicReward(true);
     if (!relicId) {
-      console.warn("[UI] Treasure node: No relic generated.");
+      console.warn('[UI] Treasure node: No relic generated.');
       this.mapMessage = 'Skrzynia była pusta... ani jednej pamiątki.';
       this._openMapOverlay();
       return;
@@ -1195,8 +1195,6 @@ export class UIManager {
       handViewOverlay.openHandView(cardViews, onCardClick);
     }
   }
-
-
 
   /**
    * @param {string} overlayId
