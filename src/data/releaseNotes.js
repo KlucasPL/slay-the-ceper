@@ -15,6 +15,17 @@ export const releaseNotesData = [
     ],
   },
   {
+    version: 'v1.6.0 - Wielki Rebalans Kart i Pamiątek',
+    date: 'kwiecień 2026',
+    changes: [
+      '⚖️ DUŻA AKTUALIZACJA BALANSU: Przestrojono najsłabsze i najsilniejsze elementy jednocześnie, z naciskiem na większą grywalność słabych wyborów i uspokojenie najbardziej dominujących opcji.',
+      '🃏 KARTY (ATAK/UMIEJĘTNOŚĆ): Wzmocniono m.in. Zemstę Górala, Punkt Widokowy i List od Maryny, a osłabiono m.in. Młynek Ciupagą, Eksmisję z Kwatery i Paragon Grozy; poprawiono też opisy, by 1:1 zgadzały się z nowymi wartościami.',
+      '🎒 PAMIĄTKI: Zrebalansowano kluczowe pamiątki ekonomiczne i bojowe (m.in. Flaszka po Śliwowicy, Dzwonek Owcy, Zepsuty Termometr, Certyfikowany Oscypek, Pęknięte Liczydło, Złota Karta Zakopiańczyka).',
+      '👵 WYPRAWKI MARYNY: Dostosowano moc i ekonomię startowych darów (Mokra Ściera, Kiesa, Złoty Różaniec, Przegląd Plecaka), a opisy wyprawek i odpowiadających im pamiątek zostały zsynchronizowane z nowym balansem.',
+      '🧾 CZYTELNOŚĆ I SPÓJNOŚĆ: Ujednolicono wartości liczbowe w opisach kart i pamiątek, żeby decyzje dotyczące budowy talii były bardziej przewidywalne już na etapie wyboru.',
+    ],
+  },
+  {
     version: 'v1.5.3 - Wygodniejsza gra na telefonach',
     date: 'kwiecień 2026',
     changes: [
