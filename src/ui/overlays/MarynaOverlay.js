@@ -28,7 +28,7 @@ export function openMarynaBoonOverlay(uiManager) {
     if (!boon) return;
 
     const wrapper = document.createElement('div');
-    wrapper.className = 'shop-card-wrapper';
+    wrapper.className = 'shop-card-wrapper maryna-boon-card';
     wrapper.style.display = 'flex';
     wrapper.style.flexDirection = 'column';
     wrapper.style.alignItems = 'center';

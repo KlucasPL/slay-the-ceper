@@ -67,7 +67,7 @@ function renderCampfireMain(uiManager) {
        ${watraSvg}
     </div>
     <div class="map-resource-strip">
-       <div class="map-resource-pill">❤️ ${uiManager.state.player.hp} / ${uiManager.state.player.maxHp} HP</div>
+       <div class="map-resource-pill">❤️ <span id="camp-hp-current">${uiManager.state.player.hp}</span> / ${uiManager.state.player.maxHp} HP</div>
     </div>
   `;
   panel.appendChild(header);
@@ -127,6 +127,7 @@ function renderCampfireMain(uiManager) {
   panel.appendChild(message);
 
   const exitBtn = document.createElement('button');
+  exitBtn.id = 'camp-exit-btn';
   exitBtn.className = 'btn shop-exit-btn';
   exitBtn.style.marginTop = 'auto';
   exitBtn.textContent = uiManager.campfireUsed ? 'Ruszaj w drogę' : 'Opuść Watrę';
