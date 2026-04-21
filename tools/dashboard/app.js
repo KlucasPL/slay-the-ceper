@@ -135,10 +135,14 @@ async function loadDefault() {
   try {
     const res = await fetch('./metrics.fixture.json');
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    metrics = await res.json();
+    const json = await res.json();
+    // Race guard: a user-supplied file may have loaded while fetch was pending.
+    if (metrics) return;
+    metrics = json;
     setLoadStatus(`Loaded fixture (${metrics.runCount.toLocaleString()} runs)`, 'ok');
     navigateTo('summary');
   } catch (err) {
+    if (metrics) return;
     setLoadStatus(`Could not auto-load fixture: ${err.message}`, 'warn');
     main.innerHTML = `<p class="empty-msg">Drop a <code>metrics.json</code> file or use the file picker above to load data.</p>`;
   }
