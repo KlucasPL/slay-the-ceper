@@ -5,6 +5,18 @@
 /** @type {ReleaseNoteEntry[]} */
 export const releaseNotesData = [
   {
+    version: 'v1.7.2 - Król Krupówek i balans',
+    date: 'kwiecień 2026',
+    changes: [
+      '🐻‍❄️ Król Krupówek – zmniejszono obrażenia wszystkich ataków, obniżono Gardę z wzmocnienia oraz zmniejszono obrażenia Podatku od zdjęcia.',
+      '⚖️ Mistrz Redyku – zmniejszono Gardę z wzmocnienia oraz zdrowie.',
+      '🚧 Parkingowy – zwiększono obrażenia ataku Bilet za wycieraczką.',
+      '🐴 Fiakier – zwiększono obrażenia wszystkich ataków o 20%.',
+      '🌬️ Halny – teraz obie strony tracą 3 Gardy na koniec tury.',
+      '🛠️ Inne – drobne poprawki i uspójnienia opisów.'
+    ],
+  },
+  {
     version: 'v1.7.1 - Przypomnienie o aktualizacji aplikacji',
     date: 'kwiecień 2026',
     changes: [

@@ -3322,12 +3322,12 @@ describe('GameState', () => {
       expect(s.enemy.status.weak).toBe(2);
     });
 
-    it('Agresywne pozowanie deals 3x3', () => {
+    it('Agresywne pozowanie deals 2x3', () => {
       const s = freshBossState();
       s.endTurn();
       expect(s.enemy.currentIntent.type).toBe('attack');
       expect(s.enemy.currentIntent.name).toBe('Agresywne pozowanie');
-      expect(s.enemy.currentIntent.damage).toBe(3);
+      expect(s.enemy.currentIntent.damage).toBe(2);
       expect(s.enemy.currentIntent.hits).toBe(3);
     });
 
@@ -3337,11 +3337,11 @@ describe('GameState', () => {
       expect(s.enemy.currentIntent.name).toBe('Górski Ryk');
     });
 
-    it('Górski Ryk gives +1 strength and +8 block when executed', () => {
+    it('Górski Ryk gives +1 strength and +5 block when executed', () => {
       const s = freshBossState();
       s.endTurn();
       expect(s.enemy.status.strength).toBe(1);
-      expect(s.enemy.block).toBeGreaterThanOrEqual(8);
+      expect(s.enemy.block).toBeGreaterThanOrEqual(5);
     });
 
     it('second intent is Agresywne pozowanie (3-hit attack)', () => {
@@ -3352,14 +3352,19 @@ describe('GameState', () => {
       expect(s.enemy.currentIntent.hits).toBe(3);
     });
 
-    it('fourth intent is Uścisk Krupówek with spike damage (17)', () => {
+    it('fourth intent is Uścisk Krupówek with spike damage (12)', () => {
       const s = freshBossState();
       s.endTurn(); // execute Górski Ryk -> intent 2
       s.endTurn(); // execute Agresywne pozowanie -> intent 3
+      // Podatek od zdjęcia (damage 9)
+      expect(s.enemy.currentIntent.type).toBe('attack');
+      expect(s.enemy.currentIntent.name).toBe('Podatek od zdjęcia');
+      expect(s.enemy.currentIntent.damage).toBe(9);
+      expect(s.enemy.currentIntent.hits).toBe(1);
       s.endTurn(); // execute Podatek od zdjęcia -> intent 4
       expect(s.enemy.currentIntent.type).toBe('attack');
       expect(s.enemy.currentIntent.name).toBe('Uścisk Krupówek');
-      expect(s.enemy.currentIntent.damage).toBe(17);
+      expect(s.enemy.currentIntent.damage).toBe(12);
       expect(s.enemy.currentIntent.hits).toBe(1);
     });
 

@@ -15,7 +15,7 @@ export const weatherLibrary = {
     id: 'halny',
     name: 'Wiatr Halny',
     emoji: '🌬️',
-    desc: 'Na końcu każdej tury obie strony tracą 2 punkty Gardy.',
+    desc: 'Na końcu każdej tury obie strony tracą 3 punkty Gardy.',
   },
   frozen: {
     id: 'frozen',
