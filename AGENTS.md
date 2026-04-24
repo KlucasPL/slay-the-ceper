@@ -52,4 +52,8 @@ Add feature in order: **Data → State → Test → UI**
 
 ## Test Coverage
 
-80% threshold on `src/state/` and `src/data/` (configured in `vite.config.js`)
+Actual: 95.98% lines, 94.31% functions, 86.81% branches. Thresholds in opencode.json:
+- statements: 85%
+- branches: 80%
+- functions: 90%
+- lines: 85%
