@@ -1,0 +1,138 @@
+/* Map */
+
+.map-tree {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+}
+
+.map-lines {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.map-link {
+  fill: none;
+  stroke: #6a4222;
+  stroke-width: 3;
+}
+
+.map-link.done {
+  stroke: #8b6914;
+}
+
+.map-link.future {
+  stroke: #3d2314;
+  stroke-dasharray: 8 4;
+}
+
+.map-link.available {
+  stroke: #ffd45e;
+  stroke-width: 4;
+}
+
+.map-link.active {
+  stroke: #ffd700;
+  stroke-width: 5;
+}
+
+.map-levels {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  position: relative;
+  z-index: 1;
+}
+
+.map-level {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.map-node-btn {
+  min-width: 60px;
+  min-height: 60px;
+  padding: 8px;
+  font-size: 2rem;
+  background: #2c1e16;
+  border: 2px solid #6a4222;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+}
+
+.map-node-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.map-node-btn.available {
+  border-color: #ffd45e;
+  background: #3d2314;
+}
+
+.map-node-btn.future {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.map-node-btn.done {
+  border-color: #4b2d17;
+  opacity: 0.7;
+}
+
+.map-node-type-elite {
+  border-color: rgba(255, 130, 76, 0.85);
+  box-shadow: 0 0 0 1px rgba(255, 130, 76, 0.35) inset, 0 0 8px rgba(255, 130, 76, 0.3);
+}
+
+.map-node-label {
+  display: block;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #fdf8eb;
+  margin-top: 4px;
+}
+
+.map-node-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.map-node-emoji {
+  font-size: 2rem;
+}
+
+.map-resource-strip {
+  display: flex;
+  gap: 8px;
+  margin: 8px 0;
+}
+
+.map-resource-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: 6px 10px;
+  border-radius: var(--radius-full);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(23, 14, 9, 0.82);
+  color: #ffe4b7;
+  font-weight: 700;
+  font-size: 0.92rem;
+}
+
+.map-message {
+  padding: 8px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #ffd45e;
+  text-align: center;
+}

@@ -1,0 +1,215 @@
+/* Cards */
+
+.card {
+  position: relative;
+  background: #f4e8d2;
+  border: 2px solid #bfa16a;
+  border-radius: 12px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 3px;
+  border: 1px solid #3d2314;
+}
+
+.card-title {
+  padding: 4px 6px;
+  font-size: clamp(0.65rem, 8cqw, 0.85rem);
+  font-weight: 800;
+  line-height: 1.1;
+  color: #2c1e16;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.card-cost-oscypek {
+  padding: 2px 5px;
+  min-width: 1.6em;
+  font-size: clamp(0.7rem, 7cqw, 0.85rem);
+  font-weight: 700;
+  color: #fdf8eb;
+  background: #8b5a2b;
+  border-radius: 4px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.card-subtitle {
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #8b6914;
+}
+
+.card-art {
+  display: grid;
+  place-items: center;
+  flex: 1 0 0%;
+  margin: 4px 0;
+  background: radial-gradient(circle at center, rgba(255, 235, 190, 0.6) 0%, transparent 60%);
+  padding: 4px;
+}
+
+.card-icon {
+  font-size: clamp(2rem, 25cqw, 4.5rem);
+  line-height: 1;
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.25));
+}
+
+.card-text-box {
+  flex: 1.2 0 0%;
+  background: rgba(230, 212, 184, 0.4);
+  border-top: 2px dashed rgba(140, 90, 53, 0.4);
+  padding: 12px 14px 8px 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  overflow: hidden;
+}
+
+.card-desc {
+  font-size: clamp(var(--card-desc-size-min), 1cqw, var(--card-desc-size-max));
+  font-weight: 700;
+  line-height: 1.25;
+  text-align: left;
+  color: var(--color-text-brown);
+  white-space: normal;
+  overflow-wrap: break-word;
+  margin: 0;
+}
+
+.card-exhaust-inline {
+  margin-top: var(--space-sm);
+  font-size: var(--font-sm);
+  font-weight: 800;
+  color: var(--color-exhaust);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  letter-spacing: 0.05em;
+}
+
+.card-exhaust-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 7px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: #fff;
+  background: #b32d1c;
+  border-radius: 6px;
+}
+
+.card-exhaust-fire {
+  font-size: 0.8rem;
+}
+
+.card.card-disabled-state {
+  opacity: 0.45;
+}
+
+.card.card-disabled-state .card-title,
+.card.card-disabled-state .card-desc {
+  text-decoration: line-through;
+  color: #999;
+}
+
+.hand-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 100%;
+}
+
+.hand {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px;
+}
+
+.hand-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+.hand-view-btn {
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #fdf8eb;
+  background: rgba(139, 105, 20, 0.5);
+  border: 1px solid rgba(255, 212, 94, 0.3);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.hand-view-btn:hover {
+  background: rgba(139, 105, 20, 0.7);
+}
+
+/* Reward cards */
+.reward-card {
+  background: #f4e8d2;
+  color: #2c1e16;
+  border: 3px solid var(--rarity-border-color, var(--rarity-common));
+  border-radius: 12px;
+  padding: 12px;
+  min-height: 220px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.reward-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 8px 16px rgba(255, 215, 0, 0.2);
+}
+
+.reward-card:active {
+  transform: translateY(-4px);
+}
+
+/* Card library */
+.library-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+  padding: 12px;
+}
+
+.library-grid .card {
+  min-height: 180px;
+}
+
+.library-grid .card-title {
+  font-size: 0.7rem;
+}
+
+.library-grid .card-desc {
+  font-size: clamp(0.65rem, 8cqw, 0.8rem);
+  line-height: 1.2;
+}

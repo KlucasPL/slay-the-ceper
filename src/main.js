@@ -1,5 +1,10 @@
 import './styles/variables.css';
 import './styles/layout.css';
+import './styles/components/cards.css';
+import './styles/components/combat.css';
+import './styles/components/events.css';
+import './styles/components/map.css';
+import './styles/components/shop.css';
 import './styles/overlays.css';
 import { registerSW } from 'virtual:pwa-register';
 import './styles/animations.css';
