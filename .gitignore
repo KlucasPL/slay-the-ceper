@@ -35,3 +35,6 @@ test-results/
 # Local QA captures — attach to PRs, don't commit
 qa-*.png
 qa2-*.png
+
+# OpenCode local database
+.opencode/

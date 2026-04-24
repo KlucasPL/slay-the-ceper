@@ -2,6 +2,25 @@
 
 Project: **Usiec Cepra** — Slay-the-Spire-like deckbuilder, Polish Tatra setting.
 
+## Sandboxed Execution (Optional)
+
+To run OpenCode in an isolated Docker container:
+
+```bash
+./start-sandbox.sh
+```
+
+Then attach to the container:
+```bash
+docker exec -it opencode-sandbox /bin/bash
+```
+
+Inside the container:
+```bash
+opencode providers login   # First time setup
+opencode .                # Start OpenCode
+```
+
 ## Quick Start
 
 ```bash
