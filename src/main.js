@@ -1,3 +1,4 @@
+import './styles/variables.css';
 import './styles/layout.css';
 import './styles/overlays.css';
 import { registerSW } from 'virtual:pwa-register';
