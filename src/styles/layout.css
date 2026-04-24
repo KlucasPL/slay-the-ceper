@@ -1,90 +1,47 @@
-/* --- Fix for Event Button Text Overflow --- */
-.event-choice-row {
-  align-items: stretch !important; /* Ensures the 'eye' button grows to match the choice button */
-}
-
-.event-choice-btn {
-  height: auto !important; /* Forces the button to wrap tall content instead of letting it bleed out */
-  overflow: visible !important;
-}
-
-/* Ensure the eye button keeps its content centered even when stretched vertically */
-.event-preview-btn {
-  height: auto !important;
-  align-self: stretch !important;
-}
-/* --- Missing Event Preview Styles --- */
+/* --- Event System --- */
 .event-choice-row {
   display: flex;
-  gap: 8px;
+  gap: var(--space-sm);
   width: 100%;
-  margin-bottom: 12px;
+  margin-bottom: var(--space-md);
+  align-items: stretch;
 }
 
 .event-choice-row .event-choice-btn {
   flex: 1;
   margin-bottom: 0;
+  height: auto;
+  overflow: visible;
 }
 
-.event-preview-btn {
-  background: #2c1e16;
-  border: 3px solid #bfa16a;
-  border-radius: 16px;
-  color: #fdf8eb;
-  padding: 0 18px;
-  font-size: 1.6rem;
-  cursor: pointer;
-  transition: all 0.18s ease-out;
-  box-shadow: 0 2px 12px rgba(69, 40, 22, 0.1);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.event-preview-btn:hover:not(:disabled) {
-  background: #3d2314;
-  border-color: #e0b85a;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 18px rgba(69, 40, 22, 0.18);
-}
-
-.event-preview-btn:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-  filter: grayscale(100%);
-}
-/* --- Event Choice Button (Campfire, Events) --- */
 .event-choice-btn {
   display: flex;
   align-items: flex-start;
   gap: 18px;
   width: 100%;
-  background: linear-gradient(90deg, #f7e3c1 0%, #e8d9bd 100%);
-  border: 3px solid #bfa16a;
-  border-radius: 16px;
-  box-shadow: 0 2px 12px rgba(69, 40, 22, 0.1);
-  padding: 18px 22px 18px 18px;
+  background: linear-gradient(90deg, var(--color-btn-gradient-start) 0%, var(--color-btn-gradient-end) 100%);
+  border: 3px solid var(--color-primary-dark);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  padding: 18px 22px;
   margin: 0;
   font-family: inherit;
-  font-size: 1.13rem;
+  font-size: var(--font-lg);
   font-weight: 700;
-  color: #3d2314;
+  color: var(--color-text-brown);
   cursor: pointer;
-  transition:
-    box-shadow 0.18s,
-    border-color 0.18s,
-    background 0.18s;
+  transition: box-shadow var(--transition-base), border-color var(--transition-base), background var(--transition-base);
   outline: none;
   position: relative;
   text-align: left;
   min-height: 72px;
+  height: auto;
+  overflow: visible;
 }
+
 .event-choice-btn:disabled {
   opacity: 0.55;
   cursor: not-allowed;
-  background: #e8d9bd;
-  color: #a89b8b;
-  border-color: #cfc2a2;
 }
 .event-choice-btn:not(:disabled):hover,
 .event-choice-btn:not(:disabled):focus {
@@ -300,25 +257,25 @@ div.card.card-disabled-state:focus {
 }
 
 .card-desc {
-  font-size: clamp(0.74rem, 9cqw, 0.85rem) !important;
+  font-size: clamp(var(--card-desc-size-min), 1cqw, var(--card-desc-size-max));
   font-weight: 700;
-  line-height: 1.15;
+  line-height: 1.25;
   text-align: left;
-  color: #3d2314;
+  color: var(--color-text-brown);
   white-space: normal;
   overflow-wrap: break-word;
   margin: 0;
 }
 
 .card-exhaust-inline {
-  margin-top: 8px;
-  font-size: 0.75rem;
+  margin-top: var(--space-sm);
+  font-size: var(--font-sm);
   font-weight: 800;
-  color: #b32d1c;
+  color: var(--color-exhaust);
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  gap: var(--space-xs);
   letter-spacing: 0.05em;
 }
 
@@ -1624,23 +1581,6 @@ h1 {
   white-space: normal;
   overflow-wrap: break-word;
 }
-
-/* 6. Inline Highlander Exhaust (PRZEPADO) */
-.card-exhaust-inline {
-  margin-top: 8px;
-  font-size: 0.75rem;
-  font-weight: 800;
-  color: #b32d1c; /* Traditional deep highlander red accent */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  letter-spacing: 0.05em;
-}
-
-/* 5. Dedicated Text Box (High-Contrast Sheepskin) */
-
-/* Critical Readability Fix: Left-Align Text */
 
 /* 6. Inline Highlander Exhaust (PRZEPADO) */
 .card-exhaust-inline {
