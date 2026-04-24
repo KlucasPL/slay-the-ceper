@@ -194,16 +194,16 @@ div.card.card-disabled-state:focus {
   border: 1px solid #3d2314;
 }
 
-/* --- Modern Full-Screen Shop Layout (Moved outside .card) --- */
+/* --- Modern Full-Screen Shop Layout --- */
 .shop-panel {
   width: 1000px;
   max-width: 95%;
   max-height: 940px;
   overflow-y: auto;
-  background: linear-gradient(180deg, #6a4222 0%, #4b2d17 100%);
-  border: 10px solid #7c4a1f;
+  background: linear-gradient(180deg, var(--color-shop-bg-top) 0%, var(--color-shop-bg-bottom) 100%);
+  border: 10px solid var(--color-shop-border);
   box-shadow:
-    0 0 0 4px #3a210f,
+    0 0 0 4px var(--color-shop-shadow),
     0 12px 40px rgba(0, 0, 0, 0.65);
   border-radius: 18px;
   padding: 24px;
@@ -1547,13 +1547,6 @@ h1 {
   width: 100%;
   padding: 10px 5px;
   box-sizing: border-box;
-}
-
-.card-icon {
-  font-size: clamp(2rem, 4.5vw, 4rem); /* Allow the icon to shrink slightly more than before */
-  max-height: 100%; /* Prevent it from blowing out of its shrinking container */
-  line-height: 1;
-  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.25));
 }
 
 /* 5. Dedicated Text Box (High-Contrast Sheepskin) */
@@ -3007,24 +3000,6 @@ h1 {
   font-weight: bold;
 }
 
-.shop-panel {
-  width: 1000px;
-  max-width: 95%;
-  max-height: 940px;
-  overflow-y: auto;
-  background: linear-gradient(180deg, #6a4222 0%, #4b2d17 100%);
-  border: 10px solid #7c4a1f;
-  box-shadow:
-    0 0 0 4px #3a210f,
-    0 12px 40px rgba(0, 0, 0, 0.65);
-  border-radius: 18px;
-  padding: 24px;
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
 .shop-header {
   display: flex;
   flex-direction: column;
@@ -3525,36 +3500,6 @@ h1 {
   line-height: 1.25;
   color: #2c1e16;
   margin: 0;
-}
-
-/* Hand View Overlay */
-.hand-view-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 4750;
-  background: rgba(0, 0, 0, 0.86);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  backdrop-filter: blur(3px);
-}
-
-.hand-view-overlay.hidden {
-  display: none;
-}
-
-.hand-view-panel {
-  background: #1a1a1a;
-  border: 2px solid #8b6914;
-  border-radius: 12px;
-  padding: 20px;
-  width: 90%;
-  height: 82%;
-  max-width: 1200px;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8);
 }
 
 .hand-view-header {

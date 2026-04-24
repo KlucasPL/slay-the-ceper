@@ -36,6 +36,12 @@
   --color-disabled: #95a5a6;
   --color-disabled-bg: #e8d9bd;
 
+  /* Shop colors */
+  --color-shop-bg-top: #6a4222;
+  --color-shop-bg-bottom: #4b2d17;
+  --color-shop-border: #7c4a1f;
+  --color-shop-shadow: #3a210f;
+
   /* Status colors */
   --color-low-hp: #ff5d5d;
   --color-exhaust: #b32d1c;
