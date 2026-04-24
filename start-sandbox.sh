@@ -3,20 +3,24 @@ set -e
 cd "$(dirname "$0")"
 DOCKER="/Applications/Docker.app/Contents/Resources/bin/docker"
 IMG="opencode-sandbox"
+CONTAINER_NAME="opencode-sandbox"
 
 if ! $DOCKER image inspect $IMG >/dev/null 2>&1; then
     echo "Building opencode-sandbox image..."
     $DOCKER build -t $IMG .
 fi
 
-echo "Starting container..."
-$DOCKER run --rm -v "$(pwd):/workspace" -w /workspace -d --name opencode-sandbox $IMG
+EXISTING=$($DOCKER ps -a -q -f name=$CONTAINER_NAME 2>/dev/null || true)
 
-echo "Container started."
-echo ""
-echo "To attach, run:"
-echo "  docker exec -it opencode-sandbox /bin/bash"
-echo ""
-echo "Then inside container:"
-echo "  opencode providers login"
-echo "  opencode ."
+if [ -n "$EXISTING" ]; then
+    echo "Starting existing container..."
+    $DOCKER start $CONTAINER_NAME
+    echo "Container started."
+    exec $DOCKER exec -w /workspace -it $CONTAINER_NAME /bin/bash -c "opencode ."
+    echo ""
+else
+    echo "Starting new container..."
+    $DOCKER run -v "$(pwd):/workspace" -w /workspace -d --name $CONTAINER_NAME $IMG
+    echo "Container started."
+    exec $DOCKER exec -w /workspace $CONTAINER_NAME /bin/bash -c "opencode ."
+fi
