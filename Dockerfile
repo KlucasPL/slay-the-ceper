@@ -16,4 +16,6 @@ WORKDIR /workspace
 
 COPY --chown=developer:developer . .
 
+RUN npm install --ignore-scripts && npm install @rollup/rollup-linux-x64
+
 ENTRYPOINT ["opencode"]
