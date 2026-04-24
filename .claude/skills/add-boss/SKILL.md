@@ -6,12 +6,15 @@ metadata:
   audience: developers
   workflow: feature
 ---
+
 ## What I do
 
 Follow this order:
 
 ### Step 1: Data
+
 Add boss in `src/data/enemies.js` with:
+
 - `id`, `name` (with "Boss" suffix)
 - `isBoss: true`
 - `phases` — array of phase configurations
@@ -19,18 +22,23 @@ Add boss in `src/data/enemies.js` with:
 - Multi-phase `intent` patterns
 
 ### Step 2: State
+
 Handle in `src/state/EnemyState.js`:
+
 - Phase transitions
 - HP reset between phases
 - Intent recalculation
 
 ### Step 3: Test
+
 Test in `tests/GameState.test.js`:
+
 - Phase transitions work
 - HP scaling per phase
 - Intent variety
 
 ### Step 4: UI
+
 Boss health bar needs phase support in CombatUI.
 
 ## Phase Structure
@@ -49,8 +57,9 @@ Boss health bar needs phase support in CombatUI.
 ## Scaling
 
 Bosses scale harder:
+
 ```js
-maxHp: baseHp * (1 + (act - 1) * 0.5)
+maxHp: baseHp * (1 + (act - 1) * 0.5);
 ```
 
 ## Debug

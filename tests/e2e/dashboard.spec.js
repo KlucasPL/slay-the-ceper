@@ -1,11 +1,6 @@
 import { test, expect } from '@playwright/test';
-import { readFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
-import { dirname, join } from 'node:path';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
 const DASHBOARD_BASE = 'http://localhost:5174';
-const FIXTURE_PATH = join(__dirname, 'fixtures/metrics.fixture.json');
 
 // Safety guard: no test may navigate outside localhost
 test.beforeEach(async ({ page }) => {

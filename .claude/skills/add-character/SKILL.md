@@ -6,12 +6,15 @@ metadata:
   audience: developers
   workflow: feature
 ---
+
 ## What I do
 
 Follow this order:
 
 ### Step 1: Data
+
 Add character in `src/data/characters.js`:
+
 - `id` — unique identifier
 - `name` — display name (Polish)
 - `archetype` — tank/rogue/mage
@@ -20,11 +23,14 @@ Add character in `src/data/characters.js`:
 - `startDeck` — array of starter card IDs
 
 ### Step 2: State
+
 Add to `src/state/PlayerState.js`:
+
 - Character-specific stats
 - Special abilities hook points
 
 ### Step 3: UI
+
 Add to CharacterSelect if new character.
 
 ## Characters

@@ -13,7 +13,7 @@ export const releaseNotesData = [
       '🚧 Parkingowy – zwiększono obrażenia ataku Bilet za wycieraczką.',
       '🐴 Fiakier – zwiększono obrażenia wszystkich ataków o 20%.',
       '🌬️ Halny – teraz obie strony tracą 3 Gardy na koniec tury.',
-      '🛠️ Inne – drobne poprawki i uspójnienia opisów.'
+      '🛠️ Inne – drobne poprawki i uspójnienia opisów.',
     ],
   },
   {

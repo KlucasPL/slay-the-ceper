@@ -6,9 +6,11 @@ metadata:
   audience: developers
   workflow: ci
 ---
+
 ## What I do
 
 Run Lighthouse CI:
+
 ```bash
 npm run lhci
 ```
@@ -34,6 +36,7 @@ npm run lhci
 ## URL
 
 Tests against deployed URL or local:
+
 - Deploy preview: `npm run preview`
 - Then run `lhci autorun`
 

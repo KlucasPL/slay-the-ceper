@@ -6,9 +6,11 @@ metadata:
   audience: developers
   workflow: local
 ---
+
 ## What I do
 
 Run quick simulation:
+
 ```bash
 npm run sim:smoke
 ```

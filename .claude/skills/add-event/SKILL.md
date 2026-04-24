@@ -6,28 +6,36 @@ metadata:
   audience: developers
   workflow: feature
 ---
+
 ## What I do
 
 Follow this order:
 
 ### Step 1: Data
+
 Add event in `src/data/events.js`:
+
 - `id`, `title`, `description`
 - `type`: `encounter`, `merchant`, `campfire`, `question`
 - `choices`: array of {label, effect, requirements}
 - Effect mutates `state`, never DOM
 
-### Step 2: State  
+### Step 2: State
+
 If new mechanics:
+
 - Extend `src/state/EventSystem.js`
 - Add choice resolution logic
 
 ### Step 3: Test
+
 Test in `tests/GameState.test.js`:
+
 - Test each choice outcome
 - Test requirements
 
 ### Step 4: UI
+
 Add to EventRenderer in `src/ui/`.
 
 ## Event Types
