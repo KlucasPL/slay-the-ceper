@@ -1551,16 +1551,6 @@ h1 {
 
 /* 5. Dedicated Text Box (High-Contrast Sheepskin) */
 /* 5. Dedicated Text Box (Bottom Half, 50/50 Split, No Scroll) */
-.card-text-box {
-  flex: 1.2 0 0%;
-  background: rgba(230, 212, 184, 0.4);
-  border-top: 2px dashed rgba(140, 90, 53, 0.4);
-  padding: 12px 14px 8px 14px;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  overflow: hidden;
-}
 
 /* Critical Readability Fix: Left-Align Text */
 .card-desc {
