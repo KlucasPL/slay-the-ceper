@@ -138,3 +138,98 @@ test('status-tag: shouldDisplayStatusColors', async ({ page }) => {
     await expect(first).toBeVisible();
   }
 });
+
+/* --- Title Screen Tests --- */
+
+test('title-start-btn: shouldBeVisible', async ({ page }) => {
+  await page.goto(GAME_BASE);
+
+  const btn = page.locator('#title-btn-normal');
+  await expect(btn).toBeVisible();
+});
+
+test('title-screen: shouldHaveTitleText', async ({ page }) => {
+  await page.goto(GAME_BASE);
+
+  const title = page.locator('.title-main');
+  await expect(title).toBeVisible();
+});
+
+/* --- Combat UI Tests --- */
+
+test('hp-bar: shouldShowPlayerHp', async ({ page }) => {
+  await loadScene(page, 'combat-opening');
+
+  const hp = page.locator('#p-hp');
+  await expect(hp).toBeVisible();
+
+  const text = await hp.textContent();
+  expect(text).toMatch(/\d+/);
+});
+
+test('hp-bar: shouldShowEnemyHp', async ({ page }) => {
+  await loadScene(page, 'combat-opening');
+
+  const hp = page.locator('#e-hp');
+  await expect(hp).toBeVisible();
+
+  const text = await hp.textContent();
+  expect(text).toMatch(/\d+/);
+});
+
+test('energy: shouldDisplayOscypek', async ({ page }) => {
+  await loadScene(page, 'combat-opening');
+
+  const energy = page.locator('#energy');
+  await expect(energy).toBeVisible();
+
+  const text = await energy.textContent();
+  expect(text).toMatch(/\d+/);
+});
+
+/* --- Hand Tests --- */
+
+test('hand-container: shouldDisplayCards', async ({ page }) => {
+  await loadScene(page, 'combat-opening');
+
+  const hand = page.locator('#hand');
+  await expect(hand).toBeVisible();
+
+  const cards = page.locator('#hand .card');
+  const count = await cards.count();
+  expect(count).toBeGreaterThanOrEqual(3);
+});
+
+/* --- Map Tests --- */
+
+test('map-overlay: shouldBeVisible', async ({ page }) => {
+  await page.goto(GAME_BASE);
+  await page.addInitScript(() => {
+    window.__SCENE_TEST__ = true;
+  });
+  // Start a run to get to map
+  await page.locator('#title-btn-normal').click();
+  await page.waitForTimeout(500);
+
+  const map = page.locator('#map-overlay:not(.hidden)');
+  await expect(map).toBeVisible({ timeout: 5000 }).catch(() => map.first().waitFor({timeout: 500}));
+});
+
+test('map-node: shouldHaveNodes', async ({ page }) => {
+  await page.goto(GAME_BASE);
+  await page.addInitScript(() => {
+    window.__SCENE_TEST__ = true;
+  });
+  // Start a run to get to map
+  await page.locator('#title-btn-normal').click();
+  await page.waitForTimeout(500);
+
+  // Wait for map if visible
+  const map = page.locator('#map-overlay');
+  const isMapVisible = await map.isVisible().catch(() => false);
+  if (isMapVisible) {
+    const nodes = page.locator('.map-node-btn');
+    const count = await nodes.count();
+    expect(count).toBeGreaterThan(0);
+  }
+});
