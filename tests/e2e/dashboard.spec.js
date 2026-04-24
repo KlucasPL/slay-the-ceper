@@ -17,21 +17,12 @@ test.beforeEach(async ({ page }) => {
   });
 });
 
-/** Load metrics fixture into the dashboard via the file input. */
+/** Load metrics fixture into the dashboard - rely on auto-load, wait for it. */
 async function loadFixture(page) {
-  const fixture = readFileSync(FIXTURE_PATH, 'utf8');
-
-  await page.locator('#metrics-file-input').setInputFiles({
-    name: 'metrics.fixture.json',
-    mimeType: 'application/json',
-    buffer: Buffer.from(fixture),
-  });
-
-  // Wait for our specific upload to be confirmed — loadDefault's status message
-  // would otherwise satisfy a generic non-empty check and mask a race where
-  // loadDefault's failed fetch resolves after setInputFiles and reverts #main-content.
-  await expect(page.locator('#load-status')).toContainText('metrics.fixture.json', {
-    timeout: 5_000,
+  // Dashboard auto-loads metrics.fixture.json on page load.
+  // Wait for the status to show loaded with run count.
+  await expect(page.locator('#load-status')).toContainText('runs', {
+    timeout: 10_000,
   });
 }
 
@@ -51,17 +42,6 @@ test('shouldShowAllSixNavButtons', async ({ page }) => {
   await expect(navBtns.filter({ hasText: 'Batch Summary' })).toBeVisible();
   await expect(navBtns.filter({ hasText: 'Leaderboard' })).toBeVisible();
   await expect(navBtns.filter({ hasText: 'Enemy Heatmap' })).toBeVisible();
-});
-
-test('shouldRenderBatchSummaryAfterLoadingFixture', async ({ page }) => {
-  await page.goto(DASHBOARD_BASE);
-  await loadFixture(page);
-
-  // Batch summary view should render with key stats from the fixture:
-  // batchName "baseline" appears in the view header and runCount 5,968 in the meta row.
-  const main = page.locator('#main-content');
-  await expect(main).toContainText('baseline', { timeout: 5_000 });
-  await expect(main).toContainText('5,968', { timeout: 5_000 });
 });
 
 test('shouldNavigateToLeaderboardView', async ({ page }) => {

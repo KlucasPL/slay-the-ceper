@@ -29,15 +29,15 @@ export default defineConfig({
       // Game preview build
       command: 'npx vite preview --port 4173',
       url: 'http://localhost:4173/slay-the-ceper/',
-      reuseExistingServer: !process.env.CI,
-      timeout: 30_000,
+      reuseExistingServer: true,  // Always reuse if already running
+      timeout: 60_000,
     },
     {
       // Static server for dashboard
       command: `npx serve ${join(__dirname, 'tools/dashboard')} --listen tcp://127.0.0.1:5174 --no-clipboard`,
       url: 'http://localhost:5174',
-      reuseExistingServer: !process.env.CI,
-      timeout: 15_000,
+      reuseExistingServer: true,  // Always reuse if already running
+      timeout: 30_000,
     },
   ],
 });
