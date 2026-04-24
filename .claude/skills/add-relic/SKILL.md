@@ -6,28 +6,36 @@ metadata:
   audience: developers
   workflow: feature
 ---
+
 ## What I do
 
 Follow this order:
 
 ### Step 1: Data
+
 Add relic in `src/data/relics.js`:
+
 - `id`, `name`, `rarity` (starter/common/rare/epic/boss)
 - `description` (Polish)
 - `trigger`: when relic activates (e.g., `onDamaged`, `onTurnStart`, `onBattleStart`)
 - `effect(state)` callback
 
 ### Step 2: State
+
 If new trigger type:
+
 - Add to `src/state/RelicSystem.js`
 - Add trigger hook in `BattleLifecycle.js`
 
 ### Step 3: Test
+
 Write test in `tests/GameState.test.js`:
+
 - Test relic activation
 - Test trigger conditions
 
 ### Step 4: UI
+
 Add to RelicRenderer if visual.
 
 ## Trigger Types

@@ -6,6 +6,7 @@ metadata:
   audience: developers
   workflow: ci
 ---
+
 ## What I do
 
 Run in exact order:
@@ -29,20 +30,24 @@ Before committing or creating PR. This mirrors CI gates in `.github/workflows/pr
 ## Debugging Failures
 
 If lint fails:
+
 ```bash
 npm run lint:fix  # Auto-fix where possible
 ```
 
 If format fails:
+
 ```bash
 npm run format  # Auto-format
 ```
 
 If tests fail:
+
 ```bash
 npm run test:watch  # Watch mode for debugging
 ```
 
 If build fails:
+
 - Check import paths
 - Check for missing exports

@@ -6,6 +6,7 @@ metadata:
   audience: developers
   workflow: ci
 ---
+
 ## What I do
 
 1. Run 10k-game simulation: `npm run sim`
@@ -15,6 +16,7 @@ metadata:
 ## When to use me
 
 Use this when:
+
 - Intentionally changing game balance
 - After adding new content (cards, enemies, relics)
 - Asked to apply `baseline-update` PR label
@@ -28,6 +30,7 @@ Use this when:
 ## Before Running
 
 Ensure CI passes:
+
 ```bash
 npm run lint
 npm run format:check

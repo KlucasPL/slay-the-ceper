@@ -6,6 +6,7 @@ metadata:
   audience: developers
   workflow: ci
 ---
+
 ## What I do
 
 1. Run 5k-game simulation: `npm run sim`
@@ -27,6 +28,7 @@ Run CI first: `lint → format:check → test → build` must pass.
 ## Output format
 
 Report:
+
 - Which metrics passed/failed
 - Actual vs threshold for each failing metric
 - Suggestions for which changes caused drift

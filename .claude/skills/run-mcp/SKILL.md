@@ -6,9 +6,11 @@ metadata:
   audience: developers
   workflow: integration
 ---
+
 ## What I do
 
 Start MCP server:
+
 ```bash
 npm run mcp
 ```

@@ -6,12 +6,15 @@ metadata:
   audience: developers
   workflow: feature
 ---
+
 ## What I do
 
 Follow this order:
 
 ### Step 1: Data
+
 Add weather in `src/data/weather.js`:
+
 - `id` — unique identifier
 - `name` — display name (Polish)
 - `description` — effect description
@@ -19,17 +22,23 @@ Add weather in `src/data/weather.js`:
 - `weight` — spawn probability
 
 ### Step 2: State
+
 Add to `src/state/MapEngine.js`:
+
 - Weather roll on node generation
 - Weather application at node visited
 
 ### Step 3: UI
+
 Add to MapRenderer:
+
 - Weather icon on nodes
 - Weather effect display
 
 ### Step 4: Test
+
 Test in `tests/GameState.test.js`:
+
 - Weather applies correctly
 - Weather persists through battle
 

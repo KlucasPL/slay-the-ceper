@@ -6,9 +6,11 @@ metadata:
   audience: developers
   workflow: local
 ---
+
 ## What I do
 
 Start Vite dev server:
+
 ```bash
 npm run dev
 ```
@@ -18,6 +20,7 @@ Opens at: http://localhost:5173/slay-the-ceper/
 ## Debug Mode
 
 In game, press `~` or `F9` to open Debug Overlay:
+
 - Spawn any enemy
 - Set HP, Dutki, statuses
 - God Mode

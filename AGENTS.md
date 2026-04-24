@@ -23,11 +23,11 @@ CI gate order (all must pass): `lint → format:check → test → build`
 
 ## Architecture (strict 3-layer)
 
-| Layer | Folder | Rule |
-|-------|--------|------|
-| L1 | `src/data/` | Pure data, NO `Math.random` (use `state.rng()`) |
-| L2 | `src/state/` | Game logic, NO DOM, NO `console.log` |
-| L3 | `src/ui/` | DOM only, NO game math |
+| Layer | Folder       | Rule                                            |
+| ----- | ------------ | ----------------------------------------------- |
+| L1    | `src/data/`  | Pure data, NO `Math.random` (use `state.rng()`) |
+| L2    | `src/state/` | Game logic, NO DOM, NO `console.log`            |
+| L3    | `src/ui/`    | DOM only, NO game math                          |
 
 Add features in order: **Data → State → Test → UI**
 

@@ -6,6 +6,7 @@ metadata:
   audience: developers
   workflow: ci
 ---
+
 ## What I do
 
 Run E2E tests:
@@ -46,6 +47,7 @@ npx playwright test --debug
 ## Headless by Default
 
 CI runs headless. For local debug, use `--headed`:
+
 ```bash
 npx playwright test --headed
 ```
