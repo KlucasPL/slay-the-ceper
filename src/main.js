@@ -1,7 +1,8 @@
 import './styles/layout.css';
 import './styles/overlays.css';
-import { registerSW } from 'virtual:pwa-register';
 import './styles/animations.css';
+import './styles/base.css';
+import { registerSW } from 'virtual:pwa-register';
 
 import { AudioManager } from './logic/AudioManager.js';
 import { getSkipIntro } from './logic/settings.js';
