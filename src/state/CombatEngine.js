@@ -496,10 +496,11 @@ export function playCard(state, handIndex) {
       effect = card.effect(state);
     }
 
-    if (isFirstOrSecondCardThisBattle && state.enemy.hp > 0 && !activateLansOnly) {
-      card.effect(state);
-      state.gainPlayerBlockFromCard(2);
-    }
+  const isSecondTriggerEligible = isFirstOrSecondCardThisBattle && state.enemy.hp > 0 && !activateLansOnly;
+  if (isSecondTriggerEligible) {
+    card.effect(state);
+    state.gainPlayerBlockFromCard(2);
+  }
   } finally {
     state.activeRuntimeCardId = null;
   }

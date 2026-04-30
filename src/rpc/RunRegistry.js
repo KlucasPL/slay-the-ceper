@@ -1,4 +1,6 @@
 import { EngineController } from '../engine/EngineController.js';
+import { randomUUID } from 'crypto';
+
 
 const RUN_CAP = 16;
 const IDLE_TTL_MS = 10 * 60 * 1000; // 10 minutes
@@ -61,7 +63,7 @@ export class RunRegistry {
    */
   createFromEngine(engine) {
     if (this._runs.size >= RUN_CAP) throw new RunCapExceeded();
-    const runId = crypto.randomUUID();
+    const runId = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('run_' + Math.random().toString(36).slice(2) + '_' + Date.now().toString(36));
     this._runs.set(runId, {
       engine,
       errored: false,
