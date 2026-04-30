@@ -162,13 +162,13 @@ export function gainPlayerBlockFromCard(state, amount) {
 export function calculateDamage(state, baseDmg, sourceEntity, targetEntity) {
   let dmg = baseDmg;
 
-  if (sourceEntity.status.strength > 0) {
-    dmg += sourceEntity.status.strength;
-  }
-
   if (sourceEntity.status.weak > 0) {
     const weakMultiplier = state.currentWeather === 'frozen' ? 0.5 : 0.75;
     dmg = Math.floor(dmg * weakMultiplier);
+  }
+
+  if (sourceEntity.status.strength > 0) {
+    dmg += sourceEntity.status.strength;
   }
 
   if (sourceEntity.status.strength > 0) {
@@ -181,7 +181,7 @@ export function calculateDamage(state, baseDmg, sourceEntity, targetEntity) {
     sourceEntity.status.next_double
   ) {
     dmg *= 2;
-    sourceEntity.status.next_double = false;
+    sourceEntity.status.next_double = false; // Consume the buff
   }
 
   if (
