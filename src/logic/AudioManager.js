@@ -177,6 +177,7 @@ export class AudioManager {
     this.gameScene = 'map';
     this._stopAllMenuTracks();
     this._stopInGameSceneTracks();
+    this._stopOneShotThemes();
     if (this.gameMusicEnabled) {
       this._play(this.mapTrack);
     }
