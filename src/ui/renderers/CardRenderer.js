@@ -116,7 +116,11 @@ export function renderHand(uiManager) {
       exhaust: Boolean(card.exhaust),
     });
 
-    if (uiManager.state.hasRelic('smycz_zakopane') && player.hp > 0 && enemy.hp > 0) {
+    const showKeepBtn =
+      (uiManager.state.hasRelic('smycz_zakopane') || uiManager.state.schowekRetainPending) &&
+      player.hp > 0 &&
+      enemy.hp > 0;
+    if (showKeepBtn) {
       const keepBtn = document.createElement('button');
       keepBtn.type = 'button';
       keepBtn.className = 'card-keep-btn';
@@ -125,6 +129,7 @@ export function renderHand(uiManager) {
       keepBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         uiManager.state.setSmyczKeptCard(index);
+        uiManager.state.schowekRetainPending = false;
         uiManager.updateUI();
       });
       cardEl.appendChild(keepBtn);

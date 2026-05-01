@@ -4782,4 +4782,293 @@ describe('GameState', () => {
       });
     });
   });
+
+  describe('new cards from CARDY-PROPOZYCJE-60', () => {
+    it('zaskoczenie_z_kosodrzewiny: deals 7 damage bypassing evasion', () => {
+      const s = makeState();
+      s.hand = ['zaskoczenie_z_kosodrzewiny'];
+      s.enemy.evasionCharges = 3;
+      const hpBefore = s.enemy.hp;
+      s.playCard(0);
+      expect(s.enemy.hp).toBeLessThan(hpBefore);
+      expect(s.enemy.evasionCharges).toBe(0);
+    });
+
+    it('zaskoczenie_z_kosodrzewiny: bypasses fog miss by clearing playerAttackMissCheck', () => {
+      const s = makeState();
+      s.hand = ['zaskoczenie_z_kosodrzewiny'];
+      s.currentWeather = 'fog';
+      s.combat.playerAttackMissCheck = true;
+      s.combat.playerAttackMissed = true;
+      const hpBefore = s.enemy.hp;
+      s.playCard(0);
+      expect(s.enemy.hp).toBeLessThan(hpBefore);
+    });
+
+    it('schowek_za_pazucha: sets schowekRetainPending flag', () => {
+      const s = makeState();
+      s.hand = ['schowek_za_pazucha', 'ciupaga'];
+      s.playCard(0);
+      expect(s.schowekRetainPending).toBe(true);
+    });
+
+    it('schowek_za_pazucha: retain pending clears at end of player turn', () => {
+      const s = makeState();
+      s.schowekRetainPending = true;
+      s.enemy.currentIntent = { type: 'buffer', name: 'czeka', damage: 0, hits: 0, block: 0 };
+      s.endTurn();
+      expect(s.schowekRetainPending).toBe(false);
+    });
+
+    it('piorko_u_kapelusza: LANS gives 8 block and draws 1', () => {
+      const s = makeState();
+      s.hand = ['piorko_u_kapelusza'];
+      s.player.status.lans = 3;
+      const blockBefore = s.player.block;
+      s.playCard(0);
+      expect(s.player.block).toBe(blockBefore + 8);
+    });
+
+    it('piorko_u_kapelusza: without LANS only activates lans', () => {
+      const s = makeState();
+      s.hand = ['piorko_u_kapelusza'];
+      s.player.status.lans = 0;
+      const blockBefore = s.player.block;
+      s.playCard(0);
+      expect(s.player.block).toBe(blockBefore);
+      expect(s.player.status.lans).toBeGreaterThan(0);
+    });
+
+    it('wypieta_piers: LANS gives 7 block and sets nextAttackCardBonus +3', () => {
+      const s = makeState();
+      s.hand = ['wypieta_piers'];
+      s.player.status.lans = 3;
+      s.playCard(0);
+      expect(s.player.block).toBeGreaterThanOrEqual(7);
+      expect(s.nextAttackCardBonus).toBeGreaterThanOrEqual(3);
+    });
+
+    it('stary_numer_maryny: applies 2 weak + 2 fragile and draws 1', () => {
+      const s = makeState();
+      s.hand = ['stary_numer_maryny'];
+      s.player.energy = 3;
+      const handSizeBefore = s.hand.length;
+      s.playCard(0);
+      expect(s.enemy.status.weak).toBe(2);
+      expect(s.enemy.status.fragile).toBe(2);
+      expect(s.hand.length).toBeGreaterThan(handSizeBefore - 1);
+    });
+
+    it('nauczka_z_krupowek: applies 1 self-weak and +2 strength', () => {
+      const s = makeState();
+      s.hand = ['nauczka_z_krupowek'];
+      s.playCard(0);
+      expect(s.player.status.weak).toBe(1);
+      expect(s.player.status.strength).toBe(2);
+    });
+
+    it('zasieki_z_gubalowki: gains 12 block and sets zasiekiActive', () => {
+      const s = makeState();
+      s.hand = ['zasieki_z_gubalowki'];
+      s.player.energy = 3;
+      s.playCard(0);
+      expect(s.player.block).toBeGreaterThanOrEqual(12);
+      expect(s.zasiekiActive).toBe(true);
+    });
+
+    it('zasieki_z_gubalowki: counter-attacks 5 damage when player takes any hit', () => {
+      const s = makeState();
+      s.zasiekiActive = true;
+      s.enemy.hp = 50;
+      s.enemy.block = 0;
+      const enemyHpBefore = s.enemy.hp;
+      s.takeDamage(3);
+      expect(s.enemy.hp).toBe(enemyHpBefore - 5);
+    });
+
+    it('zasieki_z_gubalowki: counter-attacks even on blocked hit', () => {
+      const s = makeState();
+      s.zasiekiActive = true;
+      s.player.block = 10;
+      s.enemy.hp = 50;
+      s.enemy.block = 0;
+      const enemyHpBefore = s.enemy.hp;
+      s.takeDamage(3); // fully blocked
+      expect(s.enemy.hp).toBe(enemyHpBefore - 5);
+    });
+
+    it('zasieki_z_gubalowki: zasiekiActive resets at end of player turn', () => {
+      const s = makeState();
+      s.zasiekiActive = true;
+      s.enemy.currentIntent = { type: 'buffer', name: 'czeka', damage: 0, hits: 0, block: 0 };
+      s.endTurn();
+      expect(s.zasiekiActive).toBe(false);
+    });
+
+    it('zamach_znad_glodowki: sets next_double and exhausts', () => {
+      const s = makeState();
+      s.hand = ['zamach_znad_glodowki'];
+      s.playCard(0);
+      expect(s.player.status.next_double).toBe(true);
+      expect(s.exhaust).toContain('zamach_znad_glodowki');
+    });
+
+    it('wezwanie_przedsadowe: grants block equal to 1/3 of enemy rachunek', () => {
+      const s = makeState();
+      s.hand = ['wezwanie_przedsadowe'];
+      s.player.energy = 3;
+      s.enemy.rachunek = 30;
+      s.playCard(0);
+      expect(s.player.block).toBeGreaterThanOrEqual(10); // floor(30/3) = 10
+    });
+
+    it('wezwanie_przedsadowe: 0 rachunek gives 0 block and exhausts', () => {
+      const s = makeState();
+      s.hand = ['wezwanie_przedsadowe'];
+      s.player.energy = 3;
+      s.enemy.rachunek = 0;
+      const blockBefore = s.player.block;
+      s.playCard(0);
+      expect(s.player.block).toBe(blockBefore);
+      expect(s.exhaust).toContain('wezwanie_przedsadowe');
+    });
+
+    it('przeliczanie_dutkow: LANS draws 1 and gains 4 block', () => {
+      const s = makeState();
+      s.hand = ['przeliczanie_dutkow'];
+      s.player.status.lans = 3;
+      const blockBefore = s.player.block;
+      s.playCard(0);
+      expect(s.player.block).toBe(blockBefore + 4);
+    });
+
+    it('herbata_z_pradem: heals 6 when at <=50% HP, exhausts', () => {
+      const s = makeState();
+      s.hand = ['herbata_z_pradem'];
+      s.player.hp = 20;
+      s.player.maxHp = 50;
+      const hpBefore = s.player.hp;
+      s.playCard(0);
+      expect(s.player.hp).toBe(Math.min(s.player.maxHp, hpBefore + 6));
+      expect(s.exhaust).toContain('herbata_z_pradem');
+    });
+
+    it('herbata_z_pradem: heals only 2 when above 50% HP', () => {
+      const s = makeState();
+      s.hand = ['herbata_z_pradem'];
+      s.player.hp = 40;
+      s.player.maxHp = 50;
+      const hpBefore = s.player.hp;
+      s.playCard(0);
+      expect(s.player.hp).toBe(Math.min(s.player.maxHp, hpBefore + 2));
+    });
+
+    it('goralski_upor (skill): gives 5 block and records blurBlockAmount', () => {
+      const s = makeState();
+      s.hand = ['goralski_upor'];
+      s.playCard(0);
+      expect(s.player.block).toBeGreaterThanOrEqual(5);
+      expect(s.blurBlockAmount).toBe(5);
+    });
+
+    it('goralski_upor (skill): blur block is preserved into next player turn', () => {
+      const s = makeState();
+      s.blurBlockAmount = 5;
+      s.enemy.currentIntent = { type: 'buffer', name: 'czeka', damage: 0, hits: 0, block: 0 };
+      s.endTurn();
+      s.startTurn(); // blur block restored here
+      expect(s.player.block).toBeGreaterThanOrEqual(5);
+      expect(s.blurBlockAmount).toBe(0);
+    });
+
+    it('na_ratunek_gopr: heals 5, and 5 more if enemy rachunek > 20, exhausts', () => {
+      const s = makeState();
+      s.hand = ['na_ratunek_gopr'];
+      s.player.hp = 30;
+      s.player.maxHp = 50;
+      s.enemy.rachunek = 25;
+      const hpBefore = s.player.hp;
+      s.playCard(0);
+      expect(s.player.hp).toBe(Math.min(s.player.maxHp, hpBefore + 10));
+      expect(s.exhaust).toContain('na_ratunek_gopr');
+    });
+
+    it('na_ratunek_gopr: heals only 5 when rachunek <= 20', () => {
+      const s = makeState();
+      s.hand = ['na_ratunek_gopr'];
+      s.player.hp = 30;
+      s.player.maxHp = 50;
+      s.enemy.rachunek = 10;
+      const hpBefore = s.player.hp;
+      s.playCard(0);
+      expect(s.player.hp).toBe(Math.min(s.player.maxHp, hpBefore + 5));
+    });
+
+    it('szal_bacy: sets player.szal_bacy flag and exhausts', () => {
+      const s = makeState();
+      s.hand = ['szal_bacy'];
+      s.player.energy = 3;
+      s.playCard(0);
+      expect(s.player.szal_bacy).toBe(true);
+      expect(s.exhaust).toContain('szal_bacy');
+    });
+
+    it('szal_bacy: deals 3 damage per extra card drawn during player turn', () => {
+      const s = makeState();
+      // makeState() → initGame() → startTurn() sets szalBacyTurnDrawDone = true
+      s.player.szal_bacy = true;
+      s.enemy.hp = 50;
+      s.enemy.block = 0;
+      const hpBefore = s.enemy.hp;
+      s._drawCards(1);
+      expect(s.enemy.hp).toBe(hpBefore - 3);
+    });
+
+    it('szal_bacy: does NOT trigger when szalBacyTurnDrawDone is false', () => {
+      const s = makeState();
+      s.player.szal_bacy = true;
+      s.szalBacyTurnDrawDone = false; // force flag off
+      s.enemy.hp = 50;
+      s.enemy.block = 0;
+      const hpBefore = s.enemy.hp;
+      s._drawCards(1);
+      expect(s.enemy.hp).toBe(hpBefore);
+    });
+
+    it('goralski_upor_moc (power): sets flag and exhausts', () => {
+      const s = makeState();
+      s.hand = ['goralski_upor_moc'];
+      s.playCard(0);
+      expect(s.player.goralski_upor_moc).toBe(true);
+      expect(s.exhaust).toContain('goralski_upor_moc');
+    });
+
+    it('goralski_upor_moc (power): queues draw when player takes HP damage', () => {
+      const s = makeState();
+      s.player.goralski_upor_moc = true;
+      s.player.block = 0;
+      s.goralskiUporDrawPending = 0;
+      s.takeDamage(5);
+      expect(s.goralskiUporDrawPending).toBe(1);
+    });
+
+    it('goralski_upor_moc (power): pending draws are consumed at start of next turn', () => {
+      const s = makeState();
+      s.player.goralski_upor_moc = true;
+      s.goralskiUporDrawPending = 2;
+      s.enemy.currentIntent = { type: 'buffer', name: 'czeka', damage: 0, hits: 0, block: 0 };
+      s.endTurn();
+      s.startTurn(); // pending draws consumed here
+      expect(s.goralskiUporDrawPending).toBe(0);
+    });
+
+    it('goralski_upor_moc (power): no draw queued on fully-blocked hit', () => {
+      const s = makeState();
+      s.player.goralski_upor_moc = true;
+      s.player.block = 10;
+      s.goralskiUporDrawPending = 0;
+      s.takeDamage(5); // fully blocked
+      expect(s.goralskiUporDrawPending).toBe(0);
+    });
+  });
 });

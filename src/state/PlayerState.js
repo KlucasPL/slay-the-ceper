@@ -296,6 +296,16 @@ export function takeDamage(state, amount) {
     state.dutki = Math.max(0, state.dutki - 3);
   }
 
+  // zasieki_z_gubalowki: counter-attack 5 damage on any hit (including blocked)
+  if (amount > 0 && state.zasiekiActive && state.enemy.hp > 0) {
+    state._applyDamageToEnemy(5);
+  }
+
+  // goralski_upor_moc power: queue 1 draw for start of next turn on HP loss
+  if (dealt > 0 && state.player.goralski_upor_moc) {
+    state.goralskiUporDrawPending = (state.goralskiUporDrawPending ?? 0) + 1;
+  }
+
   if (
     state.player.status.duma_podhala > 0 &&
     state.combat.activeSide === 'enemy' &&

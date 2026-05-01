@@ -121,6 +121,15 @@ export function drawCards(state, amount) {
       state.hand.push(cardId);
       drawn.push(cardId);
       emitF(state, 'card_drawn', { card: { kind: 'card', id: getBaseCardId(cardId) } });
+      // szal_bacy power: deal 3 damage per extra card drawn during player turn
+      if (
+        state.player.szal_bacy &&
+        state.szalBacyTurnDrawDone &&
+        state.combat.activeSide === 'player' &&
+        state.enemy.hp > 0
+      ) {
+        applyDamageToEnemy(state, 3);
+      }
     }
   }
   return drawn;
@@ -415,8 +424,18 @@ export function startTurn(state) {
 
   state.player.energy = state.player.maxEnergy + state.player.status.energy_next_turn;
   state.player.status.energy_next_turn = 0;
-  state.player.block = 0;
+  // goralski_upor (blur): preserve blur block instead of zeroing
+  state.player.block = state.blurBlockAmount ?? 0;
+  state.blurBlockAmount = 0;
+  state.szalBacyTurnDrawDone = false;
   state._drawCards(state._drawPerTurn());
+  state.szalBacyTurnDrawDone = true;
+
+  // goralski_upor_moc power: draw cards pending from previous turn HP loss
+  if (state.goralskiUporDrawPending > 0) {
+    state._drawCards(state.goralskiUporDrawPending);
+    state.goralskiUporDrawPending = 0;
+  }
 
   if (state.smyczKeptCardId) {
     state.hand.unshift(state.smyczKeptCardId);
@@ -457,7 +476,7 @@ export function startTurn(state) {
     state.applyEnemyDebuff('vulnerable', 1);
   }
 
-  // ── Per-turn relic counter resets ──
+  // ── Per-turn relic/card counter resets ──
   state.muffinAttackCountThisTurn = 0;
   state.muffinEnergyGrantedThisTurn = 0;
   state.dzbanEnergyGrantedThisTurn = 0;
@@ -621,6 +640,10 @@ export function playCard(state, handIndex) {
  */
 export function endTurn(state) {
   const playerHandSizeBeforeDiscard = state.hand.length;
+
+  // Clear per-player-turn card flags when the player's turn ends
+  state.zasiekiActive = false;
+  state.schowekRetainPending = false;
 
   if (state.hasRelic('smycz_zakopane') && state.smyczKeptHandIndex !== null) {
     if (state.smyczKeptHandIndex >= 0 && state.smyczKeptHandIndex < state.hand.length) {

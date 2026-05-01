@@ -136,6 +136,17 @@ export class GameState {
     this.portfelTurystyUsedThisShop = false;
     /** @type {boolean} zaszczyt_upadku: draw-2 pending for next turn start (after Lans break) */
     this.zaszytUpadkuDrawPending = false;
+    // ── Per-card / per-turn card mechanics ──
+    /** @type {boolean} schowek_za_pazucha: player chose to retain a card this turn */
+    this.schowekRetainPending = false;
+    /** @type {number} goralski_upor (skill blur): block amount to preserve into next turn */
+    this.blurBlockAmount = 0;
+    /** @type {boolean} zasieki_z_gubalowki: counter-attack active this turn */
+    this.zasiekiActive = false;
+    /** @type {number} goralski_upor_moc (power): draws queued for next turn start */
+    this.goralskiUporDrawPending = 0;
+    /** @type {boolean} szal_bacy: flag marking that the normal start-of-turn draw is done */
+    this.szalBacyTurnDrawDone = false;
     /** @type {number} */
     this.currentAct = 1;
     /** @type {string} */
@@ -1431,6 +1442,11 @@ export class GameState {
     this.lansDutkiSpentEvent = 0;
     this.rachunekResistEvent = false;
     this.dumaPodhalaActive = false;
+    this.schowekRetainPending = false;
+    this.blurBlockAmount = 0;
+    this.zasiekiActive = false;
+    this.goralskiUporDrawPending = 0;
+    this.szalBacyTurnDrawDone = false;
     this._setLansActive(false);
     this._resetBattleScopedFlags();
 
