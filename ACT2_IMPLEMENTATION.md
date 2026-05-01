@@ -247,3 +247,94 @@ Weather recap: `currentWeather` ∈ `{clear, halny, frozen, fog}`. Halny drains 
 - Test Lans relics: `pancerz_z_lansu` reduces damage while Lans active; `wejscie_z_przytupem` deals 5 dmg on activation; `zaszczyt_upadku` draws 2 + gives +2 energy next turn on Lans break
 - Test Weather relics: `plecak_na_kazda_pogode` gives correct bonus per weather; `goralska_skora` halves Halny drain + fog miss; `barometr_tatrzanski` gives +1 energy on non-clear turns
 - Run `npm test` to ensure no regressions
+
+---
+
+## Part 4: Act 2 Enemies - Morskie Oko Roster Proposal
+
+### Target Count (mirrors Act 1)
+
+To match current Act 1 composition, Act 2 should introduce:
+
+- **7 regular enemies**
+- **3 elite enemies**
+
+This keeps pacing, encounter variety, and elite density aligned between acts.
+
+### Theme Direction
+
+Act 2 around **Morskie Oko** should feel: alpine weather pressure, trail congestion, rescue infrastructure, nature hazards, and high-altitude fatigue. Enemy mechanics should lean into:
+
+- weather interactions (`fog`, `halny`, `frozen`)
+- hand disruption / tempo loss (tourist chaos)
+- block attrition and chip pressure
+- selective Rachunek pressure from premium tourism services
+
+### Proposed Regular Enemies (7)
+
+1. **Bacowka Parkingowy z Palenicy** (regular)
+   - Role: opener pressure, anti-block poke.
+   - Identity: ticketing + queue policing near trailhead.
+   - Mechanics idea: attack scaling with cards in hand, minor `fragile`.
+
+2. **Przewodnik od Skrótu** (regular)
+   - Role: trickster tempo enemy.
+   - Identity: "shortcut" scams on route to Morskie Oko.
+   - Mechanics idea: adds status cards (misdirection leaflets), low multi-hit.
+
+3. **Woznica Zaprzegu** (regular)
+   - Role: burst turn every 2-3 actions.
+   - Identity: horse-cart transport operator.
+   - Mechanics idea: builds "ped"-like momentum then spends for one heavy strike.
+
+4. **Fotograf z Pomostu** (regular)
+   - Role: vulnerable setup into medium hit.
+   - Identity: paid-photo hustle by the lake.
+   - Mechanics idea: apply `vulnerable`, then single attack; occasional self-block.
+
+5. **Ratownik-amator** (regular)
+   - Role: sustain/control.
+   - Identity: overconfident pseudo-rescuer creating chaos.
+   - Mechanics idea: gains block + heal, then applies `weak` with low damage.
+
+6. **Kaczka z Morskiego Oka** (regular)
+   - Role: evasive nuisance.
+   - Identity: wildlife interference around food/tourists.
+   - Mechanics idea: small hits, occasional `evasion` gain, chip over time.
+
+7. **Zmeczony Turysta Wysokogorski** (regular)
+   - Role: fatigue/debuff specialist.
+   - Identity: altitude-drained but unpredictable climber.
+   - Mechanics idea: apply `weak`/`fragile`, light damage, occasional self-buff.
+
+### Proposed Elite Enemies (3)
+
+1. **Kierownik Schroniska** (elite)
+   - Elite fantasy: resource drain + endurance.
+   - Mechanics idea: steals Dutki / raises Rachunek, alternates between block and strong single hits.
+
+2. **Lawinowy Patrol** (elite)
+   - Elite fantasy: weather enforcer.
+   - Mechanics idea: toggles/benefits from `frozen` or `halny`, multi-hit in storm turns.
+
+3. **Niedzwiedzica z Morskiego Oka** (elite)
+   - Elite fantasy: apex nature threat.
+   - Mechanics idea: slow ramp (`strengthGain`), heavy telegraphed strike, occasional fear-style debuff (`vulnerable`/`weak`).
+
+### Encounter Mix Guidance
+
+- Keep regular pool split by archetype: 2 pressure, 2 control, 2 disruption, 1 sustain.
+- Ensure at least 2 regular enemies interact with weather directly.
+- Ensure each elite has a distinct win condition check:
+  - economy check (Dutki/Rachunek)
+  - weather management check
+  - burst-defense check
+
+### Next Implementation Slice (optional follow-up)
+
+When approved, implement in this order:
+
+1. Add 7 regular + 3 elite definitions in `src/data/enemies.js`.
+2. Gate them to Act 2 selection in enemy pool logic (`EnemyState`/pool filters).
+3. Add tests ensuring Act 1/Act 2 pools are separated and counts are correct.
+4. Tune HP/damage bands against existing Act 2 relic power level.
