@@ -1821,13 +1821,15 @@ Po instalacji gra działa offline i bez paska przeglądarki.`;
     const actNumber = Number.isFinite(this.state.currentAct)
       ? Math.max(1, this.state.currentAct)
       : 1;
-    const ordinals = ['PIERWSZA', 'DRUGA', 'TRZECIA', 'CZWARTA', 'PIĄTA'];
-    const ordinal = ordinals[actNumber - 1] ?? `${actNumber}.`;
+    const rawTitle = this.state.currentActName || 'NIEZNANY SZLAK';
+    const title = rawTitle
+      .toLocaleLowerCase('pl-PL')
+      .replace(/(^|\s)\S/g, (char) => char.toLocaleUpperCase('pl-PL'));
 
     return {
-      partLabel: `CZĘŚĆ ${ordinal}`,
+      partLabel: `CZĘŚĆ ${actNumber}:`,
       actLabel: '',
-      title: this.state.currentActName || 'NIEZNANY SZLAK',
+      title,
     };
   }
 }
