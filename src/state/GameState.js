@@ -1,4 +1,5 @@
 import { weatherLibrary } from '../data/weather.js';
+import { relicLibrary } from '../data/relics.js';
 import {
   generateCardRewardChoices as generateDeckCardRewardChoices,
   getCardDamageBonus as getDeckCardDamageBonus,
@@ -117,6 +118,24 @@ export class GameState {
     this.attackCardsPlayedThisBattle = 0;
     /** @type {number} Count of cards triggered by pocztowka_giewont this battle (max 2) */
     this.pocztowkaCardsTriggeredThisBattle = 0;
+    // ── Per-turn relic counters (reset at startTurn) ──
+    /** @type {number} muffin_oscypkowy: attack cards played this turn (for every-2nd trigger) */
+    this.muffinAttackCountThisTurn = 0;
+    /** @type {number} muffin_oscypkowy: energy granted this turn (max 2) */
+    this.muffinEnergyGrantedThisTurn = 0;
+    /** @type {number} dzban_mleka: heal-based energy granted this turn (max 2) */
+    this.dzbanEnergyGrantedThisTurn = 0;
+    /** @type {boolean} kedziorek_na_energie: penalty already queued this turn */
+    this.kedziorekPenaltyTriggeredThisTurn = false;
+    /** @type {boolean} ciupaga_ekspresowa: free-skill discount used this turn */
+    this.ciupagaExpresowaTurnUsed = false;
+    // ── Cross-battle relic flags ──
+    /** @type {boolean} portfel_turysty: pending +1 energy for next battle start */
+    this.portfelTurystyPendingEnergy = false;
+    /** @type {boolean} portfel_turysty: first-purchase bonus already used this shop visit */
+    this.portfelTurystyUsedThisShop = false;
+    /** @type {boolean} zaszczyt_upadku: draw-2 pending for next turn start (after Lans break) */
+    this.zaszytUpadkuDrawPending = false;
     /** @type {number} */
     this.currentAct = 1;
     /** @type {string} */
@@ -802,6 +821,18 @@ export class GameState {
   }
 
   /**
+   * Builds a 3-choice offer from the Act 2 boss-only relic pool.
+   * Called after Act 1 boss victory before transitioning to Act 2.
+   * @param {number} [count=3]
+   * @returns {string[]}
+   */
+  generateAct2TransitionRelicChoices(count = 3) {
+    const pool = relicSystem.buildAct2TransitionRelicPool(this);
+    if (pool.length === 0) return [];
+    return this._pickUniqueItems(pool, relicLibrary, Math.min(count, pool.length));
+  }
+
+  /**
    * @param {number} count
    * @returns {string[]}
    */
@@ -1367,6 +1398,57 @@ export class GameState {
    */
   resetBattle() {
     battleLifecycle.resetBattle(this);
+  }
+
+  /**
+   * Starts Act 2 while preserving run progress (deck, relics, HP, Dutki).
+   * Rebuilds map state and clears combat-scoped runtime flags.
+   */
+  startAct2() {
+    this.currentAct = 2;
+    this.currentActName = 'MORSKIE OKO';
+
+    // Rebuild a clean deck state from all piles and strip temporary status cards.
+    this.clearStatusCardsFromPiles();
+
+    this.player.block = 0;
+    this.player.status = defaultStatus();
+    this.player.stunned = false;
+    this.player.cardsPlayedThisTurn = 0;
+    this.attackCardsPlayedThisBattle = 0;
+    this.pocztowkaCardsTriggeredThisBattle = 0;
+    this.smyczKeptCardId = null;
+    this.smyczKeptHandIndex = null;
+    this.flaszkaCostSeed = {};
+    this.termometerTurnParity = 0;
+    this.battleTurnsElapsed = 0;
+    this.zegarekFreeSkillAvailable = false;
+    this.enemyBankruptFlag = false;
+    this.enemyBankruptcyPending = false;
+    this.enemyBankruptcyBonus = 0;
+    this.lansBreakEvent = false;
+    this.lansActivatedEvent = false;
+    this.lansDutkiSpentEvent = 0;
+    this.rachunekResistEvent = false;
+    this.dumaPodhalaActive = false;
+    this._setLansActive(false);
+    this._resetBattleScopedFlags();
+
+    this.lastVictoryMessage = '';
+    this.pendingBattleDutki = true;
+    this.battleContext = 'map';
+    this.enemy = this._createEnemyState(this.enemy);
+
+    this.generateMap();
+    this.currentScreen = 'map';
+  }
+
+  /**
+   * Returns true if current victory should transition into Act 2.
+   * @returns {boolean}
+   */
+  tryAdvanceActAfterBossVictory() {
+    return battleLifecycle.tryAdvanceActAfterBossVictory(this);
   }
 
   /**

@@ -149,6 +149,17 @@ export function checkWinCondition(state) {
 }
 
 /**
+ * Checks whether the player just won the Act 1 boss fight.
+ * Does NOT call startAct2() — callers must do that after showing the relic reward.
+ * @param {any} state
+ * @returns {boolean}
+ */
+export function tryAdvanceActAfterBossVictory(state) {
+  const currentNode = state.getCurrentMapNode();
+  return state.currentAct === 1 && currentNode?.type === 'boss';
+}
+
+/**
  * @param {any} state
  * @returns {string[]}
  */

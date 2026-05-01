@@ -9,7 +9,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const CLI = join(__dirname, '../../scripts/sim/index.js');
 
 // A minimal batch config file that writes to stdout (no output.path).
-const BATCH_PATH = join(tmpdir(), `cli-test-batch-${process.pid}.js`);
+const BATCH_PATH = join(tmpdir(), `cli-test-batch-${process.pid}.mjs`);
 
 beforeAll(() => {
   writeFileSync(

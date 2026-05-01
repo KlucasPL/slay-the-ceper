@@ -72,9 +72,27 @@ export function buildAvailableRelicPool(state) {
       !state.seenRelicOffers.includes(id) &&
       !relicLibrary[id]?.eventOnly &&
       !relicLibrary[id]?.tutorialOnly &&
-      !relicLibrary[id]?.marynaOnly
+      !relicLibrary[id]?.marynaOnly &&
+      !relicLibrary[id]?.act2Only &&
+      !relicLibrary[id]?.bossRewardOnly
   );
   return state.filterPool('relics', basePool);
+}
+
+/**
+ * Builds the pool for Act 2 transition relic choices (after Act 1 boss).
+ * Only includes relics with act2Only + bossRewardOnly that haven't been acquired.
+ * @param {{ relics: string[] }} state
+ * @returns {string[]}
+ */
+export function buildAct2TransitionRelicPool(state) {
+  return Object.keys(relicLibrary).filter(
+    (id) =>
+      relicLibrary[id]?.act2Only &&
+      relicLibrary[id]?.bossRewardOnly &&
+      !relicLibrary[id]?.marynaOnly &&
+      !state.relics.includes(id)
+  );
 }
 
 /**

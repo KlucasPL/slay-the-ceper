@@ -227,6 +227,13 @@ export function showEndGame(uiManager, outcome) {
     const bankruptBonus = uiManager.state.enemyBankruptcyBonus;
     const scriptedEventRewardRelic = uiManager.state.consumePendingEventVictoryRelicReward();
 
+    if (uiManager.state.tryAdvanceActAfterBossVictory()) {
+      uiManager.audioManager.playVictoryTheme();
+      const choices = uiManager.state.generateAct2TransitionRelicChoices(3);
+      uiManager._showAct2TransitionRelicReward(choices);
+      return;
+    }
+
     if (isBossFight) {
       uiManager.audioManager.playVictoryTheme();
       uiManager.updateUI();

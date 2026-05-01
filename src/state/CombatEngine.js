@@ -63,6 +63,42 @@ export function applyBattleStartRelics(state) {
     state.gainPlayerBlockFromCard(8);
     state.player.status.strength += 1;
   }
+
+  // ── Act 2 transition relics ──
+  if (state.hasRelic('pasterski_termos')) {
+    state.player.energy += 2;
+  }
+  if (state.hasRelic('kedziorek_na_energie')) {
+    state.player.energy += 2;
+  }
+  if (state.hasRelic('dzban_mleka')) {
+    state.player.energy = Math.max(0, state.player.energy - 1);
+  }
+  if (state.portfelTurystyPendingEnergy) {
+    state.player.energy += 1;
+    state.portfelTurystyPendingEnergy = false;
+  }
+
+  // ── Act 2 boss relics ──
+  if (state.hasRelic('paragon_startowy')) {
+    state.addEnemyRachunek(6);
+  }
+  if (state.hasRelic('plecak_na_kazda_pogode')) {
+    switch (state.currentWeather) {
+      case 'halny':
+        state.gainPlayerBlockFromCard(6);
+        break;
+      case 'frozen':
+        state.applyEnemyDebuff('vulnerable', 1);
+        break;
+      case 'fog':
+        state._drawCards(2);
+        break;
+      default:
+        state.player.energy += 1;
+        break;
+    }
+  }
 }
 
 /**
@@ -113,7 +149,8 @@ export function applyDamageToEnemy(state, dmg) {
   ) {
     if (!state.combat.playerAttackMissRolled) {
       state.combat.playerAttackMissRolled = true;
-      state.combat.playerAttackMissed = state.rng() < 0.25;
+      const fogMissThreshold = state.hasRelic('goralska_skora') ? 0.12 : 0.25;
+      state.combat.playerAttackMissed = state.rng() < fogMissThreshold;
       if (state.combat.playerAttackMissed) {
         state._registerWeatherMiss('enemy');
       }
@@ -420,6 +457,25 @@ export function startTurn(state) {
     state.applyEnemyDebuff('vulnerable', 1);
   }
 
+  // ── Per-turn relic counter resets ──
+  state.muffinAttackCountThisTurn = 0;
+  state.muffinEnergyGrantedThisTurn = 0;
+  state.dzbanEnergyGrantedThisTurn = 0;
+  state.kedziorekPenaltyTriggeredThisTurn = false;
+  state.ciupagaExpresowaTurnUsed = false;
+
+  // ── Turn-start relic triggers ──
+  if (state.hasRelic('herbata_zimowa') && state.battleTurnsElapsed % 2 === 0) {
+    state.player.energy += 1;
+  }
+  if (state.hasRelic('barometr_tatrzanski') && state.currentWeather !== 'clear') {
+    state.player.energy += 1;
+  }
+  if (state.zaszytUpadkuDrawPending) {
+    state._drawCards(2);
+    state.zaszytUpadkuDrawPending = false;
+  }
+
   emitF(state, 'turn_started', { battleTurn: state.battleTurnsElapsed });
 }
 
@@ -521,6 +577,27 @@ export function playCard(state, handIndex) {
     if (state.attackCardsPlayedThisBattle % 3 === 0 && state.hasRelic('bilet_tpn')) {
       state.player.energy += 1;
     }
+    // muffin_oscypkowy: every 2nd attack card this turn gives +1 energy (max 2/turn)
+    state.muffinAttackCountThisTurn += 1;
+    if (
+      state.hasRelic('muffin_oscypkowy') &&
+      state.muffinAttackCountThisTurn % 2 === 0 &&
+      state.muffinEnergyGrantedThisTurn < 2
+    ) {
+      state.player.energy += 1;
+      state.muffinEnergyGrantedThisTurn += 1;
+    }
+  }
+
+  if (card.type === 'skill') {
+    // ksiega_dluguw: each skill card gives enemy +2 Rachunek
+    if (state.hasRelic('ksiega_dluguw')) {
+      state.addEnemyRachunek(2);
+    }
+    // ciupaga_ekspresowa: first skill this turn was free — mark it used
+    if (state.hasRelic('ciupaga_ekspresowa') && !state.ciupagaExpresowaTurnUsed) {
+      state.ciupagaExpresowaTurnUsed = true;
+    }
   }
 
   state.combat.playerAttackMissCheck = false;
@@ -615,6 +692,11 @@ export function endTurn(state) {
   }
 
   state._applyHalnyBlockDrain(state.player);
+
+  // herbata_zimowa: end-of-turn penalty if high block
+  if (state.hasRelic('herbata_zimowa') && state.player.block >= 8) {
+    state.player.status.energy_next_turn -= 1;
+  }
 
   /** @type {{ amount: number, text: string } | null} */
   let enemyPassiveHeal = null;

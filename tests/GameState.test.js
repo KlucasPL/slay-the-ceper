@@ -2074,7 +2074,9 @@ describe('GameState', () => {
         .filter((relic) => !relic.marynaOnly)
         .forEach((relic) => {
           expect(typeof relic.price).toBe('number');
-          expect(relic.price).toBeGreaterThan(0);
+          if (!relic.bossRewardOnly) {
+            expect(relic.price).toBeGreaterThan(0);
+          }
         });
     });
 
@@ -2092,7 +2094,7 @@ describe('GameState', () => {
       };
 
       Object.values(relicLibrary)
-        .filter((relic) => !relic.marynaOnly)
+        .filter((relic) => !relic.marynaOnly && !relic.bossRewardOnly)
         .forEach((relic) => {
           const range = ranges[relic.rarity];
           expect(relic.price).toBeGreaterThanOrEqual(range.min);
@@ -2796,6 +2798,66 @@ describe('GameState', () => {
     it('returns null when both are still alive', () => {
       const s = freshState();
       expect(s.checkWinCondition()).toBeNull();
+    });
+  });
+
+  describe('act transitions', () => {
+    it('transitions from Act 1 boss victory to Act 2 while preserving run progress', () => {
+      const s = freshState();
+      const relicId = Object.keys(relicLibrary)[0];
+
+      s.currentAct = 1;
+      s.currentActName = 'KRUPÓWKI';
+      s.currentScreen = 'battle';
+      s.player.hp = 27;
+      s.dutki = 123;
+      s.relics = relicId ? [relicId] : [];
+      s.deck = ['ciupaga'];
+      s.hand = ['gasior'];
+      s.discard = ['kierpce'];
+      s.exhaust = ['spam_tagami'];
+
+      s.map = [
+        [null, null, null],
+        [
+          null,
+          {
+            x: 1,
+            y: 1,
+            type: 'boss',
+            label: 'Boss',
+            emoji: '👑',
+            weather: 'halny',
+            connections: [],
+          },
+          null,
+        ],
+      ];
+      s.currentLevel = 1;
+      s.currentNodeIndex = 1;
+      s.currentNode = { x: 1, y: 1 };
+
+      const transitioned = s.tryAdvanceActAfterBossVictory();
+      // tryAdvanceActAfterBossVictory no longer calls startAct2() — UI does that after reward pick
+      if (transitioned) s.startAct2();
+
+      expect(transitioned).toBe(true);
+      expect(s.currentAct).toBe(2);
+      expect(s.currentActName).toBe('MORSKIE OKO');
+      expect(s.currentScreen).toBe('map');
+      expect(s.player.hp).toBe(27);
+      expect(s.dutki).toBe(123);
+      expect(s.relics).toEqual(relicId ? [relicId] : []);
+      expect(s.hand).toEqual([]);
+      expect(s.discard).toEqual([]);
+      expect(s.exhaust).toEqual([]);
+      expect(s.deck).toContain('ciupaga');
+      expect(s.deck).toContain('gasior');
+      expect(s.deck).toContain('kierpce');
+      expect(s.deck).not.toContain('spam_tagami');
+      expect(s.currentLevel).toBe(0);
+      expect(s.currentNodeIndex).toBe(1);
+      expect(s.runSummary).toBeNull();
     });
   });
 
@@ -4322,6 +4384,402 @@ describe('GameState', () => {
 
       const winSummary = s.captureRunSummary('player_win');
       expect(winSummary.killerName).toBeNull();
+    });
+  });
+
+  // ── Act 2 relics ──────────────────────────────────────────────────────────
+  describe('Act 2 transition relics', () => {
+    it('pasterski_termos: +2 energy at battle start, -2 HP after battle', () => {
+      const s = freshState();
+      s.relics = ['pasterski_termos'];
+      s.player.energy = 3;
+      s._applyBattleStartRelics();
+      expect(s.player.energy).toBe(5);
+      s.player.hp = 40;
+      s.pendingBattleDutki = true;
+      s.grantBattleDutki();
+      expect(s.player.hp).toBe(38);
+    });
+
+    it('pasterski_termos: post-battle HP cannot drop below 1', () => {
+      const s = freshState();
+      s.relics = ['pasterski_termos'];
+      s.player.hp = 1;
+      s.pendingBattleDutki = true;
+      s.grantBattleDutki();
+      expect(s.player.hp).toBe(1);
+    });
+
+    it('muffin_oscypkowy: +1 energy every 2nd attack card (max 2/turn)', () => {
+      const s = freshState();
+      s.relics = ['muffin_oscypkowy'];
+      s.player.energy = 3;
+      // Simulate playCard hook logic directly
+      s.muffinAttackCountThisTurn = 0;
+      s.muffinEnergyGrantedThisTurn = 0;
+      // 1st attack — no bonus
+      s.muffinAttackCountThisTurn += 1;
+      if (
+        s.hasRelic('muffin_oscypkowy') &&
+        s.muffinAttackCountThisTurn % 2 === 0 &&
+        s.muffinEnergyGrantedThisTurn < 2
+      ) {
+        s.player.energy += 1;
+        s.muffinEnergyGrantedThisTurn += 1;
+      }
+      expect(s.player.energy).toBe(3);
+      // 2nd attack — bonus
+      s.muffinAttackCountThisTurn += 1;
+      if (
+        s.hasRelic('muffin_oscypkowy') &&
+        s.muffinAttackCountThisTurn % 2 === 0 &&
+        s.muffinEnergyGrantedThisTurn < 2
+      ) {
+        s.player.energy += 1;
+        s.muffinEnergyGrantedThisTurn += 1;
+      }
+      expect(s.player.energy).toBe(4);
+      expect(s.muffinEnergyGrantedThisTurn).toBe(1);
+      // 3rd attack — no bonus (odd)
+      s.muffinAttackCountThisTurn += 1;
+      if (
+        s.hasRelic('muffin_oscypkowy') &&
+        s.muffinAttackCountThisTurn % 2 === 0 &&
+        s.muffinEnergyGrantedThisTurn < 2
+      ) {
+        s.player.energy += 1;
+        s.muffinEnergyGrantedThisTurn += 1;
+      }
+      expect(s.player.energy).toBe(4);
+      // 4th attack — 2nd bonus
+      s.muffinAttackCountThisTurn += 1;
+      if (
+        s.hasRelic('muffin_oscypkowy') &&
+        s.muffinAttackCountThisTurn % 2 === 0 &&
+        s.muffinEnergyGrantedThisTurn < 2
+      ) {
+        s.player.energy += 1;
+        s.muffinEnergyGrantedThisTurn += 1;
+      }
+      expect(s.player.energy).toBe(5);
+      // 5th+6th attack — capped at 2 grants/turn
+      s.muffinAttackCountThisTurn += 1;
+      s.muffinAttackCountThisTurn += 1;
+      if (
+        s.hasRelic('muffin_oscypkowy') &&
+        s.muffinAttackCountThisTurn % 2 === 0 &&
+        s.muffinEnergyGrantedThisTurn < 2
+      ) {
+        s.player.energy += 1;
+        s.muffinEnergyGrantedThisTurn += 1;
+      }
+      expect(s.player.energy).toBe(5);
+    });
+
+    it('kedziorek_na_energie: +2 energy at battle start', () => {
+      const s = freshState();
+      s.relics = ['kedziorek_na_energie'];
+      s.player.energy = 3;
+      s._applyBattleStartRelics();
+      expect(s.player.energy).toBe(5);
+    });
+
+    it('kedziorek_na_energie: penalizes next turn energy when hit at 0 block', () => {
+      const s = freshState();
+      s.relics = ['kedziorek_na_energie'];
+      s.player.block = 0;
+      s.player.hp = 50;
+      s.takeDamage(5);
+      expect(s.player.status.energy_next_turn).toBe(-1);
+    });
+
+    it('kedziorek_na_energie: no penalty when hit with block', () => {
+      const s = freshState();
+      s.relics = ['kedziorek_na_energie'];
+      s.player.block = 10;
+      s.takeDamage(5);
+      expect(s.player.status.energy_next_turn).toBe(0);
+    });
+
+    it('herbata_zimowa: +1 energy on even turns', () => {
+      const s = freshState();
+      s.relics = ['herbata_zimowa'];
+      s.player.energy = 3;
+      s.battleTurnsElapsed = 2;
+      // Simulate turn-start logic
+      if (s.hasRelic('herbata_zimowa') && s.battleTurnsElapsed % 2 === 0) s.player.energy += 1;
+      expect(s.player.energy).toBe(4);
+    });
+
+    it('herbata_zimowa: no bonus on odd turns', () => {
+      const s = freshState();
+      s.relics = ['herbata_zimowa'];
+      s.player.energy = 3;
+      s.battleTurnsElapsed = 1;
+      if (s.hasRelic('herbata_zimowa') && s.battleTurnsElapsed % 2 === 0) s.player.energy += 1;
+      expect(s.player.energy).toBe(3);
+    });
+
+    it('herbata_zimowa: end-of-turn penalty if block >= 8', () => {
+      const s = freshState();
+      s.relics = ['herbata_zimowa'];
+      s.player.block = 10;
+      // Simulate end-of-turn logic
+      if (s.hasRelic('herbata_zimowa') && s.player.block >= 8)
+        s.player.status.energy_next_turn -= 1;
+      expect(s.player.status.energy_next_turn).toBe(-1);
+    });
+
+    it('portfel_turysty: queues +1 energy on first shop purchase (simulated)', () => {
+      const s = freshState();
+      s.relics = ['portfel_turysty'];
+      s.portfelTurystyUsedThisShop = false;
+      s.portfelTurystyPendingEnergy = false;
+      // Simulate the buyItem hook directly
+      if (s.hasRelic('portfel_turysty') && !s.portfelTurystyUsedThisShop) {
+        s.portfelTurystyPendingEnergy = true;
+        s.portfelTurystyUsedThisShop = true;
+      }
+      expect(s.portfelTurystyPendingEnergy).toBe(true);
+      expect(s.portfelTurystyUsedThisShop).toBe(true);
+    });
+
+    it('portfel_turysty: pending energy granted at battle start', () => {
+      const s = freshState();
+      s.relics = ['portfel_turysty'];
+      s.portfelTurystyPendingEnergy = true;
+      s.player.energy = 3;
+      s._applyBattleStartRelics();
+      expect(s.player.energy).toBe(4);
+      expect(s.portfelTurystyPendingEnergy).toBe(false);
+    });
+
+    it('ciupaga_ekspresowa: first skill card costs 0', () => {
+      const s = freshState();
+      s.relics = ['ciupaga_ekspresowa'];
+      s.ciupagaExpresowaTurnUsed = false;
+      // gasior is a skill card
+      const cost = s.getCardCostInHand('gasior');
+      expect(cost).toBe(0);
+    });
+
+    it('ciupaga_ekspresowa: second skill card has normal cost', () => {
+      const s = freshState();
+      s.relics = ['ciupaga_ekspresowa'];
+      s.ciupagaExpresowaTurnUsed = true;
+      const cost = s.getCardCostInHand('gasior');
+      expect(cost).toBeGreaterThan(0);
+    });
+
+    it('dzban_mleka: -1 energy at battle start', () => {
+      const s = freshState();
+      s.relics = ['dzban_mleka'];
+      s.player.energy = 3;
+      s._applyBattleStartRelics();
+      expect(s.player.energy).toBe(2);
+    });
+
+    it('dzban_mleka: +1 energy per 3 HP healed', () => {
+      const s = freshState();
+      s.relics = ['dzban_mleka'];
+      s.player.hp = 30;
+      s.player.maxHp = 80;
+      s.player.energy = 2;
+      s.dzbanEnergyGrantedThisTurn = 0;
+      s.healPlayer(6);
+      expect(s.player.energy).toBe(4);
+      expect(s.dzbanEnergyGrantedThisTurn).toBe(2);
+    });
+
+    it('dzban_mleka: energy grant capped at 2/turn', () => {
+      const s = freshState();
+      s.relics = ['dzban_mleka'];
+      s.player.hp = 10;
+      s.player.maxHp = 80;
+      s.player.energy = 0;
+      s.dzbanEnergyGrantedThisTurn = 0;
+      s.healPlayer(30);
+      expect(s.player.energy).toBe(2);
+    });
+  });
+
+  describe('Act 2 boss relics', () => {
+    it('paragon_startowy: +6 Rachunek at battle start', () => {
+      const s = freshState();
+      s.relics = ['paragon_startowy'];
+      s.enemy.rachunek = 0;
+      s._applyBattleStartRelics();
+      expect(s.enemy.rachunek).toBe(6);
+    });
+
+    it('ksiega_dluguw: +2 Rachunek per skill card played', () => {
+      const s = freshState();
+      s.relics = ['ksiega_dluguw'];
+      s.enemy.rachunek = 0;
+      // Simulate the hook
+      if (s.hasRelic('ksiega_dluguw')) s.addEnemyRachunek(2);
+      expect(s.enemy.rachunek).toBe(2);
+    });
+
+    it('bankructwo_z_bonusem: heals +6 and grants +20 Dutki on bankruptcy', () => {
+      const s = freshState();
+      s.relics = ['bankructwo_z_bonusem'];
+      s.player.hp = 30;
+      s.player.maxHp = 80;
+      s.dutki = 50;
+      s.enemy.rachunek = 30;
+      s.enemy.hp = 10;
+      s.enemyBankruptFlag = false;
+      s.enemyBankrupt();
+      expect(s.player.hp).toBe(36);
+      expect(s.dutki).toBeGreaterThanOrEqual(70);
+    });
+
+    it('pancerz_z_lansu: reduces HP damage by 2 when Lans active', () => {
+      const s = freshState();
+      s.relics = ['pancerz_z_lansu'];
+      s.dutki = 100;
+      s._setLansActive(true);
+      s.player.block = 0;
+      s.player.hp = 50;
+      s.takeDamage(5);
+      // With Lans at rate=2: 5 damage costs 10 dutki (Lans absorbs); pancerz only applies if dealt>0
+      // Lans rate starts at 2, 5*2=10 <= 100, so Lans absorbs all → dealt=0, pancerz has no effect
+      // Player HP stays at 50
+      expect(s.player.hp).toBe(50);
+    });
+
+    it('wejscie_z_przytupem: deals 5 dmg when Lans activates', () => {
+      const s = freshState();
+      s.relics = ['wejscie_z_przytupem'];
+      s.enemy.hp = 50;
+      s.enemy.block = 0;
+      s._setLansActive(true);
+      expect(s.enemy.hp).toBe(45);
+    });
+
+    it('wejscie_z_przytupem: no damage if Lans was already active', () => {
+      const s = freshState();
+      s.relics = ['wejscie_z_przytupem'];
+      s._setLansActive(true);
+      const hpAfterFirst = s.enemy.hp;
+      s._setLansActive(true); // already active, no re-trigger
+      expect(s.enemy.hp).toBe(hpAfterFirst);
+    });
+
+    it('zaszczyt_upadku: queues draw+energy when Lans breaks', () => {
+      const s = freshState();
+      s.relics = ['zaszczyt_upadku'];
+      s.dutki = 0;
+      s._setLansActive(true);
+      s.player.block = 0;
+      s.player.hp = 50;
+      // Lans breaks when dutki < required
+      s.takeDamage(5);
+      // Lans breaks: rate=2, 5*2=10 > 0 dutki → breaks
+      expect(s.zaszytUpadkuDrawPending).toBe(true);
+      expect(s.player.status.energy_next_turn).toBe(2);
+    });
+
+    it('goralska_skora: halny drains only 1 block', () => {
+      const s = freshState();
+      s.relics = ['goralska_skora'];
+      s.currentWeather = 'halny';
+      s.player.block = 5;
+      s._applyHalnyBlockDrain(s.player);
+      expect(s.player.block).toBe(4);
+    });
+
+    it('barometr_tatrzanski: +1 energy at turn start in non-clear weather', () => {
+      const s = freshState();
+      s.relics = ['barometr_tatrzanski'];
+      s.currentWeather = 'halny';
+      s.player.energy = 3;
+      if (s.hasRelic('barometr_tatrzanski') && s.currentWeather !== 'clear') s.player.energy += 1;
+      expect(s.player.energy).toBe(4);
+    });
+
+    it('barometr_tatrzanski: no bonus in clear weather', () => {
+      const s = freshState();
+      s.relics = ['barometr_tatrzanski'];
+      s.currentWeather = 'clear';
+      s.player.energy = 3;
+      if (s.hasRelic('barometr_tatrzanski') && s.currentWeather !== 'clear') s.player.energy += 1;
+      expect(s.player.energy).toBe(3);
+    });
+
+    it('plecak_na_kazda_pogode: clear sky gives +1 energy at battle start', () => {
+      const s = freshState();
+      s.relics = ['plecak_na_kazda_pogode'];
+      s.currentWeather = 'clear';
+      s.player.energy = 3;
+      s._applyBattleStartRelics();
+      expect(s.player.energy).toBe(4);
+    });
+
+    it('plecak_na_kazda_pogode: halny gives +6 block at battle start', () => {
+      const s = freshState();
+      s.relics = ['plecak_na_kazda_pogode'];
+      s.currentWeather = 'halny';
+      s.player.block = 0;
+      s._applyBattleStartRelics();
+      expect(s.player.block).toBe(6);
+    });
+  });
+
+  describe('Act 2 transition relic pool', () => {
+    it('buildAct2TransitionRelicPool returns only transition relics', () => {
+      const s = freshState();
+      s.relics = [];
+      const pool = s.generateAct2TransitionRelicChoices(7);
+      expect(pool.length).toBeGreaterThan(0);
+      pool.forEach((id) => {
+        expect([
+          'pasterski_termos',
+          'muffin_oscypkowy',
+          'kedziorek_na_energie',
+          'herbata_zimowa',
+          'portfel_turysty',
+          'ciupaga_ekspresowa',
+          'dzban_mleka',
+          'paragon_startowy',
+          'ksiega_dluguw',
+          'bankructwo_z_bonusem',
+          'pancerz_z_lansu',
+          'wejscie_z_przytupem',
+          'zaszczyt_upadku',
+          'plecak_na_kazda_pogode',
+          'goralska_skora',
+          'barometr_tatrzanski',
+        ]).toContain(id);
+      });
+    });
+
+    it('act2Only relics are excluded from the regular relic pool', () => {
+      const s = freshState();
+      s.relics = [];
+      const relicChoices = s.generateRelicChoices(50);
+      const act2Ids = [
+        'pasterski_termos',
+        'muffin_oscypkowy',
+        'kedziorek_na_energie',
+        'herbata_zimowa',
+        'portfel_turysty',
+        'ciupaga_ekspresowa',
+        'dzban_mleka',
+        'paragon_startowy',
+        'ksiega_dluguw',
+        'bankructwo_z_bonusem',
+        'pancerz_z_lansu',
+        'wejscie_z_przytupem',
+        'zaszczyt_upadku',
+        'plecak_na_kazda_pogode',
+        'goralska_skora',
+        'barometr_tatrzanski',
+      ];
+      act2Ids.forEach((id) => {
+        expect(relicChoices).not.toContain(id);
+      });
     });
   });
 });

@@ -68,6 +68,11 @@ export function enemyBankrupt(state) {
     state.lastVictoryMessage = 'Wróg zbankrutował!';
   }
   state.enemyBankruptcyPending = false;
+  // bankructwo_z_bonusem: bonus heal + Dutki on bankruptcy
+  if (state.hasRelic('bankructwo_z_bonusem')) {
+    state.healPlayer(6);
+    state.addDutki(20);
+  }
 }
 
 /**

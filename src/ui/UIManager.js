@@ -1154,6 +1154,27 @@ Po instalacji gra działa offline i bez paska przeglądarki.`;
   }
 
   /**
+   * Opens map flow after state-level act transition.
+   */
+  _handleActTransitionToMap() {
+    this.state.hasStartedFirstBattle = false;
+    this.state.currentScreen = 'map';
+    this.mapMessage = 'Wkraczasz na szlak: MORSKIE OKO.';
+    this._openMapOverlay();
+    this.updateUI();
+    void this._onActChange();
+  }
+
+  /**
+   * Shows the Act 2 transition relic reward screen (3 choices from act2Only pool).
+   * On pick: adds relic, then calls startAct2() and transitions to map.
+   * @param {string[]} choices
+   */
+  _showAct2TransitionRelicReward(choices) {
+    rewardRenderer.showAct2TransitionRelicReward(this, choices);
+  }
+
+  /**
    * Shows the final victory message after defeating the boss.
    */
   showVictoryScreen() {
