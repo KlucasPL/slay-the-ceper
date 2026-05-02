@@ -1438,8 +1438,8 @@ export const enemyLibrary = {
     id: 'krolowa_schroniska',
     name: 'Królowa Schroniska',
     emoji: '👑',
-    hp: 280,
-    maxHp: 280,
+    hp: 300,
+    maxHp: 300,
     block: 0,
     baseAttack: 0,
     act: 2,
@@ -1449,9 +1449,9 @@ export const enemyLibrary = {
     isBoss: true,
     pattern: [
       { type: 'status', name: 'Gorąca zupa', addStatusCard: 'ulotka', amount: 2 },
-      { type: 'attack', name: 'Wrzątek płatny', damage: 12, hits: 1, applyWeak: 2 },
-      { type: 'buff', name: 'Obsługa kolejki', strengthGain: 3, block: 18 },
-      { type: 'attack', name: 'Koniec wydawki', damage: 28, hits: 1 },
+      { type: 'attack', name: 'Wrzątek płatny', damage: 14, hits: 1, applyWeak: 2 },
+      { type: 'buff', name: 'Obsługa kolejki', strengthGain: 4, block: 20 },
+      { type: 'attack', name: 'Koniec wydawki', damage: 31, hits: 1 },
     ],
   },
   harnas_pogodynka: {
