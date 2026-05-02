@@ -83,7 +83,12 @@ export function generateMap(state, rows = state.debugMapRows) {
   state._enforceSpecialNodeLimits(generated);
   state._ensureReachableElite(generated);
   state._ensureReachableTrueEvent(generated);
-  state._forceRow1CeprFights(generated);
+  // Act 1: force row 1 to be Cepr fights after Maryna. Act 2: allow random Act 2 enemies.
+  if (state.currentAct === 1) {
+    state._forceRow1CeprFights(generated);
+  } else {
+    state._ensureRow1Fights(generated);
+  }
   ensureShopPathRules(state, generated);
   // Re-check elite guarantee after shop rewrites to preserve map invariants.
   state._ensureReachableElite(generated);
@@ -134,6 +139,22 @@ export function forceRow1CeprFights(state, map) {
     if (!node) return;
     state._setNodeType(node, 'fight');
     node.forcedEnemyId = 'cepr';
+  });
+}
+
+/**
+ * Ensure all row 1 nodes are fights (for Act 2, without forcing a specific enemy).
+ * @param {{ _setNodeType: (node: MapNode | null, type: MapNodeType) => void }} state
+ * @param {(MapNode | null)[][]} map
+ */
+export function ensureRow1Fights(state, map) {
+  const row = map[1] ?? [];
+  row.forEach((node) => {
+    if (!node) return;
+    if (node.type !== 'fight') {
+      state._setNodeType(node, 'fight');
+    }
+    // No forcedEnemyId — let enemies spawn naturally
   });
 }
 

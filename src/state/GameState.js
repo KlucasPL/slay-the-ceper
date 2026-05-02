@@ -311,6 +311,14 @@ export class GameState {
   }
 
   /**
+   * Ensure all row-1 nodes are fights (for Act 2, without forcing a specific enemy).
+   * @param {(import('./GameState.js').MapNode | null)[][]} map
+   */
+  _ensureRow1Fights(map) {
+    mapEngine.ensureRow1Fights(this, map);
+  }
+
+  /**
    * Rolls 3 unique Maryna boon IDs and stores them in state.
    * @param {number} [count]
    * @returns {string[]}

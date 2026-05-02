@@ -156,7 +156,7 @@ const ceprzyca_vipSprite = `
 
 /**
  * @typedef {{ type: 'attack', name: string, damage: number, hits?: number, applyWeak?: number, applyFrail?: number, applyVulnerable?: number, damagePerCardInHand?: boolean, gainPed?: number, usePed?: boolean, stealDutki?: number } | { type: 'block', name: string, block: number, heal?: number, gainEvasion?: number } | { type: 'buff', name: string, strengthGain?: number, block?: number } | { type: 'status', name: string, addStatusCard?: string, amount?: number, applyStun?: number }} EnemyMoveDef
- * @typedef {{ id: string, name: string, emoji: string, hp: number, maxHp: number, block: number, baseAttack?: number, passive?: string, spriteSvg: string, phase2SpriteSvg?: string, patternType: 'random'|'loop', pattern?: EnemyMoveDef[], phaseTwoPattern?: EnemyMoveDef[], elite?: boolean, isBoss?: boolean, eventOnly?: boolean, tutorialOnly?: boolean }} EnemyDef
+ * @typedef {{ id: string, name: string, emoji: string, hp: number, maxHp: number, block: number, baseAttack?: number, passive?: string, spriteSvg: string, phase2SpriteSvg?: string, patternType: 'random'|'loop', pattern?: EnemyMoveDef[], phaseTwoPattern?: EnemyMoveDef[], elite?: boolean, isBoss?: boolean, eventOnly?: boolean, tutorialOnly?: boolean, act?: number }} EnemyDef
  */
 
 const ceprSprite = `
@@ -516,6 +516,462 @@ const naganiaczeDuoPhase2Sprite = `
   </g>
 </svg>`;
 
+// ─── Act 2: Morskie Oko sprites ──────────────────────────────────────────────
+
+const turystaSprite = `
+<svg viewBox="0 0 100 100" width="120" height="120">
+  <!-- flip-flops -->
+  <ellipse cx="39" cy="97" rx="10" ry="3" fill="#ff6600"/>
+  <ellipse cx="61" cy="97" rx="10" ry="3" fill="#ff6600"/>
+  <!-- legs -->
+  <line x1="43" y1="80" x2="39" y2="97" stroke="#f5c0a0" stroke-width="6"/>
+  <line x1="57" y1="80" x2="61" y2="97" stroke="#f5c0a0" stroke-width="6"/>
+  <!-- shorts -->
+  <rect x="36" y="62" width="28" height="20" rx="3" fill="#ff9900"/>
+  <!-- t-shirt -->
+  <rect x="33" y="42" width="34" height="22" rx="5" fill="#ffffff" stroke="#ddd" stroke-width="1"/>
+  <text x="50" y="55" text-anchor="middle" font-size="5.5" fill="#cc0000">I ❤ ZKP</text>
+  <!-- arms -->
+  <line x1="33" y1="48" x2="18" y2="60" stroke="#f5c0a0" stroke-width="6" stroke-linecap="round"/>
+  <line x1="67" y1="48" x2="80" y2="58" stroke="#f5c0a0" stroke-width="6" stroke-linecap="round"/>
+  <!-- plastic bag -->
+  <ellipse cx="85" cy="68" rx="7" ry="9" fill="#ddeeff" opacity="0.85" stroke="#aabbcc" stroke-width="1"/>
+  <line x1="80" y1="60" x2="81" y2="59" stroke="#aabbcc" stroke-width="1"/>
+  <line x1="90" y1="60" x2="89" y2="59" stroke="#aabbcc" stroke-width="1"/>
+  <!-- head -->
+  <circle cx="50" cy="29" r="14" fill="#f5c0a0"/>
+  <!-- sunglasses -->
+  <rect x="39" y="26" width="9" height="5" rx="2" fill="#222"/>
+  <rect x="52" y="26" width="9" height="5" rx="2" fill="#222"/>
+  <line x1="48" y1="28" x2="52" y2="28" stroke="#111" stroke-width="1.5"/>
+  <!-- smile -->
+  <path d="M 44,36 Q 50,40 56,36" fill="none" stroke="#994422" stroke-width="2"/>
+  <!-- straw hat -->
+  <ellipse cx="50" cy="16" rx="18" ry="4" fill="#ddbb55"/>
+  <ellipse cx="50" cy="13" rx="10" ry="6" fill="#ccaa44"/>
+</svg>`;
+
+const glosnikSprite = `
+<svg viewBox="0 0 100 100" width="120" height="120">
+  <!-- legs -->
+  <line x1="44" y1="80" x2="41" y2="97" stroke="#f5c0a0" stroke-width="6"/>
+  <line x1="56" y1="80" x2="59" y2="97" stroke="#f5c0a0" stroke-width="6"/>
+  <!-- pants -->
+  <rect x="37" y="62" width="26" height="20" rx="3" fill="#3355aa"/>
+  <!-- body -->
+  <rect x="33" y="42" width="34" height="22" rx="5" fill="#ee4444"/>
+  <!-- arm left -->
+  <line x1="33" y1="50" x2="18" y2="60" stroke="#f5c0a0" stroke-width="6" stroke-linecap="round"/>
+  <!-- arm right holds speaker high -->
+  <line x1="67" y1="48" x2="80" y2="38" stroke="#f5c0a0" stroke-width="6" stroke-linecap="round"/>
+  <!-- bluetooth speaker box -->
+  <rect x="76" y="26" width="20" height="16" rx="4" fill="#1a1a1a"/>
+  <circle cx="82" cy="34" r="5" fill="#333" stroke="#555" stroke-width="1"/>
+  <circle cx="82" cy="34" r="2.5" fill="#111"/>
+  <circle cx="90" cy="34" r="5" fill="#333" stroke="#555" stroke-width="1"/>
+  <circle cx="90" cy="34" r="2.5" fill="#111"/>
+  <!-- led bar -->
+  <rect x="77" y="40" width="18" height="2" rx="1" fill="#00ff88" opacity="0.8"/>
+  <!-- sound waves -->
+  <path d="M 98,28 Q 105,34 98,40" fill="none" stroke="#ffcc00" stroke-width="2" opacity="0.7"/>
+  <!-- head -->
+  <circle cx="50" cy="29" r="13" fill="#f5c0a0"/>
+  <!-- open mouth singing -->
+  <ellipse cx="50" cy="36" rx="5" ry="3" fill="#cc5544"/>
+  <!-- eyes closed happy -->
+  <path d="M 43,27 Q 46,25 49,27" fill="none" stroke="#333" stroke-width="2" stroke-linecap="round"/>
+  <path d="M 51,27 Q 54,25 57,27" fill="none" stroke="#333" stroke-width="2" stroke-linecap="round"/>
+  <!-- hair -->
+  <path d="M 38,23 Q 50,13 62,23" fill="#886644" stroke="#886644" stroke-width="3"/>
+</svg>`;
+
+const polmaratonczykSprite = `
+<svg viewBox="0 0 100 100" width="120" height="120">
+  <!-- running legs -->
+  <line x1="48" y1="78" x2="36" y2="97" stroke="#f5c0a0" stroke-width="6"/>
+  <line x1="52" y1="78" x2="68" y2="90" stroke="#f5c0a0" stroke-width="6"/>
+  <!-- shoes -->
+  <ellipse cx="34" cy="97" rx="9" ry="3" fill="#ff4400"/>
+  <ellipse cx="70" cy="92" rx="9" ry="3" fill="#ff4400"/>
+  <!-- compression shorts -->
+  <rect x="37" y="62" width="26" height="18" rx="2" fill="#0033cc"/>
+  <!-- running shirt with bib -->
+  <rect x="33" y="40" width="34" height="24" rx="5" fill="#44aaff"/>
+  <rect x="40" y="46" width="20" height="13" rx="1" fill="#fff"/>
+  <text x="50" y="55" text-anchor="middle" font-size="8" font-weight="bold" fill="#333">42</text>
+  <!-- arms pumping -->
+  <line x1="33" y1="48" x2="14" y2="42" stroke="#f5c0a0" stroke-width="6" stroke-linecap="round"/>
+  <line x1="67" y1="48" x2="86" y2="56" stroke="#f5c0a0" stroke-width="6" stroke-linecap="round"/>
+  <!-- head forward lean -->
+  <circle cx="53" cy="27" r="13" fill="#f5c0a0"/>
+  <!-- sweat drops -->
+  <ellipse cx="20" cy="27" rx="2.5" ry="4" fill="#66bbff" opacity="0.8"/>
+  <ellipse cx="16" cy="36" rx="2" ry="3" fill="#66bbff" opacity="0.7"/>
+  <ellipse cx="78" cy="22" rx="2" ry="3" fill="#66bbff" opacity="0.7"/>
+  <!-- determined face -->
+  <line x1="46" y1="24" x2="50" y2="25" stroke="#333" stroke-width="2" stroke-linecap="round"/>
+  <line x1="56" y1="25" x2="60" y2="24" stroke="#333" stroke-width="2" stroke-linecap="round"/>
+  <rect x="47" y="31" width="12" height="4" rx="1" fill="#fff" stroke="#994422" stroke-width="1"/>
+  <!-- headband -->
+  <rect x="41" y="16" width="24" height="5" rx="2" fill="#ff4400"/>
+</svg>`;
+
+const instaTaterniczkaSprite = `
+<svg viewBox="0 0 100 100" width="120" height="120">
+  <!-- legs -->
+  <line x1="44" y1="80" x2="42" y2="97" stroke="#f5c0a0" stroke-width="6"/>
+  <line x1="56" y1="80" x2="58" y2="97" stroke="#f5c0a0" stroke-width="6"/>
+  <!-- hiking boots -->
+  <rect x="36" y="93" width="12" height="5" rx="2" fill="#6b4226"/>
+  <rect x="52" y="93" width="12" height="5" rx="2" fill="#6b4226"/>
+  <!-- leggings -->
+  <rect x="37" y="62" width="26" height="20" rx="3" fill="#882288"/>
+  <!-- jacket -->
+  <rect x="33" y="40" width="34" height="24" rx="6" fill="#aa44bb"/>
+  <!-- arm left balance -->
+  <line x1="33" y1="50" x2="16" y2="54" stroke="#f5c0a0" stroke-width="6" stroke-linecap="round"/>
+  <!-- arm right: selfie stick -->
+  <line x1="67" y1="46" x2="84" y2="28" stroke="#f5c0a0" stroke-width="6" stroke-linecap="round"/>
+  <line x1="84" y1="28" x2="92" y2="8" stroke="#aaa" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- phone -->
+  <rect x="86" y="3" width="12" height="8" rx="2" fill="#222"/>
+  <rect x="87" y="4" width="10" height="6" rx="1" fill="#55aaff"/>
+  <!-- flash -->
+  <circle cx="92" cy="7" r="6" fill="#ffffcc" opacity="0.55"/>
+  <!-- head -->
+  <circle cx="50" cy="27" r="13" fill="#f5c0a0"/>
+  <!-- duck lips dzióbek -->
+  <ellipse cx="50" cy="34" rx="5" ry="3" fill="#ff6688"/>
+  <!-- eyes with lashes -->
+  <circle cx="44" cy="25" r="3" fill="#222"/>
+  <circle cx="56" cy="25" r="3" fill="#222"/>
+  <line x1="41" y1="22" x2="44" y2="23" stroke="#222" stroke-width="1.5"/>
+  <line x1="56" y1="23" x2="59" y2="22" stroke="#222" stroke-width="1.5"/>
+  <!-- hair bun -->
+  <circle cx="50" cy="16" r="8" fill="#774422"/>
+  <circle cx="50" cy="13" r="5" fill="#885533"/>
+</svg>`;
+
+const januszSprite = `
+<svg viewBox="0 0 100 100" width="120" height="120">
+  <!-- legs -->
+  <line x1="44" y1="80" x2="42" y2="97" stroke="#f5c0a0" stroke-width="7"/>
+  <line x1="56" y1="80" x2="58" y2="97" stroke="#f5c0a0" stroke-width="7"/>
+  <!-- sandals -->
+  <rect x="36" y="93" width="12" height="5" rx="2" fill="#8b4513"/>
+  <rect x="52" y="93" width="12" height="5" rx="2" fill="#8b4513"/>
+  <!-- cargo shorts khaki -->
+  <rect x="36" y="62" width="28" height="20" rx="3" fill="#8fbc5a"/>
+  <rect x="37" y="66" width="8" height="6" rx="1" fill="#7aaa4a" stroke="#6a9a3a" stroke-width="0.5"/>
+  <!-- polo shirt -->
+  <rect x="32" y="40" width="36" height="24" rx="6" fill="#ddcc88"/>
+  <!-- arm left pointing -->
+  <line x1="32" y1="50" x2="14" y2="56" stroke="#f5c0a0" stroke-width="6" stroke-linecap="round"/>
+  <!-- arm right holds map -->
+  <line x1="68" y1="50" x2="84" y2="50" stroke="#f5c0a0" stroke-width="6" stroke-linecap="round"/>
+  <!-- map -->
+  <rect x="82" y="43" width="14" height="12" rx="1" fill="#eedd99" stroke="#8b7333" stroke-width="1"/>
+  <line x1="84" y1="47" x2="94" y2="47" stroke="#aaa" stroke-width="0.8"/>
+  <line x1="84" y1="50" x2="92" y2="50" stroke="#aaa" stroke-width="0.8"/>
+  <!-- head stocky -->
+  <circle cx="50" cy="27" r="14" fill="#f0b090"/>
+  <!-- receding hair -->
+  <path d="M 37,22 Q 50,10 63,22 L 63,26 Q 50,16 37,26 Z" fill="#887766"/>
+  <!-- big moustache -->
+  <path d="M 40,33 Q 45,30 50,33 Q 55,30 60,33" fill="#777755"/>
+  <!-- eyebrows skeptical -->
+  <line x1="42" y1="24" x2="47" y2="25" stroke="#555" stroke-width="2" stroke-linecap="round"/>
+  <line x1="53" y1="25" x2="58" y2="24" stroke="#555" stroke-width="2" stroke-linecap="round"/>
+  <circle cx="44" cy="28" r="2" fill="#4a3020"/>
+  <circle cx="56" cy="28" r="2" fill="#4a3020"/>
+</svg>`;
+
+const kaczkaSprite = `
+<svg viewBox="0 0 100 100" width="120" height="120">
+  <!-- water hint -->
+  <ellipse cx="50" cy="96" rx="34" ry="6" fill="#88bbff" opacity="0.35"/>
+  <!-- tail feathers -->
+  <ellipse cx="73" cy="72" rx="13" ry="6" fill="#228b22" transform="rotate(-30 73 72)"/>
+  <!-- body white -->
+  <ellipse cx="50" cy="72" rx="24" ry="18" fill="#f8f8f0"/>
+  <!-- wing line -->
+  <path d="M 30,70 Q 50,58 70,68" fill="none" stroke="#ddd" stroke-width="2"/>
+  <!-- neck -->
+  <ellipse cx="34" cy="55" rx="10" ry="14" fill="#f8f8f0"/>
+  <!-- head green -->
+  <circle cx="28" cy="44" r="14" fill="#228b22"/>
+  <!-- white collar -->
+  <ellipse cx="31" cy="58" rx="9" ry="4" fill="#f8f8f0"/>
+  <!-- beak with food -->
+  <polygon points="16,44 8,41 8,47" fill="#ffcc00"/>
+  <!-- bread in beak -->
+  <rect x="2" y="39" width="8" height="6" rx="2" fill="#ddb060"/>
+  <!-- beady eye -->
+  <circle cx="22" cy="41" r="3" fill="#111"/>
+  <circle cx="21" cy="40" r="1" fill="#fff"/>
+  <!-- angry brow -->
+  <line x1="18" y1="37" x2="24" y2="38" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+  <!-- feet -->
+  <line x1="44" y1="88" x2="36" y2="97" stroke="#ffaa00" stroke-width="4"/>
+  <line x1="56" y1="88" x2="64" y2="97" stroke="#ffaa00" stroke-width="4"/>
+  <line x1="30" y1="97" x2="42" y2="97" stroke="#ffaa00" stroke-width="3"/>
+  <line x1="58" y1="97" x2="70" y2="97" stroke="#ffaa00" stroke-width="3"/>
+</svg>`;
+
+const swistakSprite = `
+<svg viewBox="0 0 100 100" width="120" height="120">
+  <!-- ground hint -->
+  <ellipse cx="50" cy="97" rx="28" ry="4" fill="#88aa44" opacity="0.45"/>
+  <!-- body fat marmot -->
+  <ellipse cx="50" cy="74" rx="20" ry="20" fill="#aa8844"/>
+  <!-- belly -->
+  <ellipse cx="50" cy="78" rx="12" ry="13" fill="#cc9955"/>
+  <!-- paws raised -->
+  <ellipse cx="28" cy="62" rx="8" ry="6" fill="#aa8844" transform="rotate(-35 28 62)"/>
+  <ellipse cx="72" cy="62" rx="8" ry="6" fill="#aa8844" transform="rotate(35 72 62)"/>
+  <!-- claws left -->
+  <line x1="21" y1="56" x2="19" y2="52" stroke="#665533" stroke-width="2"/>
+  <line x1="24" y1="54" x2="22" y2="50" stroke="#665533" stroke-width="2"/>
+  <!-- claws right -->
+  <line x1="79" y1="56" x2="81" y2="52" stroke="#665533" stroke-width="2"/>
+  <line x1="76" y1="54" x2="78" y2="50" stroke="#665533" stroke-width="2"/>
+  <!-- tail -->
+  <ellipse cx="68" cy="88" rx="10" ry="6" fill="#887733" transform="rotate(20 68 88)"/>
+  <!-- head -->
+  <circle cx="50" cy="46" r="18" fill="#aa8844"/>
+  <!-- chubby cheeks -->
+  <ellipse cx="36" cy="50" rx="8" ry="7" fill="#cc9955"/>
+  <ellipse cx="64" cy="50" rx="8" ry="7" fill="#cc9955"/>
+  <!-- greedy eyes -->
+  <circle cx="42" cy="43" r="3.5" fill="#222"/>
+  <circle cx="58" cy="43" r="3.5" fill="#222"/>
+  <circle cx="43" cy="42" r="1" fill="#fff"/>
+  <circle cx="59" cy="42" r="1" fill="#fff"/>
+  <!-- nose -->
+  <ellipse cx="50" cy="51" rx="4" ry="2.5" fill="#884422"/>
+  <!-- whiskers -->
+  <line x1="30" y1="50" x2="44" y2="51" stroke="#555" stroke-width="1" opacity="0.7"/>
+  <line x1="30" y1="53" x2="44" y2="53" stroke="#555" stroke-width="1" opacity="0.7"/>
+  <line x1="56" y1="51" x2="70" y2="50" stroke="#555" stroke-width="1" opacity="0.7"/>
+  <line x1="56" y1="53" x2="70" y2="53" stroke="#555" stroke-width="1" opacity="0.7"/>
+  <!-- buck teeth -->
+  <rect x="46" y="55" width="5" height="6" rx="1" fill="#fff" stroke="#ccc" stroke-width="0.5"/>
+  <rect x="52" y="55" width="5" height="6" rx="1" fill="#fff" stroke="#ccc" stroke-width="0.5"/>
+  <!-- ears -->
+  <circle cx="35" cy="31" r="6" fill="#aa8844"/>
+  <circle cx="65" cy="31" r="6" fill="#aa8844"/>
+  <circle cx="35" cy="31" r="3.5" fill="#cc9966"/>
+  <circle cx="65" cy="31" r="3.5" fill="#cc9966"/>
+</svg>`;
+
+const bileterSprite = `
+<svg viewBox="0 0 100 100" width="120" height="120">
+  <!-- legs -->
+  <line x1="43" y1="82" x2="41" y2="97" stroke="#111" stroke-width="7"/>
+  <line x1="57" y1="82" x2="59" y2="97" stroke="#111" stroke-width="7"/>
+  <!-- boots -->
+  <rect x="35" y="93" width="12" height="5" rx="2" fill="#111"/>
+  <rect x="53" y="93" width="12" height="5" rx="2" fill="#111"/>
+  <!-- dark trousers -->
+  <rect x="36" y="64" width="28" height="20" rx="3" fill="#1a3050"/>
+  <!-- TPN uniform green -->
+  <rect x="32" y="42" width="36" height="24" rx="6" fill="#2a5a30"/>
+  <!-- badge -->
+  <rect x="36" y="47" width="12" height="8" rx="1" fill="#d4a520"/>
+  <text x="42" y="53" text-anchor="middle" font-size="5" font-weight="bold" fill="#1a3050">TPN</text>
+  <!-- arm left holding clipboard -->
+  <line x1="32" y1="52" x2="16" y2="60" stroke="#f5c0a0" stroke-width="6" stroke-linecap="round"/>
+  <rect x="8" y="56" width="12" height="16" rx="2" fill="#eee" stroke="#666" stroke-width="1"/>
+  <rect x="9" y="55" width="10" height="3" rx="1" fill="#aaa"/>
+  <line x1="10" y1="62" x2="18" y2="62" stroke="#888" stroke-width="1"/>
+  <line x1="10" y1="65" x2="18" y2="65" stroke="#888" stroke-width="1"/>
+  <line x1="10" y1="68" x2="16" y2="68" stroke="#888" stroke-width="1"/>
+  <!-- arm right raised pointing -->
+  <line x1="68" y1="50" x2="84" y2="44" stroke="#f5c0a0" stroke-width="6" stroke-linecap="round"/>
+  <!-- head -->
+  <circle cx="50" cy="28" r="14" fill="#f0b090"/>
+  <!-- TPN cap -->
+  <rect x="36" y="16" width="28" height="10" rx="2" fill="#2a5a30"/>
+  <rect x="34" y="24" width="32" height="3" rx="1" fill="#1a4020"/>
+  <rect x="34" y="25" width="32" height="2" fill="#d4a520"/>
+  <!-- stern face -->
+  <line x1="42" y1="26" x2="46" y2="27" stroke="#333" stroke-width="2" stroke-linecap="round"/>
+  <line x1="54" y1="27" x2="58" y2="26" stroke="#333" stroke-width="2" stroke-linecap="round"/>
+  <circle cx="44" cy="30" r="2" fill="#333"/>
+  <circle cx="56" cy="30" r="2" fill="#333"/>
+  <!-- frown -->
+  <path d="M 44,37 Q 50,34 56,37" fill="none" stroke="#994422" stroke-width="2"/>
+</svg>`;
+
+const meleksiarzSprite = `
+<svg viewBox="0 0 100 100" width="120" height="120">
+  <!-- meleks / golf cart body -->
+  <rect x="12" y="58" width="76" height="30" rx="8" fill="#ffdd00" stroke="#ccaa00" stroke-width="2"/>
+  <!-- roof -->
+  <rect x="18" y="43" width="64" height="18" rx="4" fill="#ffdd00" stroke="#ccaa00" stroke-width="1.5"/>
+  <!-- roof posts -->
+  <line x1="20" y1="43" x2="20" y2="61" stroke="#ccaa00" stroke-width="3"/>
+  <line x1="80" y1="43" x2="80" y2="61" stroke="#ccaa00" stroke-width="3"/>
+  <!-- wheels -->
+  <circle cx="28" cy="90" r="9" fill="#333" stroke="#222" stroke-width="2"/>
+  <circle cx="28" cy="90" r="4" fill="#888"/>
+  <circle cx="72" cy="90" r="9" fill="#333" stroke="#222" stroke-width="2"/>
+  <circle cx="72" cy="90" r="4" fill="#888"/>
+  <!-- klakson/horn -->
+  <ellipse cx="88" cy="68" rx="8" ry="5" fill="#ff4400"/>
+  <text x="88" y="71" text-anchor="middle" font-size="7" font-weight="bold" fill="#fff">!</text>
+  <!-- driver torso -->
+  <rect x="28" y="46" width="24" height="14" rx="4" fill="#ee6600"/>
+  <!-- driver head -->
+  <circle cx="40" cy="36" r="12" fill="#f5c0a0"/>
+  <!-- cap -->
+  <rect x="29" y="27" width="24" height="9" rx="3" fill="#ee6600"/>
+  <rect x="27" y="35" width="28" height="3" rx="1" fill="#cc4400"/>
+  <!-- grumpy face -->
+  <circle cx="36" cy="37" r="2" fill="#222"/>
+  <circle cx="46" cy="37" r="2" fill="#222"/>
+  <path d="M 36,43 Q 40,40 45,43" fill="none" stroke="#994422" stroke-width="2"/>
+  <!-- arm on steering wheel -->
+  <line x1="28" y1="54" x2="16" y2="64" stroke="#f5c0a0" stroke-width="5" stroke-linecap="round"/>
+  <!-- steering wheel -->
+  <circle cx="14" cy="66" r="7" fill="none" stroke="#aa8800" stroke-width="2.5"/>
+</svg>`;
+
+const boberSprite = `
+<svg viewBox="0 0 100 100" width="120" height="120">
+  <!-- tourist junk dam -->
+  <rect x="4" y="70" width="92" height="7" rx="2" fill="#aaaaaa" opacity="0.4"/>
+  <ellipse cx="18" cy="72" rx="8" ry="3" fill="#ff6600" opacity="0.65"/>
+  <rect x="68" y="66" width="5" height="12" rx="2" fill="#88ccff" opacity="0.55"/>
+  <!-- body large -->
+  <ellipse cx="50" cy="76" rx="28" ry="16" fill="#7a4a1a"/>
+  <!-- belly -->
+  <ellipse cx="50" cy="79" rx="18" ry="10" fill="#aa7733"/>
+  <!-- flat paddle tail -->
+  <ellipse cx="75" cy="85" rx="18" ry="8" fill="#5a3010" stroke="#3a1a00" stroke-width="1"/>
+  <line x1="60" y1="81" x2="91" y2="83" stroke="#3a1a00" stroke-width="1" opacity="0.6"/>
+  <line x1="60" y1="85" x2="91" y2="87" stroke="#3a1a00" stroke-width="1" opacity="0.6"/>
+  <!-- front paws raised -->
+  <ellipse cx="22" cy="62" rx="9" ry="7" fill="#7a4a1a" transform="rotate(-40 22 62)"/>
+  <ellipse cx="78" cy="62" rx="9" ry="7" fill="#7a4a1a" transform="rotate(40 78 62)"/>
+  <!-- claws -->
+  <line x1="15" y1="56" x2="12" y2="52" stroke="#3a1a00" stroke-width="2"/>
+  <line x1="18" y1="54" x2="16" y2="50" stroke="#3a1a00" stroke-width="2"/>
+  <line x1="82" y1="56" x2="85" y2="52" stroke="#3a1a00" stroke-width="2"/>
+  <line x1="79" y1="54" x2="81" y2="50" stroke="#3a1a00" stroke-width="2"/>
+  <!-- head -->
+  <circle cx="50" cy="50" r="20" fill="#7a4a1a"/>
+  <!-- muzzle / cheeks -->
+  <ellipse cx="50" cy="56" rx="13" ry="9" fill="#aa7733"/>
+  <!-- wide angry eyes -->
+  <circle cx="39" cy="45" r="5" fill="#fff" stroke="#3a1a00" stroke-width="1"/>
+  <circle cx="61" cy="45" r="5" fill="#fff" stroke="#3a1a00" stroke-width="1"/>
+  <circle cx="40" cy="46" r="3" fill="#222"/>
+  <circle cx="62" cy="46" r="3" fill="#222"/>
+  <circle cx="41" cy="45" r="1" fill="#fff"/>
+  <circle cx="63" cy="45" r="1" fill="#fff"/>
+  <!-- angry brows -->
+  <line x1="33" y1="40" x2="41" y2="42" stroke="#3a1a00" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="59" y1="42" x2="67" y2="40" stroke="#3a1a00" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- nose -->
+  <ellipse cx="50" cy="56" rx="5" ry="3" fill="#5a2a00"/>
+  <!-- beaver teeth -->
+  <rect x="45" y="62" width="5" height="7" rx="1" fill="#fff" stroke="#ddd" stroke-width="0.5"/>
+  <rect x="51" y="62" width="5" height="7" rx="1" fill="#fff" stroke="#ddd" stroke-width="0.5"/>
+  <!-- round ears -->
+  <circle cx="33" cy="33" r="8" fill="#7a4a1a"/>
+  <circle cx="67" cy="33" r="8" fill="#7a4a1a"/>
+  <circle cx="33" cy="33" r="4" fill="#aa6633"/>
+  <circle cx="67" cy="33" r="4" fill="#aa6633"/>
+</svg>`;
+
+const krolowaSchroniskaSprite = `
+<svg viewBox="0 0 100 100" width="140" height="140">
+  <!-- counter -->
+  <rect x="0" y="72" width="100" height="28" fill="#8b5a2b"/>
+  <rect x="0" y="70" width="100" height="5" fill="#a0692e"/>
+  <!-- items on counter -->
+  <rect x="8" y="61" width="8" height="12" rx="2" fill="#ddaa55"/>
+  <rect x="22" y="63" width="14" height="9" rx="3" fill="#cc4444"/>
+  <ellipse cx="55" cy="68" rx="10" ry="4" fill="#ddeeff"/>
+  <!-- body + apron -->
+  <rect x="26" y="40" width="48" height="32" rx="6" fill="#cc4444"/>
+  <rect x="36" y="44" width="28" height="28" rx="3" fill="#ffffff"/>
+  <!-- apron strings -->
+  <line x1="36" y1="46" x2="26" y2="49" stroke="#eee" stroke-width="2"/>
+  <line x1="64" y1="46" x2="74" y2="49" stroke="#eee" stroke-width="2"/>
+  <!-- arm left -->
+  <line x1="26" y1="52" x2="8" y2="62" stroke="#f5c0a0" stroke-width="7" stroke-linecap="round"/>
+  <!-- arm right wagging finger -->
+  <line x1="74" y1="52" x2="90" y2="44" stroke="#f5c0a0" stroke-width="7" stroke-linecap="round"/>
+  <line x1="90" y1="44" x2="96" y2="36" stroke="#f5c0a0" stroke-width="4" stroke-linecap="round"/>
+  <!-- head -->
+  <circle cx="50" cy="24" r="18" fill="#f0b090"/>
+  <!-- hair dark bun -->
+  <path d="M 33,20 Q 50,6 67,20 L 67,26 Q 50,14 33,26 Z" fill="#3a2a1a"/>
+  <circle cx="50" cy="12" r="8" fill="#3a2a1a"/>
+  <line x1="44" y1="10" x2="56" y2="10" stroke="#d4a520" stroke-width="2"/>
+  <!-- commanding face -->
+  <line x1="40" y1="22" x2="44" y2="23" stroke="#333" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="56" y1="23" x2="60" y2="22" stroke="#333" stroke-width="2.5" stroke-linecap="round"/>
+  <circle cx="42" cy="27" r="2.5" fill="#3a2010"/>
+  <circle cx="58" cy="27" r="2.5" fill="#3a2010"/>
+  <!-- thin pursed lips -->
+  <line x1="43" y1="33" x2="57" y2="33" stroke="#994422" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- steam lines -->
+  <path d="M 18,57 Q 12,48 18,40" fill="none" stroke="#ffffff" stroke-width="1.5" opacity="0.55"/>
+  <path d="M 14,57 Q 8,46 14,36" fill="none" stroke="#ffffff" stroke-width="1" opacity="0.35"/>
+</svg>`;
+
+const harnasPogodynkaSprite = `
+<svg viewBox="0 0 100 100" width="140" height="140">
+  <!-- halny wind lines -->
+  <path d="M 2,18 Q 14,13 8,8" fill="none" stroke="#88aacc" stroke-width="2" opacity="0.6"/>
+  <path d="M 0,28 Q 14,20 8,14" fill="none" stroke="#88aacc" stroke-width="1.5" opacity="0.5"/>
+  <path d="M 98,16 Q 86,11 92,6" fill="none" stroke="#88aacc" stroke-width="2" opacity="0.6"/>
+  <!-- snowflake symbols -->
+  <text x="84" y="34" font-size="10" fill="#88ddff" opacity="0.8">❄</text>
+  <text x="7" y="48" font-size="8" fill="#88ddff" opacity="0.7">❄</text>
+  <!-- fog wisps -->
+  <ellipse cx="14" cy="72" rx="12" ry="5" fill="#cccccc" opacity="0.35"/>
+  <ellipse cx="84" cy="78" rx="13" ry="5" fill="#cccccc" opacity="0.3"/>
+  <!-- legs -->
+  <line x1="43" y1="82" x2="40" y2="97" stroke="#111" stroke-width="8"/>
+  <line x1="57" y1="82" x2="60" y2="97" stroke="#111" stroke-width="8"/>
+  <!-- kierpce shoes -->
+  <rect x="33" y="93" width="14" height="5" rx="2" fill="#111"/>
+  <rect x="53" y="93" width="14" height="5" rx="2" fill="#111"/>
+  <!-- white trousers with red stripe -->
+  <rect x="36" y="64" width="28" height="20" rx="3" fill="#f8f8f0"/>
+  <line x1="36" y1="70" x2="64" y2="70" stroke="#cc2200" stroke-width="1.5"/>
+  <!-- broad body: vest over shirt -->
+  <rect x="30" y="42" width="40" height="24" rx="6" fill="#f5f5f0" stroke="#ccc" stroke-width="1"/>
+  <rect x="30" y="42" width="15" height="24" rx="4" fill="#2a3a1a" opacity="0.9"/>
+  <rect x="55" y="42" width="15" height="24" rx="4" fill="#2a3a1a" opacity="0.9"/>
+  <!-- arms spread commanding weather -->
+  <line x1="30" y1="50" x2="8" y2="37" stroke="#f5c0a0" stroke-width="7" stroke-linecap="round"/>
+  <line x1="70" y1="50" x2="92" y2="37" stroke="#f5c0a0" stroke-width="7" stroke-linecap="round"/>
+  <!-- weather orbs in hands -->
+  <circle cx="5" cy="35" r="8" fill="#88ccff" opacity="0.7"/>
+  <circle cx="95" cy="35" r="8" fill="#ffcc44" opacity="0.7"/>
+  <!-- head -->
+  <circle cx="50" cy="28" r="15" fill="#c49a6c"/>
+  <!-- grey beard -->
+  <path d="M 37,35 Q 42,43 50,45 Q 58,43 63,35" fill="#aaaaaa"/>
+  <!-- bushy eyebrows -->
+  <path d="M 37,22 Q 44,19 48,22" fill="none" stroke="#666" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M 52,22 Q 56,19 63,22" fill="none" stroke="#666" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- eyes piercing -->
+  <circle cx="43" cy="26" r="3" fill="#333"/>
+  <circle cx="57" cy="26" r="3" fill="#333"/>
+  <!-- góralski hat -->
+  <rect x="36" y="14" width="28" height="10" rx="2" fill="#111"/>
+  <rect x="34" y="22" width="32" height="3" rx="1" fill="#0a0a0a"/>
+  <rect x="34" y="21" width="32" height="2" fill="#cc2200"/>
+  <path d="M 60,15 Q 70,8 68,2 Q 64,7 62,15" fill="#228b22"/>
+  <path d="M 62,15 Q 74,5 72,0 Q 67,6 64,15" fill="#33aa33"/>
+</svg>`;
+
 /** @type {Record<string, EnemyDef>} */
 export const enemyLibrary = {
   cepr: {
@@ -792,6 +1248,229 @@ export const enemyLibrary = {
       { type: 'attack', name: 'Agresywne pozowanie', damage: 2, hits: 3 },
       { type: 'attack', name: 'Podatek od zdjęcia', damage: 9, hits: 1, applyFrail: 1 },
       { type: 'attack', name: 'Uścisk Krupówek', damage: 12, hits: 1 },
+    ],
+  },
+
+  // ─── Act 2: Morskie Oko — regular enemies ──────────────────────────────────
+  turysta_w_klapkach: {
+    id: 'turysta_w_klapkach',
+    name: 'Turysta w Klapkach',
+    emoji: '🩴',
+    hp: 115,
+    maxHp: 115,
+    block: 0,
+    baseAttack: 0,
+    act: 2,
+    spriteSvg: turystaSprite,
+    patternType: 'loop',
+    pattern: [
+      { type: 'attack', name: 'Rzut kabanosem', damage: 11, hits: 1 },
+      { type: 'attack', name: 'Plask klapkiem', damage: 7, hits: 2, applyFrail: 1 },
+      { type: 'attack', name: 'Otarcia pięty', damage: 15, hits: 1 },
+    ],
+  },
+  rodzina_z_glosnikiem: {
+    id: 'rodzina_z_glosnikiem',
+    name: 'Rodzina z Głośnikiem',
+    emoji: '📢',
+    hp: 112,
+    maxHp: 112,
+    block: 0,
+    baseAttack: 0,
+    act: 2,
+    spriteSvg: glosnikSprite,
+    patternType: 'loop',
+    pattern: [
+      { type: 'status', name: 'Bas drop', addStatusCard: 'ulotka', amount: 2 },
+      { type: 'attack', name: 'Zgubione dziecko', damage: 7, hits: 2, applyWeak: 1 },
+      { type: 'attack', name: 'Krzyk o loda', damage: 13, hits: 1 },
+    ],
+  },
+  spocony_polmaratonczyk: {
+    id: 'spocony_polmaratonczyk',
+    name: 'Spocony Półmaratończyk',
+    emoji: '🏃',
+    hp: 120,
+    maxHp: 120,
+    block: 0,
+    baseAttack: 0,
+    act: 2,
+    passive: 'mglisty_sprint',
+    spriteSvg: polmaratonczykSprite,
+    patternType: 'loop',
+    pattern: [
+      { type: 'buff', name: 'Łapanie oddechu', strengthGain: 2, block: 6 },
+      { type: 'attack', name: 'Pot na czole', damage: 10, hits: 1 },
+      { type: 'attack', name: 'Ślepa szarża', damage: 16, hits: 1 },
+    ],
+  },
+  insta_taterniczka: {
+    id: 'insta_taterniczka',
+    name: 'Insta-Taterniczka',
+    emoji: '🤳',
+    hp: 118,
+    maxHp: 118,
+    block: 0,
+    baseAttack: 0,
+    act: 2,
+    spriteSvg: instaTaterniczkaSprite,
+    patternType: 'loop',
+    pattern: [
+      { type: 'attack', name: 'Błysk flesza', damage: 9, hits: 1, applyVulnerable: 2 },
+      { type: 'attack', name: 'Selfie z hasztagiem', damage: 13, hits: 1 },
+      { type: 'block', name: 'Dzióbek', block: 14, heal: 6 },
+    ],
+  },
+  janusz_znawca_szlakow: {
+    id: 'janusz_znawca_szlakow',
+    name: 'Janusz Znawca Szlaków',
+    emoji: '🗺️',
+    hp: 128,
+    maxHp: 128,
+    block: 0,
+    baseAttack: 0,
+    act: 2,
+    spriteSvg: januszSprite,
+    patternType: 'loop',
+    pattern: [
+      { type: 'block', name: 'Zjedz kanapkę', block: 16, heal: 6 },
+      { type: 'attack', name: 'Dobra rada', damage: 10, hits: 1, applyWeak: 2 },
+      { type: 'attack', name: 'Wykład o mapie', damage: 14, hits: 1 },
+    ],
+  },
+  zlodziejska_kaczka: {
+    id: 'zlodziejska_kaczka',
+    name: 'Złodziejska Kaczka',
+    emoji: '🦆',
+    hp: 112,
+    maxHp: 112,
+    block: 0,
+    baseAttack: 0,
+    act: 2,
+    spriteSvg: kaczkaSprite,
+    patternType: 'loop',
+    pattern: [
+      { type: 'attack', name: 'Uszczypnięcie', damage: 6, hits: 2 },
+      { type: 'block', name: 'Unik wodny', block: 11, gainEvasion: 1 },
+      { type: 'attack', name: 'Kradzież chleba', damage: 10, hits: 1, stealDutki: 2 },
+    ],
+  },
+  glodny_swistak: {
+    id: 'glodny_swistak',
+    name: 'Głodny Świstak',
+    emoji: '🐿️',
+    hp: 120,
+    maxHp: 120,
+    block: 0,
+    baseAttack: 0,
+    act: 2,
+    passive: 'halny_schwarm',
+    spriteSvg: swistakSprite,
+    patternType: 'loop',
+    pattern: [
+      { type: 'attack', name: 'Krótki pazur', damage: 7, hits: 2, applyWeak: 1 },
+      { type: 'buff', name: 'Pisk rozpaczy', strengthGain: 2, block: 6 },
+      { type: 'attack', name: 'Ucieczka w nory', damage: 11, hits: 1, applyFrail: 1 },
+    ],
+  },
+
+  // ─── Act 2: Morskie Oko — elite enemies ────────────────────────────────────
+  bileter_z_tpn: {
+    id: 'bileter_z_tpn',
+    name: 'Bileter z TPN',
+    emoji: '🎫',
+    hp: 150,
+    maxHp: 150,
+    block: 0,
+    baseAttack: 0,
+    act: 2,
+    spriteSvg: bileterSprite,
+    patternType: 'loop',
+    elite: true,
+    pattern: [
+      { type: 'status', name: 'Brak pieczątki', addStatusCard: 'ulotka', amount: 2 },
+      { type: 'attack', name: 'Inspekcja paragonu', damage: 16, hits: 1, applyWeak: 1 },
+      { type: 'buff', name: 'Wezwanie straży', strengthGain: 2, block: 16 },
+      { type: 'attack', name: 'Mandat za wydeptanie', damage: 20, hits: 1, applyFrail: 1 },
+    ],
+  },
+  meleksiarz_pirat_drogowy: {
+    id: 'meleksiarz_pirat_drogowy',
+    name: 'Meleksiarz Pirat Drogowy',
+    emoji: '🛺',
+    hp: 124,
+    maxHp: 124,
+    block: 0,
+    baseAttack: 0,
+    act: 2,
+    spriteSvg: meleksiarzSprite,
+    patternType: 'loop',
+    elite: true,
+    pattern: [
+      { type: 'attack', name: 'Boczkiem, boczkiem!', damage: 6, hits: 2, applyVulnerable: 1 },
+      { type: 'attack', name: 'Klakson z zaskoczenia', damage: 12, hits: 1, applyFrail: 1 },
+      { type: 'attack', name: 'Wjazd w tłum', damage: 19, hits: 1 },
+      { type: 'attack', name: 'Priorytet dla meleksa', damage: 7, hits: 2, applyVulnerable: 1 },
+    ],
+  },
+  bober_z_morskiego_oka: {
+    id: 'bober_z_morskiego_oka',
+    name: 'Bober z Morskiego Oka',
+    emoji: '🦫',
+    hp: 130,
+    maxHp: 130,
+    block: 0,
+    baseAttack: 0,
+    act: 2,
+    spriteSvg: boberSprite,
+    patternType: 'loop',
+    elite: true,
+    pattern: [
+      { type: 'block', name: 'Budowa tamy', block: 22 },
+      { type: 'attack', name: 'Plask ogonem', damage: 18, hits: 1 },
+      { type: 'attack', name: 'Podgryzanie kijka', damage: 9, hits: 1, applyFrail: 2 },
+      { type: 'buff', name: 'Inspekcja tamy', strengthGain: 1, block: 8 },
+    ],
+  },
+
+  // ─── Act 2: Morskie Oko — bosses ───────────────────────────────────────────
+  krolowa_schroniska: {
+    id: 'krolowa_schroniska',
+    name: 'Królowa Schroniska',
+    emoji: '👑',
+    hp: 280,
+    maxHp: 280,
+    block: 0,
+    baseAttack: 0,
+    act: 2,
+    spriteSvg: krolowaSchroniskaSprite,
+    patternType: 'loop',
+    passive: 'kolejka_do_toalety',
+    isBoss: true,
+    pattern: [
+      { type: 'status', name: 'Gorąca zupa', addStatusCard: 'ulotka', amount: 2 },
+      { type: 'attack', name: 'Wrzątek płatny', damage: 12, hits: 1, applyWeak: 2 },
+      { type: 'buff', name: 'Obsługa kolejki', strengthGain: 3, block: 18 },
+      { type: 'attack', name: 'Koniec wydawki', damage: 28, hits: 1 },
+    ],
+  },
+  harnas_pogodynka: {
+    id: 'harnas_pogodynka',
+    name: 'Harnaś Pogodynka',
+    emoji: '⛈️',
+    hp: 290,
+    maxHp: 290,
+    block: 0,
+    baseAttack: 0,
+    act: 2,
+    spriteSvg: harnasPogodynkaSprite,
+    patternType: 'loop',
+    isBoss: true,
+    pattern: [
+      { type: 'buff', name: 'Zapowiedź halnego', strengthGain: 2, block: 14 },
+      { type: 'attack', name: 'Taniec we mgle', damage: 15, hits: 1, applyVulnerable: 1 },
+      { type: 'attack', name: 'Lodowate spojrzenie', damage: 18, hits: 1, applyWeak: 1 },
+      { type: 'attack', name: 'Wichura szczytowa', damage: 29, hits: 1 },
     ],
   },
 };

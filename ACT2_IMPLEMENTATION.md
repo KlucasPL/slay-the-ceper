@@ -250,7 +250,7 @@ Weather recap: `currentWeather` ∈ `{clear, halny, frozen, fog}`. Halny drains 
 
 ---
 
-## Part 4: Act 2 Enemies - Morskie Oko Roster Proposal
+## Part 4: Act 2 Enemies + Story Update - Turystyczny Absurd w Morskim Oku
 
 ### Target Count (mirrors Act 1)
 
@@ -261,80 +261,238 @@ To match current Act 1 composition, Act 2 should introduce:
 
 This keeps pacing, encounter variety, and elite density aligned between acts.
 
-### Theme Direction
+### New Story Direction (Act 2)
 
-Act 2 around **Morskie Oko** should feel: alpine weather pressure, trail congestion, rescue infrastructure, nature hazards, and high-altitude fatigue. Enemy mechanics should lean into:
+Act 2 in **Morskim Oku** is now themed as **Tourist Exhaustion, Crowds, and Trail Absurdity**. Jędrek uciekł z miasta, ale chaos turystyczny i komercjalizacja dogoniły go nawet w górach.
 
-- weather interactions (`fog`, `halny`, `frozen`)
-- hand disruption / tempo loss (tourist chaos)
-- block attrition and chip pressure
-- selective Rachunek pressure from premium tourism services
+Gameplay tone: satyryczny, lokalny absurd i "wakacyjny bałagan" (bez horroru). Humor ma wynikać z codziennych sytuacji na szlaku i przejaskrawionych zachowań postaci.
+
+CRITICAL DESIGN RULE: mechanical roles, encounter mix, HP targets, and damage budgets remain unchanged from prior tuning.
+
+Mechanicznie roster nadal wzmacnia:
+
+- weather interactions (`fog`, `halny`, `frozen`),
+- tempo disruption (status cards, weak/frail/vulnerable),
+- pressure na Garda + Oscypki,
+- okazjonalny Rachunek (komercjalizacja i opłaty "premium").
+
+### Naming and Humor Style Guardrails (must match current enemies)
+
+- Names: krótkie, memiczne, lokalne, lekko prześmiewcze (`Wąsaty Busiarz`, `Influencerka` style).
+- Move names: codzienna scena + absurd (`Paragon z kieszeni`, `Pstryk bez pytania`).
+- Avoid pure grim/serious fantasy names.
+- Keep every enemy understandable "na pierwszy rzut oka" z samej nazwy.
 
 ### Proposed Regular Enemies (7)
 
-1. **Bacowka Parkingowy z Palenicy** (regular)
-   - Role: opener pressure, anti-block poke.
-   - Identity: ticketing + queue policing near trailhead.
-   - Mechanics idea: attack scaling with cards in hand, minor `fragile`.
+1. **Turysta w Klapkach** (regular)
+   - Role: pressure + anti-block.
+   - Identity: idzie na szlak w klapkach i z reklamówką, a z każdym pęcherzem robi się bardziej bojowy.
+   - Mechanics idea: ataki rosnące od kart na ręce; sporadyczne `fragile`.
+   - Flavor move examples: "Rzut kabanosem", "Plask klapkiem", "Otarcia pięty".
 
-2. **Przewodnik od Skrótu** (regular)
-   - Role: trickster tempo enemy.
-   - Identity: "shortcut" scams on route to Morskie Oko.
-   - Mechanics idea: adds status cards (misdirection leaflets), low multi-hit.
+2. **Rodzina z Głośnikiem** (regular)
+   - Role: tempo disruptor.
+   - Identity: rozkręca imprezę z bluetoothowego głośnika i totalnie rozbija tempo walki.
+   - Mechanics idea: dodaje status cardy (np. `halas`), lekki multi-hit.
+   - Flavor move examples: "Bas drop", "Zgubione dziecko", "Krzyk o loda".
 
-3. **Woznica Zaprzegu** (regular)
-   - Role: burst turn every 2-3 actions.
-   - Identity: horse-cart transport operator.
-   - Mechanics idea: builds "ped"-like momentum then spends for one heavy strike.
+3. **Spocony Półmaratończyk** (regular)
+   - Role: burst co kilka tur.
+   - Identity: trail runner, który ignoruje wszystkich i kończy sprintem prosto w Górala.
+   - Mechanics idea: build-up (`gainPed`) i jeden mocny cios (`usePed`).
+   - Flavor move examples: "Łapanie oddechu", "Ślepa szarża", "Pot na czole".
 
-4. **Fotograf z Pomostu** (regular)
-   - Role: vulnerable setup into medium hit.
-   - Identity: paid-photo hustle by the lake.
-   - Mechanics idea: apply `vulnerable`, then single attack; occasional self-block.
+4. **Insta-Taterniczka** (regular)
+   - Role: vulnerable setup + sustain.
+   - Identity: pozuje wszędzie, oślepia fleszem i robi selfie nawet w środku walki.
+   - Mechanics idea: nakłada `vulnerable`, potem medium hit; czasem block + heal.
+   - Flavor move examples: "Błysk flesza", "Dzióbek", "Selfie z hasztagiem".
 
-5. **Ratownik-amator** (regular)
-   - Role: sustain/control.
-   - Identity: overconfident pseudo-rescuer creating chaos.
-   - Mechanics idea: gains block + heal, then applies `weak` with low damage.
+5. **Janusz Znawca Szlaków** (regular)
+   - Role: control/sustain.
+   - Identity: zatrzymuje Jędrka, żeby udzielić długiej i nieproszonej porady o górach.
+   - Mechanics idea: block + heal, potem `weak` i niski damage.
+   - Flavor move examples: "Dobra rada", "Zjedz kanapkę", "Wykład o mapie".
 
-6. **Kaczka z Morskiego Oka** (regular)
+6. **Złodziejska Kaczka** (regular)
    - Role: evasive nuisance.
-   - Identity: wildlife interference around food/tourists.
-   - Mechanics idea: small hits, occasional `evasion` gain, chip over time.
+   - Identity: słynna kaczka z Morskiego Oka, szybka i bezczelna złodziejka prowiantu.
+   - Mechanics idea: chip damage, okazjonalny `gainEvasion`, drobny debuff.
+   - Flavor move examples: "Uszczypnięcie", "Unik wodny", "Kradzież chleba".
 
-7. **Zmeczony Turysta Wysokogorski** (regular)
-   - Role: fatigue/debuff specialist.
-   - Identity: altitude-drained but unpredictable climber.
-   - Mechanics idea: apply `weak`/`fragile`, light damage, occasional self-buff.
+7. **Głodny Świstak** (regular)
+   - Role: debuff specialist.
+   - Identity: rozpuszczony dokarmianiem przez turystów, agresywnie domaga się haraczu i niszczy sprzęt.
+   - Mechanics idea: `weak`/`frail`, szybkie lekkie ciosy, krótkie self-buffy.
+   - Flavor move examples: "Krótki pazur", "Pisk rozpaczy", "Ucieczka w nory".
 
 ### Proposed Elite Enemies (3)
 
-1. **Kierownik Schroniska** (elite)
-   - Elite fantasy: resource drain + endurance.
-   - Mechanics idea: steals Dutki / raises Rachunek, alternates between block and strong single hits.
+1. **Bileter z TPN** (elite)
+   - Elite fantasy: tempo + hand disruption check.
+   - Identity: nadgorliwy strażnik TPN zasypuje Jędrka mandatami, kontrolą i biurokracją.
+   - Mechanics idea: dorzuca status cardy (np. `mandat`), nakłada `weak`/`frail`, ma średnie obrażenia i krótkie tury defensywne.
+   - Flavor move examples: "Inspekcja paragonu", "Wezwanie straży", "Brak pieczątki".
 
-2. **Lawinowy Patrol** (elite)
-   - Elite fantasy: weather enforcer.
-   - Mechanics idea: toggles/benefits from `frozen` or `halny`, multi-hit in storm turns.
+2. **Meleksiarz Pirat Drogowy** (elite)
+   - Elite fantasy: anti-block pressure check.
+   - Identity: chaotyczny kierowca meleksa, jedzie skrótami, trąbi na wszystkich i rozbija obronę.
+   - Mechanics idea: seria małych hitów, regularne `vulnerable`, okresowe "wbicie się pod koła" z mocniejszym ciosem.
+   - Flavor move examples: "Boczkiem, boczkiem!", "Klakson z zaskoczenia", "Wjazd w tłum".
 
-3. **Niedzwiedzica z Morskiego Oka** (elite)
-   - Elite fantasy: apex nature threat.
-   - Mechanics idea: slow ramp (`strengthGain`), heavy telegraphed strike, occasional fear-style debuff (`vulnerable`/`weak`).
+3. **Bober z Morskiego Oka** (elite)
+   - Elite fantasy: burst-defense check.
+   - Identity: lokalny celebryta-bober, który ma dość turystów i buduje tamę z klapek, puszek i śmieci, blokując szlak.
+   - Mechanics idea: naprzemiennie wysoki block ("tama") i mocny, telegrafowany cios; okazjonalnie nakłada `frail` przez "podgryzienie ekwipunku".
+   - Flavor move examples: "Inspekcja tamy", "Plask ogonem", "Podgryzanie kijka".
 
-### Encounter Mix Guidance
+### Encounter Mix Guidance (updated)
 
 - Keep regular pool split by archetype: 2 pressure, 2 control, 2 disruption, 1 sustain.
+- Ensure at least 3 regular enemies reference crowd/tourist absurdity directly (name or move).
 - Ensure at least 2 regular enemies interact with weather directly.
-- Ensure each elite has a distinct win condition check:
-  - economy check (Dutki/Rachunek)
-  - weather management check
-  - burst-defense check
+- Ensure each elite checks a different axis:
+  - tempo/hand disruption,
+  - anti-block pressure,
+  - burst-defense.
+
+### Act 2 Strength Targets (initial tuning)
+
+Reference baseline from current Act 1:
+
+- Regular enemies: ~60-95 HP
+- Elite enemies: ~82-85 HP
+- Boss: ~165 HP
+
+Recommended starting targets for Act 2 (with stronger relic environment):
+
+- Regular enemies: **88-115 HP**
+- Elite enemies: **115-135 HP**
+- Act 2 Boss: **210-240 HP**
+
+Concrete HP targets for proposed elites:
+
+- **Bileter z TPN**: **118 HP**
+- **Meleksiarz Pirat Drogowy**: **124 HP**
+- **Bober z Morskiego Oka**: **130 HP**
+
+Damage budget guidelines:
+
+- Regulars: **7-12** single hit, or **4-6 x2**
+- Elites: **11-17** single hit, or **6-9 x2**
+- Telegraph heavy elite hit: **18-22**, no more often than every 3rd turn
+
+Control-effect safety limits:
+
+- Debuffs (`weak`, `frail`, `vulnerable`): usually **1**, rarely **2**
+- Enemy healing: regular max **4-5** per cycle, elite max **7-8** per cycle
+- High-defense turns (Bober "tama"): **16-24 block**, compensated by weaker follow-up turn
+
+Retuning rules after playtests/sims:
+
+- If Act 2 feels easier than late Act 1: first increase elite HP by **+8**, then heavy hits by **+2**.
+- If Act 2 feels oppressive: first reduce debuff frequency/stacking, then lower raw damage.
+
+### Proposed Act 2 Bosses (2)
+
+Act 2 should introduce two new bosses in rotation for Morskie Oko. Both should keep tourist-absurdity theme + satirical humor tone, and stay clearly different from elites.
+
+1. **Królowa Schroniska** (boss)
+   - Boss fantasy: deck pressure boss.
+   - Identity: bezlitosna menedżerka schroniska, która kasuje nawet za wrzątek.
+   - Mechanics idea:
+     - buduje licznik `kolejka_do_toalety`; wyższy licznik = mocniejsze status cardy i chip damage,
+     - ma fazy: "Obsługa kolejki" (statusy i presja talii) -> "Zaplecze" (self-buff) -> "Koniec wydawki" (telegrafowany cios),
+     - nie opiera się o Rachunek ani pełną rotację pogody, żeby odróżnić ją od elit.
+   - Flavor move examples: "Gorąca zupa", "Wrzątek płatny", "Koniec wydawki".
+   - Initial tuning target: **222 HP**, heavy hit **20-22**, wysoka presja statusów, średni raw damage.
+
+2. **Harnaś Pogodynka** (boss)
+   - Boss fantasy: weather set-piece boss.
+   - Identity: duch gór i prezenter pogody w jednym, steruje aurą jak telewizyjnym show dla turystów.
+   - Mechanics idea:
+     - aktywnie rotuje pogodę (`halny`, `fog`, `frozen`) i ma inny atak specjalny dla każdej,
+     - posiada turę przygotowania (telegraph), po której odpala pogodowy finisher,
+     - wymusza adaptację: block timing, zarządzanie Oscypkami, kontrola ryzyka missów we mgle.
+   - Flavor move examples: "Zapowiedź halnego", "Taniec we mgle", "Lodowate spojrzenie".
+   - Initial tuning target: **228 HP**, finisher **21-24** co 3-4 tury, wyższa presja tempa niż surowego damage.
+
+Boss diversity guardrails:
+
+- Boss A (Królowa Schroniska) = deck-pressure stress test (`kolejka_do_toalety`).
+- Boss B (Harnaś Pogodynka) = weather/tempo stress test.
+- Elites nie powinny używać pełnej rotacji pogody ani fazowego/licznikowego pressure loop bossa.
+- Oba bossy muszą mieć czytelnie telegrafowane ciężkie tury (fairness).
+- Humor w nazwach i ruchach musi pozostać "lokalny absurd", nie grimdark.
+
+Implementation note for data layer:
+
+- Keep implementation order unchanged: **1. Data, 2. Logic, 3. Testing**.
+- In `src/data/enemies.js`, use the provided Polish names for display names and aligned snake_case IDs.
+- Suggested IDs:
+  - `turysta_w_klapkach`, `rodzina_z_glosnikiem`, `spocony_polmaratonczyk`, `insta_taterniczka`, `janusz_znawca_szlakow`, `zlodziejska_kaczka`, `glodny_swistak`
+  - `bileter_z_tpn`, `meleksiarz_pirat_drogowy`, `bober_z_morskiego_oka`
+  - `krolowa_schroniska`, `harnas_pogodynka`
+
+## Part 5: Act 2 Events - Morskie Oko (3 new events)
+
+Act 1 currently has **3 events** in `src/data/events.js`, so Act 2 should add the same amount: **3 new events**.
+
+### Proposed Act 2 Events (3)
+
+1. **Korek do Toalety** (`event_korek_do_toalety`, act: `II`)
+   - Theme: schroniskowy chaos i kolejka bez końca.
+   - Core fantasy: zarządzasz czasem, stresem i Dutkami, bo każdy "szybki przystanek" kosztuje.
+   - Choices:
+     - **Kup szybkie wejście (dutki cost)**: zysk defensywny (block/utility card), strata Dutków.
+     - **Stój w kolejce (no dutki)**: lekka kara tempa (status card), ale mała nagroda ekonomiczna.
+     - **Idź w krzaki (risk)**: 50/50 - zysk zasobu albo event-fight.
+
+2. **Selfie na Krawędzi** (`event_selfie_na_krawedzi`, act: `II`)
+   - Theme: social media tourism i widowiskowe decyzje.
+   - Core fantasy: ryzykujesz dla "perfekcyjnego kadru".
+   - Choices:
+     - **Pomóż zrobić ujęcie**: dostajesz kartę utility/draw, ale tracisz Krzepę lub dostajesz `frail`.
+     - **Sprzedaj swój kijek selfie**: natychmiastowe Dutki, drobny minus combatowy.
+     - **Zgaś temat**: bez kosztu, mała stabilna nagroda (heal/block) bez ryzyka.
+
+3. **Paragon za Wrzątek** (`event_paragon_za_wrzatek`, act: `II`)
+   - Theme: komercjalizacja schroniska i absurdalne dopłaty.
+   - Core fantasy: płacisz za komfort albo kombinujesz i ryzykujesz konsekwencje.
+   - Choices:
+     - **Płać i pij**: koszt Dutków, czysta korzyść (heal + mały buff następnej walki).
+     - **Negocjuj cenę**: średnie ryzyko - częściowy zwrot lub debuff/status.
+     - **Awantura przy ladzie**: event-fight z nagrodą relikt/card po wygranej.
+
+### Event Design Constraints
+
+- Keep same style as Act 1 events: **3 choices**, czytelny koszt i jasna konsekwencja.
+- Use Polish, meme-like, everyday absurd naming in titles and choice texts.
+- Reuse existing systems first: Dutki, HP, status cards, event-fight hooks, card/relic grants.
+- At least 1 Act 2 event should include an event-fight fallback/reward pattern.
+- Keep reward power moderate (eventy nie mogą przebijać boss rewardów).
 
 ### Next Implementation Slice (optional follow-up)
 
 When approved, implement in this order:
 
-1. Add 7 regular + 3 elite definitions in `src/data/enemies.js`.
-2. Gate them to Act 2 selection in enemy pool logic (`EnemyState`/pool filters).
-3. Add tests ensuring Act 1/Act 2 pools are separated and counts are correct.
-4. Tune HP/damage bands against existing Act 2 relic power level.
+1. ✅ DONE — Add 7 regular + 3 elite + 2 boss definitions in `src/data/enemies.js` using the above naming tone.
+2. ✅ DONE — Add concise Polish move names that match existing humor style.
+3. ✅ DONE — Gate enemies and bosses to Act 2 selection in enemy pool logic (`EnemyState`/pool filters).
+4. ✅ DONE — Add tests ensuring Act 1/Act 2 pools are separated and counts are correct (including boss pool).
+5. ✅ DONE — Add at least one test verifying tourist-absurdity enemies include weather hooks in patterns.
+6. ✅ DONE — Add at least one test verifying both Act 2 bosses can be selected and are excluded from Act 1 boss pool.
+7. ✅ DONE — Add 3 Act 2 events to `src/data/events.js` with `act: 'II'` and 3 choices each.
+8. ✅ DONE — Wire Act-based event selection in event logic (`EventSystem`) and exclude Act II events from Act I pool.
+9. ✅ DONE — Add tests for event pools: Act I has original 3, Act II has new 3, no cross-pool leakage.
+10. ✅ DONE — Tune HP/damage bands and event rewards against existing Act 2 relic power level.
+
+### Art Requirements — SVG Sprites
+
+Every new Act 2 entity needs an inline SVG, following the same pattern as Act 1:
+
+- **Enemies** (7 regular + 3 elite + 2 boss): add a `spriteSvg` string to each definition in `src/data/enemies.js`. Follow Act 1 dimensions: `width="120" height="120"` for regulars/elites; bosses may use `width="140" height="140"`. Style should match the existing flat-colour, cartoonish Tatra aesthetic.
+- **Events** (3): add an `image` SVG string to each definition in `src/data/events.js`. Follow Act 1 dimensions: `width="220" height="130"`.
+- SVGs must be inline strings (no external files, no `<img src>`), consistent with the no-asset-fetch approach used throughout the game.
+- Create SVGs alongside the code definition — do not leave `spriteSvg: ''` placeholders in shipped code.

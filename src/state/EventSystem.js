@@ -5,11 +5,10 @@ import { defaultStatus } from './StatusEffects.js';
 
 /** @returns {'I' | 'II' | 'III'} */
 function getCurrentAct(state) {
-  const rows = Math.max(1, state.map.length);
-  const ratio = state.currentLevel / rows;
-  if (ratio < 1 / 3) return 'I';
-  if (ratio < 2 / 3) return 'II';
-  return 'III';
+  const act = state.currentAct ?? 1;
+  if (act === 2) return 'II';
+  if (act === 3) return 'III';
+  return 'I';
 }
 
 /**

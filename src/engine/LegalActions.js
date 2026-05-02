@@ -110,7 +110,13 @@ function _screenActions(state) {
     if (state._rewardOffer.relicId) {
       actions.push({ type: 'reward_pick_relic', relicId: state._rewardOffer.relicId });
     }
-    actions.push({ type: 'reward_pick_card', cardId: null });
+    // Act 2 transition: multiple relic choices, no skip option
+    for (const relicId of state._rewardOffer.relicIds ?? []) {
+      actions.push({ type: 'reward_pick_relic', relicId });
+    }
+    if (!state._pendingAct2Transition) {
+      actions.push({ type: 'reward_pick_card', cardId: null });
+    }
     return actions;
   }
 

@@ -155,7 +155,15 @@ function _execute(state, action) {
       state.addRelic(action.relicId);
       state.notifyRewardPicked?.('relic', action.relicId);
       state._rewardOffer = null;
-      state.currentScreen = 'map';
+      if (state._pendingAct2Transition) {
+        state._pendingAct2Transition = false;
+        state.startAct2?.();
+        // generateMap() resets hasStartedFirstBattle=false for the UI intro gate,
+        // but the headless engine skips intro — re-enable map travel immediately.
+        state.hasStartedFirstBattle = true;
+      } else {
+        state.currentScreen = 'map';
+      }
       break;
 
     case 'shop_buy_card': {
@@ -236,6 +244,24 @@ function _checkWin(state) {
     currentNode?.type === 'boss' || state.enemy?.id === 'boss' || state.enemy?.id === 'fiakier';
 
   if (isBoss) {
+    // Act 1 boss: transition to Act 2 instead of ending the run
+    if (state.tryAdvanceActAfterBossVictory?.()) {
+      state.grantBattleDutki?.();
+      const relicIds = state.generateAct2TransitionRelicChoices?.(3) ?? [];
+      if (relicIds.length === 0) {
+        state.startAct2?.();
+        state.hasStartedFirstBattle = true;
+        return;
+      }
+      state._rewardOffer = { cards: [], relicIds };
+      state._pendingAct2Transition = true;
+      state.currentScreen = 'reward';
+      state.emit?.('reward_offered', {
+        cards: [],
+        relics: relicIds.map((id) => ({ kind: 'relic', id })),
+      });
+      return;
+    }
     state.captureRunSummary('player_win');
     return;
   }
@@ -292,6 +318,8 @@ function _enterNode(state, node) {
       break;
     }
     case 'maryna':
+      // Player is always healed to full health when entering Maryna
+      state.healPlayer(state.player.maxHp);
       state.rollMarynaChoices();
       state.currentScreen = 'maryna';
       break;

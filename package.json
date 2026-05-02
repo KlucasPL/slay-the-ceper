@@ -18,6 +18,7 @@
     "sim": "node scripts/sim/index.js",
     "sim:diff": "node scripts/sim/tools/diff-baseline.js",
     "sim:replay": "node scripts/sim/replay.js",
+    "analyze": "node --max-old-space-size=6144 scripts/analyze.js",
     "rpc": "node scripts/rpc-server.js",
     "mcp": "node scripts/mcp-server.js",
     "bench:sim": "node bench/runOneGame.bench.js",

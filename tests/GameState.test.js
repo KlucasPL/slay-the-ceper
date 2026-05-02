@@ -1670,6 +1670,86 @@ describe('GameState', () => {
       });
     });
 
+    describe('Act I / Act II event pool separation', () => {
+      const act1EventIds = Object.keys(eventLibrary).filter((id) => eventLibrary[id].act === 'I');
+      const act2EventIds = Object.keys(eventLibrary).filter((id) => eventLibrary[id].act === 'II');
+
+      it('eventLibrary has exactly 2 Act I tagged events', () => {
+        expect(act1EventIds).toHaveLength(2);
+      });
+
+      it('eventLibrary has exactly 3 Act II events', () => {
+        expect(act2EventIds).toHaveLength(3);
+      });
+
+      it('Act II event IDs are the expected new events', () => {
+        expect(act2EventIds).toContain('event_korek_do_toalety');
+        expect(act2EventIds).toContain('event_selfie_na_krawedzi');
+        expect(act2EventIds).toContain('event_paragon_za_wrzatek');
+      });
+
+      it('pickRandomEventDef with currentAct=1 never returns Act II events', () => {
+        const s = freshState();
+        s.currentAct = 1;
+        s.recentEventIds = [];
+        // exhaust many picks
+        for (let i = 0; i < 30; i++) {
+          s.recentEventIds = [];
+          const picked = s.pickRandomEventDef();
+          if (picked) {
+            expect(act2EventIds).not.toContain(picked.id);
+          }
+        }
+      });
+
+      it('pickRandomEventDef with currentAct=2 never returns Act I events', () => {
+        const s = freshState();
+        s.currentAct = 2;
+        s.recentEventIds = [];
+        for (let i = 0; i < 30; i++) {
+          s.recentEventIds = [];
+          const picked = s.pickRandomEventDef();
+          if (picked) {
+            expect(act1EventIds).not.toContain(picked.id);
+          }
+        }
+      });
+
+      it('pickRandomEventDef with currentAct=2 can return Act II events', () => {
+        const s = freshState();
+        s.currentAct = 2;
+        const seenAct2 = new Set();
+        for (let i = 0; i < 40; i++) {
+          s.recentEventIds = [];
+          const picked = s.pickRandomEventDef();
+          if (picked && act2EventIds.includes(picked.id)) {
+            seenAct2.add(picked.id);
+          }
+        }
+        expect(seenAct2.size).toBeGreaterThan(0);
+      });
+
+      it('fiakier_event (no act field) appears in both Act I and Act II pools', () => {
+        expect(eventLibrary.fiakier_event.act).toBeUndefined();
+
+        const sAct1 = freshState();
+        sAct1.currentAct = 1;
+        sAct1.recentEventIds = ['event_hazard_karton', 'event_karykaturzysta'];
+        const pickedAct1 = sAct1.pickRandomEventDef();
+        expect(pickedAct1?.id).toBe('fiakier_event');
+
+        const sAct2 = freshState();
+        sAct2.currentAct = 2;
+        sAct2.recentEventIds = [
+          'event_korek_do_toalety',
+          'event_selfie_na_krawedzi',
+          'event_paragon_za_wrzatek',
+        ];
+        const pickedAct2 = sAct2.pickRandomEventDef();
+        expect(pickedAct2?.id).toBe('fiakier_event');
+      });
+    });
+
     describe('event node eventOutcome pre-roll', () => {
       it('event node has eventOutcome property after _createMapNode', () => {
         const s = freshState();
@@ -3294,26 +3374,155 @@ describe('GameState', () => {
       const ids = Object.keys(enemyLibrary).sort();
       expect(ids).toEqual([
         'baba',
+        'bileter_z_tpn',
+        'bober_z_morskiego_oka',
         'boss',
         'busiarz',
         'cepr',
         'ceprzyca_vip',
         'fiakier',
+        'glodny_swistak',
+        'harnas_pogodynka',
         'influencerka',
+        'insta_taterniczka',
+        'janusz_znawca_szlakow',
         'konik_spod_kuznic',
+        'krolowa_schroniska',
+        'meleksiarz_pirat_drogowy',
         'mistrz_redyku',
         'naganiacz_z_krupowek',
         'naganiacze_duo',
         'parkingowy',
         'pomocnik_fiakra',
+        'rodzina_z_glosnikiem',
         'spekulant',
+        'spocony_polmaratonczyk',
+        'turysta_w_klapkach',
         'zagubiony_ceper',
+        'zlodziejska_kaczka',
       ]);
     });
 
-    it('event library includes fiakier event definition', () => {
+    it('all Act 2 regular enemies have act:2 and are excluded from Act 1 pool', () => {
+      const act2RegularIds = [
+        'turysta_w_klapkach',
+        'rodzina_z_glosnikiem',
+        'spocony_polmaratonczyk',
+        'insta_taterniczka',
+        'janusz_znawca_szlakow',
+        'zlodziejska_kaczka',
+        'glodny_swistak',
+      ];
+      for (const id of act2RegularIds) {
+        expect(enemyLibrary[id].act, `${id} must have act:2`).toBe(2);
+        expect(Boolean(enemyLibrary[id].elite), `${id} must not be elite`).toBe(false);
+        expect(Boolean(enemyLibrary[id].isBoss), `${id} must not be boss`).toBe(false);
+      }
+      // Act 1 state: Act 2 enemies must not appear in pool
+      const s = freshState();
+      s.currentAct = 1;
+      const seen = new Set();
+      for (let i = 0; i < 40; i++) {
+        const def = s._pickRandomEnemyDef(false);
+        seen.add(def.id);
+      }
+      for (const id of act2RegularIds) {
+        expect(seen.has(id), `${id} must not appear in Act 1 pool`).toBe(false);
+      }
+    });
+
+    it('all Act 2 elite enemies have act:2 and are excluded from Act 1 elite pool', () => {
+      const act2EliteIds = ['bileter_z_tpn', 'meleksiarz_pirat_drogowy', 'bober_z_morskiego_oka'];
+      for (const id of act2EliteIds) {
+        expect(enemyLibrary[id].act, `${id} must have act:2`).toBe(2);
+        expect(Boolean(enemyLibrary[id].elite), `${id} must be elite`).toBe(true);
+      }
+      const s = freshState();
+      s.currentAct = 1;
+      const seen = new Set();
+      for (let i = 0; i < 30; i++) {
+        const def = s._pickRandomEnemyDef(true);
+        seen.add(def.id);
+      }
+      for (const id of act2EliteIds) {
+        expect(seen.has(id), `${id} must not appear in Act 1 elite pool`).toBe(false);
+      }
+    });
+
+    it('Act 2 regular enemies appear in Act 2 pool and Act 1 enemies do not', () => {
+      const s = freshState();
+      s.currentAct = 2;
+      const act2Ids = [
+        'turysta_w_klapkach',
+        'rodzina_z_glosnikiem',
+        'spocony_polmaratonczyk',
+        'insta_taterniczka',
+        'janusz_znawca_szlakow',
+        'zlodziejska_kaczka',
+        'glodny_swistak',
+      ];
+      const act1RegularIds = [
+        'cepr',
+        'busiarz',
+        'baba',
+        'influencerka',
+        'parkingowy',
+        'konik_spod_kuznic',
+      ];
+      const seen = new Set();
+      for (let i = 0; i < 100; i++) {
+        const def = s._pickRandomEnemyDef(false);
+        seen.add(def.id);
+      }
+      for (const id of act2Ids) {
+        expect(seen.has(id), `${id} must appear in Act 2 regular pool`).toBe(true);
+      }
+      for (const id of act1RegularIds) {
+        expect(seen.has(id), `${id} must not appear in Act 2 pool`).toBe(false);
+      }
+    });
+
+    it('Act 2 boss pool contains krolowa_schroniska and harnas_pogodynka, not Act 1 bosses', () => {
+      expect(enemyLibrary.krolowa_schroniska.isBoss).toBe(true);
+      expect(enemyLibrary.krolowa_schroniska.act).toBe(2);
+      expect(enemyLibrary.harnas_pogodynka.isBoss).toBe(true);
+      expect(enemyLibrary.harnas_pogodynka.act).toBe(2);
+      const s = freshState();
+      s.currentAct = 2;
+      const seen = new Set();
+      for (let i = 0; i < 30; i++) {
+        const def = s._pickFinalBossDef();
+        seen.add(def.id);
+      }
+      expect(seen.has('krolowa_schroniska') || seen.has('harnas_pogodynka')).toBe(true);
+      expect(seen.has('boss'), 'Act 1 boss must not appear in Act 2 boss pool').toBe(false);
+      expect(seen.has('fiakier'), 'Act 1 fiakier must not appear in Act 2 boss pool').toBe(false);
+    });
+
+    it('Act 1 boss pool does not include Act 2 bosses', () => {
+      const s = freshState();
+      s.currentAct = 1;
+      const seen = new Set();
+      for (let i = 0; i < 20; i++) {
+        const def = s._pickFinalBossDef();
+        seen.add(def.id);
+      }
+      expect(seen.has('krolowa_schroniska'), 'Act 2 boss must not appear in Act 1 pool').toBe(
+        false
+      );
+      expect(seen.has('harnas_pogodynka'), 'Act 2 boss must not appear in Act 1 pool').toBe(false);
+    });
+
+    it('event library includes all event definitions', () => {
       const ids = Object.keys(eventLibrary).sort();
-      expect(ids).toEqual(['event_hazard_karton', 'event_karykaturzysta', 'fiakier_event']);
+      expect(ids).toEqual([
+        'event_hazard_karton',
+        'event_karykaturzysta',
+        'event_korek_do_toalety',
+        'event_paragon_za_wrzatek',
+        'event_selfie_na_krawedzi',
+        'fiakier_event',
+      ]);
     });
 
     it('does not scale enemies in normal mode', () => {
@@ -3572,6 +3781,66 @@ describe('GameState', () => {
     });
   });
 
+  describe('Act 2 weather passives', () => {
+    it('halny_schwarm: glodny_swistak gains +2 strength when weather is halny', () => {
+      const s = freshState();
+      s.enemy = s._createEnemyState(enemyLibrary.glodny_swistak);
+      s.currentWeather = 'halny';
+      const strengthBefore = s.enemy.status.strength;
+
+      s.endTurn();
+
+      expect(s.enemy.status.strength).toBe(strengthBefore + 2);
+    });
+
+    it('halny_schwarm: glodny_swistak does NOT gain extra strength in non-halny weather', () => {
+      const sClear = freshState();
+      sClear.enemy = sClear._createEnemyState(enemyLibrary.glodny_swistak);
+      sClear.currentWeather = 'clear';
+      const strengthBefore = sClear.enemy.status.strength;
+      sClear.endTurn();
+
+      expect(sClear.enemy.status.strength).toBe(strengthBefore);
+    });
+
+    it('mglisty_sprint: spocony_polmaratonczyk gains +6 block extra when weather is fog', () => {
+      // In fog weather, passive adds +6 on top of whatever the pattern intent gives
+      const sFog = freshState();
+      sFog.enemy = sFog._createEnemyState(enemyLibrary.spocony_polmaratonczyk);
+      sFog.currentWeather = 'fog';
+      sFog.endTurn();
+      const fogBlock = sFog.enemy.block;
+
+      const sClear = freshState();
+      sClear.enemy = sClear._createEnemyState(enemyLibrary.spocony_polmaratonczyk);
+      sClear.currentWeather = 'clear';
+      sClear.endTurn();
+      const clearBlock = sClear.enemy.block;
+
+      expect(fogBlock - clearBlock).toBe(6);
+    });
+
+    it('mglisty_sprint: spocony_polmaratonczyk does NOT gain fog passive block in clear weather', () => {
+      const sClear = freshState();
+      sClear.enemy = sClear._createEnemyState(enemyLibrary.spocony_polmaratonczyk);
+      sClear.currentWeather = 'clear';
+      sClear.endTurn();
+
+      const sFrozen = freshState();
+      sFrozen.enemy = sFrozen._createEnemyState(enemyLibrary.spocony_polmaratonczyk);
+      sFrozen.currentWeather = 'frozen';
+      sFrozen.endTurn();
+
+      // Neither clear nor frozen should trigger the fog passive (+6); block values should match
+      expect(sFrozen.enemy.block).toBe(sClear.enemy.block);
+    });
+
+    it('both Act 2 enemies with weather passives have the correct passive field set', () => {
+      expect(enemyLibrary.glodny_swistak.passive).toBe('halny_schwarm');
+      expect(enemyLibrary.spocony_polmaratonczyk.passive).toBe('mglisty_sprint');
+    });
+  });
+
   describe('Maryna boon system', () => {
     it('map row 0 has a single maryna node at column 1', () => {
       const s = freshState();
@@ -3742,6 +4011,51 @@ describe('GameState', () => {
       s.resetForNewRun('easy');
       expect(s.maryna.pickedId).toBeNull();
       expect(s.maryna.offeredIds).toHaveLength(0);
+    });
+
+    it('Act 2 row-1 nodes are fights without forcedEnemyId', () => {
+      const s = freshState();
+      s.startAct2();
+      s.map[1].forEach((node) => {
+        if (!node) return;
+        expect(node.type).toBe('fight');
+        expect(node.forcedEnemyId).toBeUndefined();
+      });
+    });
+
+    it('Maryna boon picked in Act 1 is excluded from Act 2 choices', () => {
+      const s = freshState();
+      // Pick a boon in Act 1
+      s.pickMarynaBoon('kiesa');
+      const pickedInAct1 = s.maryna.pickedId;
+      expect(pickedInAct1).toBe('kiesa');
+
+      // Transition to Act 2
+      s.startAct2();
+
+      // Roll new boon choices in Act 2
+      const act2Choices = s.rollMarynaChoices(3);
+      expect(act2Choices).toHaveLength(3);
+      expect(act2Choices).not.toContain(pickedInAct1);
+    });
+
+    it('relic acquired in Act 1 is not offered in Act 2 transition or shop', () => {
+      const s = freshState();
+      // Acquire a specific relic in Act 1
+      const targetRelic = 'krokus';
+      s.addRelic(targetRelic);
+      expect(s.relics).toContain(targetRelic);
+
+      // Transition to Act 2
+      s.startAct2();
+
+      // Check that the acquired relic is NOT in Act 2 transition choices
+      const act2TransitionChoices = s.generateAct2TransitionRelicChoices(3);
+      expect(act2TransitionChoices).not.toContain(targetRelic);
+
+      // Check that the acquired relic is NOT offered in Act 2 shops
+      const act2Shop = s.generateShopStock();
+      expect(act2Shop.relic).not.toBe(targetRelic);
     });
   });
 

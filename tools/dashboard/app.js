@@ -133,17 +133,17 @@ function navigateTo(view, entityKey) {
 
 async function loadDefault() {
   try {
-    const res = await fetch('./metrics.fixture.json');
+    const res = await fetch('./metrics.json');
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const json = await res.json();
     // Race guard: a user-supplied file may have loaded while fetch was pending.
     if (metrics) return;
     metrics = json;
-    setLoadStatus(`Loaded fixture (${metrics.runCount.toLocaleString()} runs)`, 'ok');
+    setLoadStatus(`Loaded metrics (${metrics.runCount.toLocaleString()} runs)`, 'ok');
     navigateTo('summary');
   } catch (err) {
     if (metrics) return;
-    setLoadStatus(`Could not auto-load fixture: ${err.message}`, 'warn');
+    setLoadStatus(`Could not auto-load metrics: ${err.message}`, 'warn');
     main.innerHTML = `<p class="empty-msg">Drop a <code>metrics.json</code> file or use the file picker above to load data.</p>`;
   }
 }

@@ -130,7 +130,11 @@ export function applyEnemyDebuff(state, key, amount) {
  * @returns {EnemyState}
  */
 export function createEnemyState(state, enemyDef) {
-  const isFinalBossVariant = enemyDef.id === 'boss' || enemyDef.id === 'fiakier';
+  const isFinalBossVariant =
+    enemyDef.id === 'boss' ||
+    enemyDef.id === 'fiakier' ||
+    enemyDef.id === 'krolowa_schroniska' ||
+    enemyDef.id === 'harnas_pogodynka';
   const isMainBoss = enemyDef.id === 'boss';
   const scale = isFinalBossVariant ? 1 : state.enemyScaleFactor;
   const eliteDamageScale = enemyDef.elite ? 1.15 : 1;
@@ -196,16 +200,20 @@ export function createEnemyState(state, enemyDef) {
  */
 export function pickRandomEnemyDef(state, isElite = false) {
   const filterKind = isElite ? 'enemy_elite' : 'enemy_regular';
+  const currentAct = state.currentAct ?? 1;
   let enemyIds = Object.keys(enemyLibrary).filter(
     (id) =>
       id !== 'boss' &&
       id !== 'fiakier' &&
       id !== 'pomocnik_fiakra' &&
       !enemyLibrary[id]?.eventOnly &&
-      !enemyLibrary[id]?.tutorialOnly
+      !enemyLibrary[id]?.tutorialOnly &&
+      !enemyLibrary[id]?.isBoss
   );
 
   enemyIds = enemyIds.filter((id) => Boolean(enemyLibrary[id]?.elite) === isElite);
+  // filter by act: enemies without act field default to act 1
+  enemyIds = enemyIds.filter((id) => (enemyLibrary[id]?.act ?? 1) === currentAct);
   enemyIds = state.filterPool(filterKind, enemyIds);
 
   if (enemyIds.length === 0) {
@@ -216,7 +224,9 @@ export function pickRandomEnemyDef(state, isElite = false) {
         id !== 'pomocnik_fiakra' &&
         !enemyLibrary[id]?.eventOnly &&
         !enemyLibrary[id]?.tutorialOnly &&
-        Boolean(enemyLibrary[id]?.elite) !== isElite
+        !enemyLibrary[id]?.isBoss &&
+        Boolean(enemyLibrary[id]?.elite) !== isElite &&
+        (enemyLibrary[id]?.act ?? 1) === currentAct
     );
   }
 
@@ -236,8 +246,13 @@ export function pickRandomEnemyDef(state, isElite = false) {
  * @returns {import('../data/enemies.js').EnemyDef}
  */
 export function pickFinalBossDef(state) {
-  const bossIds = state.filterPool('enemy_boss', ['boss', 'fiakier']);
-  const bossId = bossIds[Math.floor(state.rng() * bossIds.length)] ?? 'boss';
+  const currentAct = state.currentAct ?? 1;
+  const act1BossPool = ['boss', 'fiakier'];
+  const act2BossPool = ['krolowa_schroniska', 'harnas_pogodynka'];
+  const pool = currentAct === 2 ? act2BossPool : act1BossPool;
+  const bossIds = state.filterPool('enemy_boss', pool);
+  const fallback = currentAct === 2 ? 'krolowa_schroniska' : 'boss';
+  const bossId = bossIds[Math.floor(state.rng() * bossIds.length)] ?? fallback;
   return enemyLibrary[bossId];
 }
 

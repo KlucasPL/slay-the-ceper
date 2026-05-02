@@ -240,6 +240,8 @@ export function handleMapNodeSelect(uiManager, level, nodeIndex) {
     const currentNode =
       uiManager.state.map[uiManager.state.currentLevel][uiManager.state.currentNodeIndex];
     if (currentNode?.type === 'maryna') {
+      // Player is always healed to full health when entering Maryna
+      uiManager.state.healPlayer(uiManager.state.player.maxHp);
       uiManager._openMarynaBoonOverlay();
       return;
     }

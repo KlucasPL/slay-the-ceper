@@ -757,6 +757,15 @@ export function endTurn(state) {
     state.enemy.block += 5;
   }
 
+  // Act 2 weather passives
+  if (state.enemy.passive === 'halny_schwarm' && state.currentWeather === 'halny') {
+    state.enemy.status.strength += 2;
+  }
+
+  if (state.enemy.passive === 'mglisty_sprint' && state.currentWeather === 'fog') {
+    state.enemy.block += 6;
+  }
+
   const enemyAttack = state._applyEnemyIntent();
 
   // Vulnerable should be consumed by enemy attack turns, not by non-attack turns.
