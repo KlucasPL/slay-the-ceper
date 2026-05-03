@@ -1,5 +1,5 @@
 /**
- * @typedef {{ strength: number, weak: number, fragile: number, vulnerable: number, next_double: boolean, energy_next_turn: number, lans: number, duma_podhala: number, furia_turysty: number }} StatusDef
+ * @typedef {{ strength: number, weak: number, fragile: number, vulnerable: number, next_double: boolean, energy_next_turn: number, lans: number, duma_podhala: number, furia_turysty: number, okradziony: number, brak_reszty: boolean, targowanie_sie: boolean, parcie_na_szklo: boolean, blokada_parkingowa: boolean, lichwa: boolean, hart_ducha: boolean, influencer_aura: boolean, ochrona_wizerunku: boolean, drugi_oddech: boolean, wiecznie_glodny: boolean, kontrola_stempla: boolean, gaz_do_dechy: number, napor_wody: number, kolejka_do_toalety: number, zmiana_pogody: boolean }} StatusDef
  * @typedef {{ playerAnim?: string, enemyAnim?: string, damage?: { raw: number, blocked: number, dealt: number } }} CardEffectResult
  * @typedef {'common' | 'uncommon' | 'rare'} RarityDef
  * @typedef {{ id: string, name: string, type: 'attack' | 'skill' | 'status' | 'power', cost: number, price: number, rarity: RarityDef, emoji: string, desc: string, tags?: string[], isStarter?: boolean, eventOnly?: boolean, tutorialOnly?: boolean, exhaust?: boolean, unplayable?: boolean, effect: (state: import('../state/GameState.js').GameState) => CardEffectResult }} CardDef
@@ -910,7 +910,7 @@ export const cardLibrary = {
   wepchniecie_w_kolejke: {
     id: 'wepchniecie_w_kolejke',
     name: 'Wepchniecie w Kolejkę',
-    type: 'attack',
+    type: 'skill',
     rarity: 'common',
     cost: 0,
     price: 65,

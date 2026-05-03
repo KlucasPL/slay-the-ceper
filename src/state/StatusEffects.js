@@ -14,6 +14,22 @@ export function defaultStatus() {
     lans: 0,
     duma_podhala: 0,
     furia_turysty: 0,
+    okradziony: 0,
+    brak_reszty: false,
+    targowanie_sie: false,
+    parcie_na_szklo: false,
+    blokada_parkingowa: false,
+    lichwa: false,
+    hart_ducha: false,
+    influencer_aura: false,
+    ochrona_wizerunku: false,
+    drugi_oddech: false,
+    wiecznie_glodny: false,
+    kontrola_stempla: false,
+    gaz_do_dechy: 0,
+    napor_wody: 0,
+    kolejka_do_toalety: 0,
+    zmiana_pogody: false,
   };
 }
 

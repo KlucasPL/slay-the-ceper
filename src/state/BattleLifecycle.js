@@ -73,6 +73,9 @@ export function resetBattle(state) {
   state.player.czas_na_fajke = false;
   state.player.goralska_goscinnosc = false;
   state.player.koncesja_na_oscypki = false;
+  state.player.szal_bacy = false;
+  state.player.goralski_upor_moc = false;
+  state.goralskiUporDrawPending = 0;
   state.player.status = defaultStatus();
   state._setLansActive(false);
   state.player.stunned = false;
@@ -268,6 +271,8 @@ export function resetForNewRun(state, startingDeck) {
     czas_na_fajke: false,
     goralska_goscinnosc: false,
     koncesja_na_oscypki: false,
+    szal_bacy: false,
+    goralski_upor_moc: false,
   };
 
   state.dutki = 50;

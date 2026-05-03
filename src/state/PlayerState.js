@@ -2,7 +2,7 @@ import { getBaseCardId, getCardDefinition } from '../data/cards.js';
 
 /**
  * @typedef {import('../data/cards.js').StatusDef} StatusDef
- * @typedef {{ hp: number, maxHp: number, block: number, energy: number, maxEnergy: number, status: StatusDef, stunned: boolean, cardsPlayedThisTurn: number }} PlayerState
+ * @typedef {{ hp: number, maxHp: number, block: number, energy: number, maxEnergy: number, status: StatusDef, stunned: boolean, cardsPlayedThisTurn: number, szal_bacy?: boolean, goralski_upor_moc?: boolean, koncesja_na_oscypki?: boolean, zimna_krew?: boolean, czas_na_fajke?: boolean, goralska_goscinnosc?: boolean, pan_na_wlosciach?: boolean, weather_fog_garda?: boolean, weather_frozen_vulnerable?: boolean, lans?: number }} PlayerState
  * @typedef {{ id: string, hp: number, block: number, status: StatusDef, passive: string | null, portraitShameTurns: number }} EnemyState
  */
 

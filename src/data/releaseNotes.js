@@ -14,7 +14,7 @@ export const releaseNotesData = [
       '❓ NOWE WYDARZENIA I LEPSZE PULE: Uporządkowano akty wydarzeń (Akt I/Akt II), aby spotkania trafiały do właściwej części wyprawy.',
       '🧾 NOWE STATUSY WROGÓW: Dodano nowe zagrożenia statusowe i dopracowano ekonomiczne presje w walce (m.in. efekty paragonów/rachunku).',
       '⚖️ DOSTROJENIE CAŁEJ GALERII WROGÓW: Przestrojono siłę przeciwników w obu aktach, żeby trudność rosła bardziej płynnie od początku do finału.',
-      '📊 ZAPIS PRZEBIEGU ROZGRYWKI: Dodano automatyczny zapis przebiegu wyprawy (z podziałem na akty), co poprawia analizę balansu i jakości walk.',
+      '📊 ZAPIS PRZEBIEGU ROZGRYWKI: Dodano automatyczny zapis przebiegu wyprawy (z podziałem na akty), co poprawia analizę balansu i jakości walki (DO WYŁĄCZENIA W USTAWIENIACH).',
       '🛠️ STABILNOŚĆ I SPÓJNOŚĆ: Poprawiono obsługę zwycięstw i porażek z hersztami, eksport danych z rozgrywki oraz wiele drobnych błędów wpływających na płynność wyprawy.',
     ],
   },

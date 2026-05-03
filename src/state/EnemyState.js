@@ -15,7 +15,7 @@ function emitF(state, kind, payload) {
  * @typedef {import('../data/cards.js').StatusDef} StatusDef
  * @typedef {import('../data/enemies.js').EnemyMoveDef} EnemyMoveDef
  * @typedef {{ name: string, hp: number, maxHp: number, block: number, energy: number, maxEnergy: number, status: StatusDef, stunned: boolean, cardsPlayedThisTurn: number }} PlayerState
- * @typedef {{ id: string, name: string, emoji: string, hp: number, maxHp: number, block: number, nextAttack: number, baseAttack: number, status: StatusDef, rachunek: number, ped: number, spriteSvg: string, phase2SpriteSvg?: string, patternType: 'random'|'loop'|'weather_loop', pattern: EnemyMoveDef[], phaseTwoPattern: EnemyMoveDef[], weatherPatterns?: Record<string, EnemyMoveDef[]>, patternIndex: number, harnasWeatherPatternIndex: number, currentIntent: EnemyMoveDef, tookHpDamageThisTurn: boolean, bossArtifact?: number, passive: string | null, isElite: boolean, isBoss: boolean, stunnedTurns: number, lichwaTriggeredThisTurn: boolean, hartDuchaTriggered: boolean, portraitShameTurns: number, phaseTwoTriggered: boolean, evasionCharges: number, isBankrupt?: boolean }} EnemyState
+ * @typedef {{ id: string, name: string, emoji: string, hp: number, maxHp: number, block: number, nextAttack: number, baseAttack: number, status: StatusDef, rachunek: number, ped: number, spriteSvg: string, phase2SpriteSvg?: string, patternType: 'random'|'loop'|'weather_loop', pattern: EnemyMoveDef[], phaseTwoPattern: EnemyMoveDef[], weatherPatterns?: Record<string, EnemyMoveDef[]>, patternIndex: number, harnasWeatherPatternIndex: number, currentIntent: EnemyMoveDef, tookHpDamageThisTurn: boolean, bossArtifact?: number, passive: string | null, isElite: boolean, isBoss: boolean, stunnedTurns: number, lichwaTriggeredThisTurn: boolean, hartDuchaTriggered: boolean, portraitShameTurns: number, phaseTwoTriggered: boolean, evasionCharges: number, isBankrupt?: boolean, drugiOddechTriggered: boolean, stolenCards: string[], gazDoDechyStacks: number, naporWodyPressure: number }} EnemyState
  */
 
 /**
@@ -197,6 +197,11 @@ export function createEnemyState(state, enemyDef) {
   builtEnemyState.currentIntent = state._buildEnemyIntent(builtEnemyState);
   builtEnemyState.nextAttack =
     builtEnemyState.currentIntent.type === 'attack' ? builtEnemyState.currentIntent.damage : 0;
+
+  if (enemyDef.passive) {
+    builtEnemyState.status[enemyDef.passive] = true;
+  }
+
   return builtEnemyState;
 }
 

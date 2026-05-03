@@ -1,5 +1,6 @@
 import { enemyLibrary } from '../../data/enemies.js';
 import { eventLibrary } from '../../data/events.js';
+import { cardLibrary } from '../../data/cards.js';
 import { relicLibrary } from '../../data/relics.js';
 
 const STYLE_ID = 'debug-overlay-style';
@@ -360,6 +361,34 @@ export class DebugOverlay {
 
     relicGroup.append(relicSelect, grantRelicBtn, randomRelicBtn);
 
+    const cardGroup = this._group('Karty');
+    const statusOnlyCards = [
+      'ulotka',
+      'spam_tagami',
+      'mandat',
+      'numerek_do_toalety',
+      'halas',
+      'nadprogramowy_paragon',
+    ];
+    const cardSelect = document.createElement('select');
+    cardSelect.className = 'debug-select';
+    Object.keys(cardLibrary)
+      .filter((id) => !statusOnlyCards.includes(id))
+      .sort((a, b) => cardLibrary[a].name.localeCompare(cardLibrary[b].name, 'pl'))
+      .forEach((id) => {
+        const opt = document.createElement('option');
+        opt.value = id;
+        opt.textContent = `${cardLibrary[id].name} (${id})`;
+        cardSelect.appendChild(opt);
+      });
+    const addCardBtn = this._button('Dodaj do ręki', () => {
+      const cardId = cardSelect.value;
+      this.state.hand.push(cardId);
+      this.ui.applyDebugRefresh({ checkWin: false });
+      this._log(`Dodano ${cardLibrary[cardId].name} do ręki.`);
+    });
+    cardGroup.append(cardSelect, addCardBtn);
+
     const playerGroup = this._group('Gracz');
     const godModeWrap = document.createElement('label');
     godModeWrap.className = 'debug-toggle';
@@ -485,7 +514,7 @@ export class DebugOverlay {
       clearPlayerStatusBtn
     );
 
-    panel.append(goldGroup, relicGroup, playerGroup, playerStatusGroup);
+    panel.append(goldGroup, relicGroup, cardGroup, playerGroup, playerStatusGroup);
     return panel;
   }
 

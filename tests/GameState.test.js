@@ -430,6 +430,49 @@ describe('GameState', () => {
       s.enemy.portraitShameTurns = 1;
       expect(s.calculateDamage(10, s.enemy, s.player)).toBe(8);
     });
+
+    it('applies vulnerable as +50% incoming damage on target', () => {
+      const s = freshState();
+      s.enemy.status.vulnerable = 1;
+      expect(s.calculateDamage(8, s.player, s.enemy)).toBe(12); // 8 * 1.5 = 12
+    });
+
+    it('applies vulnerable when enemy attacks player', () => {
+      const s = freshState();
+      s.player.status.vulnerable = 1;
+      expect(s.calculateDamage(10, s.enemy, s.player)).toBe(15); // 10 * 1.5 = 15
+    });
+
+    it('card attack deals +50% damage to vulnerable enemy', () => {
+      const s = freshState();
+      s.startBattleWithEnemyId('cepr');
+      s.startTurn();
+      s.enemy.status.vulnerable = 2;
+      s.enemy.hp = 20;
+      s.enemy.block = 0;
+      s.hand = ['ciupaga']; // Ensure ciupaga is in hand at index 0
+      const hpBefore = s.enemy.hp;
+      s.playCard(0); // ciupaga = 6 base damage
+      const damageDealt = hpBefore - s.enemy.hp;
+      expect(damageDealt).toBe(9); // 6 * 1.5 = 9
+    });
+
+    it('applies vulnerable from wepchniecie_w_kolejke then deals +50% with next attack', () => {
+      const s = freshState();
+      s.startBattleWithEnemyId('cepr');
+      s.startTurn();
+      s.player.status.lans = 1; // Enable LANS for wepchniecie_w_kolejke
+      s.enemy.hp = 30;
+      s.enemy.block = 0;
+      s.hand = ['wepchniecie_w_kolejke', 'ciupaga'];
+      // First play wepchniecie_w_kolejke - applies vulnerable
+      s.playCard(0);
+      expect(s.enemy.status.vulnerable).toBe(2);
+      // Now play ciupaga - should deal 50% extra damage
+      s.playCard(0);
+      const damageDealt = 30 - s.enemy.hp;
+      expect(damageDealt).toBe(9); // 6 * 1.5 = 9
+    });
   });
 
   describe('strength status', () => {
@@ -2989,6 +3032,7 @@ describe('GameState', () => {
 
     it('clears blocks and all statuses on both sides', () => {
       const s = freshState();
+      vi.spyOn(s, '_pickRandomEnemyDef').mockReturnValue(enemyLibrary.cepr);
       s.player.block = 9;
       s.enemy.block = 6;
       s.player.status = {
@@ -3028,6 +3072,22 @@ describe('GameState', () => {
         lans: 0,
         duma_podhala: 0,
         furia_turysty: 0,
+        okradziony: 0,
+        brak_reszty: false,
+        targowanie_sie: false,
+        parcie_na_szklo: false,
+        blokada_parkingowa: false,
+        lichwa: false,
+        hart_ducha: false,
+        influencer_aura: false,
+        ochrona_wizerunku: false,
+        drugi_oddech: false,
+        wiecznie_glodny: false,
+        kontrola_stempla: false,
+        gaz_do_dechy: 0,
+        napor_wody: 0,
+        kolejka_do_toalety: 0,
+        zmiana_pogody: false,
       });
       expect(s.enemy.status).toEqual({
         strength: 0,
@@ -3039,6 +3099,22 @@ describe('GameState', () => {
         lans: 0,
         duma_podhala: 0,
         furia_turysty: 0,
+        okradziony: 0,
+        brak_reszty: false,
+        targowanie_sie: false,
+        parcie_na_szklo: false,
+        blokada_parkingowa: false,
+        lichwa: false,
+        hart_ducha: false,
+        influencer_aura: false,
+        ochrona_wizerunku: false,
+        drugi_oddech: false,
+        wiecznie_glodny: false,
+        kontrola_stempla: false,
+        gaz_do_dechy: 0,
+        napor_wody: 0,
+        kolejka_do_toalety: 0,
+        zmiana_pogody: false,
       });
     });
 

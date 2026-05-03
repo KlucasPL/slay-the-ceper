@@ -386,6 +386,7 @@ export function applyEnemyIntent(state) {
       state.enemy.stolenCards.push(pick.id);
       state.lastStolenCardId = pick.id;
       emitS(state, 'card_stolen', { cardId: pick.id });
+      state.player.status.okradziony += 1;
     }
   }
 
@@ -690,6 +691,12 @@ export function playCard(state, handIndex) {
 
   state.player.cardsPlayedThisTurn += 1;
 
+  // influencer_aura: +3 Garda immediately when 3rd card is played
+  if (state.enemy.passive === 'influencer_aura' && state.player.cardsPlayedThisTurn === 3) {
+    state.enemy.block += 3;
+    emitS(state, 'enemy_passive_triggered', { passive: 'influencer_aura', effect: '+3 Garda' });
+  }
+
   emitS(state, 'card_played', {
     card: { kind: 'card', id: getBaseCardId(cardId) },
     cost: actualCost,
@@ -703,7 +710,6 @@ export function playCard(state, handIndex) {
  * @returns {import('./GameState.js').EndTurnResult}
  */
 export function endTurn(state) {
-  const playerHandSizeBeforeDiscard = state.hand.length;
   const playerHandHasStatusCard = state.hand.some(
     (id) => getCardDefinition(getBaseCardId(id))?.type === 'status'
   );
@@ -833,10 +839,6 @@ export function endTurn(state) {
 
   if (state.enemy.passive === 'parcie_na_szklo' && state._isLansActive()) {
     state.enemy.status.strength += 2;
-  }
-
-  if (state.enemy.passive === 'influencer_aura' && playerHandSizeBeforeDiscard >= 3) {
-    state.enemy.block += 5;
   }
 
   if (state.enemy.passive === 'kontrola_stempla' && playerHandHasStatusCard) {

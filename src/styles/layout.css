@@ -912,6 +912,12 @@ body.desktop-viewport-blocked #desktop-viewport-overlay {
   box-sizing: border-box;
 }
 
+#release-notes-modal .modal-content {
+  width: min(75vw, calc(100vw - 24px));
+  max-width: calc(100vw - 24px);
+  max-height: 85vh;
+}
+
 .close-btn {
   position: absolute;
   top: 10px;

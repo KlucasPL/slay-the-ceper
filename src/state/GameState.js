@@ -1403,51 +1403,6 @@ export class GameState {
       });
     }
 
-    if (this.enemy.passive === 'brak_reszty') {
-      specials.push({
-        icon: '💸',
-        label: 'Brak Reszty',
-        value: null,
-        tooltip: 'Gdy zadaje obrażenia Krzepie, kradnie 3 dutki.',
-      });
-    }
-
-    if (this.enemy.passive === 'targowanie_sie') {
-      specials.push({
-        icon: '🤝',
-        label: 'Targowanie się',
-        value: null,
-        tooltip: 'Odporny na Rachunek — nie może zbankrutować.',
-      });
-    }
-
-    if (this.enemy.passive === 'ochrona_wizerunku') {
-      specials.push({
-        icon: '🪞',
-        label: 'Ochrona Wizerunku',
-        value: 1,
-        tooltip: 'Każde trafienie zadaje graczowi 1 obrażenie zwrotne.',
-      });
-    }
-
-    if (this.enemy.passive === 'parcie_na_szklo') {
-      specials.push({
-        icon: '🤳',
-        label: 'Parcie na Szkło',
-        value: null,
-        tooltip: 'Gdy gracz ma Lans, na początku tury wroga zyskuje +2 Siły.',
-      });
-    }
-
-    if (this.enemy.passive === 'blokada_parkingowa') {
-      specials.push({
-        icon: '🚧',
-        label: 'Blokada Parkingowa',
-        value: null,
-        tooltip: 'Gracz może zagrać maksymalnie 3 karty na turę.',
-      });
-    }
-
     if (this.enemy.id === 'fiakier') {
       specials.push({
         icon: '🧾',
