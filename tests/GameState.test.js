@@ -4359,6 +4359,24 @@ describe('GameState', () => {
       expect(s.getShopRemovalPrice()).toBe(100);
     });
 
+    it('lista_zakupow allows only the first removal for free in the whole run', () => {
+      const s = freshState();
+      s.pickMarynaBoon('lista_zakupow');
+
+      s.generateShopStock();
+      expect(s.getShopRemovalPrice()).toBe(0);
+      s.afterShopCardRemoval();
+      expect(s.getShopRemovalPrice()).toBe(100);
+
+      s.generateShopStock();
+      expect(s.getShopRemovalPrice()).toBe(100);
+
+      const countersBefore = s.maryna.counters.listaFreeRemovalsLeft;
+      s.afterShopCardRemoval();
+      expect(s.maryna.counters.listaFreeRemovalsLeft).toBe(countersBefore);
+      expect(s.getShopRemovalPrice()).toBe(100);
+    });
+
     it('resetForNewRun clears maryna state', () => {
       const s = freshState();
       s.pickMarynaBoon('kiesa');

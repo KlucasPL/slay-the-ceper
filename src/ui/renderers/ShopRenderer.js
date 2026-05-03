@@ -376,7 +376,8 @@ function renderRemovalShop(uiManager) {
       removeBtn.disabled = uiManager.state.dutki < price;
 
       removeBtn.onclick = () => {
-        if (uiManager.state.spendDutki(price)) {
+        const livePrice = uiManager.state.getShopRemovalPrice();
+        if (uiManager.state.spendDutki(livePrice)) {
           uiManager.state.removeCardFromDeck(cardId);
           uiManager.state.logAction('removals', cardId);
           uiManager.state.afterShopCardRemoval();

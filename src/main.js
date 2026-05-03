@@ -40,6 +40,7 @@ const GAME_ANALYTICS_BUILD = import.meta.env.VITE_GAMEANALYTICS_BUILD || 'web-1.
 const GAME_ANALYTICS_GAME_KEY = import.meta.env.VITE_GAMEANALYTICS_GAME_KEY || '';
 const GAME_ANALYTICS_SECRET_KEY = import.meta.env.VITE_GAMEANALYTICS_SECRET_KEY || '';
 const GAME_ANALYTICS_INFO_LOG = import.meta.env.DEV;
+const GAME_ANALYTICS_LIVE_EVENTS = import.meta.env.VITE_GAMEANALYTICS_LIVE_EVENTS === 'true';
 
 /**
  * @param {boolean} isUpdateAvailable
@@ -113,14 +114,17 @@ if (import.meta.env.DEV) {
     hasGameKey: Boolean(GAME_ANALYTICS_GAME_KEY),
     hasSecretKey: Boolean(GAME_ANALYTICS_SECRET_KEY),
     build: GAME_ANALYTICS_BUILD,
+    liveEventsEnabled: GAME_ANALYTICS_LIVE_EVENTS,
   });
 }
 
-const originalEmit = state.emit.bind(state);
-state.emit = (kind, payload) => {
-  originalEmit(kind, payload);
-  analytics.trackEngineEvent(kind, payload, state);
-};
+if (GAME_ANALYTICS_LIVE_EVENTS) {
+  const originalEmit = state.emit.bind(state);
+  state.emit = (kind, payload) => {
+    originalEmit(kind, payload);
+    analytics.trackEngineEvent(kind, payload, state);
+  };
+}
 state.onTelemetryDownloaded = (meta) => {
   analytics.trackTelemetryDownload(meta);
 };

@@ -56,13 +56,13 @@ export function generateShopStock(state) {
     state.certyfikowanyOscypekShopProcs += 1;
   }
 
-  const isListaActive =
-    state.hasRelic('relic_boon_lista_zakupow') &&
-    (state.maryna.counters.listaFreeRemovalsLeft ?? 0) > 0;
+  const hasListaBoonRelic = state.hasRelic('relic_boon_lista_zakupow');
+  const listaFreeUsed = state.maryna.flags.listaFreeRemovalUsed === true;
+  const listaFreeRemovalsLeft = state.maryna.counters.listaFreeRemovalsLeft ?? 0;
+  const isListaActive = hasListaBoonRelic && !listaFreeUsed && listaFreeRemovalsLeft > 0;
   if (isListaActive) {
     state.maryna.flags.listaDiscountActive = true;
     state.maryna.flags.listaFreeRemovalAvailable = true;
-    state.maryna.flags.listaFreeRemovalUsed = false;
   } else {
     state.maryna.flags.listaDiscountActive = false;
     state.maryna.flags.listaFreeRemovalAvailable = false;

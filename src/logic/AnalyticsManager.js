@@ -52,6 +52,32 @@ function sanitizeEventPart(value) {
     .slice(0, 48);
 }
 
+/**
+ * Best-effort client OS detection for analytics segmentation.
+ * Keeps a stable small set of values for GA custom dimensions.
+ *
+ * @returns {'macos' | 'windows' | 'linux' | 'ios' | 'android' | 'unknown'}
+ */
+function detectClientPlatformOs() {
+  if (typeof navigator === 'undefined') return 'unknown';
+
+  const ua = String(navigator.userAgent ?? '').toLowerCase();
+  const platform = String(navigator.platform ?? '').toLowerCase();
+  const uaDataPlatform = String(navigator.userAgentData?.platform ?? '').toLowerCase();
+
+  const isIpadDesktopMode = platform === 'macintel' && Number(navigator.maxTouchPoints ?? 0) > 1;
+  if (isIpadDesktopMode || /iphone|ipad|ipod|\bios\b/.test(ua)) return 'ios';
+  if (/android/.test(ua) || /android/.test(uaDataPlatform)) return 'android';
+  if (/mac|darwin/.test(platform) || /mac|darwin/.test(uaDataPlatform) || /mac os/.test(ua)) {
+    return 'macos';
+  }
+  if (/win/.test(platform) || /win/.test(uaDataPlatform) || /windows/.test(ua)) return 'windows';
+  if (/linux|x11|cros/.test(platform) || /linux|cros/.test(uaDataPlatform) || /linux/.test(ua)) {
+    return 'linux';
+  }
+  return 'unknown';
+}
+
 export class AnalyticsManager {
   /**
    * @param {AnalyticsConfig} config
@@ -120,9 +146,19 @@ export class AnalyticsManager {
     }
 
     try {
+      const clientPlatformOs = detectClientPlatformOs();
       this.call('setEnabledInfoLog', Boolean(this.config.enableInfoLog));
       this.call('setEnabledVerboseLog', false);
       this.call('configureBuild', this.config.build);
+      this.call('configureAvailableCustomDimensions01', [
+        'macos',
+        'windows',
+        'linux',
+        'ios',
+        'android',
+        'unknown',
+      ]);
+      this.call('setCustomDimension01', clientPlatformOs);
       this.call('configureAvailableResourceCurrencies', ['dutki']);
       this.call('configureAvailableResourceItemTypes', ['shop', 'event', 'reward', 'battle']);
       const initialized = this.call('initialize', this.config.gameKey, this.config.secretKey);
@@ -135,8 +171,10 @@ export class AnalyticsManager {
         return false;
       }
       this.enabled = true;
+      this.call('addDesignEvent', `client_platform:${clientPlatformOs}`);
       this.debug('init success', {
         build: this.config.build,
+        clientPlatformOs,
         hasGameKey: Boolean(this.config.gameKey),
         hasSecretKey: Boolean(this.config.secretKey),
       });

@@ -102,27 +102,33 @@ export function getCardShopPrice(state, cardId) {
 }
 
 /**
- * @param {{ hasRelic: (relicId: string) => boolean, maryna: { flags: { listaFreeRemovalAvailable: boolean, listaFreeRemovalUsed: boolean } } }} state
+ * @param {{ hasRelic: (relicId: string) => boolean, maryna: { flags: { listaFreeRemovalAvailable: boolean, listaFreeRemovalUsed: boolean }, counters: { listaFreeRemovalsLeft?: number } } }} state
  * @returns {number}
  */
 export function getShopRemovalPrice(state) {
   if (state.hasRelic('zlota_karta_zakopianczyka')) return 0;
-  if (state.maryna.flags.listaFreeRemovalAvailable && !state.maryna.flags.listaFreeRemovalUsed) {
+  const hasListaBoonRelic = state.hasRelic('relic_boon_lista_zakupow');
+  const listaFreeUsed = state.maryna.flags.listaFreeRemovalUsed === true;
+  const listaFreeRemovalsLeft = state.maryna.counters.listaFreeRemovalsLeft ?? 0;
+  const canUseListaFreeRemoval = hasListaBoonRelic && !listaFreeUsed && listaFreeRemovalsLeft > 0;
+  if (canUseListaFreeRemoval) {
     return 0;
   }
   return 100;
 }
 
 /**
- * @param {{ maryna: { flags: { listaFreeRemovalAvailable: boolean, listaFreeRemovalUsed: boolean, listaDiscountActive: boolean } } }} state
+ * @param {{ hasRelic: (relicId: string) => boolean, maryna: { flags: { listaFreeRemovalAvailable: boolean, listaFreeRemovalUsed: boolean, listaDiscountActive: boolean }, counters: { listaFreeRemovalsLeft?: number } } }} state
  */
 export function afterShopCardRemoval(state) {
-  if (state.maryna.flags.listaFreeRemovalAvailable && !state.maryna.flags.listaFreeRemovalUsed) {
+  const hasListaBoonRelic = state.hasRelic('relic_boon_lista_zakupow');
+  const listaFreeUsed = state.maryna.flags.listaFreeRemovalUsed === true;
+  const listaFreeRemovalsLeft = state.maryna.counters.listaFreeRemovalsLeft ?? 0;
+
+  if (hasListaBoonRelic && !listaFreeUsed && listaFreeRemovalsLeft > 0) {
     state.maryna.flags.listaFreeRemovalUsed = true;
-    state.maryna.counters.listaFreeRemovalsLeft = Math.max(
-      0,
-      (state.maryna.counters.listaFreeRemovalsLeft ?? 1) - 1
-    );
+    state.maryna.counters.listaFreeRemovalsLeft = Math.max(0, listaFreeRemovalsLeft - 1);
+    state.maryna.flags.listaFreeRemovalAvailable = false;
     if (state.maryna.counters.listaFreeRemovalsLeft === 0) {
       state.maryna.flags.listaDiscountActive = false;
     }
