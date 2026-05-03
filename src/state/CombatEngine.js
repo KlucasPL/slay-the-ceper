@@ -1,4 +1,5 @@
 import { getBaseCardId, getCardDefinition } from '../data/cards.js';
+import { weatherLibrary } from '../data/weather.js';
 
 /** @param {any} state @param {string} kind @param {Record<string, unknown>} payload */
 function emitS(state, kind, payload) {
@@ -183,6 +184,7 @@ export function applyDamageToEnemy(state, dmg) {
 
   if (state.enemy.hp < hpBefore) {
     state.enemy.tookHpDamageThisTurn = true;
+    state.enemy.gazDoDechyStacks = 0;
 
     if (
       state.enemy.passive === 'lichwa' &&
@@ -204,7 +206,23 @@ export function applyDamageToEnemy(state, dmg) {
       state.enemy.hartDuchaTriggered = true;
     }
 
+    if (
+      state.enemy.passive === 'drugi_oddech' &&
+      !state.enemy.drugiOddechTriggered &&
+      state.enemy.hp > 0 &&
+      state.enemy.hp <= state.enemy.maxHp * 0.6
+    ) {
+      state.enemy.status.strength += 2;
+      state.enemy.drugiOddechTriggered = true;
+    }
+
     state._handleEnemyPhaseTransitions();
+  } else if (
+    dmg > 0 &&
+    state.enemy.passive === 'napor_wody' &&
+    state.combat.activeSide === 'player'
+  ) {
+    state.enemy.naporWodyPressure = (state.enemy.naporWodyPressure ?? 0) + dmg;
   }
 
   state._checkEnemyBankruptcy();
@@ -266,7 +284,10 @@ export function applyEnemyIntent(state) {
 
   if (intent.type === 'status') {
     if (intent.addStatusCard) {
-      const amount = intent.amount ?? 1;
+      let amount = intent.amount ?? 1;
+      if (state.enemy.passive === 'kolejka_do_toalety') {
+        amount += state.enemy.kolejkaCounter ?? 0;
+      }
       for (let i = 0; i < amount; i++) {
         state.discard.push(intent.addStatusCard);
       }
@@ -290,8 +311,14 @@ export function applyEnemyIntent(state) {
   let dealt = 0;
   const hits = intent.hits ?? 1;
 
-  const intentDamage = intent.usePed ? intent.damage + (state.enemy.ped ?? 0) : intent.damage;
+  const naporBonus =
+    state.enemy.passive === 'napor_wody' ? (state.enemy.naporWodyPressure ?? 0) : 0;
+  const intentDamage =
+    (intent.usePed ? intent.damage + (state.enemy.ped ?? 0) : intent.damage) +
+    (state.enemy.passive === 'gaz_do_dechy' ? (state.enemy.gazDoDechyStacks ?? 0) * 5 : 0) +
+    naporBonus;
   if (intent.usePed) state.enemy.ped = 0;
+  if (naporBonus > 0) state.enemy.naporWodyPressure = 0;
 
   for (let hitIndex = 0; hitIndex < hits; hitIndex++) {
     const hitDamage = state.calculateDamage(intentDamage, state.enemy, state.player);
@@ -337,6 +364,28 @@ export function applyEnemyIntent(state) {
     }
   }
 
+  if (intent.stealCard && dealt > 0) {
+    // Pick a random card from hand or discard (non-status cards only)
+    const stealableHand = state.hand.filter((id) => getCardDefinition(id)?.type !== 'status');
+    const stealableDiscard = state.discard.filter((id) => getCardDefinition(id)?.type !== 'status');
+    const allStealable = [...stealableHand, ...stealableDiscard];
+    if (allStealable.length > 0) {
+      const idx = Math.floor(state.rng() * allStealable.length);
+      const stolenId = allStealable[idx];
+      const handIdx = state.hand.indexOf(stolenId);
+      if (handIdx !== -1) {
+        state.hand.splice(handIdx, 1);
+      } else {
+        const discardIdx = state.discard.indexOf(stolenId);
+        if (discardIdx !== -1) state.discard.splice(discardIdx, 1);
+      }
+      if (!Array.isArray(state.enemy.stolenCards)) state.enemy.stolenCards = [];
+      state.enemy.stolenCards.push(stolenId);
+      state.lastStolenCardId = stolenId;
+      emitS(state, 'card_stolen', { cardId: stolenId });
+    }
+  }
+
   return { raw, blocked, dealt };
 }
 
@@ -350,6 +399,8 @@ export function getEnemyIntentDamage(state) {
 
   let baseDmg = intent.damagePerCardInHand ? intent.damage + state.hand.length : intent.damage;
   if (intent.usePed) baseDmg += state.enemy.ped ?? 0;
+  if (state.enemy.passive === 'gaz_do_dechy') baseDmg += (state.enemy.gazDoDechyStacks ?? 0) * 5;
+  if (state.enemy.passive === 'napor_wody') baseDmg += state.enemy.naporWodyPressure ?? 0;
   const hits = intent.hits ?? 1;
   const perHit = state.calculateDamage(baseDmg, state.enemy, state.player);
   return Math.max(0, perHit * hits - state.player.block);
@@ -392,7 +443,11 @@ export function getEnemyIntentText(state) {
   }
 
   const totalDamage = state.getEnemyIntentDamage();
-  const stealPart = intent.stealDutki ? `, 💰 -${intent.stealDutki}` : '';
+  const stealPart = intent.stealDutki
+    ? `, 💰 -${intent.stealDutki}`
+    : intent.stealCard
+      ? `, 🃏 kradzież`
+      : '';
   if (hits > 1) {
     return `Zamiar: ${intent.name} (⚔️ ${totalDamage}, ${hits}x${stealPart})`;
   }
@@ -521,6 +576,12 @@ export function playCard(state, handIndex) {
     return { success: false, reason: 'blokada' };
   }
 
+  // If any hałas card is in hand, it must be played before other cards
+  const hasHalas = state.hand.some((id) => getBaseCardId(id) === 'halas');
+  if (hasHalas && getBaseCardId(cardId) !== 'halas') {
+    return { success: false, reason: 'halas' };
+  }
+
   if (state.smyczKeptHandIndex !== null) {
     if (handIndex === state.smyczKeptHandIndex) {
       state.smyczKeptHandIndex = null;
@@ -640,6 +701,12 @@ export function playCard(state, handIndex) {
  */
 export function endTurn(state) {
   const playerHandSizeBeforeDiscard = state.hand.length;
+  const playerHandHasStatusCard = state.hand.some(
+    (id) => getCardDefinition(getBaseCardId(id))?.type === 'status'
+  );
+  const playerHandStatusCount = state.hand.filter(
+    (id) => getCardDefinition(getBaseCardId(id))?.type === 'status'
+  ).length;
 
   // Clear per-player-turn card flags when the player's turn ends
   state.zasiekiActive = false;
@@ -655,7 +722,11 @@ export function endTurn(state) {
     state.smyczKeptHandIndex = null;
   }
 
-  if (state.hand.some((entry) => getBaseCardId(entry) === 'spam_tagami')) {
+  if (
+    state.hand.some(
+      (entry) => getBaseCardId(entry) === 'spam_tagami' || getBaseCardId(entry) === 'mandat'
+    )
+  ) {
     state.dutki = Math.max(0, state.dutki - 2);
   }
 
@@ -747,6 +818,10 @@ export function endTurn(state) {
     };
   }
 
+  if (state.enemy.passive === 'gaz_do_dechy' && !state.enemy.tookHpDamageThisTurn) {
+    state.enemy.gazDoDechyStacks += 1;
+  }
+
   state.enemy.block = 0;
 
   if (state.enemy.passive === 'parcie_na_szklo' && state._isLansActive()) {
@@ -757,13 +832,22 @@ export function endTurn(state) {
     state.enemy.block += 5;
   }
 
-  // Act 2 weather passives
-  if (state.enemy.passive === 'halny_schwarm' && state.currentWeather === 'halny') {
-    state.enemy.status.strength += 2;
+  if (state.enemy.passive === 'kontrola_stempla' && playerHandHasStatusCard) {
+    state.enemy.status.strength += 1;
   }
 
-  if (state.enemy.passive === 'mglisty_sprint' && state.currentWeather === 'fog') {
-    state.enemy.block += 6;
+  if (state.enemy.passive === 'kolejka_do_toalety') {
+    if (playerHandStatusCount > 0) {
+      state.enemy.kolejkaCounter = (state.enemy.kolejkaCounter ?? 0) + playerHandStatusCount;
+    } else {
+      state.enemy.kolejkaCounter = 0;
+    }
+  }
+
+  if (state.enemy.passive === 'wiecznie_glodny' && state.enemy.hp < state.enemy.maxHp) {
+    const heal = Math.min(4, state.enemy.maxHp - state.enemy.hp);
+    state.enemy.hp += heal;
+    enemyPassiveHeal = { amount: heal, text: `+${heal} Krzepy (Przekąska)` };
   }
 
   const enemyAttack = state._applyEnemyIntent();
@@ -790,12 +874,32 @@ export function endTurn(state) {
     state._checkEnemyBankruptcy();
   }
 
+  /** @type {{ id: string, name: string, emoji: string } | null} */
+  let weatherChanged = null;
+
   if (state.enemy.patternType === 'loop') {
     const activePattern =
       state.enemy.phaseTwoTriggered && state.enemy.phaseTwoPattern.length > 0
         ? state.enemy.phaseTwoPattern
         : state.enemy.pattern;
     state.enemy.patternIndex = (state.enemy.patternIndex + 1) % activePattern.length;
+  }
+
+  if (state.enemy.patternType === 'weather_loop') {
+    const wp = state.enemy.weatherPatterns ?? {};
+    const weather = state.currentWeather ?? 'clear';
+    const activePattern = wp[weather] && wp[weather].length > 0 ? wp[weather] : (wp['clear'] ?? []);
+    state.enemy.harnasWeatherPatternIndex =
+      (state.enemy.harnasWeatherPatternIndex + 1) % (activePattern.length || 1);
+
+    if (state.enemy.passive === 'zmiana_pogody' && state.battleTurnsElapsed % 3 === 0) {
+      const rotation = ['halny', 'frozen', 'fog'];
+      const currentIdx = rotation.indexOf(state.currentWeather);
+      const nextWeather = rotation[(currentIdx + 1) % rotation.length];
+      state.currentWeather = nextWeather;
+      state.enemy.harnasWeatherPatternIndex = 0;
+      weatherChanged = { id: nextWeather, ...weatherLibrary[nextWeather] };
+    }
   }
 
   state._applyHalnyBlockDrain(state.enemy);
@@ -809,5 +913,5 @@ export function endTurn(state) {
     intentName: state.enemy.currentIntent.name,
   });
 
-  return { enemyAttack, enemyPassiveHeal, playerPassiveHeal };
+  return { enemyAttack, enemyPassiveHeal, playerPassiveHeal, weatherChanged };
 }

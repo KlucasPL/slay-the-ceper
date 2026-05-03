@@ -1,5 +1,6 @@
 import { weatherLibrary } from '../data/weather.js';
 import { relicLibrary } from '../data/relics.js';
+import { getCardDefinition } from '../data/cards.js';
 import {
   generateCardRewardChoices as generateDeckCardRewardChoices,
   getCardDamageBonus as getDeckCardDamageBonus,
@@ -40,9 +41,9 @@ const EVENT_OUTCOME_FIGHT_CHANCE = 0.12;
  * @typedef {'fight' | 'elite' | 'shop' | 'treasure' | 'event' | 'campfire' | 'boss'} MapNodeType
  * @typedef {{ x: number, y: number, type: MapNodeType, label: string, emoji: string, weather: WeatherId, connections: number[] }} MapNode
  * @typedef {import('../data/events.js').GameEventDef} GameEventDef
- * @typedef {{ id: string, name: string, emoji: string, hp: number, maxHp: number, block: number, nextAttack: number, baseAttack: number, status: StatusDef, rachunek: number, ped: number, spriteSvg: string, phase2SpriteSvg?: string, patternType: 'random'|'loop', pattern: EnemyMoveDef[], phaseTwoPattern: EnemyMoveDef[], patternIndex: number, currentIntent: EnemyMoveDef, tookHpDamageThisTurn: boolean, bossArtifact?: number, passive: string | null, isElite: boolean, isBoss: boolean, stunnedTurns: number, lichwaTriggeredThisTurn: boolean, hartDuchaTriggered: boolean, portraitShameTurns: number, phaseTwoTriggered: boolean, evasionCharges: number }} EnemyState
+ * @typedef {{ id: string, name: string, emoji: string, hp: number, maxHp: number, block: number, nextAttack: number, baseAttack: number, status: StatusDef, rachunek: number, ped: number, spriteSvg: string, phase2SpriteSvg?: string, patternType: 'random'|'loop'|'weather_loop', pattern: EnemyMoveDef[], phaseTwoPattern: EnemyMoveDef[], weatherPatterns?: Record<string, EnemyMoveDef[]>, patternIndex: number, harnasWeatherPatternIndex: number, currentIntent: EnemyMoveDef, tookHpDamageThisTurn: boolean, bossArtifact?: number, passive: string | null, isElite: boolean, isBoss: boolean, stunnedTurns: number, lichwaTriggeredThisTurn: boolean, hartDuchaTriggered: boolean, portraitShameTurns: number, phaseTwoTriggered: boolean, evasionCharges: number }} EnemyState
  * @typedef {{ success: false, reason?: string } | { success: true, effect: import('../data/cards.js').CardEffectResult }} PlayCardResult
- * @typedef {{ enemyAttack: { raw: number, blocked: number, dealt: number }, enemyPassiveHeal: { amount: number, text: string } | null, playerPassiveHeal: { amount: number, text: string } | null }} EndTurnResult
+ * @typedef {{ enemyAttack: { raw: number, blocked: number, dealt: number }, enemyPassiveHeal: { amount: number, text: string } | null, playerPassiveHeal: { amount: number, text: string } | null, weatherChanged: { id: string, name: string, emoji: string } | null }} EndTurnResult
  * @typedef {{ cards: string[], relic: string | null }} ShopStock
  */
 
@@ -99,6 +100,7 @@ export class GameState {
     /** @type {{ x: number, y: number }} */
     this.currentNode = { x: 0, y: 0 };
     /** @type {number} */
+    this.floorOffset = 0;
     this.debugMapRows = 15;
     /** @type {MapNodeType | null} */
     this.debugForcedNextNodeType = null;
@@ -630,6 +632,14 @@ export class GameState {
     if (!this.lansBreakEvent) return null;
     this.lansBreakEvent = false;
     return 'BANKRUT!';
+  }
+
+  /** @returns {string | null} Card name stolen by the duck in the last enemy attack, or null */
+  consumeCardStolenEvent() {
+    const id = this.lastStolenCardId ?? null;
+    if (!id) return null;
+    this.lastStolenCardId = null;
+    return getCardDefinition(id)?.name ?? id;
   }
 
   /** @returns {boolean} */
@@ -1426,6 +1436,8 @@ export class GameState {
   startAct2() {
     this.currentAct = 2;
     this.currentActName = 'MORSKIE OKO';
+    // Keep global floor numbering continuous across acts for telemetry/analytics.
+    this.floorOffset = Math.max(this.floorOffset ?? 0, this.maxFloorReached ?? 0);
 
     // Rebuild a clean deck state from all piles and strip temporary status cards.
     this.clearStatusCardsFromPiles();

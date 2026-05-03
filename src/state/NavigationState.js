@@ -70,6 +70,7 @@ export function canTravelTo(state, level, nodeIndex) {
  *   currentNodeIndex: number,
  *   currentNode: { x: number, y: number },
  *   maxFloorReached: number,
+ *   floorOffset?: number,
  *   debugForcedNextNodeType: MapNodeType | null,
  *   _setNodeType: (node: MapNode | null, type: MapNodeType) => void,
  *   getCurrentMapNode: () => MapNode | null
@@ -85,14 +86,15 @@ export function travelTo(state, level, nodeIndex) {
   state.currentLevel = level;
   state.currentNodeIndex = nodeIndex;
   state.currentNode = { x: nodeIndex, y: level };
-  state.maxFloorReached = Math.max(state.maxFloorReached, level + 1);
+  const globalFloor = (state.floorOffset ?? 0) + level + 1;
+  state.maxFloorReached = Math.max(state.maxFloorReached, globalFloor);
   const node = state.getCurrentMapNode();
   if (node && state.debugForcedNextNodeType && node.type !== 'boss' && node.type !== 'campfire') {
     state._setNodeType(node, state.debugForcedNextNodeType);
     state.debugForcedNextNodeType = null;
   }
   if (node) {
-    state.emit('node_entered', { floor: level + 1, nodeType: node.type, weather: node.weather });
+    state.emit('node_entered', { floor: globalFloor, nodeType: node.type, weather: node.weather });
   }
   return node;
 }
@@ -125,6 +127,7 @@ export function getCurrentAct(state) {
  *   currentNodeIndex: number,
  *   currentNode: { x: number, y: number },
  *   maxFloorReached: number,
+ *   floorOffset?: number,
  *   hasStartedFirstBattle: boolean,
  *   _setCurrentWeatherFromNode: () => void
  * }} state
@@ -139,7 +142,8 @@ export function applyJumpToBossShortcut(state) {
   state.currentLevel = campfireLevel;
   state.currentNodeIndex = 1;
   state.currentNode = { x: 1, y: campfireLevel };
-  state.maxFloorReached = Math.max(state.maxFloorReached, campfireLevel + 1);
+  const globalFloor = (state.floorOffset ?? 0) + campfireLevel + 1;
+  state.maxFloorReached = Math.max(state.maxFloorReached, globalFloor);
   state.jumpToBoss = false;
   state.hasStartedFirstBattle = true;
   state._setCurrentWeatherFromNode();

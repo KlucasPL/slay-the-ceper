@@ -608,6 +608,58 @@ export const cardLibrary = {
     },
   },
 
+  mandat: {
+    id: 'mandat',
+    name: 'Mandat',
+    type: 'status',
+    rarity: 'common',
+    cost: 2,
+    price: 1,
+    isStarter: true,
+    exhaust: true,
+    emoji: '🎫',
+    desc: 'Zapłać mandat (2 Oscypki) i wyrzuć. Jeśli nie zapłacisz — tracisz 2 Dutki co turę.',
+    effect(state) {
+      void state;
+      return {};
+    },
+  },
+
+  numerek_do_toalety: {
+    id: 'numerek_do_toalety',
+    name: 'Numerek do Toalety',
+    type: 'status',
+    rarity: 'common',
+    cost: 0,
+    price: 1,
+    isStarter: true,
+    unplayable: true,
+    emoji: '🚽',
+    desc: 'Nie można zagrać. Utknąłeś w kolejce — zajmuje miejsce w dłoni.',
+    effect(state) {
+      void state;
+      return {};
+    },
+  },
+
+  halas: {
+    id: 'halas',
+    name: 'Hałas',
+    type: 'status',
+    rarity: 'common',
+    cost: 1,
+    price: 1,
+    isStarter: true,
+    exhaust: true,
+    mustPlayFirst: true,
+    emoji: '📢',
+    desc: 'Musisz zagrać tę kartę przed innymi. Zagraj, by wyrzucić.',
+    effect(state) {
+      void state;
+      return { playerAnim: 'anim-block' };
+    },
+  },
+
   wydruk_z_kasy: {
     id: 'wydruk_z_kasy',
     name: 'Wydruk z Kasy',

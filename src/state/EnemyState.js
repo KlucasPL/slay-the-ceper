@@ -15,7 +15,7 @@ function emitF(state, kind, payload) {
  * @typedef {import('../data/cards.js').StatusDef} StatusDef
  * @typedef {import('../data/enemies.js').EnemyMoveDef} EnemyMoveDef
  * @typedef {{ name: string, hp: number, maxHp: number, block: number, energy: number, maxEnergy: number, status: StatusDef, stunned: boolean, cardsPlayedThisTurn: number }} PlayerState
- * @typedef {{ id: string, name: string, emoji: string, hp: number, maxHp: number, block: number, nextAttack: number, baseAttack: number, status: StatusDef, rachunek: number, ped: number, spriteSvg: string, phase2SpriteSvg?: string, patternType: 'random'|'loop', pattern: EnemyMoveDef[], phaseTwoPattern: EnemyMoveDef[], patternIndex: number, currentIntent: EnemyMoveDef, tookHpDamageThisTurn: boolean, bossArtifact?: number, passive: string | null, isElite: boolean, isBoss: boolean, stunnedTurns: number, lichwaTriggeredThisTurn: boolean, hartDuchaTriggered: boolean, portraitShameTurns: number, phaseTwoTriggered: boolean, evasionCharges: number, isBankrupt?: boolean }} EnemyState
+ * @typedef {{ id: string, name: string, emoji: string, hp: number, maxHp: number, block: number, nextAttack: number, baseAttack: number, status: StatusDef, rachunek: number, ped: number, spriteSvg: string, phase2SpriteSvg?: string, patternType: 'random'|'loop'|'weather_loop', pattern: EnemyMoveDef[], phaseTwoPattern: EnemyMoveDef[], weatherPatterns?: Record<string, EnemyMoveDef[]>, patternIndex: number, harnasWeatherPatternIndex: number, currentIntent: EnemyMoveDef, tookHpDamageThisTurn: boolean, bossArtifact?: number, passive: string | null, isElite: boolean, isBoss: boolean, stunnedTurns: number, lichwaTriggeredThisTurn: boolean, hartDuchaTriggered: boolean, portraitShameTurns: number, phaseTwoTriggered: boolean, evasionCharges: number, isBankrupt?: boolean }} EnemyState
  */
 
 /**
@@ -173,6 +173,7 @@ export function createEnemyState(state, enemyDef) {
     patternType: enemyDef.patternType,
     pattern,
     phaseTwoPattern,
+    weatherPatterns: enemyDef.weatherPatterns ?? {},
     patternIndex: 0,
     currentIntent: { type: 'attack', name: 'Atak', damage: 0, hits: 1 },
     tookHpDamageThisTurn: false,
@@ -183,9 +184,15 @@ export function createEnemyState(state, enemyDef) {
     stunnedTurns: 0,
     lichwaTriggeredThisTurn: false,
     hartDuchaTriggered: false,
+    drugiOddechTriggered: false,
+    gazDoDechyStacks: 0,
+    naporWodyPressure: 0,
+    kolejkaCounter: 0,
+    harnasWeatherPatternIndex: 0,
     portraitShameTurns: 0,
     phaseTwoTriggered: false,
     evasionCharges: 0,
+    stolenCards: [],
   };
   builtEnemyState.currentIntent = state._buildEnemyIntent(builtEnemyState);
   builtEnemyState.nextAttack =
@@ -271,6 +278,14 @@ export function rollEnemyAttack(state, enemyState = state.enemy) {
  * @returns {EnemyMoveDef}
  */
 export function buildEnemyIntent(state, enemyState) {
+  if (enemyState.patternType === 'weather_loop') {
+    const wp = enemyState.weatherPatterns ?? {};
+    const weather = state.currentWeather ?? 'clear';
+    const activePattern = wp[weather] && wp[weather].length > 0 ? wp[weather] : (wp['clear'] ?? []);
+    const move = activePattern[enemyState.harnasWeatherPatternIndex % activePattern.length];
+    return { ...move };
+  }
+
   if (enemyState.patternType === 'loop') {
     const activePattern =
       enemyState.phaseTwoTriggered && enemyState.phaseTwoPattern.length > 0

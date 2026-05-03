@@ -2598,7 +2598,7 @@ describe('GameState', () => {
       expect(s.enemy.currentIntent).toEqual({
         type: 'attack',
         name: 'Selfie z zaskoczenia',
-        damage: 12,
+        damage: 13,
         hits: 1,
         applyVulnerable: 2,
       });
@@ -3061,7 +3061,7 @@ describe('GameState', () => {
       s.resetBattle();
       expect(s.enemy.id).toBe('busiarz');
       expect(s.enemy.name).toBe('Wąsaty Busiarz');
-      expect(s.enemy.maxHp).toBe(65);
+      expect(s.enemy.maxHp).toBe(68);
     });
 
     it('can load Babę from the enemy library after victory', () => {
@@ -3070,7 +3070,7 @@ describe('GameState', () => {
       s.resetBattle();
       expect(s.enemy.id).toBe('baba');
       expect(s.enemy.name).toBe('Handlara oscypkami');
-      expect(s.enemy.maxHp).toBe(78);
+      expect(s.enemy.maxHp).toBe(82);
     });
 
     it('can load Parkingowego from the enemy library with lowered HP', () => {
@@ -3079,7 +3079,7 @@ describe('GameState', () => {
       s.resetBattle();
       expect(s.enemy.id).toBe('parkingowy');
       expect(s.enemy.name).toBe('Parkingowy z Palenicy');
-      expect(s.enemy.maxHp).toBe(95);
+      expect(s.enemy.maxHp).toBe(100);
     });
 
     it('does not repeat the same regular enemy twice in a row when alternatives exist', () => {
@@ -3317,7 +3317,7 @@ describe('GameState', () => {
       s.resetBattle();
       expect(s.enemy.id).toBe('boss');
       expect(s.enemy.name).toBe('Król Krupówek - Biały Misiek (Zdzisiek)');
-      expect(s.enemy.maxHp).toBe(165);
+      expect(s.enemy.maxHp).toBe(1);
       expect(s.enemy.bossArtifact).toBe(2);
     });
 
@@ -3334,7 +3334,7 @@ describe('GameState', () => {
       s.resetBattle();
       expect(s.enemy.id).toBe('fiakier');
       expect(s.enemy.name).toBe('Fiakier spod Krupówek');
-      expect(s.enemy.maxHp).toBe(165);
+      expect(s.enemy.maxHp).toBe(1);
       expect(s.enemy.bossArtifact).toBe(0);
     });
 
@@ -3782,62 +3782,294 @@ describe('GameState', () => {
   });
 
   describe('Act 2 weather passives', () => {
-    it('halny_schwarm: glodny_swistak gains +2 strength when weather is halny', () => {
+    it('kontrola_stempla: bileter_z_tpn gains +1 strength when player holds status cards', () => {
+      const s = freshState();
+      s.enemy = s._createEnemyState(enemyLibrary.bileter_z_tpn);
+      s.hand = ['mandat'];
+      const strBefore = s.enemy.status.strength;
+      s.endTurn();
+      expect(s.enemy.status.strength).toBe(strBefore + 1);
+    });
+
+    it('kontrola_stempla: bileter_z_tpn does NOT gain strength with no status cards in hand', () => {
+      const s = freshState();
+      s.enemy = s._createEnemyState(enemyLibrary.bileter_z_tpn);
+      s.hand = ['ciupaga'];
+      const strBefore = s.enemy.status.strength;
+      s.endTurn();
+      expect(s.enemy.status.strength).toBe(strBefore);
+    });
+
+    it('mandat: drains 2 dutki per turn while in hand', () => {
+      const s = freshState();
+      s.enemy = s._createEnemyState(enemyLibrary.bileter_z_tpn);
+      s.hand = ['mandat'];
+      s.dutki = 3;
+      s.endTurn();
+      expect(s.dutki).toBe(1);
+    });
+
+    it('wiecznie_glodny: glodny_swistak heals 4 HP at start of enemy turn when not at full HP', () => {
       const s = freshState();
       s.enemy = s._createEnemyState(enemyLibrary.glodny_swistak);
-      s.currentWeather = 'halny';
-      const strengthBefore = s.enemy.status.strength;
-
+      s.enemy.hp = s.enemy.maxHp - 10;
+      const hpBefore = s.enemy.hp;
       s.endTurn();
-
-      expect(s.enemy.status.strength).toBe(strengthBefore + 2);
+      expect(s.enemy.hp).toBe(hpBefore + 4);
     });
 
-    it('halny_schwarm: glodny_swistak does NOT gain extra strength in non-halny weather', () => {
-      const sClear = freshState();
-      sClear.enemy = sClear._createEnemyState(enemyLibrary.glodny_swistak);
-      sClear.currentWeather = 'clear';
-      const strengthBefore = sClear.enemy.status.strength;
-      sClear.endTurn();
-
-      expect(sClear.enemy.status.strength).toBe(strengthBefore);
+    it('wiecznie_glodny: glodny_swistak does NOT heal when already at full HP', () => {
+      const s = freshState();
+      s.enemy = s._createEnemyState(enemyLibrary.glodny_swistak);
+      s.enemy.hp = s.enemy.maxHp;
+      s.endTurn();
+      expect(s.enemy.hp).toBe(s.enemy.maxHp);
     });
 
-    it('mglisty_sprint: spocony_polmaratonczyk gains +6 block extra when weather is fog', () => {
-      // In fog weather, passive adds +6 on top of whatever the pattern intent gives
-      const sFog = freshState();
-      sFog.enemy = sFog._createEnemyState(enemyLibrary.spocony_polmaratonczyk);
-      sFog.currentWeather = 'fog';
-      sFog.endTurn();
-      const fogBlock = sFog.enemy.block;
-
-      const sClear = freshState();
-      sClear.enemy = sClear._createEnemyState(enemyLibrary.spocony_polmaratonczyk);
-      sClear.currentWeather = 'clear';
-      sClear.endTurn();
-      const clearBlock = sClear.enemy.block;
-
-      expect(fogBlock - clearBlock).toBe(6);
+    it('wiecznie_glodny: heal is capped at maxHp', () => {
+      const s = freshState();
+      s.enemy = s._createEnemyState(enemyLibrary.glodny_swistak);
+      s.enemy.hp = s.enemy.maxHp - 2;
+      s.endTurn();
+      expect(s.enemy.hp).toBe(s.enemy.maxHp);
     });
 
-    it('mglisty_sprint: spocony_polmaratonczyk does NOT gain fog passive block in clear weather', () => {
-      const sClear = freshState();
-      sClear.enemy = sClear._createEnemyState(enemyLibrary.spocony_polmaratonczyk);
-      sClear.currentWeather = 'clear';
-      sClear.endTurn();
-
-      const sFrozen = freshState();
-      sFrozen.enemy = sFrozen._createEnemyState(enemyLibrary.spocony_polmaratonczyk);
-      sFrozen.currentWeather = 'frozen';
-      sFrozen.endTurn();
-
-      // Neither clear nor frozen should trigger the fog passive (+6); block values should match
-      expect(sFrozen.enemy.block).toBe(sClear.enemy.block);
+    it('drugi_oddech: spocony_polmaratonczyk gains +2 strength when HP drops to 60%', () => {
+      const s = freshState();
+      s.enemy = s._createEnemyState(enemyLibrary.spocony_polmaratonczyk);
+      const threshold = Math.floor(s.enemy.maxHp * 0.6);
+      s.enemy.hp = threshold;
+      const strBefore = s.enemy.status.strength;
+      s._applyDamageToEnemy(1);
+      expect(s.enemy.status.strength).toBe(strBefore + 2);
+      expect(s.enemy.drugiOddechTriggered).toBe(true);
     });
 
-    it('both Act 2 enemies with weather passives have the correct passive field set', () => {
-      expect(enemyLibrary.glodny_swistak.passive).toBe('halny_schwarm');
-      expect(enemyLibrary.spocony_polmaratonczyk.passive).toBe('mglisty_sprint');
+    it('drugi_oddech: spocony_polmaratonczyk does NOT gain strength above 60% HP threshold', () => {
+      const s = freshState();
+      s.enemy = s._createEnemyState(enemyLibrary.spocony_polmaratonczyk);
+      s.enemy.hp = Math.ceil(s.enemy.maxHp * 0.7);
+      const strBefore = s.enemy.status.strength;
+      s._applyDamageToEnemy(1);
+      expect(s.enemy.status.strength).toBe(strBefore);
+      expect(s.enemy.drugiOddechTriggered).toBe(false);
+    });
+
+    it('drugi_oddech: strength bonus triggers only once per battle', () => {
+      const s = freshState();
+      s.enemy = s._createEnemyState(enemyLibrary.spocony_polmaratonczyk);
+      const threshold = Math.floor(s.enemy.maxHp * 0.6);
+      s.enemy.hp = threshold;
+      s._applyDamageToEnemy(1);
+      const strAfterFirst = s.enemy.status.strength;
+      s._applyDamageToEnemy(5);
+      expect(s.enemy.status.strength).toBe(strAfterFirst);
+    });
+
+    it('glodny_swistak passive and spocony_polmaratonczyk passive fields are correct', () => {
+      expect(enemyLibrary.glodny_swistak.passive).toBe('wiecznie_glodny');
+      expect(enemyLibrary.spocony_polmaratonczyk.passive).toBe('drugi_oddech');
+    });
+
+    it('gaz_do_dechy: stacks increment when enemy takes no HP damage', () => {
+      const s = freshState();
+      s.enemy = s._createEnemyState(enemyLibrary.meleksiarz_pirat_drogowy);
+      s.enemy.block = 9999;
+      expect(s.enemy.gazDoDechyStacks).toBe(0);
+      s.endTurn();
+      expect(s.enemy.gazDoDechyStacks).toBe(1);
+      s.enemy.block = 9999;
+      s.endTurn();
+      expect(s.enemy.gazDoDechyStacks).toBe(2);
+    });
+
+    it('gaz_do_dechy: stacks reset when enemy takes HP damage', () => {
+      const s = freshState();
+      s.enemy = s._createEnemyState(enemyLibrary.meleksiarz_pirat_drogowy);
+      s.enemy.gazDoDechyStacks = 3;
+      s._applyDamageToEnemy(5);
+      expect(s.enemy.gazDoDechyStacks).toBe(0);
+    });
+
+    it('gaz_do_dechy: attack damage increases by 5 per stack', () => {
+      const s = freshState();
+      s.enemy = s._createEnemyState(enemyLibrary.meleksiarz_pirat_drogowy);
+      s.enemy.currentIntent = { type: 'attack', name: 'Test', damage: 10, hits: 1, usePed: false };
+      s.enemy.gazDoDechyStacks = 2;
+      s.player.block = 9999;
+      const hpBefore = s.player.hp;
+      s._applyEnemyIntent();
+      // Block absorbs, but intent damage should have been 10 + 2*5 = 20
+      expect(s.player.block).toBe(9999 - 20);
+      expect(s.player.hp).toBe(hpBefore);
+    });
+
+    it('napor_wody: accumulates pressure when attack is fully blocked', () => {
+      const s = freshState();
+      s.enemy = s._createEnemyState(enemyLibrary.bober_z_morskiego_oka);
+      s.enemy.block = 50;
+      expect(s.enemy.naporWodyPressure).toBe(0);
+      s._applyDamageToEnemy(12);
+      expect(s.enemy.naporWodyPressure).toBe(12);
+      s._applyDamageToEnemy(8);
+      expect(s.enemy.naporWodyPressure).toBe(20);
+    });
+
+    it('napor_wody: does NOT accumulate pressure when attack deals HP damage', () => {
+      const s = freshState();
+      s.enemy = s._createEnemyState(enemyLibrary.bober_z_morskiego_oka);
+      s.enemy.block = 5;
+      s._applyDamageToEnemy(15); // 5 blocked, 10 HP damage
+      expect(s.enemy.naporWodyPressure).toBe(0);
+    });
+
+    it('napor_wody: pressure is added to attack damage and reset on use', () => {
+      const s = freshState();
+      s.enemy = s._createEnemyState(enemyLibrary.bober_z_morskiego_oka);
+      s.enemy.naporWodyPressure = 14;
+      s.enemy.currentIntent = { type: 'attack', name: 'Test', damage: 10, hits: 1, usePed: false };
+      s.player.block = 9999;
+      s._applyEnemyIntent();
+      // Pressure 14 + base 10 = 24 absorbed by block
+      expect(s.player.block).toBe(9999 - 24);
+      expect(s.enemy.naporWodyPressure).toBe(0);
+    });
+
+    it('kolejka_do_toalety: counter increments by number of status cards held at end of turn', () => {
+      const s = freshState();
+      s.enemy = s._createEnemyState(enemyLibrary.krolowa_schroniska);
+      s.hand = ['numerek_do_toalety', 'numerek_do_toalety', 'ciupaga'];
+      expect(s.enemy.kolejkaCounter).toBe(0);
+      s.endTurn();
+      expect(s.enemy.kolejkaCounter).toBe(2);
+    });
+
+    it('kolejka_do_toalety: counter resets when player holds no status cards', () => {
+      const s = freshState();
+      s.enemy = s._createEnemyState(enemyLibrary.krolowa_schroniska);
+      s.enemy.kolejkaCounter = 5;
+      s.hand = ['ciupaga'];
+      s.endTurn();
+      expect(s.enemy.kolejkaCounter).toBe(0);
+    });
+
+    it('kolejka_do_toalety: status intent adds 2 + counter cards', () => {
+      const s = freshState();
+      s.enemy = s._createEnemyState(enemyLibrary.krolowa_schroniska);
+      s.enemy.kolejkaCounter = 3;
+      s.enemy.currentIntent = {
+        type: 'status',
+        name: 'Gorąca zupa',
+        addStatusCard: 'numerek_do_toalety',
+        amount: 2,
+      };
+      const discardBefore = s.discard.length;
+      s._applyEnemyIntent();
+      expect(s.discard.length - discardBefore).toBe(5); // 2 + 3
+    });
+
+    it('zmiana_pogody: harnas_pogodynka has weather_loop patternType and zmiana_pogody passive', () => {
+      expect(enemyLibrary.harnas_pogodynka.patternType).toBe('weather_loop');
+      expect(enemyLibrary.harnas_pogodynka.passive).toBe('zmiana_pogody');
+      const wp = enemyLibrary.harnas_pogodynka.weatherPatterns;
+      expect(wp).toBeDefined();
+      expect(wp.clear.length).toBeGreaterThan(0);
+      expect(wp.halny.length).toBeGreaterThan(0);
+      expect(wp.frozen.length).toBeGreaterThan(0);
+      expect(wp.fog.length).toBeGreaterThan(0);
+    });
+
+    it('zmiana_pogody: weather cycles to halny on turn 3 (battleTurnsElapsed % 3 === 0)', () => {
+      const s = freshState();
+      s.enemy = s._createEnemyState(enemyLibrary.harnas_pogodynka);
+      s.currentWeather = 'clear';
+      // Simulate 2 turns (no cycle yet)
+      s.battleTurnsElapsed = 1;
+      let result = s.endTurn();
+      expect(result.weatherChanged).toBeNull();
+      expect(s.currentWeather).toBe('clear');
+      s.battleTurnsElapsed = 2;
+      result = s.endTurn();
+      expect(result.weatherChanged).toBeNull();
+      expect(s.currentWeather).toBe('clear');
+      // Turn 3: cycle fires
+      s.battleTurnsElapsed = 3;
+      result = s.endTurn();
+      expect(result.weatherChanged).not.toBeNull();
+      expect(result.weatherChanged.id).toBe('halny');
+      expect(s.currentWeather).toBe('halny');
+    });
+
+    it('zmiana_pogody: rotation cycles halny → frozen → fog → halny', () => {
+      const s = freshState();
+      s.enemy = s._createEnemyState(enemyLibrary.harnas_pogodynka);
+      s.currentWeather = 'clear';
+      s.battleTurnsElapsed = 3;
+      s.endTurn(); // → halny
+      expect(s.currentWeather).toBe('halny');
+      s.battleTurnsElapsed = 6;
+      s.endTurn(); // → frozen
+      expect(s.currentWeather).toBe('frozen');
+      s.battleTurnsElapsed = 9;
+      s.endTurn(); // → fog
+      expect(s.currentWeather).toBe('fog');
+      s.battleTurnsElapsed = 12;
+      s.endTurn(); // wraps → halny
+      expect(s.currentWeather).toBe('halny');
+    });
+
+    it('zmiana_pogody: pattern index resets to 0 when weather changes', () => {
+      const s = freshState();
+      s.enemy = s._createEnemyState(enemyLibrary.harnas_pogodynka);
+      s.currentWeather = 'clear';
+      // Advance the index a few times
+      s.battleTurnsElapsed = 1;
+      s.endTurn();
+      s.battleTurnsElapsed = 2;
+      s.endTurn();
+      // harnasWeatherPatternIndex is now 2 (advanced twice)
+      expect(s.enemy.harnasWeatherPatternIndex).toBe(2);
+      // Turn 3: weather changes, index resets
+      s.battleTurnsElapsed = 3;
+      s.endTurn();
+      expect(s.enemy.harnasWeatherPatternIndex).toBe(0);
+      expect(s.currentWeather).toBe('halny');
+    });
+
+    it('zmiana_pogody: intent uses correct weather pattern after weather change', () => {
+      const s = freshState();
+      s.currentWeather = 'halny';
+      s.enemy = s._createEnemyState(enemyLibrary.harnas_pogodynka);
+      // The intent should come from the halny pattern (index 0)
+      const halnyFirst = enemyLibrary.harnas_pogodynka.weatherPatterns.halny[0];
+      expect(s.enemy.currentIntent.name).toBe(halnyFirst.name);
+    });
+
+    it('zmiana_pogody: non-harnas enemies do not cycle weather on turn 3', () => {
+      const s = freshState();
+      // Use a regular loop enemy
+      s.currentWeather = 'clear';
+      s.battleTurnsElapsed = 3;
+      const result = s.endTurn();
+      expect(result.weatherChanged).toBeNull();
+      expect(s.currentWeather).toBe('clear');
+    });
+
+    it('zmiana_pogody: pattern index advances independently per weather', () => {
+      const s = freshState();
+      s.enemy = s._createEnemyState(enemyLibrary.harnas_pogodynka);
+      s.currentWeather = 'halny';
+      s.enemy.harnasWeatherPatternIndex = 0;
+      const halnyPattern = enemyLibrary.harnas_pogodynka.weatherPatterns.halny;
+      // Advance through the halny pattern
+      s.battleTurnsElapsed = 1;
+      s.endTurn();
+      expect(s.enemy.harnasWeatherPatternIndex).toBe(1);
+      expect(s.enemy.currentIntent.name).toBe(halnyPattern[1].name);
+      s.battleTurnsElapsed = 2;
+      s.endTurn();
+      expect(s.enemy.harnasWeatherPatternIndex).toBe(2);
+      expect(s.enemy.currentIntent.name).toBe(halnyPattern[2].name);
     });
   });
 
@@ -4505,7 +4737,7 @@ describe('GameState', () => {
       s.enemy.block = 0;
       const energyBefore = s.player.energy;
       s.playCard(0);
-      expect(s.enemy.hp).toBe(58);
+      expect(s.enemy.hp).toBe(62);
       expect(s.player.energy).toBe(energyBefore - 2 + 1);
     });
 
@@ -4698,6 +4930,17 @@ describe('GameState', () => {
 
       const winSummary = s.captureRunSummary('player_win');
       expect(winSummary.killerName).toBeNull();
+    });
+
+    it('captureRunSummary uses global floor numbering in Act 2', () => {
+      const s = freshState();
+      s.currentAct = 2;
+      s.floorOffset = 15;
+      s.currentLevel = 3; // 4th floor of Act 2 -> global floor 19
+      s.maxFloorReached = 15;
+
+      const summary = s.captureRunSummary('enemy_win');
+      expect(summary.runStats.floorReached).toBe(19);
     });
   });
 

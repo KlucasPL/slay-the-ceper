@@ -65,6 +65,8 @@ export function handlePlayCard(uiManager, handIndex) {
       );
     } else if (result.reason === 'blokada') {
       showFloatingText(uiManager, 'sprite-enemy', 'PARKINGOWY: LIMIT 3 KART!', 'floating-shame');
+    } else if (result.reason === 'halas') {
+      showFloatingText(uiManager, 'sprite-player', '📢 Najpierw zagraj Hałas!', 'floating-shame');
     }
     return;
   }
@@ -164,10 +166,28 @@ export function handleEndTurn(uiManager) {
   if (result.playerPassiveHeal) {
     showFloatingText(uiManager, 'sprite-player', result.playerPassiveHeal.text, 'floating-heal');
   }
+  if (result.weatherChanged) {
+    showFloatingText(
+      uiManager,
+      'sprite-enemy',
+      `${result.weatherChanged.emoji} ${result.weatherChanged.name}!`,
+      'floating-shame'
+    );
+    uiManager._renderWeatherIndicator();
+  }
   const lansBreakText = uiManager.state.consumeLansBreakEvent();
   if (lansBreakText) {
     triggerLansOffAnimation();
     showFloatingText(uiManager, 'sprite-player', lansBreakText, 'floating-shame');
+  }
+  const stolenCardName = uiManager.state.consumeCardStolenEvent();
+  if (stolenCardName) {
+    showFloatingText(
+      uiManager,
+      'sprite-player',
+      `🃏 Skradziono: ${stolenCardName}!`,
+      'floating-shame'
+    );
   }
   showLansDutkiSpentFeedback(uiManager);
 

@@ -79,6 +79,12 @@ export function resetBattle(state) {
 
   clearStatusCardsFromPiles(state);
 
+  // Return any cards stolen by the duck (or other enemies) back to the deck
+  if (Array.isArray(state.enemy.stolenCards) && state.enemy.stolenCards.length > 0) {
+    state.deck.push(...state.enemy.stolenCards);
+    state.enemy.stolenCards = [];
+  }
+
   const currentNode = state.getCurrentMapNode();
   const isBossNode = currentNode?.type === 'boss';
   const isEliteNode = currentNode?.type === 'elite';
@@ -205,7 +211,10 @@ export function captureRunSummary(state, outcome) {
     snapshotTotalDutkiEarned,
     runStats: {
       totalDutkiEarned: state.totalDutkiEarned,
-      floorReached: Math.max(state.maxFloorReached, state.currentLevel + 1),
+      floorReached: Math.max(
+        state.maxFloorReached,
+        (state.floorOffset ?? 0) + state.currentLevel + 1
+      ),
       totalTurnsPlayed: state.totalTurnsPlayed,
       hpAtDeath,
       maxHp,
@@ -257,6 +266,7 @@ export function resetForNewRun(state, startingDeck) {
   state.currentNodeIndex = 1;
   state.currentNode = { x: 1, y: 0 };
   state.maxFloorReached = 1;
+  state.floorOffset = 0;
   state.currentAct = 1;
   state.currentActName = 'KRUPÓWKI';
   state.debugForcedNextNodeType = null;

@@ -4,7 +4,7 @@
  *   'card_drawn'|'card_played'|'card_skipped'|'card_exhausted'|'enemy_move'|
  *   'status_applied'|'shop_opened'|'shop_purchase'|'event_entered'|'event_resolved'|
  *   'reward_offered'|'reward_picked'|'campfire_choice'|'relic_gained'|'boon_offered'|
- *   'boon_picked'|'deck_mutation'} EngineEventKind
+ *   'boon_picked'|'deck_mutation'|'card_stolen'} EngineEventKind
  *
  * @typedef {{ kind: string, id: string }} EntityRef
  *
@@ -29,18 +29,19 @@ export function createEventBuffer() {
 
 /**
  * Emit one engine event into the buffer.
- * @param {{ _engineEvents: { buffer: EngineEvent[], seq: number }, battleTurnsElapsed: number, currentLevel: number, currentAct: number }} state
+ * @param {{ _engineEvents: { buffer: EngineEvent[], seq: number }, battleTurnsElapsed: number, currentLevel: number, currentAct: number, floorOffset?: number }} state
  * @param {EngineEventKind} kind
  * @param {Record<string, unknown>} payload
  */
 export function emit(state, kind, payload) {
   const eb = state._engineEvents;
+  const floor = (state.floorOffset ?? 0) + (state.currentLevel ?? 0) + 1;
   const event = {
     seq: eb.seq++,
     t: Date.now(),
     kind,
     turn: state.battleTurnsElapsed ?? 0,
-    floor: (state.currentLevel ?? 0) + 1,
+    floor,
     act: state.currentAct ?? 1,
     payload,
   };
