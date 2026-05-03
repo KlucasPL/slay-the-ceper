@@ -217,6 +217,8 @@ jobs:
     needs: [prepare, run-shards]
     runs-on: ubuntu-latest
     timeout-minutes: 180
+    permissions:
+      contents: write # CRITICAL: Required for pushing to the gh-pages branch
 
     steps:
       - name: Checkout
@@ -327,6 +329,16 @@ jobs:
           path: metrics/dashboard
           retention-days: 14
 
+      # --- NEW STEP: Deploys directly to the gh-pages branch in a subfolder ---
+      - name: Deploy dashboard to gh-pages subfolder
+        if: needs.prepare.outputs.dashboard_enabled == 'true'
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./metrics/dashboard
+          destination_dir: ./dashboard # Ensures it lives at yoursite.com/your-repo/dashboard/
+          keep_files: true # Prevents overwriting your existing documentation/site
+
       - name: Upload merged JSONL artifact
         if: needs.prepare.outputs.dashboard_enabled == 'true' && inputs.keep_merged_jsonl
         shell: bash
@@ -363,5 +375,6 @@ jobs:
             echo "- mega-sim-shards (combined shard package + manifest)"
             if [ "${{ needs.prepare.outputs.dashboard_enabled }}" = 'true' ]; then
               echo "- mega-sim-dashboard (static dashboard with metrics.json)"
+              echo "- **GitHub Pages deployed to gh-pages branch at \`/dashboard\` subfolder**"
             fi
           } >> "$GITHUB_STEP_SUMMARY"
