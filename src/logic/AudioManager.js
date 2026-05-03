@@ -34,6 +34,7 @@ export class AudioManager {
       new URL('../audio/main_menu_2.mp3', import.meta.url).href,
     ];
     const mapUrl = new URL('../audio/summit_sprint.mp3', import.meta.url).href;
+    const mapAct2Url = new URL('../audio/map_act2.mp3', import.meta.url).href;
     const gameUrl = new URL('../audio/battle.mp3', import.meta.url).href;
     const bossUrl = new URL('../audio/boss.mp3', import.meta.url).href;
     const victoryUrl = new URL('../audio/summit_stomp.mp3', import.meta.url).href;
@@ -51,6 +52,8 @@ export class AudioManager {
     this.menuTrack = this._getRandomMenuTrack();
     /** @type {HTMLAudioElement} */
     this.mapTrack = this._createTrack(mapUrl, true, 0.45);
+    /** @type {HTMLAudioElement} */
+    this.mapTrackAct2 = this._createTrack(mapAct2Url, true, 0.45);
     /** @type {HTMLAudioElement} */
     this.gameTrack = this._createTrack(gameUrl, true, 0.45);
     /** @type {HTMLAudioElement} */
@@ -179,7 +182,8 @@ export class AudioManager {
     this._stopInGameSceneTracks();
     this._stopOneShotThemes();
     if (this.gameMusicEnabled) {
-      this._play(this.mapTrack);
+      const track = this.state.currentAct === 2 ? this.mapTrackAct2 : this.mapTrack;
+      this._play(track);
     }
   }
 
@@ -241,6 +245,8 @@ export class AudioManager {
     this.marynaTrack.currentTime = 0;
     this.mapTrack.pause();
     this.mapTrack.currentTime = 0;
+    this.mapTrackAct2.pause();
+    this.mapTrackAct2.currentTime = 0;
     this.fiakierEventTrack.pause();
     this.fiakierEventTrack.currentTime = 0;
     this.karykaturaEventTrack.pause();
@@ -335,6 +341,8 @@ export class AudioManager {
   _stopInGameSceneTracks() {
     this.mapTrack.pause();
     this.mapTrack.currentTime = 0;
+    this.mapTrackAct2.pause();
+    this.mapTrackAct2.currentTime = 0;
     this.gameTrack.pause();
     this.gameTrack.currentTime = 0;
     this.bossTrack.pause();
