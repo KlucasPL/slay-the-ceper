@@ -3317,7 +3317,7 @@ describe('GameState', () => {
       s.resetBattle();
       expect(s.enemy.id).toBe('boss');
       expect(s.enemy.name).toBe('Król Krupówek - Biały Misiek (Zdzisiek)');
-      expect(s.enemy.maxHp).toBe(1);
+      expect(s.enemy.maxHp).toBe(155);
       expect(s.enemy.bossArtifact).toBe(2);
     });
 
@@ -3334,7 +3334,7 @@ describe('GameState', () => {
       s.resetBattle();
       expect(s.enemy.id).toBe('fiakier');
       expect(s.enemy.name).toBe('Fiakier spod Krupówek');
-      expect(s.enemy.maxHp).toBe(1);
+      expect(s.enemy.maxHp).toBe(165);
       expect(s.enemy.bossArtifact).toBe(0);
     });
 
