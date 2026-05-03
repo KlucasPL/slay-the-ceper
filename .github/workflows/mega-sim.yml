@@ -244,7 +244,14 @@ jobs:
           set -euo pipefail
           COUNT=$(find metrics/shards -name 'shard-*.jsonl.gz' | wc -l | tr -d ' ')
           echo "Downloaded shard files: $COUNT"
-          ls -1 metrics/shards/shard-*.meta.json > /tmp/meta-files.txt
+          find metrics/shards -name 'shard-*.meta.json' | sort -V > /tmp/meta-files.txt
+          META_COUNT=$(wc -l < /tmp/meta-files.txt | tr -d ' ')
+          if [ "$META_COUNT" -eq 0 ]; then
+            echo "No shard metadata files found after artifact download." >&2
+            echo "Available files:" >&2
+            find metrics/shards -type f | sort -V >&2
+            exit 1
+          fi
 
           node - <<'EOF'
           const fs = require('node:fs');
@@ -259,8 +266,8 @@ jobs:
         with:
           name: mega-sim-shards
           path: |
-            metrics/shards/*.jsonl.gz
-            metrics/shards/*.meta.json
+            metrics/shards/**/*.jsonl.gz
+            metrics/shards/**/*.meta.json
             metrics/manifest.json
           retention-days: 14
 
@@ -272,9 +279,17 @@ jobs:
           mkdir -p metrics
 
           find metrics/shards -name 'shard-*.jsonl.gz' | sort -V > /tmp/shard-files.txt
+          SHARD_FILE_COUNT=$(wc -l < /tmp/shard-files.txt | tr -d ' ')
+          if [ "$SHARD_FILE_COUNT" -eq 0 ]; then
+            echo "No shard JSONL files found for dashboard build." >&2
+            exit 1
+          fi
 
           if [ '${{ needs.prepare.outputs.dashboard_mode }}' = 'full' ]; then
-            gunzip -c metrics/shards/shard-*.jsonl.gz > metrics/dashboard.input.jsonl
+            : > metrics/dashboard.input.jsonl
+            while IFS= read -r GZ_FILE; do
+              gunzip -c "$GZ_FILE" >> metrics/dashboard.input.jsonl
+            done < /tmp/shard-files.txt
           else
             TARGET=${{ needs.prepare.outputs.dashboard_games }}
             FOUND=0
