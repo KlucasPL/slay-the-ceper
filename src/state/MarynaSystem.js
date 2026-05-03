@@ -8,7 +8,13 @@ import { marynaBoonLibrary } from '../data/marynaBoons.js';
  */
 export function rollMarynaChoices(state, count = 3) {
   const basePool = Object.keys(marynaBoonLibrary);
-  const pool = state.filterPool('boons', basePool);
+  let pool = state.filterPool('boons', basePool);
+
+  // Exclude previously picked boon (from Act 1) to prevent duplicates across acts
+  if (state.maryna.pickedId && pool.includes(state.maryna.pickedId)) {
+    pool = pool.filter((id) => id !== state.maryna.pickedId);
+  }
+
   const result = [];
   const remaining = [...pool];
   const n = Math.min(count, remaining.length);

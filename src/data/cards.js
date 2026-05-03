@@ -1,5 +1,5 @@
 /**
- * @typedef {{ strength: number, weak: number, fragile: number, vulnerable: number, next_double: boolean, energy_next_turn: number, lans: number, duma_podhala: number, furia_turysty: number }} StatusDef
+ * @typedef {{ strength: number, weak: number, fragile: number, vulnerable: number, next_double: boolean, energy_next_turn: number, lans: number, duma_podhala: number, furia_turysty: number, okradziony: number, brak_reszty: boolean, targowanie_sie: boolean, parcie_na_szklo: boolean, blokada_parkingowa: boolean, lichwa: boolean, hart_ducha: boolean, influencer_aura: boolean, ochrona_wizerunku: boolean, drugi_oddech: boolean, wiecznie_glodny: boolean, kontrola_stempla: boolean, gaz_do_dechy: number, napor_wody: number, kolejka_do_toalety: number, zmiana_pogody: boolean }} StatusDef
  * @typedef {{ playerAnim?: string, enemyAnim?: string, damage?: { raw: number, blocked: number, dealt: number } }} CardEffectResult
  * @typedef {'common' | 'uncommon' | 'rare'} RarityDef
  * @typedef {{ id: string, name: string, type: 'attack' | 'skill' | 'status' | 'power', cost: number, price: number, rarity: RarityDef, emoji: string, desc: string, tags?: string[], isStarter?: boolean, eventOnly?: boolean, tutorialOnly?: boolean, exhaust?: boolean, unplayable?: boolean, effect: (state: import('../state/GameState.js').GameState) => CardEffectResult }} CardDef
@@ -608,6 +608,75 @@ export const cardLibrary = {
     },
   },
 
+  mandat: {
+    id: 'mandat',
+    name: 'Mandat',
+    type: 'status',
+    rarity: 'common',
+    cost: 2,
+    price: 1,
+    isStarter: true,
+    exhaust: true,
+    emoji: '🎫',
+    desc: 'Zapłać mandat (2 Oscypki) i wyrzuć. Jeśli nie zapłacisz — tracisz 2 Dutki co turę.',
+    effect(state) {
+      void state;
+      return {};
+    },
+  },
+
+  numerek_do_toalety: {
+    id: 'numerek_do_toalety',
+    name: 'Numerek do Toalety',
+    type: 'status',
+    rarity: 'common',
+    cost: 0,
+    price: 1,
+    isStarter: true,
+    unplayable: true,
+    emoji: '🚽',
+    desc: 'Nie można zagrać. Utknąłeś w kolejce — zajmuje miejsce w dłoni.',
+    effect(state) {
+      void state;
+      return {};
+    },
+  },
+
+  halas: {
+    id: 'halas',
+    name: 'Hałas',
+    type: 'status',
+    rarity: 'common',
+    cost: 1,
+    price: 1,
+    isStarter: true,
+    exhaust: true,
+    mustPlayFirst: true,
+    emoji: '📢',
+    desc: 'Musisz zagrać tę kartę przed innymi. Zagraj, by wyrzucić.',
+    effect(state) {
+      void state;
+      return { playerAnim: 'anim-block' };
+    },
+  },
+
+  nadprogramowy_paragon: {
+    id: 'nadprogramowy_paragon',
+    name: 'Nadprogramowy Paragon',
+    type: 'status',
+    rarity: 'common',
+    cost: 1,
+    price: 1,
+    isStarter: true,
+    exhaust: true,
+    emoji: '🧾',
+    desc: 'Zapłać 1 Oscypek i wyrzuć. Póki na ręce — tracisz 3 dutki co turę.',
+    effect(state) {
+      void state;
+      return {};
+    },
+  },
+
   wydruk_z_kasy: {
     id: 'wydruk_z_kasy',
     name: 'Wydruk z Kasy',
@@ -841,7 +910,7 @@ export const cardLibrary = {
   wepchniecie_w_kolejke: {
     id: 'wepchniecie_w_kolejke',
     name: 'Wepchniecie w Kolejkę',
-    type: 'attack',
+    type: 'skill',
     rarity: 'common',
     cost: 0,
     price: 65,
@@ -1371,6 +1440,261 @@ export const cardLibrary = {
     exhaust: true,
     effect(state) {
       state.player.weather_frozen_vulnerable = true;
+      return { playerAnim: 'anim-block' };
+    },
+  },
+
+  zaskoczenie_z_kosodrzewiny: {
+    id: 'zaskoczenie_z_kosodrzewiny',
+    name: 'Zaskoczenie z Kosodrzewiny',
+    type: 'attack',
+    rarity: 'common',
+    cost: 1,
+    price: 55,
+    emoji: '🌲',
+    desc: 'Zadaje 7 obrażeń. Zawsze trafia (ignoruje mgłę i uniki).',
+    effect(state) {
+      state.enemy.evasionCharges = 0;
+      state.combat.playerAttackMissCheck = false;
+      const dmg = state._calcAttackDamage(
+        state.player,
+        7 + state.getCardDamageBonus('zaskoczenie_z_kosodrzewiny')
+      );
+      const damage = state._applyDamageToEnemy(dmg);
+      return {
+        playerAnim: 'anim-attack-p',
+        enemyAnim: damage.dealt > 0 ? 'anim-damage' : 'anim-block',
+        damage,
+      };
+    },
+  },
+
+  schowek_za_pazucha: {
+    id: 'schowek_za_pazucha',
+    name: 'Schowek za Pazuchą',
+    type: 'skill',
+    rarity: 'uncommon',
+    cost: 0,
+    price: 75,
+    emoji: '🧥',
+    desc: 'Wybierz 1 kartę z ręki. Zostaje ona na następną turę.',
+    effect(state) {
+      state.schowekRetainPending = true;
+      return { playerAnim: 'anim-block' };
+    },
+  },
+
+  piorko_u_kapelusza: {
+    id: 'piorko_u_kapelusza',
+    name: 'Piórko u Kapelusza',
+    type: 'skill',
+    rarity: 'uncommon',
+    cost: 1,
+    price: 80,
+    emoji: '🪶',
+    desc: 'LANS: Zyskaj 8 Gardy i dobierz 1 kartę.',
+    tags: ['lans'],
+    effect(state) {
+      state.gainPlayerBlockFromCard(8);
+      state._drawCards(1);
+      return { playerAnim: 'anim-block' };
+    },
+  },
+
+  wypieta_piers: {
+    id: 'wypieta_piers',
+    name: 'Wypięta Pierś',
+    type: 'skill',
+    rarity: 'uncommon',
+    cost: 1,
+    price: 80,
+    emoji: '🦚',
+    desc: 'LANS: Zyskaj 7 Gardy. Następny atak zadaje +3 obrażenia.',
+    tags: ['lans'],
+    effect(state) {
+      state.gainPlayerBlockFromCard(7);
+      state.nextAttackCardBonus += 3;
+      return { playerAnim: 'anim-block' };
+    },
+  },
+
+  stary_numer_maryny: {
+    id: 'stary_numer_maryny',
+    name: 'Stary Numer Maryny',
+    type: 'skill',
+    rarity: 'rare',
+    cost: 2,
+    price: 115,
+    emoji: '📱',
+    desc: 'Nakłada 2 Słabości i 2 Kruchości. Dobierz 1 kartę.',
+    effect(state) {
+      state.applyEnemyDebuff('weak', 2);
+      state.applyEnemyDebuff('fragile', 2);
+      state._drawCards(1);
+      return { playerAnim: 'anim-attack-p' };
+    },
+  },
+
+  nauczka_z_krupowek: {
+    id: 'nauczka_z_krupowek',
+    name: 'Nauczka z Krupówek',
+    type: 'skill',
+    rarity: 'uncommon',
+    cost: 1,
+    price: 80,
+    emoji: '🥊',
+    desc: 'Nakładasz na siebie 1 Słabość. Zyskujesz +2 Siły.',
+    effect(state) {
+      state.player.status.weak += 1;
+      state.player.status.strength += 2;
+      return { playerAnim: 'anim-block' };
+    },
+  },
+
+  zasieki_z_gubalowki: {
+    id: 'zasieki_z_gubalowki',
+    name: 'Zasieki z Gubałówki',
+    type: 'skill',
+    rarity: 'rare',
+    cost: 2,
+    price: 120,
+    emoji: '🚧',
+    desc: 'Zyskaj 12 Gardy. Gdy otrzymujesz obrażenia od wroga (nawet blokowane), zadaj mu 5 obrażeń.',
+    effect(state) {
+      state.gainPlayerBlockFromCard(12);
+      state.zasiekiActive = true;
+      return { playerAnim: 'anim-block' };
+    },
+  },
+
+  zamach_znad_glodowki: {
+    id: 'zamach_znad_glodowki',
+    name: 'Zamach znad Głodówki',
+    type: 'skill',
+    rarity: 'uncommon',
+    cost: 0,
+    price: 75,
+    emoji: '⚡',
+    desc: 'Ustawiasz status Podwójnego Ciosu. Wyczerpuje.',
+    exhaust: true,
+    effect(state) {
+      state.player.status.next_double = true;
+      return { playerAnim: 'anim-attack-p' };
+    },
+  },
+
+  wezwanie_przedsadowe: {
+    id: 'wezwanie_przedsadowe',
+    name: 'Wezwanie Przedsądowe',
+    type: 'skill',
+    rarity: 'rare',
+    cost: 2,
+    price: 115,
+    emoji: '⚖️',
+    desc: 'Zyskaj Gardę równą 1/3 Rachunku wroga. Wyczerpuje.',
+    exhaust: true,
+    effect(state) {
+      const block = Math.floor(state.enemy.rachunek / 3);
+      if (block > 0) state.gainPlayerBlockFromCard(block);
+      return { playerAnim: 'anim-block' };
+    },
+  },
+
+  przeliczanie_dutkow: {
+    id: 'przeliczanie_dutkow',
+    name: 'Przeliczanie Dutków',
+    type: 'skill',
+    rarity: 'common',
+    cost: 1,
+    price: 55,
+    emoji: '🪙',
+    desc: 'LANS: Dobierz 1 kartę i zyskaj 4 Gardy.',
+    tags: ['lans'],
+    effect(state) {
+      state._drawCards(1);
+      state.gainPlayerBlockFromCard(4);
+      return { playerAnim: 'anim-block' };
+    },
+  },
+
+  herbata_z_pradem: {
+    id: 'herbata_z_pradem',
+    name: 'Herbata z Prądem',
+    type: 'skill',
+    rarity: 'uncommon',
+    cost: 1,
+    price: 80,
+    emoji: '🫖',
+    desc: 'Jeśli masz ≤50% Krzepy, ulecz 6. W przeciwnym razie ulecz 2. Wyczerpuje.',
+    exhaust: true,
+    effect(state) {
+      const healAmount = state.player.hp <= state.player.maxHp / 2 ? 6 : 2;
+      state.healPlayer(healAmount);
+      return { playerAnim: 'anim-block' };
+    },
+  },
+
+  goralski_upor: {
+    id: 'goralski_upor',
+    name: 'Góralski Upór',
+    type: 'skill',
+    rarity: 'uncommon',
+    cost: 1,
+    price: 80,
+    emoji: '🗿',
+    desc: 'Zyskaj 5 Gardy. Ta Garda nie znika na początku następnej tury (Blur).',
+    effect(state) {
+      state.gainPlayerBlockFromCard(5);
+      state.blurBlockAmount = (state.blurBlockAmount ?? 0) + 5;
+      return { playerAnim: 'anim-block' };
+    },
+  },
+
+  na_ratunek_gopr: {
+    id: 'na_ratunek_gopr',
+    name: 'Na Ratunek GOPR',
+    type: 'skill',
+    rarity: 'uncommon',
+    cost: 1,
+    price: 80,
+    emoji: '🚁',
+    desc: 'Ulecz 5 Krzepy. Jeśli wróg ma >20 Rachunku, ulecz dodatkowe 5. Wyczerpuje.',
+    exhaust: true,
+    effect(state) {
+      state.healPlayer(5);
+      if (state.enemy.rachunek > 20) state.healPlayer(5);
+      return { playerAnim: 'anim-block' };
+    },
+  },
+
+  szal_bacy: {
+    id: 'szal_bacy',
+    name: 'Szał Bacy',
+    type: 'power',
+    rarity: 'rare',
+    cost: 2,
+    price: 120,
+    emoji: '🐐',
+    desc: 'Ilekroć dobierasz kartę w trakcie swojej tury (poza normalnym dobieraniem), zadaj wrogowi 3 obrażenia.',
+    exhaust: true,
+    effect(state) {
+      state.player.szal_bacy = true;
+      return { playerAnim: 'anim-block' };
+    },
+  },
+
+  goralski_upor_moc: {
+    id: 'goralski_upor_moc',
+    name: 'Góralski Upór',
+    type: 'power',
+    rarity: 'uncommon',
+    cost: 1,
+    price: 85,
+    emoji: '🫀',
+    desc: 'Ilekroć tracisz Krzepę, dobierz 1 kartę na początku następnej tury.',
+    exhaust: true,
+    effect(state) {
+      state.player.goralski_upor_moc = true;
       return { playerAnim: 'anim-block' };
     },
   },

@@ -34,6 +34,7 @@ export class AudioManager {
       new URL('../audio/main_menu_2.mp3', import.meta.url).href,
     ];
     const mapUrl = new URL('../audio/summit_sprint.mp3', import.meta.url).href;
+    const mapAct2Url = new URL('../audio/map_act2.mp3', import.meta.url).href;
     const gameUrl = new URL('../audio/battle.mp3', import.meta.url).href;
     const bossUrl = new URL('../audio/boss.mp3', import.meta.url).href;
     const victoryUrl = new URL('../audio/summit_stomp.mp3', import.meta.url).href;
@@ -44,6 +45,9 @@ export class AudioManager {
     const fiakierEventUrl = new URL('../audio/fiakier_event.mp3', import.meta.url).href;
     const karykaturaEventUrl = new URL('../audio/karykatura_event.mp3', import.meta.url).href;
     const trzyKubkiEventUrl = new URL('../audio/event_trzy_kubki.mp3', import.meta.url).href;
+    const toiletEventUrl = new URL('../audio/event_toilet.mp3', import.meta.url).href;
+    const selfieEventUrl = new URL('../audio/event_selfie.mp3', import.meta.url).href;
+    const paragonEventUrl = new URL('../audio/event_paragon.mp3', import.meta.url).href;
 
     /** @type {HTMLAudioElement[]} Menu BGM pool — both tracks are pre-loaded; one is active at a time. */
     this.menuTrackPool = menuUrls.map((url) => this._createTrack(url, true, 0.7));
@@ -51,6 +55,8 @@ export class AudioManager {
     this.menuTrack = this._getRandomMenuTrack();
     /** @type {HTMLAudioElement} */
     this.mapTrack = this._createTrack(mapUrl, true, 0.45);
+    /** @type {HTMLAudioElement} */
+    this.mapTrackAct2 = this._createTrack(mapAct2Url, true, 0.45);
     /** @type {HTMLAudioElement} */
     this.gameTrack = this._createTrack(gameUrl, true, 0.45);
     /** @type {HTMLAudioElement} */
@@ -71,6 +77,12 @@ export class AudioManager {
     this.karykaturaEventTrack = this._createTrack(karykaturaEventUrl, true, 0.5);
     /** @type {HTMLAudioElement} */
     this.trzyKubkiEventTrack = this._createTrack(trzyKubkiEventUrl, true, 0.5);
+    /** @type {HTMLAudioElement} */
+    this.toiletEventTrack = this._createTrack(toiletEventUrl, true, 0.5);
+    /** @type {HTMLAudioElement} */
+    this.selfieEventTrack = this._createTrack(selfieEventUrl, true, 0.5);
+    /** @type {HTMLAudioElement} */
+    this.paragonEventTrack = this._createTrack(paragonEventUrl, true, 0.5);
 
     /** @type {'title' | 'inGame'} */
     this.context = 'title';
@@ -177,8 +189,10 @@ export class AudioManager {
     this.gameScene = 'map';
     this._stopAllMenuTracks();
     this._stopInGameSceneTracks();
+    this._stopOneShotThemes();
     if (this.gameMusicEnabled) {
-      this._play(this.mapTrack);
+      const track = this.state.currentAct === 2 ? this.mapTrackAct2 : this.mapTrack;
+      this._play(track);
     }
   }
 
@@ -208,6 +222,15 @@ export class AudioManager {
     } else if (eventId === 'event_hazard_karton') {
       this.eventSceneTrack = 'trzy_kubki';
       eventTrack = this.trzyKubkiEventTrack;
+    } else if (eventId === 'event_korek_do_toalety') {
+      this.eventSceneTrack = 'toilet';
+      eventTrack = this.toiletEventTrack;
+    } else if (eventId === 'event_selfie_na_krawedzi') {
+      this.eventSceneTrack = 'selfie';
+      eventTrack = this.selfieEventTrack;
+    } else if (eventId === 'event_paragon_za_wrzatek') {
+      this.eventSceneTrack = 'paragon';
+      eventTrack = this.paragonEventTrack;
     } else {
       this.eventSceneTrack = 'fiakier';
     }
@@ -225,6 +248,18 @@ export class AudioManager {
     this.playEventMusic('event_karykaturzysta');
   }
 
+  playToiletEventMusic() {
+    this.playEventMusic('event_korek_do_toalety');
+  }
+
+  playSelfieEventMusic() {
+    this.playEventMusic('event_selfie_na_krawedzi');
+  }
+
+  playParagonEventMusic() {
+    this.playEventMusic('event_paragon_za_wrzatek');
+  }
+
   playBossMusic() {
     if (this.themeLock === 'defeat') return;
     this.gameScene = 'boss';
@@ -240,6 +275,8 @@ export class AudioManager {
     this.marynaTrack.currentTime = 0;
     this.mapTrack.pause();
     this.mapTrack.currentTime = 0;
+    this.mapTrackAct2.pause();
+    this.mapTrackAct2.currentTime = 0;
     this.fiakierEventTrack.pause();
     this.fiakierEventTrack.currentTime = 0;
     this.karykaturaEventTrack.pause();
@@ -334,6 +371,8 @@ export class AudioManager {
   _stopInGameSceneTracks() {
     this.mapTrack.pause();
     this.mapTrack.currentTime = 0;
+    this.mapTrackAct2.pause();
+    this.mapTrackAct2.currentTime = 0;
     this.gameTrack.pause();
     this.gameTrack.currentTime = 0;
     this.bossTrack.pause();
@@ -350,6 +389,12 @@ export class AudioManager {
     this.karykaturaEventTrack.currentTime = 0;
     this.trzyKubkiEventTrack.pause();
     this.trzyKubkiEventTrack.currentTime = 0;
+    this.toiletEventTrack.pause();
+    this.toiletEventTrack.currentTime = 0;
+    this.selfieEventTrack.pause();
+    this.selfieEventTrack.currentTime = 0;
+    this.paragonEventTrack.pause();
+    this.paragonEventTrack.currentTime = 0;
   }
 
   playVictoryTheme() {

@@ -73,11 +73,20 @@ export function resetBattle(state) {
   state.player.czas_na_fajke = false;
   state.player.goralska_goscinnosc = false;
   state.player.koncesja_na_oscypki = false;
+  state.player.szal_bacy = false;
+  state.player.goralski_upor_moc = false;
+  state.goralskiUporDrawPending = 0;
   state.player.status = defaultStatus();
   state._setLansActive(false);
   state.player.stunned = false;
 
   clearStatusCardsFromPiles(state);
+
+  // Return any cards stolen by the duck (or other enemies) back to the deck
+  if (Array.isArray(state.enemy.stolenCards) && state.enemy.stolenCards.length > 0) {
+    state.deck.push(...state.enemy.stolenCards);
+    state.enemy.stolenCards = [];
+  }
 
   const currentNode = state.getCurrentMapNode();
   const isBossNode = currentNode?.type === 'boss';
@@ -96,6 +105,16 @@ export function resetBattle(state) {
   }
   state._battleEndedEmitted = false;
   state.enemy = state._createEnemyState(nextEnemy);
+  if (state.currentFloorLog) {
+    state.currentFloorLog.battle = {
+      enemyId: state.enemy.id,
+      enemyName: state.enemy.name,
+      context: 'map',
+      weather: state.currentWeather ?? null,
+      outcome: null,
+      turns: null,
+    };
+  }
   // Telemetry: record which boss variant was actually selected.
   if (isBossNode) {
     state.bossEncountered = state.enemy.id;
@@ -103,6 +122,9 @@ export function resetBattle(state) {
   state.battleContext = 'map';
   state._setCurrentWeatherFromNode();
   state.pendingBattleDutki = true;
+  if (state.currentFloorLog?.battle) {
+    state.currentFloorLog.battle.weather = state.currentWeather ?? null;
+  }
 
   emitS(state, 'battle_started', { enemy: { kind: 'enemy', id: state.enemy.id } });
 
@@ -139,6 +161,10 @@ export function checkWinCondition(state) {
   else if (state.player.hp <= 0) outcome = 'enemy_win';
   if (outcome) {
     state._battleEndedEmitted = true;
+    if (state.currentFloorLog?.battle) {
+      state.currentFloorLog.battle.outcome = outcome;
+      state.currentFloorLog.battle.turns = state.battleTurnsElapsed ?? 0;
+    }
     emitS(state, 'battle_ended', {
       outcome,
       enemy: { kind: 'enemy', id: state.enemy.id },
@@ -146,6 +172,17 @@ export function checkWinCondition(state) {
     });
   }
   return outcome;
+}
+
+/**
+ * Checks whether the player just won the Act 1 boss fight.
+ * Does NOT call startAct2() — callers must do that after showing the relic reward.
+ * @param {any} state
+ * @returns {boolean}
+ */
+export function tryAdvanceActAfterBossVictory(state) {
+  const currentNode = state.getCurrentMapNode();
+  return state.currentAct === 1 && currentNode?.type === 'boss';
 }
 
 /**
@@ -194,7 +231,10 @@ export function captureRunSummary(state, outcome) {
     snapshotTotalDutkiEarned,
     runStats: {
       totalDutkiEarned: state.totalDutkiEarned,
-      floorReached: Math.max(state.maxFloorReached, state.currentLevel + 1),
+      floorReached: Math.max(
+        state.maxFloorReached,
+        (state.floorOffset ?? 0) + state.currentLevel + 1
+      ),
       totalTurnsPlayed: state.totalTurnsPlayed,
       hpAtDeath,
       maxHp,
@@ -205,6 +245,10 @@ export function captureRunSummary(state, outcome) {
     outcome,
     killerEnemy: killerName ? { kind: 'enemy', id: state.enemy.id } : null,
   });
+
+  if (typeof state.publishRunTelemetryIfReady === 'function') {
+    state.publishRunTelemetryIfReady();
+  }
 
   return state.runSummary;
 }
@@ -227,6 +271,8 @@ export function resetForNewRun(state, startingDeck) {
     czas_na_fajke: false,
     goralska_goscinnosc: false,
     koncesja_na_oscypki: false,
+    szal_bacy: false,
+    goralski_upor_moc: false,
   };
 
   state.dutki = 50;
@@ -246,6 +292,7 @@ export function resetForNewRun(state, startingDeck) {
   state.currentNodeIndex = 1;
   state.currentNode = { x: 1, y: 0 };
   state.maxFloorReached = 1;
+  state.floorOffset = 0;
   state.currentAct = 1;
   state.currentActName = 'KRUPÓWKI';
   state.debugForcedNextNodeType = null;
@@ -271,6 +318,8 @@ export function resetForNewRun(state, startingDeck) {
   state.lastRegularEnemyId = 'cepr';
   state.activeEventId = null;
   state.recentEventIds = [];
+  state.seenEventIdsThisAct = [];
+  state._eventNodeShopsThisAct = 0;
   state.maryna = { offeredIds: [], pickedId: null, flags: {}, counters: {} };
   state.jumpToBoss = false;
   state.forceMainBossNextBattle = false;
@@ -304,6 +353,7 @@ export function resetForNewRun(state, startingDeck) {
   // do NOT overwrite it here or seeded runs lose their seed.
   state.bossEncountered = null;
   state.deathLevel = null;
+  state._runTelemetryPublished = false;
 
   state.enemy = state._createEnemyState(enemyLibrary.cepr);
   state.generateMap();

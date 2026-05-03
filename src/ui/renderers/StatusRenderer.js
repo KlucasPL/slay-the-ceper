@@ -162,6 +162,8 @@ export function renderStatuses(uiManager, containerId, status) {
       { flag: 'czas_na_fajke', cardId: 'czas_na_fajke' },
       { flag: 'goralska_goscinnosc', cardId: 'goralska_goscinnosc' },
       { flag: 'koncesja_na_oscypki', cardId: 'koncesja_na_oscypki' },
+      { flag: 'szal_bacy', cardId: 'szal_bacy' },
+      { flag: 'goralski_upor_moc', cardId: 'goralski_upor' },
     ];
 
     powerFlags.forEach(({ flag, cardId }) => {
@@ -170,6 +172,11 @@ export function renderStatuses(uiManager, containerId, status) {
       if (!card) return;
       tag(card.emoji, card.name, null, card.desc);
     });
+
+    const nextBonus = uiManager.state.nextAttackCardBonus ?? 0;
+    if (nextBonus > 0) {
+      tag('👁️', 'Spostrzegawczość', `+${nextBonus}`, `Następny atak zadaje +${nextBonus} obrażeń.`);
+    }
   }
 
   if (containerId === 'e-statuses') {

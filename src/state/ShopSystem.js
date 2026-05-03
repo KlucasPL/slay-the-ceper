@@ -50,6 +50,7 @@ export function spendDutki(state, cost) {
  * @returns {{ cards: string[], relic: string | null }}
  */
 export function generateShopStock(state) {
+  state.portfelTurystyUsedThisShop = false;
   if (state.hasRelic('certyfikowany_oscypek') && state.certyfikowanyOscypekShopProcs < 3) {
     state.gainMaxHp(5);
     state.certyfikowanyOscypekShopProcs += 1;
@@ -149,6 +150,15 @@ export function buyItem(state, item, type) {
   state.shopStock.relic = null;
   state.lastShopMessage = `Kupiono pamiątkę: ${item.name}`;
   state.emit('shop_purchase', { entity: { kind: 'relic', id: item.id }, price: item.price });
+  // portfel_turysty: first purchase per shop visit queues +1 energy for next battle
+  if (state.hasRelic('portfel_turysty') && !state.portfelTurystyUsedThisShop) {
+    state.portfelTurystyPendingEnergy = true;
+    state.portfelTurystyUsedThisShop = true;
+  }
+  if (state.hasRelic('portfel_turysty') && !state.portfelTurystyUsedThisShop) {
+    state.portfelTurystyPendingEnergy = true;
+    state.portfelTurystyUsedThisShop = true;
+  }
   return { success: true, message: state.lastShopMessage };
 }
 
@@ -162,7 +172,9 @@ export function buyItem(state, item, type) {
  *   battleContext: 'map' | 'event' | 'debug' | 'tutorial',
  *   battleTurnsElapsed: number,
  *   healPlayer: (amount: number) => void,
- *   maryna: { flags: { kiesaFirstWinClaimed: boolean } }
+ *   maryna: { flags: { kiesaFirstWinClaimed: boolean } },
+ *   emit: (kind: string, payload: Record<string, unknown>) => void,
+ *   enemy: { id: string, isBankrupt?: boolean, isElite: boolean }
  * }} state
  * @returns {number}
  */
@@ -212,6 +224,18 @@ export function grantBattleDutki(state) {
     drop += 40;
     state.maryna.flags.kiesaFirstWinClaimed = true;
   }
+
+  // pasterski_termos: lose 2 HP (min 1) after each battle
+  if (state.hasRelic('pasterski_termos')) {
+    state.player.hp = Math.max(1, state.player.hp - 2);
+  }
+
+  state.emit('resource_gained', {
+    currency: 'dutki',
+    amount: drop,
+    source: 'battle',
+    enemyId: state.enemy?.id ?? 'unknown',
+  });
 
   return drop;
 }

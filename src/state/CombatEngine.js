@@ -1,4 +1,5 @@
 import { getBaseCardId, getCardDefinition } from '../data/cards.js';
+import { weatherLibrary } from '../data/weather.js';
 
 /** @param {any} state @param {string} kind @param {Record<string, unknown>} payload */
 function emitS(state, kind, payload) {
@@ -63,6 +64,42 @@ export function applyBattleStartRelics(state) {
     state.gainPlayerBlockFromCard(8);
     state.player.status.strength += 1;
   }
+
+  // ── Act 2 transition relics ──
+  if (state.hasRelic('pasterski_termos')) {
+    state.player.energy += 2;
+  }
+  if (state.hasRelic('kedziorek_na_energie')) {
+    state.player.energy += 2;
+  }
+  if (state.hasRelic('dzban_mleka')) {
+    state.player.energy = Math.max(0, state.player.energy - 1);
+  }
+  if (state.portfelTurystyPendingEnergy) {
+    state.player.energy += 1;
+    state.portfelTurystyPendingEnergy = false;
+  }
+
+  // ── Act 2 boss relics ──
+  if (state.hasRelic('paragon_startowy')) {
+    state.addEnemyRachunek(6);
+  }
+  if (state.hasRelic('plecak_na_kazda_pogode')) {
+    switch (state.currentWeather) {
+      case 'halny':
+        state.gainPlayerBlockFromCard(6);
+        break;
+      case 'frozen':
+        state.applyEnemyDebuff('vulnerable', 1);
+        break;
+      case 'fog':
+        state._drawCards(2);
+        break;
+      default:
+        state.player.energy += 1;
+        break;
+    }
+  }
 }
 
 /**
@@ -84,7 +121,16 @@ export function drawCards(state, amount) {
     if (typeof cardId === 'string') {
       state.hand.push(cardId);
       drawn.push(cardId);
-      emitF(state, 'card_drawn', { card: { kind: 'card', id: getBaseCardId(cardId) } });
+      emitS(state, 'card_drawn', { card: { kind: 'card', id: getBaseCardId(cardId) } });
+      // szal_bacy power: deal 3 damage per extra card drawn during player turn
+      if (
+        state.player.szal_bacy &&
+        state.szalBacyTurnDrawDone &&
+        state.combat.activeSide === 'player' &&
+        state.enemy.hp > 0
+      ) {
+        applyDamageToEnemy(state, 3);
+      }
     }
   }
   return drawn;
@@ -113,7 +159,8 @@ export function applyDamageToEnemy(state, dmg) {
   ) {
     if (!state.combat.playerAttackMissRolled) {
       state.combat.playerAttackMissRolled = true;
-      state.combat.playerAttackMissed = state.rng() < 0.25;
+      const fogMissThreshold = state.hasRelic('goralska_skora') ? 0.12 : 0.25;
+      state.combat.playerAttackMissed = state.rng() < fogMissThreshold;
       if (state.combat.playerAttackMissed) {
         state._registerWeatherMiss('enemy');
       }
@@ -137,6 +184,7 @@ export function applyDamageToEnemy(state, dmg) {
 
   if (state.enemy.hp < hpBefore) {
     state.enemy.tookHpDamageThisTurn = true;
+    state.enemy.gazDoDechyStacks = 0;
 
     if (
       state.enemy.passive === 'lichwa' &&
@@ -158,7 +206,23 @@ export function applyDamageToEnemy(state, dmg) {
       state.enemy.hartDuchaTriggered = true;
     }
 
+    if (
+      state.enemy.passive === 'drugi_oddech' &&
+      !state.enemy.drugiOddechTriggered &&
+      state.enemy.hp > 0 &&
+      state.enemy.hp <= state.enemy.maxHp * 0.6
+    ) {
+      state.enemy.status.strength += 2;
+      state.enemy.drugiOddechTriggered = true;
+    }
+
     state._handleEnemyPhaseTransitions();
+  } else if (
+    dmg > 0 &&
+    state.enemy.passive === 'napor_wody' &&
+    state.combat.activeSide === 'player'
+  ) {
+    state.enemy.naporWodyPressure = (state.enemy.naporWodyPressure ?? 0) + dmg;
   }
 
   state._checkEnemyBankruptcy();
@@ -220,7 +284,13 @@ export function applyEnemyIntent(state) {
 
   if (intent.type === 'status') {
     if (intent.addStatusCard) {
-      const amount = intent.amount ?? 1;
+      let amount = intent.amount ?? 1;
+      if (state.enemy.passive === 'kolejka_do_toalety') {
+        const queued = state.enemy.kolejkaCounter ?? 0;
+        amount += queued;
+        // Queue is consumed only when Królowa actually serves this status move.
+        state.enemy.kolejkaCounter = 0;
+      }
       for (let i = 0; i < amount; i++) {
         state.discard.push(intent.addStatusCard);
       }
@@ -244,8 +314,14 @@ export function applyEnemyIntent(state) {
   let dealt = 0;
   const hits = intent.hits ?? 1;
 
-  const intentDamage = intent.usePed ? intent.damage + (state.enemy.ped ?? 0) : intent.damage;
+  const naporBonus =
+    state.enemy.passive === 'napor_wody' ? (state.enemy.naporWodyPressure ?? 0) : 0;
+  const intentDamage =
+    (intent.usePed ? intent.damage + (state.enemy.ped ?? 0) : intent.damage) +
+    (state.enemy.passive === 'gaz_do_dechy' ? (state.enemy.gazDoDechyStacks ?? 0) * 5 : 0) +
+    naporBonus;
   if (intent.usePed) state.enemy.ped = 0;
+  if (naporBonus > 0) state.enemy.naporWodyPressure = 0;
 
   for (let hitIndex = 0; hitIndex < hits; hitIndex++) {
     const hitDamage = state.calculateDamage(intentDamage, state.enemy, state.player);
@@ -291,6 +367,32 @@ export function applyEnemyIntent(state) {
     }
   }
 
+  if (intent.stealCard && dealt > 0) {
+    // Build stealable entries with source pile and real index to avoid indexOf
+    // duplicates (same card ID appearing in both hand and discard).
+    const stealableEntries = [
+      ...state.hand
+        .map((id, i) => ({ id, pile: 'hand', realIndex: i }))
+        .filter((e) => getCardDefinition(e.id)?.type !== 'status'),
+      ...state.discard
+        .map((id, i) => ({ id, pile: 'discard', realIndex: i }))
+        .filter((e) => getCardDefinition(e.id)?.type !== 'status'),
+    ];
+    if (stealableEntries.length > 0) {
+      const pick = stealableEntries[Math.floor(state.rng() * stealableEntries.length)];
+      if (pick.pile === 'hand') {
+        state.hand.splice(pick.realIndex, 1);
+      } else {
+        state.discard.splice(pick.realIndex, 1);
+      }
+      if (!Array.isArray(state.enemy.stolenCards)) state.enemy.stolenCards = [];
+      state.enemy.stolenCards.push(pick.id);
+      state.lastStolenCardId = pick.id;
+      emitS(state, 'card_stolen', { cardId: pick.id });
+      state.player.status.okradziony += 1;
+    }
+  }
+
   return { raw, blocked, dealt };
 }
 
@@ -304,6 +406,8 @@ export function getEnemyIntentDamage(state) {
 
   let baseDmg = intent.damagePerCardInHand ? intent.damage + state.hand.length : intent.damage;
   if (intent.usePed) baseDmg += state.enemy.ped ?? 0;
+  if (state.enemy.passive === 'gaz_do_dechy') baseDmg += (state.enemy.gazDoDechyStacks ?? 0) * 5;
+  if (state.enemy.passive === 'napor_wody') baseDmg += state.enemy.naporWodyPressure ?? 0;
   const hits = intent.hits ?? 1;
   const perHit = state.calculateDamage(baseDmg, state.enemy, state.player);
   return Math.max(0, perHit * hits - state.player.block);
@@ -346,7 +450,11 @@ export function getEnemyIntentText(state) {
   }
 
   const totalDamage = state.getEnemyIntentDamage();
-  const stealPart = intent.stealDutki ? `, 💰 -${intent.stealDutki}` : '';
+  const stealPart = intent.stealDutki
+    ? `, 💰 -${intent.stealDutki}`
+    : intent.stealCard
+      ? `, 🃏 kradzież`
+      : '';
   if (hits > 1) {
     return `Zamiar: ${intent.name} (⚔️ ${totalDamage}, ${hits}x${stealPart})`;
   }
@@ -378,8 +486,18 @@ export function startTurn(state) {
 
   state.player.energy = state.player.maxEnergy + state.player.status.energy_next_turn;
   state.player.status.energy_next_turn = 0;
-  state.player.block = 0;
+  // goralski_upor (blur): preserve blur block instead of zeroing
+  state.player.block = state.blurBlockAmount ?? 0;
+  state.blurBlockAmount = 0;
+  state.szalBacyTurnDrawDone = false;
   state._drawCards(state._drawPerTurn());
+  state.szalBacyTurnDrawDone = true;
+
+  // goralski_upor_moc power: draw cards pending from previous turn HP loss
+  if (state.goralskiUporDrawPending > 0) {
+    state._drawCards(state.goralskiUporDrawPending);
+    state.goralskiUporDrawPending = 0;
+  }
 
   if (state.smyczKeptCardId) {
     state.hand.unshift(state.smyczKeptCardId);
@@ -420,7 +538,26 @@ export function startTurn(state) {
     state.applyEnemyDebuff('vulnerable', 1);
   }
 
-  emitF(state, 'turn_started', { battleTurn: state.battleTurnsElapsed });
+  // ── Per-turn relic/card counter resets ──
+  state.muffinAttackCountThisTurn = 0;
+  state.muffinEnergyGrantedThisTurn = 0;
+  state.dzbanEnergyGrantedThisTurn = 0;
+  state.kedziorekPenaltyTriggeredThisTurn = false;
+  state.ciupagaExpresowaTurnUsed = false;
+
+  // ── Turn-start relic triggers ──
+  if (state.hasRelic('herbata_zimowa') && state.battleTurnsElapsed % 2 === 0) {
+    state.player.energy += 1;
+  }
+  if (state.hasRelic('barometr_tatrzanski') && state.currentWeather !== 'clear') {
+    state.player.energy += 1;
+  }
+  if (state.zaszytUpadkuDrawPending) {
+    state._drawCards(2);
+    state.zaszytUpadkuDrawPending = false;
+  }
+
+  emitS(state, 'turn_started', { battleTurn: state.battleTurnsElapsed });
 }
 
 /**
@@ -444,6 +581,12 @@ export function playCard(state, handIndex) {
 
   if (state.enemy.passive === 'blokada_parkingowa' && state.player.cardsPlayedThisTurn >= 3) {
     return { success: false, reason: 'blokada' };
+  }
+
+  // If any hałas card is in hand, it must be played before other cards
+  const hasHalas = state.hand.some((id) => getBaseCardId(id) === 'halas');
+  if (hasHalas && getBaseCardId(cardId) !== 'halas') {
+    return { success: false, reason: 'halas' };
   }
 
   if (state.smyczKeptHandIndex !== null) {
@@ -480,7 +623,7 @@ export function playCard(state, handIndex) {
   state.hand.splice(handIndex, 1);
   if (card.exhaust) {
     state.exhaust.push(cardId);
-    emitF(state, 'card_exhausted', { card: { kind: 'card', id: getBaseCardId(cardId) } });
+    emitS(state, 'card_exhausted', { card: { kind: 'card', id: getBaseCardId(cardId) } });
   } else {
     state.discard.push(cardId);
   }
@@ -521,6 +664,27 @@ export function playCard(state, handIndex) {
     if (state.attackCardsPlayedThisBattle % 3 === 0 && state.hasRelic('bilet_tpn')) {
       state.player.energy += 1;
     }
+    // muffin_oscypkowy: every 2nd attack card this turn gives +1 energy (max 2/turn)
+    state.muffinAttackCountThisTurn += 1;
+    if (
+      state.hasRelic('muffin_oscypkowy') &&
+      state.muffinAttackCountThisTurn % 2 === 0 &&
+      state.muffinEnergyGrantedThisTurn < 2
+    ) {
+      state.player.energy += 1;
+      state.muffinEnergyGrantedThisTurn += 1;
+    }
+  }
+
+  if (card.type === 'skill') {
+    // ksiega_dluguw: each skill card gives enemy +2 Rachunek
+    if (state.hasRelic('ksiega_dluguw')) {
+      state.addEnemyRachunek(2);
+    }
+    // ciupaga_ekspresowa: first skill this turn was free — mark it used
+    if (state.hasRelic('ciupaga_ekspresowa') && !state.ciupagaExpresowaTurnUsed) {
+      state.ciupagaExpresowaTurnUsed = true;
+    }
   }
 
   state.combat.playerAttackMissCheck = false;
@@ -529,6 +693,12 @@ export function playCard(state, handIndex) {
   state.currentAttackCardBonus = 0;
 
   state.player.cardsPlayedThisTurn += 1;
+
+  // influencer_aura: +3 Garda immediately when 3rd card is played
+  if (state.enemy.passive === 'influencer_aura' && state.player.cardsPlayedThisTurn === 3) {
+    state.enemy.block += 3;
+    emitS(state, 'enemy_passive_triggered', { passive: 'influencer_aura', effect: '+3 Garda' });
+  }
 
   emitS(state, 'card_played', {
     card: { kind: 'card', id: getBaseCardId(cardId) },
@@ -543,7 +713,16 @@ export function playCard(state, handIndex) {
  * @returns {import('./GameState.js').EndTurnResult}
  */
 export function endTurn(state) {
-  const playerHandSizeBeforeDiscard = state.hand.length;
+  const playerHandHasStatusCard = state.hand.some(
+    (id) => getCardDefinition(getBaseCardId(id))?.type === 'status'
+  );
+  const playerHandStatusCount = state.hand.filter(
+    (id) => getCardDefinition(getBaseCardId(id))?.type === 'status'
+  ).length;
+
+  // Clear per-player-turn card flags when the player's turn ends
+  state.zasiekiActive = false;
+  state.schowekRetainPending = false;
 
   if (state.hasRelic('smycz_zakopane') && state.smyczKeptHandIndex !== null) {
     if (state.smyczKeptHandIndex >= 0 && state.smyczKeptHandIndex < state.hand.length) {
@@ -555,8 +734,16 @@ export function endTurn(state) {
     state.smyczKeptHandIndex = null;
   }
 
-  if (state.hand.some((entry) => getBaseCardId(entry) === 'spam_tagami')) {
+  if (
+    state.hand.some(
+      (entry) => getBaseCardId(entry) === 'spam_tagami' || getBaseCardId(entry) === 'mandat'
+    )
+  ) {
     state.dutki = Math.max(0, state.dutki - 2);
+  }
+
+  if (state.hand.some((entry) => getBaseCardId(entry) === 'nadprogramowy_paragon')) {
+    state.dutki = Math.max(0, state.dutki - 3);
   }
 
   if (
@@ -570,7 +757,7 @@ export function endTurn(state) {
   }
 
   for (const skippedId of state.hand) {
-    emitF(state, 'card_skipped', { card: { kind: 'card', id: getBaseCardId(skippedId) } });
+    emitS(state, 'card_skipped', { card: { kind: 'card', id: getBaseCardId(skippedId) } });
   }
   state.discard.push(...state.hand);
   state.hand = [];
@@ -616,6 +803,11 @@ export function endTurn(state) {
 
   state._applyHalnyBlockDrain(state.player);
 
+  // herbata_zimowa: end-of-turn penalty if high block
+  if (state.hasRelic('herbata_zimowa') && state.player.block >= 8) {
+    state.player.status.energy_next_turn -= 1;
+  }
+
   /** @type {{ amount: number, text: string } | null} */
   let enemyPassiveHeal = null;
   if (state.enemy.id === 'baba' && !state.enemy.tookHpDamageThisTurn) {
@@ -642,14 +834,30 @@ export function endTurn(state) {
     };
   }
 
+  if (state.enemy.passive === 'gaz_do_dechy' && !state.enemy.tookHpDamageThisTurn) {
+    state.enemy.gazDoDechyStacks += 1;
+  }
+
   state.enemy.block = 0;
 
   if (state.enemy.passive === 'parcie_na_szklo' && state._isLansActive()) {
     state.enemy.status.strength += 2;
   }
 
-  if (state.enemy.passive === 'influencer_aura' && playerHandSizeBeforeDiscard >= 3) {
-    state.enemy.block += 5;
+  if (state.enemy.passive === 'kontrola_stempla' && playerHandHasStatusCard) {
+    state.enemy.status.strength += 1;
+  }
+
+  if (state.enemy.passive === 'kolejka_do_toalety') {
+    if (playerHandStatusCount > 0) {
+      state.enemy.kolejkaCounter = (state.enemy.kolejkaCounter ?? 0) + playerHandStatusCount;
+    }
+  }
+
+  if (state.enemy.passive === 'wiecznie_glodny' && state.enemy.hp < state.enemy.maxHp) {
+    const heal = Math.min(4, state.enemy.maxHp - state.enemy.hp);
+    state.enemy.hp += heal;
+    enemyPassiveHeal = { amount: heal, text: `+${heal} Krzepy (Przekąska)` };
   }
 
   const enemyAttack = state._applyEnemyIntent();
@@ -676,6 +884,9 @@ export function endTurn(state) {
     state._checkEnemyBankruptcy();
   }
 
+  /** @type {{ id: string, name: string, emoji: string } | null} */
+  let weatherChanged = null;
+
   if (state.enemy.patternType === 'loop') {
     const activePattern =
       state.enemy.phaseTwoTriggered && state.enemy.phaseTwoPattern.length > 0
@@ -684,16 +895,33 @@ export function endTurn(state) {
     state.enemy.patternIndex = (state.enemy.patternIndex + 1) % activePattern.length;
   }
 
+  if (state.enemy.patternType === 'weather_loop') {
+    const wp = state.enemy.weatherPatterns ?? {};
+    const weather = state.currentWeather ?? 'clear';
+    const activePattern = wp[weather] && wp[weather].length > 0 ? wp[weather] : (wp['clear'] ?? []);
+    state.enemy.harnasWeatherPatternIndex =
+      (state.enemy.harnasWeatherPatternIndex + 1) % (activePattern.length || 1);
+
+    if (state.enemy.passive === 'zmiana_pogody' && state.battleTurnsElapsed % 3 === 0) {
+      const rotation = ['halny', 'frozen', 'fog'];
+      const currentIdx = rotation.indexOf(state.currentWeather);
+      const nextWeather = rotation[(currentIdx + 1) % rotation.length];
+      state.currentWeather = nextWeather;
+      state.enemy.harnasWeatherPatternIndex = 0;
+      weatherChanged = { id: nextWeather, ...weatherLibrary[nextWeather] };
+    }
+  }
+
   state._applyHalnyBlockDrain(state.enemy);
 
   state._refreshEnemyIntent();
 
-  emitF(state, 'turn_ended', { battleTurn: state.battleTurnsElapsed });
-  emitF(state, 'enemy_move', {
+  emitS(state, 'turn_ended', { battleTurn: state.battleTurnsElapsed });
+  emitS(state, 'enemy_move', {
     enemy: { kind: 'enemy', id: state.enemy.id },
     intentType: state.enemy.currentIntent.type,
     intentName: state.enemy.currentIntent.name,
   });
 
-  return { enemyAttack, enemyPassiveHeal, playerPassiveHeal };
+  return { enemyAttack, enemyPassiveHeal, playerPassiveHeal, weatherChanged };
 }

@@ -24,6 +24,7 @@ const KNOWN_KINDS = new Set([
   'status_applied',
   'shop_opened',
   'shop_purchase',
+  'resource_gained',
   'event_entered',
   'event_resolved',
   'reward_offered',

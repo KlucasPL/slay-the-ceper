@@ -4,6 +4,8 @@ const SKIP_INTRO_KEY = 'stc_skip_intro';
 const MENU_MUSIC_KEY = 'slay-the-ceper:menu-music';
 /** @type {string} localStorage key for the in-game music preference. */
 const GAME_MUSIC_KEY = 'slay-the-ceper:game-music';
+/** @type {string} localStorage key for analytics preference. */
+const ANALYTICS_ENABLED_KEY = 'slay-the-ceper:analytics-enabled';
 /** @type {string} localStorage key for global text size preference. */
 const TEXT_SIZE_KEY = 'slay-the-ceper:text-size';
 /** @type {string} localStorage key for text-size schema version. */
@@ -99,6 +101,22 @@ export function getGameMusicEnabled() {
  */
 export function setGameMusicEnabled(value) {
   writeBool(GAME_MUSIC_KEY, value);
+}
+
+/**
+ * Returns whether analytics tracking is enabled. Defaults to `true`.
+ * @returns {boolean}
+ */
+export function getAnalyticsEnabled() {
+  return readBool(ANALYTICS_ENABLED_KEY, true);
+}
+
+/**
+ * Persists the analytics enabled preference.
+ * @param {boolean} value
+ */
+export function setAnalyticsEnabled(value) {
+  writeBool(ANALYTICS_ENABLED_KEY, value);
 }
 
 /**

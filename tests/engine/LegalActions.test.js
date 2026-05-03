@@ -112,3 +112,57 @@ describe('getLegalActions — battle phase', () => {
     expect(actions.filter((a) => a.type === 'play_card').length).toBeGreaterThan(0);
   });
 });
+
+describe('getLegalActions — Act 2 transition reward screen', () => {
+  function makeAct2TransitionState(relicIds = ['relic_a', 'relic_b', 'relic_c']) {
+    const state = new GameState(characters.jedrek, enemyLibrary.cepr);
+    state.currentScreen = 'reward';
+    state.runSummary = null;
+    state._rewardOffer = { cards: [], relicIds };
+    state._pendingAct2Transition = true;
+    return state;
+  }
+
+  it('shouldExposeOneActionPerRelicChoice', () => {
+    // given
+    const state = makeAct2TransitionState(['zasluzony_portfel', 'bilet_tpn', 'baca_hat']);
+
+    // when
+    const actions = getLegalActions(state);
+
+    // then — 3 relic picks, no skip
+    const relicPicks = actions.filter((a) => a.type === 'reward_pick_relic');
+    expect(relicPicks).toHaveLength(3);
+    expect(relicPicks.map((a) => a.relicId)).toEqual([
+      'zasluzony_portfel',
+      'bilet_tpn',
+      'baca_hat',
+    ]);
+  });
+
+  it('shouldNotIncludeSkipActionDuringTransition', () => {
+    // given
+    const state = makeAct2TransitionState(['zasluzony_portfel']);
+
+    // when
+    const actions = getLegalActions(state);
+
+    // then — no reward_pick_card (skip) action
+    expect(actions.some((a) => a.type === 'reward_pick_card')).toBe(false);
+  });
+
+  it('shouldIncludeSkipActionOnNormalRewardScreen', () => {
+    // given — normal post-battle reward, no transition flag
+    const state = new GameState(characters.jedrek, enemyLibrary.cepr);
+    state.currentScreen = 'reward';
+    state.runSummary = null;
+    state._rewardOffer = { cards: ['ciupaga'], relicId: null };
+    // _pendingAct2Transition not set (undefined = falsy)
+
+    // when
+    const actions = getLegalActions(state);
+
+    // then — skip (null cardId) IS present
+    expect(actions.some((a) => a.type === 'reward_pick_card' && a.cardId === null)).toBe(true);
+  });
+});

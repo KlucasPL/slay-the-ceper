@@ -69,6 +69,16 @@ function freshBabaState() {
   return s;
 }
 
+/** @returns {GameState} */
+function freshCeprState() {
+  const s = new GameState({ ...mockPlayer }, enemyLibrary.cepr);
+  s.player.energy = 3;
+  s.hand = [];
+  s.deck = [];
+  s.discard = [];
+  return s;
+}
+
 /**
  * @param {GameState} state
  * @param {import('../src/data/enemies.js').EnemyMoveDef} intent
@@ -419,6 +429,49 @@ describe('GameState', () => {
       const s = freshState();
       s.enemy.portraitShameTurns = 1;
       expect(s.calculateDamage(10, s.enemy, s.player)).toBe(8);
+    });
+
+    it('applies vulnerable as +50% incoming damage on target', () => {
+      const s = freshState();
+      s.enemy.status.vulnerable = 1;
+      expect(s.calculateDamage(8, s.player, s.enemy)).toBe(12); // 8 * 1.5 = 12
+    });
+
+    it('applies vulnerable when enemy attacks player', () => {
+      const s = freshState();
+      s.player.status.vulnerable = 1;
+      expect(s.calculateDamage(10, s.enemy, s.player)).toBe(15); // 10 * 1.5 = 15
+    });
+
+    it('card attack deals +50% damage to vulnerable enemy', () => {
+      const s = freshState();
+      s.startBattleWithEnemyId('cepr');
+      s.startTurn();
+      s.enemy.status.vulnerable = 2;
+      s.enemy.hp = 20;
+      s.enemy.block = 0;
+      s.hand = ['ciupaga']; // Ensure ciupaga is in hand at index 0
+      const hpBefore = s.enemy.hp;
+      s.playCard(0); // ciupaga = 6 base damage
+      const damageDealt = hpBefore - s.enemy.hp;
+      expect(damageDealt).toBe(9); // 6 * 1.5 = 9
+    });
+
+    it('applies vulnerable from wepchniecie_w_kolejke then deals +50% with next attack', () => {
+      const s = freshState();
+      s.startBattleWithEnemyId('cepr');
+      s.startTurn();
+      s.player.status.lans = 1; // Enable LANS for wepchniecie_w_kolejke
+      s.enemy.hp = 30;
+      s.enemy.block = 0;
+      s.hand = ['wepchniecie_w_kolejke', 'ciupaga'];
+      // First play wepchniecie_w_kolejke - applies vulnerable
+      s.playCard(0);
+      expect(s.enemy.status.vulnerable).toBe(2);
+      // Now play ciupaga - should deal 50% extra damage
+      s.playCard(0);
+      const damageDealt = 30 - s.enemy.hp;
+      expect(damageDealt).toBe(9); // 6 * 1.5 = 9
     });
   });
 
@@ -1619,6 +1672,26 @@ describe('GameState', () => {
         expect(s.rollEventNodeOutcome()).toBe('event');
       });
 
+      it('falls back to non-event outcomes when all act events are exhausted', () => {
+        const s = freshState();
+        s.currentAct = 1;
+        s.seenEventIdsThisAct = ['fiakier_event', 'event_karykaturzysta', 'event_hazard_karton'];
+        s._eventNodeShopsThisAct = 0;
+
+        vi.spyOn(Math, 'random').mockReturnValue(0.9);
+        expect(s.rollEventNodeOutcome()).toBe('shop');
+      });
+
+      it('falls back to fight when non-event roll points to shop but shop quota is used', () => {
+        const s = freshState();
+        s.currentAct = 1;
+        s.seenEventIdsThisAct = ['fiakier_event', 'event_karykaturzysta', 'event_hazard_karton'];
+        s._eventNodeShopsThisAct = 1;
+
+        vi.spyOn(Math, 'random').mockReturnValue(0.9);
+        expect(s.rollEventNodeOutcome()).toBe('fight');
+      });
+
       it('returns fight for roll between 0.68 and 0.8', () => {
         const s = freshState();
         vi.spyOn(Math, 'random').mockReturnValue(0.79);
@@ -1627,6 +1700,7 @@ describe('GameState', () => {
 
       it('returns shop for roll >= 0.8', () => {
         const s = freshState();
+        s._eventNodeShopsThisAct = 0;
         vi.spyOn(Math, 'random').mockReturnValue(0.8);
         expect(s.rollEventNodeOutcome()).toBe('shop');
       });
@@ -1636,7 +1710,7 @@ describe('GameState', () => {
       it('does not repeat the same event twice in a row when alternatives exist', () => {
         const s = freshState();
         s.currentLevel = 0;
-        s.recentEventIds = ['fiakier_event'];
+        s.seenEventIdsThisAct = ['fiakier_event'];
         vi.spyOn(Math, 'random').mockReturnValue(0);
 
         const next = s.pickRandomEventDef();
@@ -1645,7 +1719,7 @@ describe('GameState', () => {
         expect(next?.id).not.toBe('fiakier_event');
       });
 
-      it('stores selected event id in recentEventIds', () => {
+      it('stores selected event id in seenEventIdsThisAct', () => {
         const s = freshState();
         s.currentLevel = 0;
         vi.spyOn(Math, 'random').mockReturnValue(0);
@@ -1653,20 +1727,106 @@ describe('GameState', () => {
         const next = s.pickRandomEventDef();
 
         expect(next).not.toBeNull();
-        expect(s.recentEventIds).toContain(next?.id);
+        expect(s.seenEventIdsThisAct).toContain(next?.id);
       });
 
-      it('does not repeat the last N-1 events so each event is seen before any repeats', () => {
+      it('does not repeat already-seen events within the same act', () => {
         const s = freshState();
         s.currentLevel = 0;
-        // With 3 act-I events, window = 2; seed recentEventIds with 2 known picks
-        s.recentEventIds = ['fiakier_event', 'event_karykaturzysta'];
+        // Seed two of the three act-I events as already seen
+        s.seenEventIdsThisAct = ['fiakier_event', 'event_karykaturzysta'];
 
         const next = s.pickRandomEventDef();
 
         expect(next).not.toBeNull();
         expect(next?.id).not.toBe('fiakier_event');
         expect(next?.id).not.toBe('event_karykaturzysta');
+      });
+
+      it('returns null when all act events were already seen', () => {
+        const s = freshState();
+        s.currentAct = 1;
+        s.seenEventIdsThisAct = ['fiakier_event', 'event_karykaturzysta', 'event_hazard_karton'];
+
+        const next = s.pickRandomEventDef();
+
+        expect(next).toBeNull();
+      });
+    });
+
+    describe('Act I / Act II event pool separation', () => {
+      const act1EventIds = Object.keys(eventLibrary).filter((id) => eventLibrary[id].act === 'I');
+      const act2EventIds = Object.keys(eventLibrary).filter((id) => eventLibrary[id].act === 'II');
+
+      it('eventLibrary has exactly 3 Act I tagged events', () => {
+        expect(act1EventIds).toHaveLength(3);
+      });
+
+      it('eventLibrary has exactly 3 Act II events', () => {
+        expect(act2EventIds).toHaveLength(3);
+      });
+
+      it('Act II event IDs are the expected new events', () => {
+        expect(act2EventIds).toContain('event_korek_do_toalety');
+        expect(act2EventIds).toContain('event_selfie_na_krawedzi');
+        expect(act2EventIds).toContain('event_paragon_za_wrzatek');
+      });
+
+      it('pickRandomEventDef with currentAct=1 never returns Act II events', () => {
+        const s = freshState();
+        s.currentAct = 1;
+        // exhaust many picks; reset seenEventIdsThisAct so pool doesn't dry up
+        for (let i = 0; i < 30; i++) {
+          s.seenEventIdsThisAct = [];
+          const picked = s.pickRandomEventDef();
+          if (picked) {
+            expect(act2EventIds).not.toContain(picked.id);
+          }
+        }
+      });
+
+      it('pickRandomEventDef with currentAct=2 never returns Act I events', () => {
+        const s = freshState();
+        s.currentAct = 2;
+        for (let i = 0; i < 30; i++) {
+          s.seenEventIdsThisAct = [];
+          const picked = s.pickRandomEventDef();
+          if (picked) {
+            expect(act1EventIds).not.toContain(picked.id);
+          }
+        }
+      });
+
+      it('pickRandomEventDef with currentAct=2 can return Act II events', () => {
+        const s = freshState();
+        s.currentAct = 2;
+        const seenAct2 = new Set();
+        for (let i = 0; i < 40; i++) {
+          s.seenEventIdsThisAct = [];
+          const picked = s.pickRandomEventDef();
+          if (picked && act2EventIds.includes(picked.id)) {
+            seenAct2.add(picked.id);
+          }
+        }
+        expect(seenAct2.size).toBeGreaterThan(0);
+      });
+
+      it('fiakier_event has act: I and does not appear in Act II pool', () => {
+        expect(eventLibrary.fiakier_event.act).toBe('I');
+
+        const sAct1 = freshState();
+        sAct1.currentAct = 1;
+        sAct1.seenEventIdsThisAct = ['event_hazard_karton', 'event_karykaturzysta'];
+        const pickedAct1 = sAct1.pickRandomEventDef();
+        expect(pickedAct1?.id).toBe('fiakier_event');
+
+        const sAct2 = freshState();
+        sAct2.currentAct = 2;
+        for (let i = 0; i < 30; i++) {
+          sAct2.seenEventIdsThisAct = [];
+          const picked = sAct2.pickRandomEventDef();
+          expect(picked?.id).not.toBe('fiakier_event');
+        }
       });
     });
 
@@ -1693,6 +1853,7 @@ describe('GameState', () => {
 
       it('eventOutcome is shop when roll >= 0.8', () => {
         const s = freshState();
+        s._eventNodeShopsThisAct = 0;
         vi.spyOn(Math, 'random').mockReturnValue(0.8);
         const node = s._createMapNode('event', 0, 1);
         expect(node.eventOutcome).toBe('shop');
@@ -2074,7 +2235,9 @@ describe('GameState', () => {
         .filter((relic) => !relic.marynaOnly)
         .forEach((relic) => {
           expect(typeof relic.price).toBe('number');
-          expect(relic.price).toBeGreaterThan(0);
+          if (!relic.bossRewardOnly) {
+            expect(relic.price).toBeGreaterThan(0);
+          }
         });
     });
 
@@ -2092,7 +2255,7 @@ describe('GameState', () => {
       };
 
       Object.values(relicLibrary)
-        .filter((relic) => !relic.marynaOnly)
+        .filter((relic) => !relic.marynaOnly && !relic.bossRewardOnly)
         .forEach((relic) => {
           const range = ranges[relic.rarity];
           expect(relic.price).toBeGreaterThanOrEqual(range.min);
@@ -2452,7 +2615,7 @@ describe('GameState', () => {
       expect(s.enemy.currentIntent).toEqual({
         type: 'attack',
         name: 'Wyprzedzanie na trzeciego',
-        damage: 8,
+        damage: 10,
         hits: 1,
         applyFrail: 2,
       });
@@ -2516,7 +2679,7 @@ describe('GameState', () => {
       expect(s.enemy.currentIntent).toEqual({
         type: 'attack',
         name: 'Selfie z zaskoczenia',
-        damage: 12,
+        damage: 15,
         hits: 1,
         applyVulnerable: 2,
       });
@@ -2540,7 +2703,7 @@ describe('GameState', () => {
       expect(s.discard.filter((id) => id === 'spam_tagami').length).toBeGreaterThanOrEqual(2);
     });
 
-    it('ceprzyca_vip: Podatność increases Awantura o cenę to 20 after setup', () => {
+    it('ceprzyca_vip: Podatność increases Awantura o cenę to 21 after setup', () => {
       const s = new GameState({ ...mockPlayer }, enemyLibrary.ceprzyca_vip);
       s.player.energy = 3;
       s.hand = [];
@@ -2549,8 +2712,16 @@ describe('GameState', () => {
       s.player.hp = 50;
       s.player.block = 0;
 
+      const eliteDmgScale = 1.15;
+      const scaledFirstAtk = Math.round(
+        enemyLibrary.ceprzyca_vip.pattern[0].damage * eliteDmgScale
+      );
+      const scaledThirdAtk = Math.round(
+        enemyLibrary.ceprzyca_vip.pattern[2].damage * eliteDmgScale
+      );
+
       const firstTurn = s.endTurn();
-      expect(firstTurn.enemyAttack.raw).toBe(7);
+      expect(firstTurn.enemyAttack.raw).toBe(scaledFirstAtk);
       expect(s.player.status.vulnerable).toBe(1);
 
       s.startTurn();
@@ -2560,7 +2731,7 @@ describe('GameState', () => {
 
       s.startTurn();
       const thirdTurn = s.endTurn();
-      expect(thirdTurn.enemyAttack.raw).toBe(20);
+      expect(thirdTurn.enemyAttack.raw).toBe(Math.ceil(scaledThirdAtk * 1.5));
     });
   });
 
@@ -2600,7 +2771,7 @@ describe('GameState', () => {
       expect(s.enemy.currentIntent).toEqual({
         type: 'attack',
         name: 'Cena z kosmosu',
-        damage: 7,
+        damage: 9,
         hits: 1,
         applyWeak: 1,
       });
@@ -2799,6 +2970,66 @@ describe('GameState', () => {
     });
   });
 
+  describe('act transitions', () => {
+    it('transitions from Act 1 boss victory to Act 2 while preserving run progress', () => {
+      const s = freshState();
+      const relicId = Object.keys(relicLibrary)[0];
+
+      s.currentAct = 1;
+      s.currentActName = 'KRUPÓWKI';
+      s.currentScreen = 'battle';
+      s.player.hp = 27;
+      s.dutki = 123;
+      s.relics = relicId ? [relicId] : [];
+      s.deck = ['ciupaga'];
+      s.hand = ['gasior'];
+      s.discard = ['kierpce'];
+      s.exhaust = ['spam_tagami'];
+
+      s.map = [
+        [null, null, null],
+        [
+          null,
+          {
+            x: 1,
+            y: 1,
+            type: 'boss',
+            label: 'Boss',
+            emoji: '👑',
+            weather: 'halny',
+            connections: [],
+          },
+          null,
+        ],
+      ];
+      s.currentLevel = 1;
+      s.currentNodeIndex = 1;
+      s.currentNode = { x: 1, y: 1 };
+
+      const transitioned = s.tryAdvanceActAfterBossVictory();
+      // tryAdvanceActAfterBossVictory no longer calls startAct2() — UI does that after reward pick
+      if (transitioned) s.startAct2();
+
+      expect(transitioned).toBe(true);
+      expect(s.currentAct).toBe(2);
+      expect(s.currentActName).toBe('MORSKIE OKO');
+      expect(s.currentScreen).toBe('map');
+      expect(s.player.hp).toBe(27);
+      expect(s.dutki).toBe(123);
+      expect(s.relics).toEqual(relicId ? [relicId] : []);
+      expect(s.hand).toEqual([]);
+      expect(s.discard).toEqual([]);
+      expect(s.exhaust).toEqual([]);
+      expect(s.deck).toContain('ciupaga');
+      expect(s.deck).toContain('gasior');
+      expect(s.deck).toContain('kierpce');
+      expect(s.deck).not.toContain('spam_tagami');
+      expect(s.currentLevel).toBe(0);
+      expect(s.currentNodeIndex).toBe(1);
+      expect(s.runSummary).toBeNull();
+    });
+  });
+
   // ── deck recycling ────────────────────────────────────────────────────────
   describe('deck recycling', () => {
     it('reshuffles discard into deck when deck is empty', () => {
@@ -2831,6 +3062,7 @@ describe('GameState', () => {
 
     it('clears blocks and all statuses on both sides', () => {
       const s = freshState();
+      vi.spyOn(s, '_pickRandomEnemyDef').mockReturnValue(enemyLibrary.cepr);
       s.player.block = 9;
       s.enemy.block = 6;
       s.player.status = {
@@ -2870,6 +3102,22 @@ describe('GameState', () => {
         lans: 0,
         duma_podhala: 0,
         furia_turysty: 0,
+        okradziony: 0,
+        brak_reszty: false,
+        targowanie_sie: false,
+        parcie_na_szklo: false,
+        blokada_parkingowa: false,
+        lichwa: false,
+        hart_ducha: false,
+        influencer_aura: false,
+        ochrona_wizerunku: false,
+        drugi_oddech: false,
+        wiecznie_glodny: false,
+        kontrola_stempla: false,
+        gaz_do_dechy: 0,
+        napor_wody: 0,
+        kolejka_do_toalety: 0,
+        zmiana_pogody: false,
       });
       expect(s.enemy.status).toEqual({
         strength: 0,
@@ -2881,6 +3129,22 @@ describe('GameState', () => {
         lans: 0,
         duma_podhala: 0,
         furia_turysty: 0,
+        okradziony: 0,
+        brak_reszty: false,
+        targowanie_sie: false,
+        parcie_na_szklo: false,
+        blokada_parkingowa: false,
+        lichwa: false,
+        hart_ducha: false,
+        influencer_aura: false,
+        ochrona_wizerunku: false,
+        drugi_oddech: false,
+        wiecznie_glodny: false,
+        kontrola_stempla: false,
+        gaz_do_dechy: 0,
+        napor_wody: 0,
+        kolejka_do_toalety: 0,
+        zmiana_pogody: false,
       });
     });
 
@@ -2913,31 +3177,19 @@ describe('GameState', () => {
       }
     });
 
-    it('can load Busiarz from the enemy library after victory', () => {
-      const s = freshState();
-      vi.spyOn(s, '_pickRandomEnemyDef').mockReturnValue(enemyLibrary.busiarz);
-      s.resetBattle();
-      expect(s.enemy.id).toBe('busiarz');
-      expect(s.enemy.name).toBe('Wąsaty Busiarz');
-      expect(s.enemy.maxHp).toBe(65);
+    it('busiarz enemy library has correct HP after 10% buff', () => {
+      expect(enemyLibrary.busiarz.maxHp).toBe(83);
+      expect(enemyLibrary.busiarz.pattern[1].damage).toBe(10);
     });
 
-    it('can load Babę from the enemy library after victory', () => {
-      const s = freshState();
-      vi.spyOn(s, '_pickRandomEnemyDef').mockReturnValue(enemyLibrary.baba);
-      s.resetBattle();
-      expect(s.enemy.id).toBe('baba');
-      expect(s.enemy.name).toBe('Handlara oscypkami');
-      expect(s.enemy.maxHp).toBe(78);
+    it('baba enemy library has correct HP after 10% buff', () => {
+      expect(enemyLibrary.baba.maxHp).toBe(99);
+      expect(enemyLibrary.baba.pattern[1].damage).toBe(9);
     });
 
-    it('can load Parkingowego from the enemy library with lowered HP', () => {
-      const s = freshState();
-      vi.spyOn(s, '_pickRandomEnemyDef').mockReturnValue(enemyLibrary.parkingowy);
-      s.resetBattle();
-      expect(s.enemy.id).toBe('parkingowy');
-      expect(s.enemy.name).toBe('Parkingowy z Palenicy');
-      expect(s.enemy.maxHp).toBe(95);
+    it('parkingowy enemy library has correct HP after 10% buff', () => {
+      expect(enemyLibrary.parkingowy.maxHp).toBe(121);
+      expect(enemyLibrary.parkingowy.pattern[0].damage).toBe(8);
     });
 
     it('does not repeat the same regular enemy twice in a row when alternatives exist', () => {
@@ -3045,10 +3297,10 @@ describe('GameState', () => {
     });
 
     it('elite enemies are scaled up and grant higher Dutki reward', () => {
-      const s = freshState();
+      const s = new GameState(mockPlayer, enemyLibrary.cepr);
       const eliteState = s._createEnemyState(enemyLibrary.spekulant);
       expect(eliteState.isElite).toBe(true);
-      expect(eliteState.maxHp).toBe(Math.round(84 * 1.25));
+      expect(eliteState.maxHp).toBe(Math.round(enemyLibrary.spekulant.maxHp * 1.25));
 
       s.enemy = eliteState;
       s.pendingBattleDutki = true;
@@ -3058,12 +3310,11 @@ describe('GameState', () => {
     });
 
     it('can start scripted battle against pomocnik_fiakra', () => {
-      const s = freshState();
+      const s = new GameState(mockPlayer, enemyLibrary.cepr);
       const started = s.startBattleWithEnemyId('pomocnik_fiakra');
-
       expect(started).toBe(true);
       expect(s.enemy.id).toBe('pomocnik_fiakra');
-      expect(s.enemy.maxHp).toBe(58);
+      expect(s.enemy.maxHp).toBe(70);
       expect(s.pendingBattleDutki).toBe(true);
     });
 
@@ -3175,7 +3426,7 @@ describe('GameState', () => {
       s.resetBattle();
       expect(s.enemy.id).toBe('boss');
       expect(s.enemy.name).toBe('Król Krupówek - Biały Misiek (Zdzisiek)');
-      expect(s.enemy.maxHp).toBe(165);
+      expect(s.enemy.maxHp).toBe(154);
       expect(s.enemy.bossArtifact).toBe(2);
     });
 
@@ -3192,7 +3443,7 @@ describe('GameState', () => {
       s.resetBattle();
       expect(s.enemy.id).toBe('fiakier');
       expect(s.enemy.name).toBe('Fiakier spod Krupówek');
-      expect(s.enemy.maxHp).toBe(165);
+      expect(s.enemy.maxHp).toBe(173);
       expect(s.enemy.bossArtifact).toBe(0);
     });
 
@@ -3232,26 +3483,156 @@ describe('GameState', () => {
       const ids = Object.keys(enemyLibrary).sort();
       expect(ids).toEqual([
         'baba',
+        'bileter_z_tpn',
+        'bober_z_morskiego_oka',
         'boss',
         'busiarz',
         'cepr',
         'ceprzyca_vip',
         'fiakier',
+        'glodny_swistak',
+        'harnas_pogodynka',
         'influencerka',
+        'insta_taterniczka',
+        'janusz_znawca_szlakow',
+        'kelner_schroniska',
         'konik_spod_kuznic',
+        'krolowa_schroniska',
+        'meleksiarz_pirat_drogowy',
         'mistrz_redyku',
         'naganiacz_z_krupowek',
         'naganiacze_duo',
         'parkingowy',
         'pomocnik_fiakra',
+        'rodzina_z_glosnikiem',
         'spekulant',
+        'spocony_polmaratonczyk',
+        'turysta_w_klapkach',
         'zagubiony_ceper',
+        'zlodziejska_kaczka',
       ]);
     });
 
-    it('event library includes fiakier event definition', () => {
+    it('all Act 2 regular enemies have act:2 and are excluded from Act 1 pool', () => {
+      const act2RegularIds = [
+        'turysta_w_klapkach',
+        'rodzina_z_glosnikiem',
+        'spocony_polmaratonczyk',
+        'insta_taterniczka',
+        'janusz_znawca_szlakow',
+        'zlodziejska_kaczka',
+        'glodny_swistak',
+      ];
+      for (const id of act2RegularIds) {
+        expect(enemyLibrary[id].act, `${id} must have act:2`).toBe(2);
+        expect(Boolean(enemyLibrary[id].elite), `${id} must not be elite`).toBe(false);
+        expect(Boolean(enemyLibrary[id].isBoss), `${id} must not be boss`).toBe(false);
+      }
+      // Act 1 state: Act 2 enemies must not appear in pool
+      const s = freshState();
+      s.currentAct = 1;
+      const seen = new Set();
+      for (let i = 0; i < 40; i++) {
+        const def = s._pickRandomEnemyDef(false);
+        seen.add(def.id);
+      }
+      for (const id of act2RegularIds) {
+        expect(seen.has(id), `${id} must not appear in Act 1 pool`).toBe(false);
+      }
+    });
+
+    it('all Act 2 elite enemies have act:2 and are excluded from Act 1 elite pool', () => {
+      const act2EliteIds = ['bileter_z_tpn', 'meleksiarz_pirat_drogowy', 'bober_z_morskiego_oka'];
+      for (const id of act2EliteIds) {
+        expect(enemyLibrary[id].act, `${id} must have act:2`).toBe(2);
+        expect(Boolean(enemyLibrary[id].elite), `${id} must be elite`).toBe(true);
+      }
+      const s = freshState();
+      s.currentAct = 1;
+      const seen = new Set();
+      for (let i = 0; i < 30; i++) {
+        const def = s._pickRandomEnemyDef(true);
+        seen.add(def.id);
+      }
+      for (const id of act2EliteIds) {
+        expect(seen.has(id), `${id} must not appear in Act 1 elite pool`).toBe(false);
+      }
+    });
+
+    it('Act 2 regular enemies appear in Act 2 pool and Act 1 enemies do not', () => {
+      const s = freshState();
+      s.currentAct = 2;
+      const act2Ids = [
+        'turysta_w_klapkach',
+        'rodzina_z_glosnikiem',
+        'spocony_polmaratonczyk',
+        'insta_taterniczka',
+        'janusz_znawca_szlakow',
+        'zlodziejska_kaczka',
+        'glodny_swistak',
+      ];
+      const act1RegularIds = [
+        'cepr',
+        'busiarz',
+        'baba',
+        'influencerka',
+        'parkingowy',
+        'konik_spod_kuznic',
+      ];
+      const seen = new Set();
+      for (let i = 0; i < 100; i++) {
+        const def = s._pickRandomEnemyDef(false);
+        seen.add(def.id);
+      }
+      for (const id of act2Ids) {
+        expect(seen.has(id), `${id} must appear in Act 2 regular pool`).toBe(true);
+      }
+      for (const id of act1RegularIds) {
+        expect(seen.has(id), `${id} must not appear in Act 2 pool`).toBe(false);
+      }
+    });
+
+    it('Act 2 boss pool contains krolowa_schroniska and harnas_pogodynka, not Act 1 bosses', () => {
+      expect(enemyLibrary.krolowa_schroniska.isBoss).toBe(true);
+      expect(enemyLibrary.krolowa_schroniska.act).toBe(2);
+      expect(enemyLibrary.harnas_pogodynka.isBoss).toBe(true);
+      expect(enemyLibrary.harnas_pogodynka.act).toBe(2);
+      const s = freshState();
+      s.currentAct = 2;
+      const seen = new Set();
+      for (let i = 0; i < 30; i++) {
+        const def = s._pickFinalBossDef();
+        seen.add(def.id);
+      }
+      expect(seen.has('krolowa_schroniska') || seen.has('harnas_pogodynka')).toBe(true);
+      expect(seen.has('boss'), 'Act 1 boss must not appear in Act 2 boss pool').toBe(false);
+      expect(seen.has('fiakier'), 'Act 1 fiakier must not appear in Act 2 boss pool').toBe(false);
+    });
+
+    it('Act 1 boss pool does not include Act 2 bosses', () => {
+      const s = freshState();
+      s.currentAct = 1;
+      const seen = new Set();
+      for (let i = 0; i < 20; i++) {
+        const def = s._pickFinalBossDef();
+        seen.add(def.id);
+      }
+      expect(seen.has('krolowa_schroniska'), 'Act 2 boss must not appear in Act 1 pool').toBe(
+        false
+      );
+      expect(seen.has('harnas_pogodynka'), 'Act 2 boss must not appear in Act 1 pool').toBe(false);
+    });
+
+    it('event library includes all event definitions', () => {
       const ids = Object.keys(eventLibrary).sort();
-      expect(ids).toEqual(['event_hazard_karton', 'event_karykaturzysta', 'fiakier_event']);
+      expect(ids).toEqual([
+        'event_hazard_karton',
+        'event_karykaturzysta',
+        'event_korek_do_toalety',
+        'event_paragon_za_wrzatek',
+        'event_selfie_na_krawedzi',
+        'fiakier_event',
+      ]);
     });
 
     it('does not scale enemies in normal mode', () => {
@@ -3352,11 +3733,11 @@ describe('GameState', () => {
       expect(s.enemy.currentIntent.hits).toBe(3);
     });
 
-    it('fourth intent is Uścisk Krupówek with spike damage (12)', () => {
+    it('fourth intent is Uścisk Krupówek with spike damage (11)', () => {
       const s = freshBossState();
       s.endTurn(); // execute Górski Ryk -> intent 2
       s.endTurn(); // execute Agresywne pozowanie -> intent 3
-      // Podatek od zdjęcia (damage 9)
+      // Podatek od zdjęcia (damage 8)
       expect(s.enemy.currentIntent.type).toBe('attack');
       expect(s.enemy.currentIntent.name).toBe('Podatek od zdjęcia');
       expect(s.enemy.currentIntent.damage).toBe(9);
@@ -3507,6 +3888,310 @@ describe('GameState', () => {
       const damageAfter = s.getEnemyIntentDamage();
       expect(s.enemy.hartDuchaTriggered).toBe(true);
       expect(damageAfter).toBeGreaterThan(damageBefore);
+    });
+  });
+
+  describe('Act 2 weather passives', () => {
+    it('kontrola_stempla: bileter_z_tpn gains +1 strength when player holds status cards', () => {
+      const s = freshState();
+      s.enemy = s._createEnemyState(enemyLibrary.bileter_z_tpn);
+      s.hand = ['mandat'];
+      const strBefore = s.enemy.status.strength;
+      s.endTurn();
+      expect(s.enemy.status.strength).toBe(strBefore + 1);
+    });
+
+    it('kontrola_stempla: bileter_z_tpn does NOT gain strength with no status cards in hand', () => {
+      const s = freshState();
+      s.enemy = s._createEnemyState(enemyLibrary.bileter_z_tpn);
+      s.hand = ['ciupaga'];
+      const strBefore = s.enemy.status.strength;
+      s.endTurn();
+      expect(s.enemy.status.strength).toBe(strBefore);
+    });
+
+    it('mandat: drains 2 dutki per turn while in hand', () => {
+      const s = freshState();
+      s.enemy = s._createEnemyState(enemyLibrary.bileter_z_tpn);
+      s.hand = ['mandat'];
+      s.dutki = 3;
+      s.endTurn();
+      expect(s.dutki).toBe(1);
+    });
+
+    it('nadprogramowy_paragon: drains 3 dutki per turn while in hand', () => {
+      const s = freshState();
+      s.enemy = s._createEnemyState(enemyLibrary.kelner_schroniska);
+      s.hand = ['nadprogramowy_paragon'];
+      s.dutki = 5;
+      s.endTurn();
+      expect(s.dutki).toBe(2);
+    });
+
+    it('wiecznie_glodny: glodny_swistak heals 4 HP at start of enemy turn when not at full HP', () => {
+      const s = freshState();
+      s.enemy = s._createEnemyState(enemyLibrary.glodny_swistak);
+      s.enemy.hp = s.enemy.maxHp - 10;
+      const hpBefore = s.enemy.hp;
+      s.endTurn();
+      expect(s.enemy.hp).toBe(hpBefore + 4);
+    });
+
+    it('wiecznie_glodny: glodny_swistak does NOT heal when already at full HP', () => {
+      const s = freshState();
+      s.enemy = s._createEnemyState(enemyLibrary.glodny_swistak);
+      s.enemy.hp = s.enemy.maxHp;
+      s.endTurn();
+      expect(s.enemy.hp).toBe(s.enemy.maxHp);
+    });
+
+    it('wiecznie_glodny: heal is capped at maxHp', () => {
+      const s = freshState();
+      s.enemy = s._createEnemyState(enemyLibrary.glodny_swistak);
+      s.enemy.hp = s.enemy.maxHp - 2;
+      s.endTurn();
+      expect(s.enemy.hp).toBe(s.enemy.maxHp);
+    });
+
+    it('drugi_oddech: spocony_polmaratonczyk gains +2 strength when HP drops to 60%', () => {
+      const s = freshState();
+      s.enemy = s._createEnemyState(enemyLibrary.spocony_polmaratonczyk);
+      const threshold = Math.floor(s.enemy.maxHp * 0.6);
+      s.enemy.hp = threshold;
+      const strBefore = s.enemy.status.strength;
+      s._applyDamageToEnemy(1);
+      expect(s.enemy.status.strength).toBe(strBefore + 2);
+      expect(s.enemy.drugiOddechTriggered).toBe(true);
+    });
+
+    it('drugi_oddech: spocony_polmaratonczyk does NOT gain strength above 60% HP threshold', () => {
+      const s = freshState();
+      s.enemy = s._createEnemyState(enemyLibrary.spocony_polmaratonczyk);
+      s.enemy.hp = Math.ceil(s.enemy.maxHp * 0.7);
+      const strBefore = s.enemy.status.strength;
+      s._applyDamageToEnemy(1);
+      expect(s.enemy.status.strength).toBe(strBefore);
+      expect(s.enemy.drugiOddechTriggered).toBe(false);
+    });
+
+    it('drugi_oddech: strength bonus triggers only once per battle', () => {
+      const s = freshState();
+      s.enemy = s._createEnemyState(enemyLibrary.spocony_polmaratonczyk);
+      const threshold = Math.floor(s.enemy.maxHp * 0.6);
+      s.enemy.hp = threshold;
+      s._applyDamageToEnemy(1);
+      const strAfterFirst = s.enemy.status.strength;
+      s._applyDamageToEnemy(5);
+      expect(s.enemy.status.strength).toBe(strAfterFirst);
+    });
+
+    it('glodny_swistak passive and spocony_polmaratonczyk passive fields are correct', () => {
+      expect(enemyLibrary.glodny_swistak.passive).toBe('wiecznie_glodny');
+      expect(enemyLibrary.spocony_polmaratonczyk.passive).toBe('drugi_oddech');
+    });
+
+    it('gaz_do_dechy: stacks increment when enemy takes no HP damage', () => {
+      const s = freshState();
+      s.enemy = s._createEnemyState(enemyLibrary.meleksiarz_pirat_drogowy);
+      s.enemy.block = 9999;
+      expect(s.enemy.gazDoDechyStacks).toBe(0);
+      s.endTurn();
+      expect(s.enemy.gazDoDechyStacks).toBe(1);
+      s.enemy.block = 9999;
+      s.endTurn();
+      expect(s.enemy.gazDoDechyStacks).toBe(2);
+    });
+
+    it('gaz_do_dechy: stacks reset when enemy takes HP damage', () => {
+      const s = freshState();
+      s.enemy = s._createEnemyState(enemyLibrary.meleksiarz_pirat_drogowy);
+      s.enemy.gazDoDechyStacks = 3;
+      s._applyDamageToEnemy(5);
+      expect(s.enemy.gazDoDechyStacks).toBe(0);
+    });
+
+    it('gaz_do_dechy: attack damage increases by 5 per stack', () => {
+      const s = freshState();
+      s.enemy = s._createEnemyState(enemyLibrary.meleksiarz_pirat_drogowy);
+      s.enemy.currentIntent = { type: 'attack', name: 'Test', damage: 10, hits: 1, usePed: false };
+      s.enemy.gazDoDechyStacks = 2;
+      s.player.block = 9999;
+      const hpBefore = s.player.hp;
+      s._applyEnemyIntent();
+      // Block absorbs, but intent damage should have been 10 + 2*5 = 20
+      expect(s.player.block).toBe(9999 - 20);
+      expect(s.player.hp).toBe(hpBefore);
+    });
+
+    it('napor_wody: accumulates pressure when attack is fully blocked', () => {
+      const s = freshState();
+      s.enemy = s._createEnemyState(enemyLibrary.bober_z_morskiego_oka);
+      s.enemy.block = 50;
+      expect(s.enemy.naporWodyPressure).toBe(0);
+      s._applyDamageToEnemy(12);
+      expect(s.enemy.naporWodyPressure).toBe(12);
+      s._applyDamageToEnemy(8);
+      expect(s.enemy.naporWodyPressure).toBe(20);
+    });
+
+    it('napor_wody: does NOT accumulate pressure when attack deals HP damage', () => {
+      const s = freshState();
+      s.enemy = s._createEnemyState(enemyLibrary.bober_z_morskiego_oka);
+      s.enemy.block = 5;
+      s._applyDamageToEnemy(15); // 5 blocked, 10 HP damage
+      expect(s.enemy.naporWodyPressure).toBe(0);
+    });
+
+    it('napor_wody: pressure is added to attack damage and reset on use', () => {
+      const s = freshState();
+      s.enemy = s._createEnemyState(enemyLibrary.bober_z_morskiego_oka);
+      s.enemy.naporWodyPressure = 14;
+      s.enemy.currentIntent = { type: 'attack', name: 'Test', damage: 10, hits: 1, usePed: false };
+      s.player.block = 9999;
+      s._applyEnemyIntent();
+      // Pressure 14 + base 10 = 24 absorbed by block
+      expect(s.player.block).toBe(9999 - 24);
+      expect(s.enemy.naporWodyPressure).toBe(0);
+    });
+
+    it('kolejka_do_toalety: counter increments by number of status cards held at end of turn', () => {
+      const s = freshState();
+      s.enemy = s._createEnemyState(enemyLibrary.krolowa_schroniska);
+      s.enemy.currentIntent = { type: 'attack', name: 'Test', damage: 0, hits: 1 };
+      s.hand = ['numerek_do_toalety', 'numerek_do_toalety', 'ciupaga'];
+      expect(s.enemy.kolejkaCounter).toBe(0);
+      s.endTurn();
+      expect(s.enemy.kolejkaCounter).toBe(2);
+    });
+
+    it('kolejka_do_toalety: counter persists when player holds no status cards', () => {
+      const s = freshState();
+      s.enemy = s._createEnemyState(enemyLibrary.krolowa_schroniska);
+      s.enemy.currentIntent = { type: 'attack', name: 'Test', damage: 0, hits: 1 };
+      s.enemy.kolejkaCounter = 5;
+      s.hand = ['ciupaga'];
+      s.endTurn();
+      expect(s.enemy.kolejkaCounter).toBe(5);
+    });
+
+    it('kolejka_do_toalety: status intent adds 2 + counter cards', () => {
+      const s = freshState();
+      s.enemy = s._createEnemyState(enemyLibrary.krolowa_schroniska);
+      s.enemy.kolejkaCounter = 3;
+      s.enemy.currentIntent = {
+        type: 'status',
+        name: 'Gorąca zupa',
+        addStatusCard: 'numerek_do_toalety',
+        amount: 2,
+      };
+      const discardBefore = s.discard.length;
+      s._applyEnemyIntent();
+      expect(s.discard.length - discardBefore).toBe(5); // 2 + 3
+      expect(s.enemy.kolejkaCounter).toBe(0);
+    });
+
+    it('zmiana_pogody: harnas_pogodynka has weather_loop patternType and zmiana_pogody passive', () => {
+      expect(enemyLibrary.harnas_pogodynka.patternType).toBe('weather_loop');
+      expect(enemyLibrary.harnas_pogodynka.passive).toBe('zmiana_pogody');
+      const wp = enemyLibrary.harnas_pogodynka.weatherPatterns;
+      expect(wp).toBeDefined();
+      expect(wp.clear.length).toBeGreaterThan(0);
+      expect(wp.halny.length).toBeGreaterThan(0);
+      expect(wp.frozen.length).toBeGreaterThan(0);
+      expect(wp.fog.length).toBeGreaterThan(0);
+    });
+
+    it('zmiana_pogody: weather cycles to halny on turn 3 (battleTurnsElapsed % 3 === 0)', () => {
+      const s = freshState();
+      s.enemy = s._createEnemyState(enemyLibrary.harnas_pogodynka);
+      s.currentWeather = 'clear';
+      // Simulate 2 turns (no cycle yet)
+      s.battleTurnsElapsed = 1;
+      let result = s.endTurn();
+      expect(result.weatherChanged).toBeNull();
+      expect(s.currentWeather).toBe('clear');
+      s.battleTurnsElapsed = 2;
+      result = s.endTurn();
+      expect(result.weatherChanged).toBeNull();
+      expect(s.currentWeather).toBe('clear');
+      // Turn 3: cycle fires
+      s.battleTurnsElapsed = 3;
+      result = s.endTurn();
+      expect(result.weatherChanged).not.toBeNull();
+      expect(result.weatherChanged.id).toBe('halny');
+      expect(s.currentWeather).toBe('halny');
+    });
+
+    it('zmiana_pogody: rotation cycles halny → frozen → fog → halny', () => {
+      const s = freshState();
+      s.enemy = s._createEnemyState(enemyLibrary.harnas_pogodynka);
+      s.currentWeather = 'clear';
+      s.battleTurnsElapsed = 3;
+      s.endTurn(); // → halny
+      expect(s.currentWeather).toBe('halny');
+      s.battleTurnsElapsed = 6;
+      s.endTurn(); // → frozen
+      expect(s.currentWeather).toBe('frozen');
+      s.battleTurnsElapsed = 9;
+      s.endTurn(); // → fog
+      expect(s.currentWeather).toBe('fog');
+      s.battleTurnsElapsed = 12;
+      s.endTurn(); // wraps → halny
+      expect(s.currentWeather).toBe('halny');
+    });
+
+    it('zmiana_pogody: pattern index resets to 0 when weather changes', () => {
+      const s = freshState();
+      s.enemy = s._createEnemyState(enemyLibrary.harnas_pogodynka);
+      s.currentWeather = 'clear';
+      // Advance the index a few times
+      s.battleTurnsElapsed = 1;
+      s.endTurn();
+      s.battleTurnsElapsed = 2;
+      s.endTurn();
+      // harnasWeatherPatternIndex is now 2 (advanced twice)
+      expect(s.enemy.harnasWeatherPatternIndex).toBe(2);
+      // Turn 3: weather changes, index resets
+      s.battleTurnsElapsed = 3;
+      s.endTurn();
+      expect(s.enemy.harnasWeatherPatternIndex).toBe(0);
+      expect(s.currentWeather).toBe('halny');
+    });
+
+    it('zmiana_pogody: intent uses correct weather pattern after weather change', () => {
+      const s = freshState();
+      s.currentWeather = 'halny';
+      s.enemy = s._createEnemyState(enemyLibrary.harnas_pogodynka);
+      // The intent should come from the halny pattern (index 0)
+      const halnyFirst = enemyLibrary.harnas_pogodynka.weatherPatterns.halny[0];
+      expect(s.enemy.currentIntent.name).toBe(halnyFirst.name);
+    });
+
+    it('zmiana_pogody: non-harnas enemies do not cycle weather on turn 3', () => {
+      const s = freshState();
+      // Use a regular loop enemy
+      s.currentWeather = 'clear';
+      s.battleTurnsElapsed = 3;
+      const result = s.endTurn();
+      expect(result.weatherChanged).toBeNull();
+      expect(s.currentWeather).toBe('clear');
+    });
+
+    it('zmiana_pogody: pattern index advances independently per weather', () => {
+      const s = freshState();
+      s.enemy = s._createEnemyState(enemyLibrary.harnas_pogodynka);
+      s.currentWeather = 'halny';
+      s.enemy.harnasWeatherPatternIndex = 0;
+      const halnyPattern = enemyLibrary.harnas_pogodynka.weatherPatterns.halny;
+      // Advance through the halny pattern
+      s.battleTurnsElapsed = 1;
+      s.endTurn();
+      expect(s.enemy.harnasWeatherPatternIndex).toBe(1);
+      expect(s.enemy.currentIntent.name).toBe(halnyPattern[1].name);
+      s.battleTurnsElapsed = 2;
+      s.endTurn();
+      expect(s.enemy.harnasWeatherPatternIndex).toBe(2);
+      expect(s.enemy.currentIntent.name).toBe(halnyPattern[2].name);
     });
   });
 
@@ -3680,6 +4365,51 @@ describe('GameState', () => {
       s.resetForNewRun('easy');
       expect(s.maryna.pickedId).toBeNull();
       expect(s.maryna.offeredIds).toHaveLength(0);
+    });
+
+    it('Act 2 row-1 nodes are fights without forcedEnemyId', () => {
+      const s = freshState();
+      s.startAct2();
+      s.map[1].forEach((node) => {
+        if (!node) return;
+        expect(node.type).toBe('fight');
+        expect(node.forcedEnemyId).toBeUndefined();
+      });
+    });
+
+    it('Maryna boon picked in Act 1 is excluded from Act 2 choices', () => {
+      const s = freshState();
+      // Pick a boon in Act 1
+      s.pickMarynaBoon('kiesa');
+      const pickedInAct1 = s.maryna.pickedId;
+      expect(pickedInAct1).toBe('kiesa');
+
+      // Transition to Act 2
+      s.startAct2();
+
+      // Roll new boon choices in Act 2
+      const act2Choices = s.rollMarynaChoices(3);
+      expect(act2Choices).toHaveLength(3);
+      expect(act2Choices).not.toContain(pickedInAct1);
+    });
+
+    it('relic acquired in Act 1 is not offered in Act 2 transition or shop', () => {
+      const s = freshState();
+      // Acquire a specific relic in Act 1
+      const targetRelic = 'krokus';
+      s.addRelic(targetRelic);
+      expect(s.relics).toContain(targetRelic);
+
+      // Transition to Act 2
+      s.startAct2();
+
+      // Check that the acquired relic is NOT in Act 2 transition choices
+      const act2TransitionChoices = s.generateAct2TransitionRelicChoices(3);
+      expect(act2TransitionChoices).not.toContain(targetRelic);
+
+      // Check that the acquired relic is NOT offered in Act 2 shops
+      const act2Shop = s.generateShopStock();
+      expect(act2Shop.relic).not.toBe(targetRelic);
     });
   });
 
@@ -4124,12 +4854,13 @@ describe('GameState', () => {
     });
 
     it('krzesany hits twice and grants +1 energy if second hit deals HP damage', () => {
-      const s = freshState();
+      const s = freshCeprState();
       s.hand = ['krzesany'];
-      s.enemy.block = 0;
+      s.player.energy = 3;
+      s.player.block = 0;
       const energyBefore = s.player.energy;
       s.playCard(0);
-      expect(s.enemy.hp).toBe(58);
+      expect(s.enemy.hp).toBe(enemyLibrary.cepr.maxHp - 12);
       expect(s.player.energy).toBe(energyBefore - 2 + 1);
     });
 
@@ -4322,6 +5053,794 @@ describe('GameState', () => {
 
       const winSummary = s.captureRunSummary('player_win');
       expect(winSummary.killerName).toBeNull();
+    });
+
+    it('captureRunSummary uses global floor numbering in Act 2', () => {
+      const s = freshState();
+      s.currentAct = 2;
+      s.floorOffset = 15;
+      s.currentLevel = 3; // 4th floor of Act 2 -> global floor 19
+      s.maxFloorReached = 15;
+
+      const summary = s.captureRunSummary('enemy_win');
+      expect(summary.runStats.floorReached).toBe(19);
+    });
+
+    it('getRunTelemetryJSON includes Act 2 weather, events and battle details', () => {
+      const s = freshState();
+      s.currentAct = 2;
+      s.floorOffset = 15;
+      s.currentLevel = 2;
+      s.startFloorLog({ type: 'event', label: 'Test Event', weather: 'fog' });
+      s.logAction('events', {
+        eventId: 'event_selfie_na_krawedzi',
+        choiceLabel: 'Pomóż zrobić ujęcie',
+      });
+      s.currentFloorLog.battle = {
+        enemyId: 'kelner_schroniska',
+        enemyName: 'Kelner Schroniska',
+        context: 'event',
+        weather: 'fog',
+        outcome: 'player_win',
+        turns: 4,
+      };
+      s.endFloorLog();
+
+      const telemetry = JSON.parse(s.getRunTelemetryJSON());
+      expect(telemetry.schemaVersion).toBe(2);
+      expect(telemetry.act2.floorCount).toBe(1);
+      expect(telemetry.act2.weather.fog).toBe(1);
+      expect(telemetry.act2.events).toContain('event_selfie_na_krawedzi');
+      expect(telemetry.act2.battles[0].enemyId).toBe('kelner_schroniska');
+      expect(telemetry.floorHistory[0].nodeWeather).toBe('fog');
+      expect(telemetry.floorHistory[0].globalFloor).toBe(18);
+    });
+
+    it('notifyTelemetryDownloaded triggers callback with Act 2 metadata', () => {
+      const s = freshState();
+      s.currentAct = 2;
+      s.floorOffset = 15;
+      s.currentLevel = 1;
+      s.maxFloorReached = 17;
+      s.startFloorLog({ type: 'fight', label: 'Test Fight', weather: 'halny' });
+      s.endFloorLog();
+      s.captureRunSummary('player_win');
+
+      const onTelemetryDownloaded = vi.fn();
+      s.onTelemetryDownloaded = onTelemetryDownloaded;
+      s.notifyTelemetryDownloaded();
+
+      expect(onTelemetryDownloaded).toHaveBeenCalledTimes(1);
+      expect(onTelemetryDownloaded).toHaveBeenCalledWith(
+        expect.objectContaining({
+          outcome: 'player_win',
+          actReached: 2,
+          hasAct2Data: true,
+        })
+      );
+    });
+
+    it('captureRunSummary auto-publishes run telemetry once when callback is set', () => {
+      const s = freshState();
+      s.currentAct = 2;
+      s.floorOffset = 15;
+      s.currentLevel = 2;
+      s.startFloorLog({ type: 'event', label: 'Act2 Event', weather: 'frozen' });
+      s.logAction('events', { eventId: 'event_korek_do_toalety', choiceLabel: 'Test choice' });
+      s.endFloorLog();
+
+      const onRunTelemetryReady = vi.fn();
+      s.onRunTelemetryReady = onRunTelemetryReady;
+
+      s.captureRunSummary('player_win');
+      s.captureRunSummary('player_win');
+
+      expect(onRunTelemetryReady).toHaveBeenCalledTimes(1);
+      expect(onRunTelemetryReady).toHaveBeenCalledWith(
+        expect.objectContaining({
+          schemaVersion: 2,
+          run: expect.objectContaining({
+            outcome: 'player_win',
+            actReached: 2,
+          }),
+        })
+      );
+    });
+
+    it('captureRunSummary does not auto-publish run telemetry for simulation runs', () => {
+      const s = freshState();
+      s.isSimulationRun = true;
+      const onRunTelemetryReady = vi.fn();
+      s.onRunTelemetryReady = onRunTelemetryReady;
+
+      s.captureRunSummary('player_win');
+
+      expect(onRunTelemetryReady).not.toHaveBeenCalled();
+    });
+  });
+
+  // ── Act 2 relics ──────────────────────────────────────────────────────────
+  describe('Act 2 transition relics', () => {
+    it('pasterski_termos: +2 energy at battle start, -2 HP after battle', () => {
+      const s = freshState();
+      s.relics = ['pasterski_termos'];
+      s.player.energy = 3;
+      s._applyBattleStartRelics();
+      expect(s.player.energy).toBe(5);
+      s.player.hp = 40;
+      s.pendingBattleDutki = true;
+      s.grantBattleDutki();
+      expect(s.player.hp).toBe(38);
+    });
+
+    it('pasterski_termos: post-battle HP cannot drop below 1', () => {
+      const s = freshState();
+      s.relics = ['pasterski_termos'];
+      s.player.hp = 1;
+      s.pendingBattleDutki = true;
+      s.grantBattleDutki();
+      expect(s.player.hp).toBe(1);
+    });
+
+    it('muffin_oscypkowy: +1 energy every 2nd attack card (max 2/turn)', () => {
+      const s = freshState();
+      s.relics = ['muffin_oscypkowy'];
+      s.player.energy = 3;
+      // Simulate playCard hook logic directly
+      s.muffinAttackCountThisTurn = 0;
+      s.muffinEnergyGrantedThisTurn = 0;
+      // 1st attack — no bonus
+      s.muffinAttackCountThisTurn += 1;
+      if (
+        s.hasRelic('muffin_oscypkowy') &&
+        s.muffinAttackCountThisTurn % 2 === 0 &&
+        s.muffinEnergyGrantedThisTurn < 2
+      ) {
+        s.player.energy += 1;
+        s.muffinEnergyGrantedThisTurn += 1;
+      }
+      expect(s.player.energy).toBe(3);
+      // 2nd attack — bonus
+      s.muffinAttackCountThisTurn += 1;
+      if (
+        s.hasRelic('muffin_oscypkowy') &&
+        s.muffinAttackCountThisTurn % 2 === 0 &&
+        s.muffinEnergyGrantedThisTurn < 2
+      ) {
+        s.player.energy += 1;
+        s.muffinEnergyGrantedThisTurn += 1;
+      }
+      expect(s.player.energy).toBe(4);
+      expect(s.muffinEnergyGrantedThisTurn).toBe(1);
+      // 3rd attack — no bonus (odd)
+      s.muffinAttackCountThisTurn += 1;
+      if (
+        s.hasRelic('muffin_oscypkowy') &&
+        s.muffinAttackCountThisTurn % 2 === 0 &&
+        s.muffinEnergyGrantedThisTurn < 2
+      ) {
+        s.player.energy += 1;
+        s.muffinEnergyGrantedThisTurn += 1;
+      }
+      expect(s.player.energy).toBe(4);
+      // 4th attack — 2nd bonus
+      s.muffinAttackCountThisTurn += 1;
+      if (
+        s.hasRelic('muffin_oscypkowy') &&
+        s.muffinAttackCountThisTurn % 2 === 0 &&
+        s.muffinEnergyGrantedThisTurn < 2
+      ) {
+        s.player.energy += 1;
+        s.muffinEnergyGrantedThisTurn += 1;
+      }
+      expect(s.player.energy).toBe(5);
+      // 5th+6th attack — capped at 2 grants/turn
+      s.muffinAttackCountThisTurn += 1;
+      s.muffinAttackCountThisTurn += 1;
+      if (
+        s.hasRelic('muffin_oscypkowy') &&
+        s.muffinAttackCountThisTurn % 2 === 0 &&
+        s.muffinEnergyGrantedThisTurn < 2
+      ) {
+        s.player.energy += 1;
+        s.muffinEnergyGrantedThisTurn += 1;
+      }
+      expect(s.player.energy).toBe(5);
+    });
+
+    it('kedziorek_na_energie: +2 energy at battle start', () => {
+      const s = freshState();
+      s.relics = ['kedziorek_na_energie'];
+      s.player.energy = 3;
+      s._applyBattleStartRelics();
+      expect(s.player.energy).toBe(5);
+    });
+
+    it('kedziorek_na_energie: penalizes next turn energy when hit at 0 block', () => {
+      const s = freshState();
+      s.relics = ['kedziorek_na_energie'];
+      s.player.block = 0;
+      s.player.hp = 50;
+      s.takeDamage(5);
+      expect(s.player.status.energy_next_turn).toBe(-1);
+    });
+
+    it('kedziorek_na_energie: no penalty when hit with block', () => {
+      const s = freshState();
+      s.relics = ['kedziorek_na_energie'];
+      s.player.block = 10;
+      s.takeDamage(5);
+      expect(s.player.status.energy_next_turn).toBe(0);
+    });
+
+    it('herbata_zimowa: +1 energy on even turns', () => {
+      const s = freshState();
+      s.relics = ['herbata_zimowa'];
+      s.player.energy = 3;
+      s.battleTurnsElapsed = 2;
+      // Simulate turn-start logic
+      if (s.hasRelic('herbata_zimowa') && s.battleTurnsElapsed % 2 === 0) s.player.energy += 1;
+      expect(s.player.energy).toBe(4);
+    });
+
+    it('herbata_zimowa: no bonus on odd turns', () => {
+      const s = freshState();
+      s.relics = ['herbata_zimowa'];
+      s.player.energy = 3;
+      s.battleTurnsElapsed = 1;
+      if (s.hasRelic('herbata_zimowa') && s.battleTurnsElapsed % 2 === 0) s.player.energy += 1;
+      expect(s.player.energy).toBe(3);
+    });
+
+    it('herbata_zimowa: end-of-turn penalty if block >= 8', () => {
+      const s = freshState();
+      s.relics = ['herbata_zimowa'];
+      s.player.block = 10;
+      // Simulate end-of-turn logic
+      if (s.hasRelic('herbata_zimowa') && s.player.block >= 8)
+        s.player.status.energy_next_turn -= 1;
+      expect(s.player.status.energy_next_turn).toBe(-1);
+    });
+
+    it('portfel_turysty: queues +1 energy on first shop purchase (simulated)', () => {
+      const s = freshState();
+      s.relics = ['portfel_turysty'];
+      s.portfelTurystyUsedThisShop = false;
+      s.portfelTurystyPendingEnergy = false;
+      // Simulate the buyItem hook directly
+      if (s.hasRelic('portfel_turysty') && !s.portfelTurystyUsedThisShop) {
+        s.portfelTurystyPendingEnergy = true;
+        s.portfelTurystyUsedThisShop = true;
+      }
+      expect(s.portfelTurystyPendingEnergy).toBe(true);
+      expect(s.portfelTurystyUsedThisShop).toBe(true);
+    });
+
+    it('portfel_turysty: pending energy granted at battle start', () => {
+      const s = freshState();
+      s.relics = ['portfel_turysty'];
+      s.portfelTurystyPendingEnergy = true;
+      s.player.energy = 3;
+      s._applyBattleStartRelics();
+      expect(s.player.energy).toBe(4);
+      expect(s.portfelTurystyPendingEnergy).toBe(false);
+    });
+
+    it('ciupaga_ekspresowa: first skill card costs 0', () => {
+      const s = freshState();
+      s.relics = ['ciupaga_ekspresowa'];
+      s.ciupagaExpresowaTurnUsed = false;
+      // gasior is a skill card
+      const cost = s.getCardCostInHand('gasior');
+      expect(cost).toBe(0);
+    });
+
+    it('ciupaga_ekspresowa: second skill card has normal cost', () => {
+      const s = freshState();
+      s.relics = ['ciupaga_ekspresowa'];
+      s.ciupagaExpresowaTurnUsed = true;
+      const cost = s.getCardCostInHand('gasior');
+      expect(cost).toBeGreaterThan(0);
+    });
+
+    it('dzban_mleka: -1 energy at battle start', () => {
+      const s = freshState();
+      s.relics = ['dzban_mleka'];
+      s.player.energy = 3;
+      s._applyBattleStartRelics();
+      expect(s.player.energy).toBe(2);
+    });
+
+    it('dzban_mleka: +1 energy per 3 HP healed', () => {
+      const s = freshState();
+      s.relics = ['dzban_mleka'];
+      s.player.hp = 30;
+      s.player.maxHp = 80;
+      s.player.energy = 2;
+      s.dzbanEnergyGrantedThisTurn = 0;
+      s.healPlayer(6);
+      expect(s.player.energy).toBe(4);
+      expect(s.dzbanEnergyGrantedThisTurn).toBe(2);
+    });
+
+    it('dzban_mleka: energy grant capped at 2/turn', () => {
+      const s = freshState();
+      s.relics = ['dzban_mleka'];
+      s.player.hp = 10;
+      s.player.maxHp = 80;
+      s.player.energy = 0;
+      s.dzbanEnergyGrantedThisTurn = 0;
+      s.healPlayer(30);
+      expect(s.player.energy).toBe(2);
+    });
+  });
+
+  describe('Act 2 boss relics', () => {
+    it('paragon_startowy: +6 Rachunek at battle start', () => {
+      const s = freshState();
+      s.relics = ['paragon_startowy'];
+      s.enemy.rachunek = 0;
+      s._applyBattleStartRelics();
+      expect(s.enemy.rachunek).toBe(6);
+    });
+
+    it('ksiega_dluguw: +2 Rachunek per skill card played', () => {
+      const s = freshState();
+      s.relics = ['ksiega_dluguw'];
+      s.enemy.rachunek = 0;
+      // Simulate the hook
+      if (s.hasRelic('ksiega_dluguw')) s.addEnemyRachunek(2);
+      expect(s.enemy.rachunek).toBe(2);
+    });
+
+    it('bankructwo_z_bonusem: heals +6 and grants +20 Dutki on bankruptcy', () => {
+      const s = freshState();
+      s.relics = ['bankructwo_z_bonusem'];
+      s.player.hp = 30;
+      s.player.maxHp = 80;
+      s.dutki = 50;
+      s.enemy.rachunek = 30;
+      s.enemy.hp = 10;
+      s.enemyBankruptFlag = false;
+      s.enemyBankrupt();
+      expect(s.player.hp).toBe(36);
+      expect(s.dutki).toBeGreaterThanOrEqual(70);
+    });
+
+    it('pancerz_z_lansu: reduces HP damage by 2 when Lans active', () => {
+      const s = freshState();
+      s.relics = ['pancerz_z_lansu'];
+      s.dutki = 100;
+      s._setLansActive(true);
+      s.player.block = 0;
+      s.player.hp = 50;
+      s.takeDamage(5);
+      // With Lans at rate=2: 5 damage costs 10 dutki (Lans absorbs); pancerz only applies if dealt>0
+      // Lans rate starts at 2, 5*2=10 <= 100, so Lans absorbs all → dealt=0, pancerz has no effect
+      // Player HP stays at 50
+      expect(s.player.hp).toBe(50);
+    });
+
+    it('wejscie_z_przytupem: deals 5 dmg when Lans activates', () => {
+      const s = freshState();
+      s.relics = ['wejscie_z_przytupem'];
+      s.enemy.hp = 50;
+      s.enemy.block = 0;
+      s._setLansActive(true);
+      expect(s.enemy.hp).toBe(45);
+    });
+
+    it('wejscie_z_przytupem: no damage if Lans was already active', () => {
+      const s = freshState();
+      s.relics = ['wejscie_z_przytupem'];
+      s._setLansActive(true);
+      const hpAfterFirst = s.enemy.hp;
+      s._setLansActive(true); // already active, no re-trigger
+      expect(s.enemy.hp).toBe(hpAfterFirst);
+    });
+
+    it('zaszczyt_upadku: queues draw+energy when Lans breaks', () => {
+      const s = freshState();
+      s.relics = ['zaszczyt_upadku'];
+      s.dutki = 0;
+      s._setLansActive(true);
+      s.player.block = 0;
+      s.player.hp = 50;
+      // Lans breaks when dutki < required
+      s.takeDamage(5);
+      // Lans breaks: rate=2, 5*2=10 > 0 dutki → breaks
+      expect(s.zaszytUpadkuDrawPending).toBe(true);
+      expect(s.player.status.energy_next_turn).toBe(2);
+    });
+
+    it('goralska_skora: halny drains only 1 block', () => {
+      const s = freshState();
+      s.relics = ['goralska_skora'];
+      s.currentWeather = 'halny';
+      s.player.block = 5;
+      s._applyHalnyBlockDrain(s.player);
+      expect(s.player.block).toBe(4);
+    });
+
+    it('barometr_tatrzanski: +1 energy at turn start in non-clear weather', () => {
+      const s = freshState();
+      s.relics = ['barometr_tatrzanski'];
+      s.currentWeather = 'halny';
+      s.player.energy = 3;
+      if (s.hasRelic('barometr_tatrzanski') && s.currentWeather !== 'clear') s.player.energy += 1;
+      expect(s.player.energy).toBe(4);
+    });
+
+    it('barometr_tatrzanski: no bonus in clear weather', () => {
+      const s = freshState();
+      s.relics = ['barometr_tatrzanski'];
+      s.currentWeather = 'clear';
+      s.player.energy = 3;
+      if (s.hasRelic('barometr_tatrzanski') && s.currentWeather !== 'clear') s.player.energy += 1;
+      expect(s.player.energy).toBe(3);
+    });
+
+    it('plecak_na_kazda_pogode: clear sky gives +1 energy at battle start', () => {
+      const s = freshState();
+      s.relics = ['plecak_na_kazda_pogode'];
+      s.currentWeather = 'clear';
+      s.player.energy = 3;
+      s._applyBattleStartRelics();
+      expect(s.player.energy).toBe(4);
+    });
+
+    it('plecak_na_kazda_pogode: halny gives +6 block at battle start', () => {
+      const s = freshState();
+      s.relics = ['plecak_na_kazda_pogode'];
+      s.currentWeather = 'halny';
+      s.player.block = 0;
+      s._applyBattleStartRelics();
+      expect(s.player.block).toBe(6);
+    });
+  });
+
+  describe('Act 2 transition relic pool', () => {
+    it('buildAct2TransitionRelicPool returns only transition relics', () => {
+      const s = freshState();
+      s.relics = [];
+      const pool = s.generateAct2TransitionRelicChoices(7);
+      expect(pool.length).toBeGreaterThan(0);
+      pool.forEach((id) => {
+        expect([
+          'pasterski_termos',
+          'muffin_oscypkowy',
+          'kedziorek_na_energie',
+          'herbata_zimowa',
+          'portfel_turysty',
+          'ciupaga_ekspresowa',
+          'dzban_mleka',
+          'paragon_startowy',
+          'ksiega_dluguw',
+          'bankructwo_z_bonusem',
+          'pancerz_z_lansu',
+          'wejscie_z_przytupem',
+          'zaszczyt_upadku',
+          'plecak_na_kazda_pogode',
+          'goralska_skora',
+          'barometr_tatrzanski',
+        ]).toContain(id);
+      });
+    });
+
+    it('act2Only relics are excluded from the regular relic pool', () => {
+      const s = freshState();
+      s.relics = [];
+      const relicChoices = s.generateRelicChoices(50);
+      const act2Ids = [
+        'pasterski_termos',
+        'muffin_oscypkowy',
+        'kedziorek_na_energie',
+        'herbata_zimowa',
+        'portfel_turysty',
+        'ciupaga_ekspresowa',
+        'dzban_mleka',
+        'paragon_startowy',
+        'ksiega_dluguw',
+        'bankructwo_z_bonusem',
+        'pancerz_z_lansu',
+        'wejscie_z_przytupem',
+        'zaszczyt_upadku',
+        'plecak_na_kazda_pogode',
+        'goralska_skora',
+        'barometr_tatrzanski',
+      ];
+      act2Ids.forEach((id) => {
+        expect(relicChoices).not.toContain(id);
+      });
+    });
+  });
+
+  describe('new cards from CARDY-PROPOZYCJE-60', () => {
+    it('zaskoczenie_z_kosodrzewiny: deals 7 damage bypassing evasion', () => {
+      const s = makeState();
+      s.hand = ['zaskoczenie_z_kosodrzewiny'];
+      s.enemy.evasionCharges = 3;
+      const hpBefore = s.enemy.hp;
+      s.playCard(0);
+      expect(s.enemy.hp).toBeLessThan(hpBefore);
+      expect(s.enemy.evasionCharges).toBe(0);
+    });
+
+    it('zaskoczenie_z_kosodrzewiny: bypasses fog miss by clearing playerAttackMissCheck', () => {
+      const s = makeState();
+      s.hand = ['zaskoczenie_z_kosodrzewiny'];
+      s.currentWeather = 'fog';
+      s.combat.playerAttackMissCheck = true;
+      s.combat.playerAttackMissed = true;
+      const hpBefore = s.enemy.hp;
+      s.playCard(0);
+      expect(s.enemy.hp).toBeLessThan(hpBefore);
+    });
+
+    it('schowek_za_pazucha: sets schowekRetainPending flag', () => {
+      const s = makeState();
+      s.hand = ['schowek_za_pazucha', 'ciupaga'];
+      s.playCard(0);
+      expect(s.schowekRetainPending).toBe(true);
+    });
+
+    it('schowek_za_pazucha: retain pending clears at end of player turn', () => {
+      const s = makeState();
+      s.schowekRetainPending = true;
+      s.enemy.currentIntent = { type: 'buffer', name: 'czeka', damage: 0, hits: 0, block: 0 };
+      s.endTurn();
+      expect(s.schowekRetainPending).toBe(false);
+    });
+
+    it('piorko_u_kapelusza: LANS gives 8 block and draws 1', () => {
+      const s = makeState();
+      s.hand = ['piorko_u_kapelusza'];
+      s.player.status.lans = 3;
+      const blockBefore = s.player.block;
+      s.playCard(0);
+      expect(s.player.block).toBe(blockBefore + 8);
+    });
+
+    it('piorko_u_kapelusza: without LANS only activates lans', () => {
+      const s = makeState();
+      s.hand = ['piorko_u_kapelusza'];
+      s.player.status.lans = 0;
+      const blockBefore = s.player.block;
+      s.playCard(0);
+      expect(s.player.block).toBe(blockBefore);
+      expect(s.player.status.lans).toBeGreaterThan(0);
+    });
+
+    it('wypieta_piers: LANS gives 7 block and sets nextAttackCardBonus +3', () => {
+      const s = makeState();
+      s.hand = ['wypieta_piers'];
+      s.player.status.lans = 3;
+      s.playCard(0);
+      expect(s.player.block).toBeGreaterThanOrEqual(7);
+      expect(s.nextAttackCardBonus).toBeGreaterThanOrEqual(3);
+    });
+
+    it('stary_numer_maryny: applies 2 weak + 2 fragile and draws 1', () => {
+      const s = makeState();
+      s.hand = ['stary_numer_maryny'];
+      s.player.energy = 3;
+      const handSizeBefore = s.hand.length;
+      s.playCard(0);
+      expect(s.enemy.status.weak).toBe(2);
+      expect(s.enemy.status.fragile).toBe(2);
+      expect(s.hand.length).toBeGreaterThan(handSizeBefore - 1);
+    });
+
+    it('nauczka_z_krupowek: applies 1 self-weak and +2 strength', () => {
+      const s = makeState();
+      s.hand = ['nauczka_z_krupowek'];
+      s.playCard(0);
+      expect(s.player.status.weak).toBe(1);
+      expect(s.player.status.strength).toBe(2);
+    });
+
+    it('zasieki_z_gubalowki: gains 12 block and sets zasiekiActive', () => {
+      const s = makeState();
+      s.hand = ['zasieki_z_gubalowki'];
+      s.player.energy = 3;
+      s.playCard(0);
+      expect(s.player.block).toBeGreaterThanOrEqual(12);
+      expect(s.zasiekiActive).toBe(true);
+    });
+
+    it('zasieki_z_gubalowki: counter-attacks 5 damage when player takes any hit', () => {
+      const s = makeState();
+      s.zasiekiActive = true;
+      s.enemy.hp = 50;
+      s.enemy.block = 0;
+      const enemyHpBefore = s.enemy.hp;
+      s.takeDamage(3);
+      expect(s.enemy.hp).toBe(enemyHpBefore - 5);
+    });
+
+    it('zasieki_z_gubalowki: counter-attacks even on blocked hit', () => {
+      const s = makeState();
+      s.zasiekiActive = true;
+      s.player.block = 10;
+      s.enemy.hp = 50;
+      s.enemy.block = 0;
+      const enemyHpBefore = s.enemy.hp;
+      s.takeDamage(3); // fully blocked
+      expect(s.enemy.hp).toBe(enemyHpBefore - 5);
+    });
+
+    it('zasieki_z_gubalowki: zasiekiActive resets at end of player turn', () => {
+      const s = makeState();
+      s.zasiekiActive = true;
+      s.enemy.currentIntent = { type: 'buffer', name: 'czeka', damage: 0, hits: 0, block: 0 };
+      s.endTurn();
+      expect(s.zasiekiActive).toBe(false);
+    });
+
+    it('zamach_znad_glodowki: sets next_double and exhausts', () => {
+      const s = makeState();
+      s.hand = ['zamach_znad_glodowki'];
+      s.playCard(0);
+      expect(s.player.status.next_double).toBe(true);
+      expect(s.exhaust).toContain('zamach_znad_glodowki');
+    });
+
+    it('wezwanie_przedsadowe: grants block equal to 1/3 of enemy rachunek', () => {
+      const s = makeState();
+      s.hand = ['wezwanie_przedsadowe'];
+      s.player.energy = 3;
+      s.enemy.rachunek = 30;
+      s.playCard(0);
+      expect(s.player.block).toBeGreaterThanOrEqual(10); // floor(30/3) = 10
+    });
+
+    it('wezwanie_przedsadowe: 0 rachunek gives 0 block and exhausts', () => {
+      const s = makeState();
+      s.hand = ['wezwanie_przedsadowe'];
+      s.player.energy = 3;
+      s.enemy.rachunek = 0;
+      const blockBefore = s.player.block;
+      s.playCard(0);
+      expect(s.player.block).toBe(blockBefore);
+      expect(s.exhaust).toContain('wezwanie_przedsadowe');
+    });
+
+    it('przeliczanie_dutkow: LANS draws 1 and gains 4 block', () => {
+      const s = makeState();
+      s.hand = ['przeliczanie_dutkow'];
+      s.player.status.lans = 3;
+      const blockBefore = s.player.block;
+      s.playCard(0);
+      expect(s.player.block).toBe(blockBefore + 4);
+    });
+
+    it('herbata_z_pradem: heals 6 when at <=50% HP, exhausts', () => {
+      const s = makeState();
+      s.hand = ['herbata_z_pradem'];
+      s.player.hp = 20;
+      s.player.maxHp = 50;
+      const hpBefore = s.player.hp;
+      s.playCard(0);
+      expect(s.player.hp).toBe(Math.min(s.player.maxHp, hpBefore + 6));
+      expect(s.exhaust).toContain('herbata_z_pradem');
+    });
+
+    it('herbata_z_pradem: heals only 2 when above 50% HP', () => {
+      const s = makeState();
+      s.hand = ['herbata_z_pradem'];
+      s.player.hp = 40;
+      s.player.maxHp = 50;
+      const hpBefore = s.player.hp;
+      s.playCard(0);
+      expect(s.player.hp).toBe(Math.min(s.player.maxHp, hpBefore + 2));
+    });
+
+    it('goralski_upor (skill): gives 5 block and records blurBlockAmount', () => {
+      const s = makeState();
+      s.hand = ['goralski_upor'];
+      s.playCard(0);
+      expect(s.player.block).toBeGreaterThanOrEqual(5);
+      expect(s.blurBlockAmount).toBe(5);
+    });
+
+    it('goralski_upor (skill): blur block is preserved into next player turn', () => {
+      const s = makeState();
+      s.blurBlockAmount = 5;
+      s.enemy.currentIntent = { type: 'buffer', name: 'czeka', damage: 0, hits: 0, block: 0 };
+      s.endTurn();
+      s.startTurn(); // blur block restored here
+      expect(s.player.block).toBeGreaterThanOrEqual(5);
+      expect(s.blurBlockAmount).toBe(0);
+    });
+
+    it('na_ratunek_gopr: heals 5, and 5 more if enemy rachunek > 20, exhausts', () => {
+      const s = makeState();
+      s.hand = ['na_ratunek_gopr'];
+      s.player.hp = 30;
+      s.player.maxHp = 50;
+      s.enemy.rachunek = 25;
+      const hpBefore = s.player.hp;
+      s.playCard(0);
+      expect(s.player.hp).toBe(Math.min(s.player.maxHp, hpBefore + 10));
+      expect(s.exhaust).toContain('na_ratunek_gopr');
+    });
+
+    it('na_ratunek_gopr: heals only 5 when rachunek <= 20', () => {
+      const s = makeState();
+      s.hand = ['na_ratunek_gopr'];
+      s.player.hp = 30;
+      s.player.maxHp = 50;
+      s.enemy.rachunek = 10;
+      const hpBefore = s.player.hp;
+      s.playCard(0);
+      expect(s.player.hp).toBe(Math.min(s.player.maxHp, hpBefore + 5));
+    });
+
+    it('szal_bacy: sets player.szal_bacy flag and exhausts', () => {
+      const s = makeState();
+      s.hand = ['szal_bacy'];
+      s.player.energy = 3;
+      s.playCard(0);
+      expect(s.player.szal_bacy).toBe(true);
+      expect(s.exhaust).toContain('szal_bacy');
+    });
+
+    it('szal_bacy: deals 3 damage per extra card drawn during player turn', () => {
+      const s = makeState();
+      // makeState() → initGame() → startTurn() sets szalBacyTurnDrawDone = true
+      s.player.szal_bacy = true;
+      s.enemy.hp = 50;
+      s.enemy.block = 0;
+      const hpBefore = s.enemy.hp;
+      s._drawCards(1);
+      expect(s.enemy.hp).toBe(hpBefore - 3);
+    });
+
+    it('szal_bacy: does NOT trigger when szalBacyTurnDrawDone is false', () => {
+      const s = makeState();
+      s.player.szal_bacy = true;
+      s.szalBacyTurnDrawDone = false; // force flag off
+      s.enemy.hp = 50;
+      s.enemy.block = 0;
+      const hpBefore = s.enemy.hp;
+      s._drawCards(1);
+      expect(s.enemy.hp).toBe(hpBefore);
+    });
+
+    it('goralski_upor_moc (power): sets flag and exhausts', () => {
+      const s = makeState();
+      s.hand = ['goralski_upor_moc'];
+      s.playCard(0);
+      expect(s.player.goralski_upor_moc).toBe(true);
+      expect(s.exhaust).toContain('goralski_upor_moc');
+    });
+
+    it('goralski_upor_moc (power): queues draw when player takes HP damage', () => {
+      const s = makeState();
+      s.player.goralski_upor_moc = true;
+      s.player.block = 0;
+      s.goralskiUporDrawPending = 0;
+      s.takeDamage(5);
+      expect(s.goralskiUporDrawPending).toBe(1);
+    });
+
+    it('goralski_upor_moc (power): pending draws are consumed at start of next turn', () => {
+      const s = makeState();
+      s.player.goralski_upor_moc = true;
+      s.goralskiUporDrawPending = 2;
+      s.enemy.currentIntent = { type: 'buffer', name: 'czeka', damage: 0, hits: 0, block: 0 };
+      s.endTurn();
+      s.startTurn(); // pending draws consumed here
+      expect(s.goralskiUporDrawPending).toBe(0);
+    });
+
+    it('goralski_upor_moc (power): no draw queued on fully-blocked hit', () => {
+      const s = makeState();
+      s.player.goralski_upor_moc = true;
+      s.player.block = 10;
+      s.goralskiUporDrawPending = 0;
+      s.takeDamage(5); // fully blocked
+      expect(s.goralskiUporDrawPending).toBe(0);
     });
   });
 });

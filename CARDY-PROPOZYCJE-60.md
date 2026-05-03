@@ -76,7 +76,7 @@ Cel: po dodaniu tej puli laczna liczba dostepnych kart bez statusow ma wynosic 7
 18. ✓ **Skrupulatne Wyliczenie** | attack | uncommon | koszt 1  
     Efekt: Zadaj obrazenia rowne polowie Twojej aktualnej Gardy. Jesli Rachunek > 15, dodaj +5 obrazen.
 
-19. **Zaskoczenie z Kosodrzewiny** | attack | common | koszt 1  
+19. ✓ **Zaskoczenie z Kosodrzewiny** | attack | common | koszt 1  
     Efekt: Zadaj 7 obrazen. Ten atak ignoruje uniki/pudla (zawsze trafia).
 
 20. ✓ **Paragon Grozy** | attack | rare | koszt 3  
@@ -95,25 +95,25 @@ Cel: po dodaniu tej puli laczna liczba dostepnych kart bez statusow ma wynosic 7
 23. ✓ **Wdech Halnego** | skill | common | koszt 0  
     Efekt: Odrzuc 1 karte z reki, dobierz 2 karty.
 
-24. **Schowek za Pazuchą** | skill | uncommon | koszt 0  
+24. ✓ **Schowek za Pazuchą** | skill | uncommon | koszt 0  
     Efekt: Wybierz 1 karte z reki. Zostaje ona na nastepna ture (Retain).
 
-25. **Piórko u Kapelusza** | skill | uncommon | koszt 1  
+25. ✓ **Piórko u Kapelusza** | skill | uncommon | koszt 1  
     Efekt: `Lans`: Zyskaj 8 Gardy i dobierz 1 karte.
 
-26. **Wypięta Pierś** | skill | uncommon | koszt 1  
+26. ✓ **Wypięta Pierś** | skill | uncommon | koszt 1  
     Efekt: `Lans`: Zyskaj 7 Gardy. Nastepny zagrany przez Ciebie Atak w tej turze zadaje +3 obrazenia.
 
-27. **Stary Numer Maryny** | skill | rare | koszt 2  
+27. ✓ **Stary Numer Maryny** | skill | rare | koszt 2  
     Efekt: Naloz 2 `weak` i 2 `fragile`. Dobierz 1.
 
-28. **Nauczka z Krupowek** | skill | uncommon | koszt 1  
+28. ✓ **Nauczka z Krupowek** | skill | uncommon | koszt 1  
     Efekt: Naloz na siebie 1 `weak`, zyskaj +2 Sily (`strength`).
 
-29. **Zasieki z Gubałówki** | skill | rare | koszt 2  
+29. ✓ **Zasieki z Gubałówki** | skill | rare | koszt 2  
     Efekt: Zyskaj 12 Gardy. Za kazdym razem, gdy otrzymasz od wroga obrazenia (nawet zablokowane) w tej turze, zadaj mu 5 obrazen.
 
-30. **Zamach znad Glodowki** | skill | uncommon | koszt 0  
+30. ✓ **Zamach znad Glodowki** | skill | uncommon | koszt 0  
     Efekt: Ustaw status `next_double` = true. Exhaust.
 
 31. ✓ **Punkt Widokowy** | skill | common | koszt 1  
@@ -122,28 +122,28 @@ Cel: po dodaniu tej puli laczna liczba dostepnych kart bez statusow ma wynosic 7
 32. ✓ **Przymusowy Napiwek** | skill | uncommon | koszt 1  
     Efekt: Dodaj 5 do Rachunku. Jesli przeciwnik ma `vulnerable`, dodaj jeszcze 5.
 
-33. **Wezwanie Przedsadowe** | skill | rare | koszt 2  
+33. ✓ **Wezwanie Przedsadowe** | skill | rare | koszt 2  
     Efekt: Zyskaj Garde rowna 1/3 aktualnego Rachunku wroga. Exhaust.
 
 34. ✓ **Zgubieni we Mgle** | skill | uncommon | koszt 1  
     Efekt: Jesli pogoda to `fog`, naloz 2 `weak`. W innym wypadku zyskaj 8 Gardy.
 
-35. **Przeliczanie Dutków** | skill | common | koszt 1  
+35. ✓ **Przeliczanie Dutków** | skill | common | koszt 1  
     Efekt: `Lans`: Dobierz 1 karte i zyskaj 4 Gardy.
 
 36. ✓ **List od Maryny** | skill | uncommon | koszt 1  
     Efekt: Dobierz 1 karte. Jesli wrog ma status `weak` lub `fragile`, dobierz jeszcze 1 karte.
 
-37. **Herbata z Prądem** | skill | uncommon | koszt 1  
+37. ✓ **Herbata z Prądem** | skill | uncommon | koszt 1  
     Efekt: Jesli masz <=50% Krzepy, ulecz 6. Inaczej ulecz 2. Exhaust.
 
 38. ✓ **Dutki na Stole** | skill | common | koszt 0  
     Efekt: +10 Dutkow i dodaj 4 do Rachunku. Exhaust.
 
-39. **Goralski Upor** | skill | uncommon | koszt 1  
+39. ✓ **Goralski Upor** | skill | uncommon | koszt 1  
     Efekt: Zyskaj 5 Gardy. Ta Garda nie znika na poczatku nastepnej tury (Blur).
 
-40. **Na Ratunek GOPR** | skill | uncommon | koszt 1  
+40. ✓ **Na Ratunek GOPR** | skill | uncommon | koszt 1  
     Efekt: Ulecz 5 Krzepy. Jesli wrog ma >20 Rachunku, ulecz dodatkowe 5. Exhaust.
 
 ---
@@ -174,10 +174,10 @@ Cel: po dodaniu tej puli laczna liczba dostepnych kart bez statusow ma wynosic 7
 48. ✓ **Baciarka Ciesy** | power | uncommon | koszt 1  
     Efekt: Zyskaj +2 Sily (`strength`) na cala walke.
 
-49. **Szał Bacy** | power | rare | koszt 2  
+49. ✓ **Szał Bacy** | power | rare | koszt 2  
     Efekt: Ilekroc dobierasz dodatkowo karte w trakcie swojej tury, zadaj wrogowi 3 obrazenia.
 
-50. **Góralski Upór** | power | uncommon | koszt 1  
+50. ✓ **Góralski Upór** | power | uncommon | koszt 1  
     Efekt: Ilekroc tracisz Krzepe, dobierz 1 karte na poczatku nastepnej tury.
 
 ---

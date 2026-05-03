@@ -311,13 +311,13 @@ describe('renderObservation', () => {
       const text = renderObservation(obs, 'en');
       // then
       expect(text).toMatchSnapshot();
-      expect(text).toContain('## BATTLE');
-      expect(text).toContain('Player');
-      expect(text).toContain('HP');
-      expect(text).toContain('Block');
-      expect(text).toContain('Energy');
-      expect(text).toContain('## HAND');
-      expect(text).toContain('## LEGAL');
+      expect(text).toContain('## WALKA');
+      expect(text).toContain('Gracz');
+      expect(text).toContain('Krzepa');
+      expect(text).toContain('Garda');
+      expect(text).toContain('Oscypki');
+      expect(text).toContain('## RĘKA');
+      expect(text).toContain('## DOZWOLONE');
     });
 
     it('shouldRenderBattleCompact', () => {
@@ -327,7 +327,7 @@ describe('renderObservation', () => {
       const text = renderObservation(obs, 'compact');
       // then
       expect(text).toMatchSnapshot();
-      expect(text).toContain('## BATTLE');
+      expect(text).toContain('## WALKA');
       // compact should be shorter than pl
       expect(text.length).toBeLessThan(renderObservation(obs, 'pl').length);
     });
@@ -342,9 +342,9 @@ describe('renderObservation', () => {
       expect(plText).toContain('Siła:2');
       expect(plText).toContain('Słabość:1');
       expect(plText).toContain('Podatność:2');
-      expect(enText).toContain('Strength:2');
-      expect(enText).toContain('Weak:1');
-      expect(enText).toContain('Vulnerable:2');
+      expect(enText).toContain('Siła:2');
+      expect(enText).toContain('Słabość:1');
+      expect(enText).toContain('Podatność:2');
     });
 
     it('shouldShowStunnedPlayer', () => {
@@ -392,9 +392,9 @@ describe('renderObservation', () => {
       const text = renderObservation(obs, 'en');
       // then
       expect(text).toMatchSnapshot();
-      expect(text).toContain('## MAP');
-      expect(text).toContain('Floor');
-      expect(text).toContain('Coins');
+      expect(text).toContain('## MAPA');
+      expect(text).toContain('Piętro');
+      expect(text).toContain('Dutki');
     });
 
     it('shouldRenderMapCompact', () => {
@@ -404,7 +404,7 @@ describe('renderObservation', () => {
       const text = renderObservation(obs, 'compact');
       // then
       expect(text).toMatchSnapshot();
-      expect(text).toContain('## MAP');
+      expect(text).toContain('## MAPA');
     });
   });
 
@@ -427,7 +427,7 @@ describe('renderObservation', () => {
       const text = renderObservation(obs, 'en');
       // then
       expect(text).toMatchSnapshot();
-      expect(text).toContain('## REWARD');
+      expect(text).toContain('## NAGRODA');
     });
 
     it('shouldRenderRewardCompact', () => {
@@ -437,7 +437,7 @@ describe('renderObservation', () => {
       const text = renderObservation(obs, 'compact');
       // then
       expect(text).toMatchSnapshot();
-      expect(text).toContain('## REWARD');
+      expect(text).toContain('## NAGRODA');
     });
   });
 
@@ -461,8 +461,8 @@ describe('renderObservation', () => {
       const text = renderObservation(obs, 'en');
       // then
       expect(text).toMatchSnapshot();
-      expect(text).toContain('## SHOP');
-      expect(text).toContain('Coins');
+      expect(text).toContain('## SKLEP');
+      expect(text).toContain('Dutki');
     });
 
     it('shouldRenderShopCompact', () => {
@@ -472,7 +472,7 @@ describe('renderObservation', () => {
       const text = renderObservation(obs, 'compact');
       // then
       expect(text).toMatchSnapshot();
-      expect(text).toContain('## SHOP');
+      expect(text).toContain('## SKLEP');
     });
   });
 
@@ -506,7 +506,7 @@ describe('renderObservation', () => {
       // then
       expect(text).toMatchSnapshot();
       expect(text).toContain('## TERMINAL');
-      expect(text).toContain('Victory');
+      expect(text).toContain('Zwycięstwo');
     });
 
     it('shouldRenderTerminalCompact', () => {

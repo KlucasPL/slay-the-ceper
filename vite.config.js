@@ -3,6 +3,13 @@ import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
   base: '/slay-the-ceper/',
+  resolve: {
+    alias: {
+      // The gameanalytics package only ships a "main" pointing to the Node.js
+      // build. Force Vite (browser context) to use the browser bundle instead.
+      gameanalytics: 'gameanalytics/dist/GameAnalytics.js',
+    },
+  },
   plugins: [
     VitePWA({
       registerType: 'autoUpdate',

@@ -454,6 +454,7 @@ export function showRunSummaryOverlay(uiManager) {
     downloadLogBtn.onclick = () => {
       const dataStr =
         'data:text/json;charset=utf-8,' + encodeURIComponent(uiManager.state.getRunTelemetryJSON());
+      uiManager.state.notifyTelemetryDownloaded?.();
       const downloadAnchorNode = document.createElement('a');
       downloadAnchorNode.setAttribute('href', dataStr);
       downloadAnchorNode.setAttribute('download', 'usiec_cepra_run_log.json');
@@ -528,6 +529,61 @@ export function showEliteRewardOverlay(uiManager, droppedDutki) {
       uiManager.state.addRelic(relicId);
       goToCardPhase();
     });
+    rewardCards.appendChild(relicEl);
+  });
+
+  skipBtn.classList.add('hidden');
+  skipBtn.onclick = null;
+  cardScreen.classList.remove('hidden');
+  cardScreen.setAttribute('aria-hidden', 'false');
+  document.getElementById('end-turn-btn').disabled = true;
+}
+
+/**
+ * Shows the Act 2 transition relic reward — player picks 1 of 3 boss relics
+ * before entering Act 2. After picking, calls startAct2() and transitions to map.
+ * @param {any} uiManager
+ * @param {string[]} choices
+ */
+export function showAct2TransitionRelicReward(uiManager, choices) {
+  const cardScreen = document.getElementById('card-reward-screen');
+  const rewardDutki = document.getElementById('victory-dutki');
+  const rewardCards = document.getElementById('reward-cards');
+  const skipBtn = document.getElementById('reward-skip-btn');
+  const titleEl = cardScreen?.querySelector('.victory-title');
+  if (!cardScreen || !rewardDutki || !rewardCards || !skipBtn || !titleEl) return;
+
+  rewardDutki.textContent = 'Mistrz pokonany! Wybierz swój atut na Morskie Oko:';
+  titleEl.textContent = 'Nagroda Bossowa:';
+  rewardCards.innerHTML = '';
+
+  const pickRelic = (relicId) => {
+    uiManager.state.addRelic(relicId);
+    uiManager.state.startAct2();
+    cardScreen.classList.add('hidden');
+    cardScreen.setAttribute('aria-hidden', 'true');
+    uiManager._handleActTransitionToMap();
+  };
+
+  if (choices.length === 0) {
+    // No pool items — just transition immediately
+    uiManager.state.startAct2();
+    uiManager._handleActTransitionToMap();
+    return;
+  }
+
+  choices.forEach((relicId) => {
+    const relic = relicLibrary[relicId];
+    if (!relic) return;
+    const relicEl = document.createElement('button');
+    relicEl.type = 'button';
+    relicEl.className = `reward-card reward-relic-choice relic-plate ${uiHelpers.rarityClass(relic.rarity)}`;
+    relicEl.innerHTML = `
+      <h3 class="relic-plate-title">${relic.emoji} ${relic.name}</h3>
+      <p class="relic-plate-rarity">${uiHelpers.rarityLabel(relic.rarity, 'relic')}</p>
+      <p class="relic-plate-desc">${relic.desc}</p>
+    `;
+    relicEl.addEventListener('click', () => pickRelic(relicId));
     rewardCards.appendChild(relicEl);
   });
 

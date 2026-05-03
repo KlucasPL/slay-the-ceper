@@ -1,4 +1,6 @@
 import { weatherLibrary } from '../data/weather.js';
+import { relicLibrary } from '../data/relics.js';
+import { getCardDefinition } from '../data/cards.js';
 import {
   generateCardRewardChoices as generateDeckCardRewardChoices,
   getCardDamageBonus as getDeckCardDamageBonus,
@@ -30,6 +32,7 @@ const RARITY_WEIGHTS = {
 const MIN_ELITE_LEVEL = 4;
 const EVENT_OUTCOME_EVENT_CHANCE = 0.68;
 const EVENT_OUTCOME_FIGHT_CHANCE = 0.12;
+const EVENT_OUTCOME_SHOP_CHANCE = 1 - EVENT_OUTCOME_EVENT_CHANCE - EVENT_OUTCOME_FIGHT_CHANCE;
 
 /**
  * @typedef {import('../data/cards.js').StatusDef} StatusDef
@@ -39,9 +42,9 @@ const EVENT_OUTCOME_FIGHT_CHANCE = 0.12;
  * @typedef {'fight' | 'elite' | 'shop' | 'treasure' | 'event' | 'campfire' | 'boss'} MapNodeType
  * @typedef {{ x: number, y: number, type: MapNodeType, label: string, emoji: string, weather: WeatherId, connections: number[] }} MapNode
  * @typedef {import('../data/events.js').GameEventDef} GameEventDef
- * @typedef {{ id: string, name: string, emoji: string, hp: number, maxHp: number, block: number, nextAttack: number, baseAttack: number, status: StatusDef, rachunek: number, ped: number, spriteSvg: string, phase2SpriteSvg?: string, patternType: 'random'|'loop', pattern: EnemyMoveDef[], phaseTwoPattern: EnemyMoveDef[], patternIndex: number, currentIntent: EnemyMoveDef, tookHpDamageThisTurn: boolean, bossArtifact?: number, passive: string | null, isElite: boolean, isBoss: boolean, stunnedTurns: number, lichwaTriggeredThisTurn: boolean, hartDuchaTriggered: boolean, portraitShameTurns: number, phaseTwoTriggered: boolean, evasionCharges: number }} EnemyState
+ * @typedef {{ id: string, name: string, emoji: string, hp: number, maxHp: number, block: number, nextAttack: number, baseAttack: number, status: StatusDef, rachunek: number, ped: number, spriteSvg: string, phase2SpriteSvg?: string, patternType: 'random'|'loop'|'weather_loop', pattern: EnemyMoveDef[], phaseTwoPattern: EnemyMoveDef[], weatherPatterns?: Record<string, EnemyMoveDef[]>, patternIndex: number, harnasWeatherPatternIndex: number, currentIntent: EnemyMoveDef, tookHpDamageThisTurn: boolean, bossArtifact?: number, passive: string | null, isElite: boolean, isBoss: boolean, stunnedTurns: number, lichwaTriggeredThisTurn: boolean, hartDuchaTriggered: boolean, portraitShameTurns: number, phaseTwoTriggered: boolean, evasionCharges: number }} EnemyState
  * @typedef {{ success: false, reason?: string } | { success: true, effect: import('../data/cards.js').CardEffectResult }} PlayCardResult
- * @typedef {{ enemyAttack: { raw: number, blocked: number, dealt: number }, enemyPassiveHeal: { amount: number, text: string } | null, playerPassiveHeal: { amount: number, text: string } | null }} EndTurnResult
+ * @typedef {{ enemyAttack: { raw: number, blocked: number, dealt: number }, enemyPassiveHeal: { amount: number, text: string } | null, playerPassiveHeal: { amount: number, text: string } | null, weatherChanged: { id: string, name: string, emoji: string } | null }} EndTurnResult
  * @typedef {{ cards: string[], relic: string | null }} ShopStock
  */
 
@@ -98,6 +101,7 @@ export class GameState {
     /** @type {{ x: number, y: number }} */
     this.currentNode = { x: 0, y: 0 };
     /** @type {number} */
+    this.floorOffset = 0;
     this.debugMapRows = 15;
     /** @type {MapNodeType | null} */
     this.debugForcedNextNodeType = null;
@@ -117,6 +121,35 @@ export class GameState {
     this.attackCardsPlayedThisBattle = 0;
     /** @type {number} Count of cards triggered by pocztowka_giewont this battle (max 2) */
     this.pocztowkaCardsTriggeredThisBattle = 0;
+    // ── Per-turn relic counters (reset at startTurn) ──
+    /** @type {number} muffin_oscypkowy: attack cards played this turn (for every-2nd trigger) */
+    this.muffinAttackCountThisTurn = 0;
+    /** @type {number} muffin_oscypkowy: energy granted this turn (max 2) */
+    this.muffinEnergyGrantedThisTurn = 0;
+    /** @type {number} dzban_mleka: heal-based energy granted this turn (max 2) */
+    this.dzbanEnergyGrantedThisTurn = 0;
+    /** @type {boolean} kedziorek_na_energie: penalty already queued this turn */
+    this.kedziorekPenaltyTriggeredThisTurn = false;
+    /** @type {boolean} ciupaga_ekspresowa: free-skill discount used this turn */
+    this.ciupagaExpresowaTurnUsed = false;
+    // ── Cross-battle relic flags ──
+    /** @type {boolean} portfel_turysty: pending +1 energy for next battle start */
+    this.portfelTurystyPendingEnergy = false;
+    /** @type {boolean} portfel_turysty: first-purchase bonus already used this shop visit */
+    this.portfelTurystyUsedThisShop = false;
+    /** @type {boolean} zaszczyt_upadku: draw-2 pending for next turn start (after Lans break) */
+    this.zaszytUpadkuDrawPending = false;
+    // ── Per-card / per-turn card mechanics ──
+    /** @type {boolean} schowek_za_pazucha: player chose to retain a card this turn */
+    this.schowekRetainPending = false;
+    /** @type {number} goralski_upor (skill blur): block amount to preserve into next turn */
+    this.blurBlockAmount = 0;
+    /** @type {boolean} zasieki_z_gubalowki: counter-attack active this turn */
+    this.zasiekiActive = false;
+    /** @type {number} goralski_upor_moc (power): draws queued for next turn start */
+    this.goralskiUporDrawPending = 0;
+    /** @type {boolean} szal_bacy: flag marking that the normal start-of-turn draw is done */
+    this.szalBacyTurnDrawDone = false;
     /** @type {number} */
     this.currentAct = 1;
     /** @type {string} */
@@ -154,6 +187,10 @@ export class GameState {
     this.activeEventId = null;
     /** @type {string[]} Recently selected event IDs (up to pool-size − 1) to prevent repeated picks */
     this.recentEventIds = [];
+    /** @type {string[]} Event IDs already seen this act — excluded for the rest of the act */
+    this.seenEventIdsThisAct = [];
+    /** @type {number} How many event nodes got 'shop' outcome during current map generation */
+    this._eventNodeShopsThisAct = 0;
     /** @type {{ offeredIds: string[], pickedId: string | null, flags: Record<string, boolean>, counters: Record<string, number> }} */
     this.maryna = { offeredIds: [], pickedId: null, flags: {}, counters: {} };
     /** @type {string | null} */
@@ -232,6 +269,14 @@ export class GameState {
     this.bossEncountered = null;
     /** @type {number | null} Telemetry: floor level where the player died */
     this.deathLevel = null;
+    /** @type {((meta: { outcome: string, floorReached: number, actReached: number, hasAct2Data: boolean }) => void) | null} */
+    this.onTelemetryDownloaded = null;
+    /** @type {((payload: Record<string, any>) => void) | null} */
+    this.onRunTelemetryReady = null;
+    /** @type {boolean} */
+    this._runTelemetryPublished = false;
+    /** @type {boolean} */
+    this.isSimulationRun = false;
     /** @type {EnemyState} */
     this.enemy = this._createEnemyState(enemy);
     this.generateMap();
@@ -278,6 +323,14 @@ export class GameState {
    */
   _forceRow1CeprFights(map) {
     mapEngine.forceRow1CeprFights(this, map);
+  }
+
+  /**
+   * Ensure all row-1 nodes are fights (for Act 2, without forcing a specific enemy).
+   * @param {(import('./GameState.js').MapNode | null)[][]} map
+   */
+  _ensureRow1Fights(map) {
+    mapEngine.ensureRow1Fights(this, map);
   }
 
   /**
@@ -501,6 +554,11 @@ export class GameState {
     return eventSystem.pickRandomEventDef(this);
   }
 
+  /** @returns {boolean} */
+  hasUnseenEventsThisAct() {
+    return eventSystem.hasUnseenEventsThisAct(this);
+  }
+
   /** @returns {'I' | 'II' | 'III'} */
   _getCurrentAct() {
     return navigationState.getCurrentAct(this);
@@ -514,9 +572,23 @@ export class GameState {
   /** @returns {'event' | 'fight' | 'shop'} */
   rollEventNodeOutcome() {
     const roll = this.rng();
-    if (roll < EVENT_OUTCOME_EVENT_CHANCE) return 'event';
-    if (roll < EVENT_OUTCOME_EVENT_CHANCE + EVENT_OUTCOME_FIGHT_CHANCE) return 'fight';
-    return 'shop';
+    const canRollEvent = this.hasUnseenEventsThisAct();
+
+    if (canRollEvent) {
+      if (roll < EVENT_OUTCOME_EVENT_CHANCE) return 'event';
+      if (roll < EVENT_OUTCOME_EVENT_CHANCE + EVENT_OUTCOME_FIGHT_CHANCE) return 'fight';
+    } else {
+      const nonEventTotalChance = EVENT_OUTCOME_FIGHT_CHANCE + EVENT_OUTCOME_SHOP_CHANCE;
+      const fightChance = EVENT_OUTCOME_FIGHT_CHANCE / nonEventTotalChance;
+      if (roll < fightChance) return 'fight';
+    }
+
+    // Allow at most one shop outcome per event node per act.
+    if ((this._eventNodeShopsThisAct ?? 0) === 0) {
+      this._eventNodeShopsThisAct = (this._eventNodeShopsThisAct ?? 0) + 1;
+      return 'shop';
+    }
+    return 'fight';
   }
 
   /**
@@ -594,6 +666,14 @@ export class GameState {
     return 'BANKRUT!';
   }
 
+  /** @returns {string | null} Card name stolen by the duck in the last enemy attack, or null */
+  consumeCardStolenEvent() {
+    const id = this.lastStolenCardId ?? null;
+    if (!id) return null;
+    this.lastStolenCardId = null;
+    return getCardDefinition(id)?.name ?? id;
+  }
+
   /** @returns {boolean} */
   consumeLansActivatedEvent() {
     if (!this.lansActivatedEvent) return false;
@@ -664,9 +744,11 @@ export class GameState {
   startFloorLog(node) {
     this.currentFloorLog = {
       level: this.currentLevel || 1,
+      globalFloor: (this.floorOffset ?? 0) + (this.currentLevel || 0) + 1,
       act: this.currentAct || 1,
       nodeType: node.type || 'unknown',
       nodeLabel: node.label || '',
+      nodeWeather: node.weather || this.currentWeather || null,
       startingHp: this.player.hp,
       startingDutki: this.dutki,
       purchases: [],
@@ -705,10 +787,10 @@ export class GameState {
   }
 
   /**
-   * Returns the complete run telemetry as a JSON string.
-   * @returns {string}
+   * Builds complete run telemetry payload object.
+   * @returns {Record<string, any>}
    */
-  getRunTelemetryJSON() {
+  buildRunTelemetryPayload() {
     const summary = this.runSummary;
     const currentDutki = summary?.snapshotDutki ?? this.dutki;
     const finalDutki =
@@ -718,23 +800,116 @@ export class GameState {
     const finalHp = summary ? this.player.hp : this.player.hp;
     const maxHp = this.player.maxHp;
 
-    return JSON.stringify(
-      {
-        seed: this.runSeed,
-        bossEncountered: this.bossEncountered,
-        deathLevel: this.deathLevel,
-        finalHp,
-        maxHp,
-        finalDutki,
-        currentDutki,
-        deckSize: finalDeck.length,
-        finalDeck,
-        finalRelics,
-        floorHistory: this.runLog,
+    const floorHistory = this.runLog.map((entry) => ({ ...entry }));
+    const byAct = {};
+    floorHistory.forEach((entry) => {
+      const actKey = String(entry.act ?? 1);
+      if (!byAct[actKey]) {
+        byAct[actKey] = {
+          floorCount: 0,
+          nodeTypes: {},
+          weather: {},
+          events: [],
+          battles: [],
+        };
+      }
+      const bucket = byAct[actKey];
+      bucket.floorCount += 1;
+      const nodeType = entry.nodeType ?? 'unknown';
+      bucket.nodeTypes[nodeType] = (bucket.nodeTypes[nodeType] ?? 0) + 1;
+
+      const weatherId = entry.nodeWeather ?? 'none';
+      bucket.weather[weatherId] = (bucket.weather[weatherId] ?? 0) + 1;
+
+      if (Array.isArray(entry.events) && entry.events.length > 0) {
+        entry.events.forEach((evt) => {
+          if (evt?.eventId) bucket.events.push(evt.eventId);
+        });
+      }
+
+      if (entry.battle && entry.battle.enemyId) {
+        bucket.battles.push({
+          enemyId: entry.battle.enemyId,
+          context: entry.battle.context ?? 'map',
+          outcome: entry.battle.outcome ?? null,
+          turns: entry.battle.turns ?? null,
+        });
+      }
+    });
+
+    Object.values(byAct).forEach((bucket) => {
+      bucket.events = [...new Set(bucket.events)];
+    });
+
+    return {
+      schemaVersion: 2,
+      generatedAt: new Date().toISOString(),
+      seed: this.runSeed,
+      run: {
+        outcome: summary?.outcome ?? null,
+        actReached: this.currentAct,
+        floorReached:
+          summary?.runStats?.floorReached ?? (this.floorOffset ?? 0) + this.currentLevel + 1,
       },
-      null,
-      2
-    );
+      bossEncountered: this.bossEncountered,
+      deathLevel: this.deathLevel,
+      finalHp,
+      maxHp,
+      finalDutki,
+      currentDutki,
+      deckSize: finalDeck.length,
+      finalDeck,
+      finalRelics,
+      floorHistory,
+      actSummary: byAct,
+      act2: byAct['2'] ?? {
+        floorCount: 0,
+        nodeTypes: {},
+        weather: {},
+        events: [],
+        battles: [],
+      },
+    };
+  }
+
+  /**
+   * Returns the complete run telemetry as a JSON string.
+   * @returns {string}
+   */
+  getRunTelemetryJSON() {
+    return JSON.stringify(this.buildRunTelemetryPayload(), null, 2);
+  }
+
+  /** @returns {void} */
+  publishRunTelemetryIfReady() {
+    if (this._runTelemetryPublished) return;
+    if (!this.runSummary) return;
+    if (this.isSimulationRun) return;
+    if (typeof this.onRunTelemetryReady !== 'function') return;
+
+    try {
+      this.onRunTelemetryReady(this.buildRunTelemetryPayload());
+      this._runTelemetryPublished = true;
+    } catch {
+      // Ignore telemetry publication callback failures; gameplay must not break.
+    }
+  }
+
+  /** @returns {void} */
+  notifyTelemetryDownloaded() {
+    if (typeof this.onTelemetryDownloaded !== 'function') return;
+    const payload = this.buildRunTelemetryPayload();
+    const act2Data = payload.act2 ?? { floorCount: 0 };
+    try {
+      this.onTelemetryDownloaded({
+        outcome: String(payload.run?.outcome ?? 'unknown'),
+        floorReached: Number(payload.run?.floorReached ?? 0),
+        actReached: Number(payload.run?.actReached ?? 1),
+        hasAct2Data: Boolean(act2Data.floorCount > 0),
+      });
+    } catch {
+      // Ignore telemetry download callbacks; exporting JSON must never fail gameplay.
+    }
   }
 
   // ── End Telemetry ──────────────────────────────────────────────────────────
@@ -799,6 +974,18 @@ export class GameState {
    */
   generateRelicChoices(count) {
     return relicSystem.generateRelicChoices(this, count);
+  }
+
+  /**
+   * Builds a 3-choice offer from the Act 2 boss-only relic pool.
+   * Called after Act 1 boss victory before transitioning to Act 2.
+   * @param {number} [count=3]
+   * @returns {string[]}
+   */
+  generateAct2TransitionRelicChoices(count = 3) {
+    const pool = relicSystem.buildAct2TransitionRelicPool(this);
+    if (pool.length === 0) return [];
+    return this._pickUniqueItems(pool, relicLibrary, Math.min(count, pool.length));
   }
 
   /**
@@ -1240,51 +1427,6 @@ export class GameState {
       });
     }
 
-    if (this.enemy.passive === 'brak_reszty') {
-      specials.push({
-        icon: '💸',
-        label: 'Brak Reszty',
-        value: null,
-        tooltip: 'Gdy zadaje obrażenia Krzepie, kradnie 3 dutki.',
-      });
-    }
-
-    if (this.enemy.passive === 'targowanie_sie') {
-      specials.push({
-        icon: '🤝',
-        label: 'Targowanie się',
-        value: null,
-        tooltip: 'Odporny na Rachunek — nie może zbankrutować.',
-      });
-    }
-
-    if (this.enemy.passive === 'ochrona_wizerunku') {
-      specials.push({
-        icon: '🪞',
-        label: 'Ochrona Wizerunku',
-        value: 1,
-        tooltip: 'Każde trafienie zadaje graczowi 1 obrażenie zwrotne.',
-      });
-    }
-
-    if (this.enemy.passive === 'parcie_na_szklo') {
-      specials.push({
-        icon: '🤳',
-        label: 'Parcie na Szkło',
-        value: null,
-        tooltip: 'Gdy gracz ma Lans, na początku tury wroga zyskuje +2 Siły.',
-      });
-    }
-
-    if (this.enemy.passive === 'blokada_parkingowa') {
-      specials.push({
-        icon: '🚧',
-        label: 'Blokada Parkingowa',
-        value: null,
-        tooltip: 'Gracz może zagrać maksymalnie 3 karty na turę.',
-      });
-    }
-
     if (this.enemy.id === 'fiakier') {
       specials.push({
         icon: '🧾',
@@ -1300,6 +1442,16 @@ export class GameState {
         label: 'Pęd',
         value: this.enemy.ped,
         tooltip: 'Fiakier nabrał pędu. Następny atak „Przyspieszenie" zada o tyle więcej obrażeń.',
+      });
+    }
+
+    if (this.enemy.passive === 'kolejka_do_toalety') {
+      specials.push({
+        icon: '🚾',
+        label: 'Licznik Kolejki',
+        value: this.enemy.kolejkaCounter ?? 0,
+        tooltip:
+          'Rośnie o liczbę kart statusu w Twojej ręce na końcu tury wroga. "Gorąca zupa" dodaje 2 + ten licznik kart statusu i zużywa licznik.',
       });
     }
 
@@ -1367,6 +1519,64 @@ export class GameState {
    */
   resetBattle() {
     battleLifecycle.resetBattle(this);
+  }
+
+  /**
+   * Starts Act 2 while preserving run progress (deck, relics, HP, Dutki).
+   * Rebuilds map state and clears combat-scoped runtime flags.
+   */
+  startAct2() {
+    this.currentAct = 2;
+    this.currentActName = 'MORSKIE OKO';
+    // Keep global floor numbering continuous across acts for telemetry/analytics.
+    this.floorOffset = Math.max(this.floorOffset ?? 0, this.maxFloorReached ?? 0);
+
+    // Rebuild a clean deck state from all piles and strip temporary status cards.
+    this.clearStatusCardsFromPiles();
+
+    this.player.block = 0;
+    this.player.status = defaultStatus();
+    this.player.stunned = false;
+    this.player.cardsPlayedThisTurn = 0;
+    this.attackCardsPlayedThisBattle = 0;
+    this.pocztowkaCardsTriggeredThisBattle = 0;
+    this.smyczKeptCardId = null;
+    this.smyczKeptHandIndex = null;
+    this.flaszkaCostSeed = {};
+    this.termometerTurnParity = 0;
+    this.battleTurnsElapsed = 0;
+    this.zegarekFreeSkillAvailable = false;
+    this.enemyBankruptFlag = false;
+    this.enemyBankruptcyPending = false;
+    this.enemyBankruptcyBonus = 0;
+    this.lansBreakEvent = false;
+    this.lansActivatedEvent = false;
+    this.lansDutkiSpentEvent = 0;
+    this.rachunekResistEvent = false;
+    this.dumaPodhalaActive = false;
+    this.schowekRetainPending = false;
+    this.blurBlockAmount = 0;
+    this.zasiekiActive = false;
+    this.goralskiUporDrawPending = 0;
+    this.szalBacyTurnDrawDone = false;
+    this._setLansActive(false);
+    this._resetBattleScopedFlags();
+
+    this.lastVictoryMessage = '';
+    this.pendingBattleDutki = true;
+    this.battleContext = 'map';
+    this.enemy = this._createEnemyState(this.enemy);
+
+    this.generateMap();
+    this.currentScreen = 'map';
+  }
+
+  /**
+   * Returns true if current victory should transition into Act 2.
+   * @returns {boolean}
+   */
+  tryAdvanceActAfterBossVictory() {
+    return battleLifecycle.tryAdvanceActAfterBossVictory(this);
   }
 
   /**

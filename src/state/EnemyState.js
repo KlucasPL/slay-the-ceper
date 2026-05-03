@@ -15,7 +15,7 @@ function emitF(state, kind, payload) {
  * @typedef {import('../data/cards.js').StatusDef} StatusDef
  * @typedef {import('../data/enemies.js').EnemyMoveDef} EnemyMoveDef
  * @typedef {{ name: string, hp: number, maxHp: number, block: number, energy: number, maxEnergy: number, status: StatusDef, stunned: boolean, cardsPlayedThisTurn: number }} PlayerState
- * @typedef {{ id: string, name: string, emoji: string, hp: number, maxHp: number, block: number, nextAttack: number, baseAttack: number, status: StatusDef, rachunek: number, ped: number, spriteSvg: string, phase2SpriteSvg?: string, patternType: 'random'|'loop', pattern: EnemyMoveDef[], phaseTwoPattern: EnemyMoveDef[], patternIndex: number, currentIntent: EnemyMoveDef, tookHpDamageThisTurn: boolean, bossArtifact?: number, passive: string | null, isElite: boolean, isBoss: boolean, stunnedTurns: number, lichwaTriggeredThisTurn: boolean, hartDuchaTriggered: boolean, portraitShameTurns: number, phaseTwoTriggered: boolean, evasionCharges: number, isBankrupt?: boolean }} EnemyState
+ * @typedef {{ id: string, name: string, emoji: string, hp: number, maxHp: number, block: number, nextAttack: number, baseAttack: number, status: StatusDef, rachunek: number, ped: number, spriteSvg: string, phase2SpriteSvg?: string, patternType: 'random'|'loop'|'weather_loop', pattern: EnemyMoveDef[], phaseTwoPattern: EnemyMoveDef[], weatherPatterns?: Record<string, EnemyMoveDef[]>, patternIndex: number, harnasWeatherPatternIndex: number, currentIntent: EnemyMoveDef, tookHpDamageThisTurn: boolean, bossArtifact?: number, passive: string | null, isElite: boolean, isBoss: boolean, stunnedTurns: number, lichwaTriggeredThisTurn: boolean, hartDuchaTriggered: boolean, portraitShameTurns: number, phaseTwoTriggered: boolean, evasionCharges: number, isBankrupt?: boolean, drugiOddechTriggered: boolean, stolenCards: string[], gazDoDechyStacks: number, naporWodyPressure: number }} EnemyState
  */
 
 /**
@@ -68,6 +68,11 @@ export function enemyBankrupt(state) {
     state.lastVictoryMessage = 'Wróg zbankrutował!';
   }
   state.enemyBankruptcyPending = false;
+  // bankructwo_z_bonusem: bonus heal + Dutki on bankruptcy
+  if (state.hasRelic('bankructwo_z_bonusem')) {
+    state.healPlayer(6);
+    state.addDutki(20);
+  }
 }
 
 /**
@@ -125,7 +130,11 @@ export function applyEnemyDebuff(state, key, amount) {
  * @returns {EnemyState}
  */
 export function createEnemyState(state, enemyDef) {
-  const isFinalBossVariant = enemyDef.id === 'boss' || enemyDef.id === 'fiakier';
+  const isFinalBossVariant =
+    enemyDef.id === 'boss' ||
+    enemyDef.id === 'fiakier' ||
+    enemyDef.id === 'krolowa_schroniska' ||
+    enemyDef.id === 'harnas_pogodynka';
   const isMainBoss = enemyDef.id === 'boss';
   const scale = isFinalBossVariant ? 1 : state.enemyScaleFactor;
   const eliteDamageScale = enemyDef.elite ? 1.15 : 1;
@@ -164,6 +173,7 @@ export function createEnemyState(state, enemyDef) {
     patternType: enemyDef.patternType,
     pattern,
     phaseTwoPattern,
+    weatherPatterns: enemyDef.weatherPatterns ?? {},
     patternIndex: 0,
     currentIntent: { type: 'attack', name: 'Atak', damage: 0, hits: 1 },
     tookHpDamageThisTurn: false,
@@ -174,13 +184,24 @@ export function createEnemyState(state, enemyDef) {
     stunnedTurns: 0,
     lichwaTriggeredThisTurn: false,
     hartDuchaTriggered: false,
+    drugiOddechTriggered: false,
+    gazDoDechyStacks: 0,
+    naporWodyPressure: 0,
+    kolejkaCounter: 0,
+    harnasWeatherPatternIndex: 0,
     portraitShameTurns: 0,
     phaseTwoTriggered: false,
     evasionCharges: 0,
+    stolenCards: [],
   };
   builtEnemyState.currentIntent = state._buildEnemyIntent(builtEnemyState);
   builtEnemyState.nextAttack =
     builtEnemyState.currentIntent.type === 'attack' ? builtEnemyState.currentIntent.damage : 0;
+
+  if (enemyDef.passive) {
+    builtEnemyState.status[enemyDef.passive] = true;
+  }
+
   return builtEnemyState;
 }
 
@@ -191,16 +212,20 @@ export function createEnemyState(state, enemyDef) {
  */
 export function pickRandomEnemyDef(state, isElite = false) {
   const filterKind = isElite ? 'enemy_elite' : 'enemy_regular';
+  const currentAct = state.currentAct ?? 1;
   let enemyIds = Object.keys(enemyLibrary).filter(
     (id) =>
       id !== 'boss' &&
       id !== 'fiakier' &&
       id !== 'pomocnik_fiakra' &&
       !enemyLibrary[id]?.eventOnly &&
-      !enemyLibrary[id]?.tutorialOnly
+      !enemyLibrary[id]?.tutorialOnly &&
+      !enemyLibrary[id]?.isBoss
   );
 
   enemyIds = enemyIds.filter((id) => Boolean(enemyLibrary[id]?.elite) === isElite);
+  // filter by act: enemies without act field default to act 1
+  enemyIds = enemyIds.filter((id) => (enemyLibrary[id]?.act ?? 1) === currentAct);
   enemyIds = state.filterPool(filterKind, enemyIds);
 
   if (enemyIds.length === 0) {
@@ -211,7 +236,9 @@ export function pickRandomEnemyDef(state, isElite = false) {
         id !== 'pomocnik_fiakra' &&
         !enemyLibrary[id]?.eventOnly &&
         !enemyLibrary[id]?.tutorialOnly &&
-        Boolean(enemyLibrary[id]?.elite) !== isElite
+        !enemyLibrary[id]?.isBoss &&
+        Boolean(enemyLibrary[id]?.elite) !== isElite &&
+        (enemyLibrary[id]?.act ?? 1) === currentAct
     );
   }
 
@@ -231,8 +258,13 @@ export function pickRandomEnemyDef(state, isElite = false) {
  * @returns {import('../data/enemies.js').EnemyDef}
  */
 export function pickFinalBossDef(state) {
-  const bossIds = state.filterPool('enemy_boss', ['boss', 'fiakier']);
-  const bossId = bossIds[Math.floor(state.rng() * bossIds.length)] ?? 'boss';
+  const currentAct = state.currentAct ?? 1;
+  const act1BossPool = ['boss', 'fiakier'];
+  const act2BossPool = ['krolowa_schroniska', 'harnas_pogodynka'];
+  const pool = currentAct === 2 ? act2BossPool : act1BossPool;
+  const bossIds = state.filterPool('enemy_boss', pool);
+  const fallback = currentAct === 2 ? 'krolowa_schroniska' : 'boss';
+  const bossId = bossIds[Math.floor(state.rng() * bossIds.length)] ?? fallback;
   return enemyLibrary[bossId];
 }
 
@@ -251,6 +283,14 @@ export function rollEnemyAttack(state, enemyState = state.enemy) {
  * @returns {EnemyMoveDef}
  */
 export function buildEnemyIntent(state, enemyState) {
+  if (enemyState.patternType === 'weather_loop') {
+    const wp = enemyState.weatherPatterns ?? {};
+    const weather = state.currentWeather ?? 'clear';
+    const activePattern = wp[weather] && wp[weather].length > 0 ? wp[weather] : (wp['clear'] ?? []);
+    const move = activePattern[enemyState.harnasWeatherPatternIndex % activePattern.length];
+    return { ...move };
+  }
+
   if (enemyState.patternType === 'loop') {
     const activePattern =
       enemyState.phaseTwoTriggered && enemyState.phaseTwoPattern.length > 0
