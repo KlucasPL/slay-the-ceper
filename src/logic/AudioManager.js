@@ -45,6 +45,7 @@ export class AudioManager {
     const fiakierEventUrl = new URL('../audio/fiakier_event.mp3', import.meta.url).href;
     const karykaturaEventUrl = new URL('../audio/karykatura_event.mp3', import.meta.url).href;
     const trzyKubkiEventUrl = new URL('../audio/event_trzy_kubki.mp3', import.meta.url).href;
+    const toiletEventUrl = new URL('../audio/event_toilet.mp3', import.meta.url).href;
 
     /** @type {HTMLAudioElement[]} Menu BGM pool — both tracks are pre-loaded; one is active at a time. */
     this.menuTrackPool = menuUrls.map((url) => this._createTrack(url, true, 0.7));
@@ -74,6 +75,8 @@ export class AudioManager {
     this.karykaturaEventTrack = this._createTrack(karykaturaEventUrl, true, 0.5);
     /** @type {HTMLAudioElement} */
     this.trzyKubkiEventTrack = this._createTrack(trzyKubkiEventUrl, true, 0.5);
+    /** @type {HTMLAudioElement} */
+    this.toiletEventTrack = this._createTrack(toiletEventUrl, true, 0.5);
 
     /** @type {'title' | 'inGame'} */
     this.context = 'title';
@@ -213,6 +216,9 @@ export class AudioManager {
     } else if (eventId === 'event_hazard_karton') {
       this.eventSceneTrack = 'trzy_kubki';
       eventTrack = this.trzyKubkiEventTrack;
+    } else if (eventId === 'event_korek_do_toalety') {
+      this.eventSceneTrack = 'toilet';
+      eventTrack = this.toiletEventTrack;
     } else {
       this.eventSceneTrack = 'fiakier';
     }
@@ -228,6 +234,10 @@ export class AudioManager {
 
   playKarykaturaEventMusic() {
     this.playEventMusic('event_karykaturzysta');
+  }
+
+  playToiletEventMusic() {
+    this.playEventMusic('event_korek_do_toalety');
   }
 
   playBossMusic() {
@@ -359,6 +369,8 @@ export class AudioManager {
     this.karykaturaEventTrack.currentTime = 0;
     this.trzyKubkiEventTrack.pause();
     this.trzyKubkiEventTrack.currentTime = 0;
+    this.toiletEventTrack.pause();
+    this.toiletEventTrack.currentTime = 0;
   }
 
   playVictoryTheme() {
