@@ -8,6 +8,8 @@ import {
   getTextSizePreset,
   setTextSizePreset,
   getTextSizeScale,
+  getAnalyticsEnabled,
+  setAnalyticsEnabled,
 } from '../logic/settings.js';
 import * as uiHelpers from './helpers/UIHelpers.js';
 import * as cardRenderer from './renderers/CardRenderer.js';
@@ -168,6 +170,9 @@ export class UIManager {
     document
       .getElementById('option-text-size-btn')
       ?.addEventListener('click', () => this._cycleTextSizeOption());
+    document
+      .getElementById('option-analytics-btn')
+      ?.addEventListener('click', () => this._toggleAnalyticsOption());
     document
       .getElementById('option-back-main-btn')
       ?.addEventListener('click', () => this._returnToMainMenuFromOptions());
@@ -969,11 +974,13 @@ Po instalacji gra działa offline i bez paska przeglądarki.`;
     const textSizeBtn = document.getElementById('option-text-size-btn');
     if (textSizeBtn) {
       const preset = getTextSizePreset();
-      const label = preset === 'xlarge' ? 'BARDZO DUZY' : preset === 'large' ? 'DUZY' : 'NORMALNY';
+      const label = preset === 'xlarge' ? 'BARDZO DUŻY' : preset === 'large' ? 'DUŻY' : 'NORMALNY';
       textSizeBtn.textContent = label;
       textSizeBtn.classList.toggle('is-on', preset !== 'normal');
       textSizeBtn.setAttribute('aria-label', `Rozmiar tekstu: ${label}`);
     }
+
+    this._renderAnalyticsOption();
   }
 
   _toggleMenuMusicOption() {
@@ -1000,6 +1007,25 @@ Po instalacji gra działa offline i bez paska przeglądarki.`;
     const next = current === 'normal' ? 'large' : current === 'large' ? 'xlarge' : 'normal';
     setTextSizePreset(next);
     this._applyTextSizePreference();
+    this._renderAudioOptions();
+  }
+
+  _renderAnalyticsOption() {
+    const analyticsBtn = document.getElementById('option-analytics-btn');
+    if (!analyticsBtn) return;
+    const enabled = getAnalyticsEnabled();
+    analyticsBtn.textContent = enabled ? 'ON' : 'OFF';
+    analyticsBtn.classList.toggle('is-on', enabled);
+    analyticsBtn.setAttribute('aria-pressed', String(enabled));
+  }
+
+  _toggleAnalyticsOption() {
+    if (this._isInputLocked()) return;
+    const current = getAnalyticsEnabled();
+    setAnalyticsEnabled(!current);
+    if (this.analytics && this.analytics.setAnalyticsEnabled) {
+      this.analytics.setAnalyticsEnabled(!current);
+    }
     this._renderAudioOptions();
   }
 

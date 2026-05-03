@@ -60,6 +60,14 @@ export class AnalyticsManager {
     this.config = config;
     this.enabled = false;
     this.debugEnabled = Boolean(config.enableInfoLog);
+    this.analyticsUserEnabled = config.analyticsEnabled ?? true;
+  }
+
+  /**
+   * @param {boolean} value
+   */
+  setAnalyticsEnabled(value) {
+    this.analyticsUserEnabled = value;
   }
 
   /**
@@ -97,6 +105,11 @@ export class AnalyticsManager {
 
   /** @returns {boolean} */
   init() {
+    if (!this.analyticsUserEnabled) {
+      this.debug('init skipped: analytics disabled by user');
+      this.enabled = false;
+      return false;
+    }
     if (!sdk) {
       this.debug('init skipped: GameAnalytics SDK unavailable in this runtime');
       return false;
@@ -145,7 +158,7 @@ export class AnalyticsManager {
    * @returns {void}
    */
   trackEngineEvent(kind, payload, state) {
-    if (!this.enabled || !sdk) return;
+    if (!this.enabled || !this.analyticsUserEnabled || !sdk) return;
     const hasProgression =
       typeof sdk.addProgressionEvent === 'function' || typeof sdk === 'function';
     const hasDesign = typeof sdk.addDesignEvent === 'function' || typeof sdk === 'function';
@@ -409,7 +422,7 @@ export class AnalyticsManager {
    * @returns {void}
    */
   trackTelemetryDownload(meta) {
-    if (!this.enabled || !sdk) {
+    if (!this.enabled || !this.analyticsUserEnabled || !sdk) {
       this.debug('telemetry_download skipped: analytics disabled or SDK unavailable');
       return;
     }
@@ -449,7 +462,7 @@ export class AnalyticsManager {
    * @returns {void}
    */
   trackRunTelemetry(payload) {
-    if (!this.enabled || !sdk) {
+    if (!this.enabled || !this.analyticsUserEnabled || !sdk) {
       this.debug('run_telemetry skipped: analytics disabled or SDK unavailable');
       return;
     }
@@ -506,7 +519,7 @@ export class AnalyticsManager {
    * @returns {void}
    */
   trackClientError(message, severity = 'error') {
-    if (!this.enabled || !sdk) return;
+    if (!this.enabled || !this.analyticsUserEnabled || !sdk) return;
     if (!(typeof sdk.addErrorEvent === 'function' || typeof sdk === 'function')) {
       this.debug('client_error skipped: addErrorEvent unavailable');
       return;

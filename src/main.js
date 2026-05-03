@@ -5,7 +5,7 @@ import './styles/animations.css';
 
 import { AudioManager } from './logic/AudioManager.js';
 import { AnalyticsManager } from './logic/AnalyticsManager.js';
-import { getSkipIntro } from './logic/settings.js';
+import { getSkipIntro, getAnalyticsEnabled } from './logic/settings.js';
 import { GameState } from './state/GameState.js';
 import { UIManager } from './ui/UIManager.js';
 import { MotionComicIntro } from './ui/intro/MotionComicIntro.js';
@@ -104,6 +104,7 @@ const analytics = new AnalyticsManager({
   secretKey: GAME_ANALYTICS_SECRET_KEY,
   build: GAME_ANALYTICS_BUILD,
   enableInfoLog: GAME_ANALYTICS_INFO_LOG,
+  analyticsEnabled: getAnalyticsEnabled(),
 });
 const analyticsInitialized = analytics.init();
 if (import.meta.env.DEV) {
