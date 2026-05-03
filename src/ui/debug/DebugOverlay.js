@@ -24,7 +24,7 @@ export class DebugOverlay {
     this.root = this._buildUI();
     document.body.appendChild(this.root);
     this._bindToggleKeys();
-    this._log('Debug overlay ready. Use ~ or F9 to toggle.');
+    this._log('Debug overlay gotowy. Użyj ~ lub F9 aby włączyć.');
   }
 
   _ensureStyles() {
@@ -148,7 +148,7 @@ export class DebugOverlay {
     panel.className = 'debug-panel';
     panel.dataset.tab = 'map';
 
-    const mapRowsGroup = this._group('Map Rows');
+    const mapRowsGroup = this._group('Liczba wierszy mapy');
     const rowsLabel = document.createElement('div');
     rowsLabel.textContent = `Rows: ${this.state.debugMapRows}`;
     const rowsSlider = document.createElement('input');
@@ -162,7 +162,7 @@ export class DebugOverlay {
       this.state.setDebugMapRows(Number(rowsSlider.value));
     });
 
-    const regenBtn = this._button('Regenerate Map', () => {
+    const regenBtn = this._button('Wygeneruj mapę ponownie', () => {
       this.state.generateMap(this.state.debugMapRows);
       this.ui.applyDebugRefresh({ checkWin: false, refreshMap: true });
       this._log(`Regenerated map with ${this.state.debugMapRows} rows.`);
@@ -170,15 +170,15 @@ export class DebugOverlay {
 
     mapRowsGroup.append(rowsLabel, rowsSlider, regenBtn);
 
-    const overrideGroup = this._group('Node Override');
+    const overrideGroup = this._group('Nadpisanie węzła');
     const overrideSelect = document.createElement('select');
     overrideSelect.className = 'debug-select';
     [
-      { value: '', label: 'Disabled' },
-      { value: 'elite', label: 'Elite' },
-      { value: 'shop', label: 'Shop' },
+      { value: '', label: 'Wyłączony' },
+      { value: 'elite', label: 'Elita' },
+      { value: 'shop', label: 'Sklep' },
       { value: 'campfire', label: 'Watra' },
-      { value: 'treasure', label: 'Treasure' },
+      { value: 'treasure', label: 'Skarb' },
       { value: 'boss', label: 'Boss' },
     ].forEach((entry) => {
       const opt = document.createElement('option');
@@ -189,7 +189,7 @@ export class DebugOverlay {
     overrideSelect.addEventListener('change', () => {
       const value = overrideSelect.value || null;
       this.state.setDebugNextNodeType(value);
-      this._log(value ? `Next node override: ${value}` : 'Next node override disabled.');
+      this._log(value ? `Nadpisanie węzła: ${value}` : 'Nadpisanie węzła wyłączone.');
     });
 
     const fogToggleWrap = document.createElement('label');
@@ -200,15 +200,15 @@ export class DebugOverlay {
     fogToggle.addEventListener('change', () => {
       this.state.setDebugRevealAllMap(fogToggle.checked);
       this.ui.applyDebugRefresh({ checkWin: false, refreshMap: true });
-      this._log(`Fog of war: ${fogToggle.checked ? 'revealed' : 'default'}.`);
+      this._log(`Mgła wojenna: ${fogToggle.checked ? 'odkryta' : 'domyślna'}.`);
     });
     const fogLabel = document.createElement('span');
-    fogLabel.textContent = 'Reveal all nodes and paths';
+    fogLabel.textContent = 'Odkryj wszystkie węzły i ścieżki';
     fogToggleWrap.append(fogToggle, fogLabel);
 
     overrideGroup.append(overrideSelect, fogToggleWrap);
 
-    const eventGroup = this._group('Event Tools');
+    const eventGroup = this._group('Narzędzia wydarzeń');
     const eventSelect = document.createElement('select');
     eventSelect.className = 'debug-select';
     Object.values(eventLibrary)
@@ -219,11 +219,15 @@ export class DebugOverlay {
         opt.textContent = `${eventDef.title} (${eventDef.id})`;
         eventSelect.appendChild(opt);
       });
-    const spawnEventBtn = this._button('Spawn Selected Event', () => {
+    const spawnEventBtn = this._button('Wywołaj wybrane wydarzenie', () => {
       const eventId = eventSelect.value;
       const started = this.ui.launchDebugEvent(eventId);
       const eventTitle = eventLibrary[eventId]?.title ?? eventId;
-      this._log(started ? `Spawned event: ${eventTitle}` : `Failed to spawn event: ${eventTitle}`);
+      this._log(
+        started
+          ? `Wywołano wydarzenie: ${eventTitle}`
+          : `Nie udało się wywołać wydarzenia: ${eventTitle}`
+      );
     });
     eventGroup.append(eventSelect, spawnEventBtn);
 
@@ -236,7 +240,7 @@ export class DebugOverlay {
     panel.className = 'debug-panel';
     panel.dataset.tab = 'battle';
 
-    const spawnGroup = this._group('Enemy Spawner');
+    const spawnGroup = this._group('Tworzenie wroga');
     const enemySelect = document.createElement('select');
     enemySelect.className = 'debug-select';
     Object.keys(enemyLibrary)
@@ -248,26 +252,26 @@ export class DebugOverlay {
         opt.textContent = enemyId;
         enemySelect.appendChild(opt);
       });
-    const spawnBtn = this._button('Launch Battle', () => {
+    const spawnBtn = this._button('Rozpocznij walkę', () => {
       const started = this.ui.launchDebugBattle(enemySelect.value);
       if (started) {
         this._syncEnemyHpControl(enemyHpSlider, enemyHpLabel);
-        this._log(`Spawned enemy: ${enemySelect.value}`);
+        this._log(`Stworzono wroga: ${enemySelect.value}`);
       }
     });
     spawnGroup.append(enemySelect, spawnBtn);
 
-    const statusGroup = this._group('Status Injector');
-    const weakBtn = this._button('Weak (2)', () => this._applyBattleStatus('weak', 2));
+    const statusGroup = this._group('Dodaj status');
+    const weakBtn = this._button('Słabość (2)', () => this._applyBattleStatus('weak', 2));
     const vulnBtn = this._button('Podatność (2)', () => this._applyBattleStatus('vulnerable', 2));
-    const frailBtn = this._button('Frail (2)', () => this._applyBattleStatus('fragile', 2));
-    const stunBtn = this._button('Stun (1)', () => this._applyBattleStatus('stun', 1));
+    const frailBtn = this._button('Kruchość (2)', () => this._applyBattleStatus('fragile', 2));
+    const stunBtn = this._button('Ogłuszenie (1)', () => this._applyBattleStatus('stun', 1));
     const statusRow = document.createElement('div');
     statusRow.className = 'debug-row triple';
     statusRow.append(weakBtn, vulnBtn, frailBtn);
     statusGroup.append(statusRow, stunBtn);
 
-    const hpGroup = this._group('Enemy HP');
+    const hpGroup = this._group('HP wroga');
     const enemyHpLabel = document.createElement('div');
     const enemyHpSlider = document.createElement('input');
     enemyHpSlider.className = 'debug-input';
@@ -280,21 +284,21 @@ export class DebugOverlay {
       }
       this.ui.applyDebugRefresh();
       this._syncEnemyHpControl(enemyHpSlider, enemyHpLabel);
-      this._log(`Set enemy HP to ${this.state.enemy.hp}.`);
+      this._log(`Ustawiono HP wroga na ${this.state.enemy.hp}.`);
     });
-    const killBtn = this._button('Insta-Kill', () => {
+    const killBtn = this._button('Zabij natychmiast', () => {
       this.state.enemy.hp = 0;
       this.ui.applyDebugRefresh();
       this._syncEnemyHpControl(enemyHpSlider, enemyHpLabel);
-      this._log('Enemy HP set to 0.');
+      this._log('HP wroga ustawione na 0.');
     });
     hpGroup.append(enemyHpLabel, enemyHpSlider, killBtn);
 
-    const actionGroup = this._group('Actions');
-    const resetBtn = this._button('Reset Current Turn Actions', () => {
+    const actionGroup = this._group('Akcje');
+    const resetBtn = this._button('Zresetuj akcje obecnej tury', () => {
       this.state.resetCurrentTurnActions();
       this.ui.applyDebugRefresh({ checkWin: false });
-      this._log('Reset current turn actions.');
+      this._log('Zresetowano akcje obecnej tury.');
     });
     actionGroup.append(resetBtn);
 
@@ -308,19 +312,19 @@ export class DebugOverlay {
     panel.className = 'debug-panel';
     panel.dataset.tab = 'player';
 
-    const goldGroup = this._group('Economy');
+    const goldGroup = this._group('Ekonomia');
     const goldInput = document.createElement('input');
     goldInput.className = 'debug-input';
     goldInput.type = 'number';
     goldInput.value = String(this.state.dutki);
-    const setGoldBtn = this._button('Set Dutki', () => {
+    const setGoldBtn = this._button('Ustaw Dutki', () => {
       this.state.dutki = Math.max(0, Math.floor(Number(goldInput.value) || 0));
       this.ui.applyDebugRefresh({ checkWin: false });
-      this._log(`Set dutki to ${this.state.dutki}.`);
+      this._log(`Ustawiono dutki na ${this.state.dutki}.`);
     });
     goldGroup.append(goldInput, setGoldBtn);
 
-    const relicGroup = this._group('Relic Grant');
+    const relicGroup = this._group('Przyznanie pamiątki');
     const relicSelect = document.createElement('select');
     relicSelect.className = 'debug-select';
     Object.keys(relicLibrary)
@@ -332,29 +336,31 @@ export class DebugOverlay {
         relicSelect.appendChild(opt);
       });
 
-    const grantRelicBtn = this._button('Grant Selected Relic', () => {
+    const grantRelicBtn = this._button('Przyznaj wybraną pamiątkę', () => {
       const added = this.state.addRelic(relicSelect.value);
       this.ui.applyDebugRefresh({ checkWin: false });
       this._log(
-        added ? `Granted relic: ${relicSelect.value}` : `Relic not added: ${relicSelect.value}`
+        added
+          ? `Przyznano pamiątkę: ${relicSelect.value}`
+          : `Nie dodano pamiątki: ${relicSelect.value}`
       );
     });
 
-    const randomRelicBtn = this._button('Grant Random Relic', () => {
+    const randomRelicBtn = this._button('Przyznaj losową pamiątkę', () => {
       const available = Object.keys(relicLibrary).filter((id) => !this.state.relics.includes(id));
       if (available.length === 0) {
-        this._log('No relics left to grant.');
+        this._log('Nie zostały żadne pamiątki do przyznania.');
         return;
       }
       const randomId = available[Math.floor(Math.random() * available.length)];
       this.state.addRelic(randomId);
       this.ui.applyDebugRefresh({ checkWin: false });
-      this._log(`Granted random relic: ${randomId}`);
+      this._log(`Przyznano losową pamiątkę: ${randomId}`);
     });
 
     relicGroup.append(relicSelect, grantRelicBtn, randomRelicBtn);
 
-    const playerGroup = this._group('Player');
+    const playerGroup = this._group('Gracz');
     const godModeWrap = document.createElement('label');
     godModeWrap.className = 'debug-toggle';
     const godModeToggle = document.createElement('input');
@@ -362,21 +368,21 @@ export class DebugOverlay {
     godModeToggle.checked = this.state.debugGodMode;
     godModeToggle.addEventListener('change', () => {
       this.state.setDebugGodMode(godModeToggle.checked);
-      this._log(`God mode: ${godModeToggle.checked ? 'ON' : 'OFF'}.`);
+      this._log(`Tryb Boga: ${godModeToggle.checked ? 'WŁ' : 'WYŁ'}.`);
     });
     const godModeLabel = document.createElement('span');
-    godModeLabel.textContent = 'God Mode (player takes 0 damage)';
+    godModeLabel.textContent = 'Tryb Boga (gracz nie otrzymuje obrażeń)';
     godModeWrap.append(godModeToggle, godModeLabel);
 
-    const fullHealBtn = this._button('Full Heal', () => {
+    const fullHealBtn = this._button('Pełne leczenie', () => {
       this.state.player.hp = this.state.player.maxHp;
       this.ui.applyDebugRefresh({ checkWin: false });
-      this._log(`Player healed to ${this.state.player.maxHp}.`);
+      this._log(`Gracz wyleczony do ${this.state.player.maxHp}.`);
     });
 
     playerGroup.append(godModeWrap, fullHealBtn);
 
-    const playerStatusGroup = this._group('Player Status Injector');
+    const playerStatusGroup = this._group('Dodaj status gracza');
     /** @type {Array<{value: string, label: string, numeric: boolean}>} */
     const playerStatuses = [
       { value: 'lans', label: 'Lans', numeric: false },
@@ -384,7 +390,7 @@ export class DebugOverlay {
       { value: 'weak', label: 'Słabość +2', numeric: true },
       { value: 'fragile', label: 'Kruchość +2', numeric: true },
       { value: 'vulnerable', label: 'Podatność +2', numeric: true },
-      { value: 'next_double', label: 'Next Double', numeric: false },
+      { value: 'next_double', label: 'Następny podwójny', numeric: false },
       { value: 'energy_next_turn', label: 'Energia +1', numeric: true },
       { value: 'duma_podhala', label: 'Duma Podhala +1', numeric: true },
       { value: 'furia_turysty', label: 'Furia Turysty +1', numeric: true },
@@ -409,7 +415,7 @@ export class DebugOverlay {
     const playerStatusAmountRow = document.createElement('div');
     playerStatusAmountRow.className = 'debug-row inline';
     const playerStatusAmountLabel = document.createElement('span');
-    playerStatusAmountLabel.textContent = 'Amount';
+    playerStatusAmountLabel.textContent = 'Ilość';
     playerStatusAmountLabel.style.fontSize = '11px';
 
     const playerStatusBoolRow = document.createElement('label');
@@ -418,7 +424,7 @@ export class DebugOverlay {
     playerStatusBoolInput.type = 'checkbox';
     playerStatusBoolInput.checked = true;
     const playerStatusBoolLabel = document.createElement('span');
-    playerStatusBoolLabel.textContent = 'Enabled';
+    playerStatusBoolLabel.textContent = 'Włączony';
     playerStatusBoolRow.append(playerStatusBoolInput, playerStatusBoolLabel);
 
     const syncAmountVisibility = () => {
@@ -432,9 +438,9 @@ export class DebugOverlay {
 
     playerStatusAmountRow.append(playerStatusAmountLabel, playerStatusAmountInput);
 
-    const applyPlayerStatusBtn = this._button('Apply to Player', () => {
+    const applyPlayerStatusBtn = this._button('Zastosuj u gracza', () => {
       if (this.state.currentScreen !== 'battle') {
-        this._log('Player status: only in battle.');
+        this._log('Status gracza: tylko podczas walki.');
         return;
       }
       const statusKey = playerStatusSelect.value;
@@ -450,12 +456,12 @@ export class DebugOverlay {
             : 1;
       this.state.applyPlayerDebugStatus(statusKey, amount);
       this.ui.applyDebugRefresh({ checkWin: false });
-      this._log(`Applied player status: ${statusKey} (${amount}).`);
+      this._log(`Zastosowano status gracza: ${statusKey} (${amount}).`);
     });
 
-    const clearPlayerStatusBtn = this._button('Clear All Player Statuses', () => {
+    const clearPlayerStatusBtn = this._button('Wyczyść wszystkie statusy gracza', () => {
       if (this.state.currentScreen !== 'battle') {
-        this._log('Player status: only in battle.');
+        this._log('Status gracza: tylko podczas walki.');
         return;
       }
       this.state.applyPlayerDebugStatus('strength', 0);
@@ -468,7 +474,7 @@ export class DebugOverlay {
       this.state.applyPlayerDebugStatus('duma_podhala', 0);
       this.state.applyPlayerDebugStatus('furia_turysty', 0);
       this.ui.applyDebugRefresh({ checkWin: false });
-      this._log('Cleared all player statuses.');
+      this._log('Wyczyszczono wszystkie statusy gracza.');
     });
 
     playerStatusGroup.append(
@@ -486,14 +492,14 @@ export class DebugOverlay {
   _applyBattleStatus(status, amount) {
     this.state.applyEnemyDebugStatus(status, amount);
     this.ui.applyDebugRefresh({ checkWin: false });
-    this._log(`Applied ${status} (${amount}) to enemy.`);
+    this._log(`Zastosowano ${status} (${amount}) u wroga.`);
   }
 
   _syncEnemyHpControl(slider, label) {
     const max = Math.max(1, this.state.enemy.maxHp);
     slider.max = String(max);
     slider.value = String(Math.max(0, Math.min(this.state.enemy.hp, max)));
-    label.textContent = `Enemy HP: ${this.state.enemy.hp} / ${this.state.enemy.maxHp}`;
+    label.textContent = `HP wroga: ${this.state.enemy.hp} / ${this.state.enemy.maxHp}`;
   }
 
   _group(title) {

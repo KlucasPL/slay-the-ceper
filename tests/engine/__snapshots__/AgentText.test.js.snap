@@ -1,31 +1,31 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`renderObservation > battle screen > shouldRenderBattleCompact 1`] = `
-"## BATTLE
+"## WALKA
 fl:2 act:1 wx:Słoneczna
 P hp:45/80 blk:10 en:2/3 str:2 wk:1
 E(Cepr) hp:30/50 blk:5 vul:2 int: Cios 8
 dk:8 dc:3 ex:0
 
-## HAND
+## RĘKA
 1.Cios Ciupagą(1) 2.Góralska Obrona(1)
 
-## LEGAL
+## DOZWOLONE
 1.play_card #1 "Cios Ciupagą" 2.play_card #2 "Góralska Obrona" 3.end_turn"
 `;
 
 exports[`renderObservation > battle screen > shouldRenderBattleInEnglish 1`] = `
-"## BATTLE
-Floor: 2 | Act: 1 | weather: Słoneczna
-Player: HP 45/80 | Block 10 | Energy 2/3 | Strength:2 Weak:1
-Enemy: Cepr | HP 30/50 | Block 5 | Vulnerable:2 intent: Cios 8
-deck: 8 | discard: 3 | exhaust: 0
+"## WALKA
+Piętro: 2 | Akt: 1 | pogoda: Słoneczna
+Gracz: Krzepa 45/80 | Garda 10 | Oscypki 2/3 | Siła:2 Słabość:1
+Wróg: Cepr | Krzepa 30/50 | Garda 5 | Podatność:2 zamiarem: Cios 8
+talia: 8 | odrzut: 3 | przepad: 0
 
-## HAND
+## RĘKA
   1. [1] Cios Ciupagą — Zadaj 6.
   2. [1] Góralska Obrona — Zyskaj 5 Gardy.
 
-## LEGAL
+## DOZWOLONE
   1. play_card #1 "Cios Ciupagą"
   2. play_card #2 "Góralska Obrona"
   3. end_turn"
@@ -49,20 +49,20 @@ talia: 8 | odrzucone: 3 | zniszczone: 0
 `;
 
 exports[`renderObservation > map screen > shouldRenderMapCompact 1`] = `
-"## MAP
+"## MAPA
 fl:1 act:1 dk:99
 node:battle lvl:0/15
 
-## LEGAL
+## DOZWOLONE
 1.travel floor:1 node:0"
 `;
 
 exports[`renderObservation > map screen > shouldRenderMapInEnglish 1`] = `
-"## MAP
-Floor: 1 | Act: 1 | Coins: 99
+"## MAPA
+Piętro: 1 | Akt: 1 | Dutki: 99
 Current node: battle (level 0/15)
 
-## LEGAL
+## DOZWOLONE
   1. travel floor:1 node:0"
 `;
 
@@ -76,22 +76,22 @@ Current node: battle (level 0/15)
 `;
 
 exports[`renderObservation > reward screen > shouldRenderRewardCompact 1`] = `
-"## REWARD
+"## NAGRODA
 cards:cios_ciupaga,goralska_obrona,zawierka
 
-## LEGAL
+## DOZWOLONE
 1.reward_pick_card "cios_ciupaga" 2.reward_pick_card "goralska_obrona" 3.reward_pick_card "zawierka" 4.reward_pick_card null (skip)"
 `;
 
 exports[`renderObservation > reward screen > shouldRenderRewardInEnglish 1`] = `
-"## REWARD
+"## NAGRODA
 Cards: cios_ciupaga, goralska_obrona, zawierka
 
-## LEGAL
+## DOZWOLONE
   1. reward_pick_card "cios_ciupaga"
   2. reward_pick_card "goralska_obrona"
   3. reward_pick_card "zawierka"
-  4. reward_pick_card null (Skip rewards)"
+  4. reward_pick_card null (Pomiń nagrody)"
 `;
 
 exports[`renderObservation > reward screen > shouldRenderRewardInPolish 1`] = `
@@ -106,21 +106,21 @@ Cards: cios_ciupaga, goralska_obrona, zawierka
 `;
 
 exports[`renderObservation > shop screen > shouldRenderShopCompact 1`] = `
-"## SHOP
+"## SKLEP
 dk:200
 cards:cios_ciupaga,redyk,zawierka relic:pas_bacowski
 
-## LEGAL
+## DOZWOLONE
 1.shop_buy_card "cios_ciupaga" 2.shop_leave"
 `;
 
 exports[`renderObservation > shop screen > shouldRenderShopInEnglish 1`] = `
-"## SHOP
-Coins: 200
+"## SKLEP
+Dutki: 200
 Cards: cios_ciupaga, redyk, zawierka
 Relic: pas_bacowski
 
-## LEGAL
+## DOZWOLONE
   1. shop_buy_card "cios_ciupaga"
   2. shop_leave"
 `;
@@ -143,7 +143,7 @@ out:LOSS"
 
 exports[`renderObservation > terminal screen > shouldRenderTerminalInEnglish 1`] = `
 "## TERMINAL
-Outcome: Victory"
+Wynik: Zwycięstwo"
 `;
 
 exports[`renderObservation > terminal screen > shouldRenderWinInPolish 1`] = `
