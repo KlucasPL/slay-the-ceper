@@ -172,7 +172,9 @@ export function buyItem(state, item, type) {
  *   battleContext: 'map' | 'event' | 'debug' | 'tutorial',
  *   battleTurnsElapsed: number,
  *   healPlayer: (amount: number) => void,
- *   maryna: { flags: { kiesaFirstWinClaimed: boolean } }
+ *   maryna: { flags: { kiesaFirstWinClaimed: boolean } },
+ *   emit: (kind: string, payload: Record<string, unknown>) => void,
+ *   enemy: { id: string, isBankrupt?: boolean, isElite: boolean }
  * }} state
  * @returns {number}
  */
@@ -227,5 +229,13 @@ export function grantBattleDutki(state) {
   if (state.hasRelic('pasterski_termos')) {
     state.player.hp = Math.max(1, state.player.hp - 2);
   }
+
+  state.emit('resource_gained', {
+    currency: 'dutki',
+    amount: drop,
+    source: 'battle',
+    enemyId: state.enemy?.id ?? 'unknown',
+  });
+
   return drop;
 }

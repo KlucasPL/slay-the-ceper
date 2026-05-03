@@ -6,7 +6,7 @@ import gameanalytics from 'gameanalytics';
  *   'card_drawn'|'card_played'|'card_skipped'|'card_exhausted'|'enemy_move'|
  *   'status_applied'|'shop_opened'|'shop_purchase'|'event_entered'|'event_resolved'|
  *   'reward_offered'|'reward_picked'|'campfire_choice'|'relic_gained'|'boon_offered'|
- *   'boon_picked'|'deck_mutation'|'card_stolen'} EngineEventKind
+ *   'boon_picked'|'deck_mutation'|'card_stolen'|'resource_gained'} EngineEventKind
  */
 
 /**
@@ -171,8 +171,8 @@ export class AnalyticsManager {
         case 'run_ended': {
           const status =
             payload.outcome === 'player_win'
-              ? enums.EGAProgressionStatus.Complete
-              : enums.EGAProgressionStatus.Fail;
+              ? (enums.EGAProgressionStatus?.Complete ?? 2)
+              : (enums.EGAProgressionStatus?.Fail ?? 3);
           this.call(
             'addProgressionEvent',
             status,
@@ -196,9 +196,83 @@ export class AnalyticsManager {
           const enemyId = sanitizeEventPart(payload?.enemy?.id);
           const status =
             payload.outcome === 'player_win'
-              ? enums.EGAProgressionStatus.Complete
-              : enums.EGAProgressionStatus.Fail;
+              ? (enums.EGAProgressionStatus?.Complete ?? 2)
+              : (enums.EGAProgressionStatus?.Fail ?? 3);
           this.call('addProgressionEvent', status, 'battle', enemyId);
+          return;
+        }
+        case 'map_generated': {
+          this.call('addDesignEvent', 'map_generated:rows', Number(payload.rows ?? 0));
+          return;
+        }
+        case 'weather_entered': {
+          this.call(
+            'addDesignEvent',
+            `weather_entered:${sanitizeEventPart(payload?.weather?.id ?? 'unknown')}`
+          );
+          return;
+        }
+        case 'turn_started': {
+          this.call('addDesignEvent', 'turn_started', Number(payload.battleTurn ?? 0));
+          return;
+        }
+        case 'turn_ended': {
+          this.call('addDesignEvent', 'turn_ended', Number(payload.battleTurn ?? 0));
+          return;
+        }
+        case 'card_drawn': {
+          this.call(
+            'addDesignEvent',
+            `card_drawn:${sanitizeEventPart(payload?.card?.id ?? 'unknown')}`
+          );
+          return;
+        }
+        case 'card_played': {
+          this.call(
+            'addDesignEvent',
+            `card_played:${sanitizeEventPart(payload?.card?.id ?? 'unknown')}`,
+            Number(payload.cost ?? 0)
+          );
+          return;
+        }
+        case 'card_skipped': {
+          this.call(
+            'addDesignEvent',
+            `card_skipped:${sanitizeEventPart(payload?.card?.id ?? 'unknown')}`
+          );
+          return;
+        }
+        case 'card_exhausted': {
+          this.call(
+            'addDesignEvent',
+            `card_exhausted:${sanitizeEventPart(payload?.card?.id ?? 'unknown')}`
+          );
+          return;
+        }
+        case 'card_stolen': {
+          this.call('addDesignEvent', `card_stolen:${sanitizeEventPart(payload.cardId ?? 'unknown')}`);
+          return;
+        }
+        case 'enemy_move': {
+          const enemyId = sanitizeEventPart(payload?.enemy?.id ?? 'unknown');
+          const intentType = sanitizeEventPart(payload.intentType ?? 'unknown');
+          this.call('addDesignEvent', `enemy_move:${enemyId}:${intentType}`);
+          return;
+        }
+        case 'status_applied': {
+          const target = sanitizeEventPart(payload.target ?? 'unknown');
+          const statusId = sanitizeEventPart(payload.status ?? 'unknown');
+          this.call(
+            'addDesignEvent',
+            `status_applied:${target}:${statusId}`,
+            Number(payload.amount ?? 0)
+          );
+          return;
+        }
+        case 'shop_opened': {
+          const cardCount = Array.isArray(payload.cards) ? payload.cards.length : 0;
+          this.call('addDesignEvent', 'shop_opened:cards', cardCount);
+          this.call('addDesignEvent', 'shop_opened:has_relic', payload.relic ? 1 : 0);
           return;
         }
         case 'shop_purchase': {
@@ -218,6 +292,26 @@ export class AnalyticsManager {
           }
           return;
         }
+        case 'resource_gained': {
+          const amount = Number(payload.amount ?? 0);
+          const currency = sanitizeEventPart(payload.currency || 'dutki');
+          const source = sanitizeEventPart(payload.source || 'unknown');
+          const itemId = sanitizeEventPart(payload.itemId || payload.enemyId || 'unknown');
+          if (
+            amount > 0 &&
+            (typeof sdk.addResourceEvent === 'function' || typeof sdk === 'function')
+          ) {
+            this.call(
+              'addResourceEvent',
+              enums.EGAResourceFlowType?.Source ?? 1,
+              currency,
+              amount,
+              source,
+              itemId
+            );
+          }
+          return;
+        }
         case 'reward_picked': {
           this.call(
             'addDesignEvent',
@@ -225,10 +319,30 @@ export class AnalyticsManager {
           );
           return;
         }
+        case 'reward_offered': {
+          const entities = Array.isArray(payload.entities) ? payload.entities : [];
+          this.call('addDesignEvent', 'reward_offered:count', entities.length);
+          if (entities.length > 0) {
+            this.call('addDesignEvent', `reward_offered:first_${sanitizeEventPart(entities[0]?.id)}`);
+          }
+          return;
+        }
+        case 'event_entered': {
+          const eventId = sanitizeEventPart(payload?.event?.id ?? 'unknown');
+          this.call('addProgressionEvent', enums.EGAProgressionStatus?.Start ?? 1, 'event', eventId);
+          this.call('addDesignEvent', `event_entered:${eventId}`);
+          return;
+        }
         case 'event_resolved': {
           this.call(
             'addDesignEvent',
             `event_resolved:${sanitizeEventPart(payload?.event?.id)}:choice_${sanitizeEventPart(payload.choiceIndex)}`
+          );
+          this.call(
+            'addProgressionEvent',
+            enums.EGAProgressionStatus?.Complete ?? 2,
+            'event',
+            sanitizeEventPart(payload?.event?.id)
           );
           return;
         }
@@ -237,6 +351,32 @@ export class AnalyticsManager {
             'addDesignEvent',
             `node_entered:act_${sanitizeEventPart(state.currentAct ?? 1)}:${sanitizeEventPart(payload.nodeType)}`
           );
+          return;
+        }
+        case 'campfire_choice': {
+          this.call(
+            'addDesignEvent',
+            `campfire_choice:${sanitizeEventPart(payload.option)}:${sanitizeEventPart(payload?.card?.id ?? 'none')}`
+          );
+          return;
+        }
+        case 'relic_gained': {
+          this.call('addDesignEvent', `relic_gained:${sanitizeEventPart(payload?.relic?.id)}`);
+          return;
+        }
+        case 'boon_offered': {
+          const boons = Array.isArray(payload.boons) ? payload.boons : [];
+          this.call('addDesignEvent', 'boon_offered:count', boons.length);
+          return;
+        }
+        case 'boon_picked': {
+          this.call('addDesignEvent', `boon_picked:${sanitizeEventPart(payload?.boon?.id)}`);
+          return;
+        }
+        case 'deck_mutation': {
+          const mutation = sanitizeEventPart(payload.mutation ?? 'unknown');
+          const cardId = sanitizeEventPart(payload?.card?.id ?? 'unknown');
+          this.call('addDesignEvent', `deck_mutation:${mutation}:${cardId}`);
           return;
         }
         default:
@@ -338,6 +478,34 @@ export class AnalyticsManager {
         const eventPart = sanitizeEventPart(eventId);
         this.call('addDesignEvent', `run_telemetry:act2_event:${eventPart}`);
       });
+    } catch {
+      // Never break gameplay due to analytics transport failures.
+    }
+  }
+
+  /**
+   * @param {string} message
+   * @param {'warning'|'error'|'critical'} [severity='error']
+   * @returns {void}
+   */
+  trackClientError(message, severity = 'error') {
+    if (!this.enabled || !sdk) return;
+    if (!(typeof sdk.addErrorEvent === 'function' || typeof sdk === 'function')) {
+      this.debug('client_error skipped: addErrorEvent unavailable');
+      return;
+    }
+
+    try {
+      const normalized = sanitizeEventPart(severity);
+      const severityValue =
+        normalized === 'critical'
+          ? (enums.EGAErrorSeverity?.Critical ?? 5)
+          : normalized === 'warning'
+            ? (enums.EGAErrorSeverity?.Warning ?? 3)
+            : (enums.EGAErrorSeverity?.Error ?? 4);
+      const text = String(message || 'client_error').slice(0, 512);
+      this.call('addErrorEvent', severityValue, text);
+      this.debug('sending client_error event', { severity: normalized, message: text });
     } catch {
       // Never break gameplay due to analytics transport failures.
     }

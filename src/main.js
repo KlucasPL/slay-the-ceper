@@ -134,6 +134,22 @@ state.onRunTelemetryReady = (payload) => {
   analytics.trackRunTelemetry(payload);
 };
 
+window.addEventListener('error', (event) => {
+  const msg = event?.error?.message || event?.message || 'window_error';
+  analytics.trackClientError(`window_error:${msg}`, 'error');
+});
+
+window.addEventListener('unhandledrejection', (event) => {
+  const reason = event?.reason;
+  const msg =
+    typeof reason === 'string'
+      ? reason
+      : reason instanceof Error
+        ? reason.message
+        : JSON.stringify(reason ?? 'unknown_rejection');
+  analytics.trackClientError(`unhandled_rejection:${msg}`, 'warning');
+});
+
 if (sceneDef) {
   sceneDef.build(state);
 }

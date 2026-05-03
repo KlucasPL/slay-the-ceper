@@ -5,6 +5,20 @@
 /** @type {ReleaseNoteEntry[]} */
 export const releaseNotesData = [
   {
+    version: 'v2.0.0 - Morskie Oko i pełna Wyprawa',
+    date: 'maj 2026',
+    changes: [
+      '🏔️ AKT II: Wyprawa została rozszerzona o drugi akt (Morskie Oko) z nową pulą przeciwników, elit i finałowych hersztów.',
+      '👑 NOWI HERSZCI AKTU II: Na końcu drugiego aktu czekają Królowa Schroniska oraz Harnaś Pogodynka z własnymi mechanikami i wzorcami walki.',
+      '🌦️ POGODA MA WIĘKSZE ZNACZENIE: Starcia i decyzje na mapie mocniej wykorzystują system pogody, który realnie wpływa na tempo i ryzyko wyprawy.',
+      '❓ NOWE WYDARZENIA I LEPSZE PULE: Uporządkowano akty wydarzeń (Akt I/Akt II), aby spotkania trafiały do właściwej części wyprawy.',
+      '🧾 NOWE STATUSY WROGÓW: Dodano nowe zagrożenia statusowe i dopracowano ekonomiczne presje w walce (m.in. efekty paragonów/rachunku).',
+      '⚖️ DOSTROJENIE CAŁEJ GALERII WROGÓW: Przestrojono siłę przeciwników w obu aktach, żeby trudność rosła bardziej płynnie od początku do finału.',
+      '📊 ZAPIS PRZEBIEGU ROZGRYWKI: Dodano automatyczny zapis przebiegu wyprawy (z podziałem na akty), co poprawia analizę balansu i jakości walk.',
+      '🛠️ STABILNOŚĆ I SPÓJNOŚĆ: Poprawiono obsługę zwycięstw i porażek z hersztami, eksport danych z rozgrywki oraz wiele drobnych błędów wpływających na płynność wyprawy.',
+    ],
+  },
+  {
     version: 'v1.7.2 - Król Krupówek i balans',
     date: 'kwiecień 2026',
     changes: [
