@@ -390,6 +390,12 @@ export class AnalyticsManager {
           this.call('addDesignEvent', `deck_mutation:${mutation}:${cardId}`);
           return;
         }
+        case 'phase_transition': {
+          const enemyId = sanitizeEventPart(payload?.enemy?.id ?? 'unknown');
+          const phase = payload?.phase ?? '?';
+          this.call('addDesignEvent', `phase_transition:${enemyId}:phase_${phase}`);
+          return;
+        }
         default:
           return;
       }

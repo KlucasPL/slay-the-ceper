@@ -121,7 +121,7 @@ export function drawCards(state, amount) {
     if (typeof cardId === 'string') {
       state.hand.push(cardId);
       drawn.push(cardId);
-      emitF(state, 'card_drawn', { card: { kind: 'card', id: getBaseCardId(cardId) } });
+      emitS(state, 'card_drawn', { card: { kind: 'card', id: getBaseCardId(cardId) } });
       // szal_bacy power: deal 3 damage per extra card drawn during player turn
       if (
         state.player.szal_bacy &&
@@ -553,7 +553,7 @@ export function startTurn(state) {
     state.zaszytUpadkuDrawPending = false;
   }
 
-  emitF(state, 'turn_started', { battleTurn: state.battleTurnsElapsed });
+  emitS(state, 'turn_started', { battleTurn: state.battleTurnsElapsed });
 }
 
 /**
@@ -619,7 +619,7 @@ export function playCard(state, handIndex) {
   state.hand.splice(handIndex, 1);
   if (card.exhaust) {
     state.exhaust.push(cardId);
-    emitF(state, 'card_exhausted', { card: { kind: 'card', id: getBaseCardId(cardId) } });
+    emitS(state, 'card_exhausted', { card: { kind: 'card', id: getBaseCardId(cardId) } });
   } else {
     state.discard.push(cardId);
   }
@@ -748,7 +748,7 @@ export function endTurn(state) {
   }
 
   for (const skippedId of state.hand) {
-    emitF(state, 'card_skipped', { card: { kind: 'card', id: getBaseCardId(skippedId) } });
+    emitS(state, 'card_skipped', { card: { kind: 'card', id: getBaseCardId(skippedId) } });
   }
   state.discard.push(...state.hand);
   state.hand = [];
@@ -913,8 +913,8 @@ export function endTurn(state) {
 
   state._refreshEnemyIntent();
 
-  emitF(state, 'turn_ended', { battleTurn: state.battleTurnsElapsed });
-  emitF(state, 'enemy_move', {
+  emitS(state, 'turn_ended', { battleTurn: state.battleTurnsElapsed });
+  emitS(state, 'enemy_move', {
     enemy: { kind: 'enemy', id: state.enemy.id },
     intentType: state.enemy.currentIntent.type,
     intentName: state.enemy.currentIntent.name,
