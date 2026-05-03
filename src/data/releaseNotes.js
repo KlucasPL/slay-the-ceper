@@ -5,6 +5,17 @@
 /** @type {ReleaseNoteEntry[]} */
 export const releaseNotesData = [
   {
+    version: 'v2.0.1 - Szlify Aktu II i mobile PWA',
+    date: 'maj 2026',
+    changes: [
+      '📱 MOBILE PWA: Na urządzeniach mobilnych w wersji aplikacyjnej dodano przycisk „Wymuś poziom”, który wykonuje najlepszą możliwą próbę przejścia do widoku poziomego.',
+      '🗺️ WYDARZENIA W AKTACH: Ograniczono powtarzanie wydarzeń w tym samym akcie, dzięki czemu wyprawa daje bardziej różnorodne spotkania.',
+      '🔀 LEPSZE ZASTĘPSTWO WĘZŁA WYDARZENIA: Gdy pula wydarzeń w akcie się wyczerpie, węzeł przechodzi na sensowny fallback (walka lub jarmark), zamiast pustego zdarzenia.',
+      '🚽 KOLEJKA DO TOALETY: Przerobiono pasywkę, aby licznik narastał sensownie między turami i był zużywany dopiero przy odpowiednim efekcie.',
+      '🧩 IKONY STATUSÓW: Uspójniono widoczność nowych statusów i flag mocy, żeby czytelniej pokazywać aktywne efekty podczas walki.',
+    ],
+  },
+  {
     version: 'v2.0.0 - Morskie Oko i pełna Wyprawa',
     date: 'maj 2026',
     changes: [

@@ -672,13 +672,34 @@ export class UIManager {
     const isIos =
       /iphone|ipad|ipod/i.test(navigator.userAgent) ||
       (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const isMobileLike = window.matchMedia('(hover: none) and (pointer: coarse)').matches;
     const isInStandaloneMode =
       'standalone' in navigator
         ? /** @type {any} */ (navigator).standalone
         : window.matchMedia('(display-mode: standalone)').matches;
 
     if (isInStandaloneMode) {
-      btn.style.display = 'none';
+      if (!isMobileLike) {
+        btn.style.display = 'none';
+        return;
+      }
+
+      btn.textContent = '↔ Wymuś poziom';
+      btn.setAttribute('aria-label', 'Wymuś widok poziomy');
+      panel.classList.add('hidden');
+
+      btn.addEventListener('click', async (event) => {
+        event.stopPropagation();
+        await this._handleForceLandscapeRequest(panel);
+      });
+
+      document.addEventListener('click', (event) => {
+        if (!(event.target instanceof Element)) return;
+        if (event.target.closest('.title-pwa-widget')) return;
+        panel.classList.add('hidden');
+        btn.setAttribute('aria-expanded', 'false');
+      });
+
       return;
     }
 
@@ -746,6 +767,63 @@ Po instalacji gra działa offline i bez paska przeglądarki.`;
       panel.classList.add('hidden');
       btn.setAttribute('aria-expanded', 'false');
     });
+  }
+
+  /**
+   * Best-effort mobile PWA action to switch gameplay into horizontal view.
+   * Attempts fullscreen and landscape orientation request when browser supports it.
+   *
+   * @param {HTMLElement} panel
+   * @returns {Promise<void>}
+   */
+  async _handleForceLandscapeRequest(panel) {
+    const btn = document.getElementById('title-pwa-btn');
+    if (!btn) return;
+
+    const orientationQuery = window.matchMedia('(orientation: landscape)');
+    if (orientationQuery.matches) {
+      panel.innerHTML =
+        '<strong>Widok poziomy jest już aktywny.</strong><br>Możesz od razu grać w układzie poziomym.';
+      panel.classList.remove('hidden');
+      btn.setAttribute('aria-expanded', 'true');
+      return;
+    }
+
+    let requestedFullscreen = false;
+    const root = document.documentElement;
+    if (!document.fullscreenElement && typeof root.requestFullscreen === 'function') {
+      try {
+        await root.requestFullscreen();
+        requestedFullscreen = true;
+      } catch {
+        requestedFullscreen = false;
+      }
+    }
+
+    let requestedLandscape = false;
+    if ('orientation' in screen && typeof screen.orientation?.lock === 'function') {
+      try {
+        await screen.orientation.lock('landscape');
+        requestedLandscape = true;
+      } catch {
+        requestedLandscape = false;
+      }
+    }
+
+    const isLandscapeNow =
+      orientationQuery.matches || window.matchMedia('(min-aspect-ratio: 13/10)').matches;
+    if (isLandscapeNow || requestedLandscape) {
+      panel.innerHTML =
+        '<strong>Próba przejścia do poziomu wykonana.</strong><br>Jeśli ekran nie obrócił się automatycznie, obróć telefon ręcznie.';
+    } else {
+      const fullscreenHint = requestedFullscreen
+        ? 'Uruchomiono pełny ekran.'
+        : 'Pełny ekran nie jest dostępny na tym urządzeniu.';
+      panel.innerHTML = `<strong>Automatyczne wymuszenie poziomu niedostępne.</strong><br>${fullscreenHint} Obróć telefon ręcznie, aby grać wygodnie.`;
+    }
+
+    panel.classList.remove('hidden');
+    btn.setAttribute('aria-expanded', 'true');
   }
 
   /**
