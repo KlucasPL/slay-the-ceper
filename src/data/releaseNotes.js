@@ -5,14 +5,14 @@
 /** @type {ReleaseNoteEntry[]} */
 export const releaseNotesData = [
   {
-    version: 'v2.0.1 - Szlify Aktu II i mobile PWA',
+    version: 'v2.0.1 - Szlify Aktu II i trybu aplikacyjnego',
     date: 'maj 2026',
     changes: [
-      '📱 MOBILE PWA: Na urządzeniach mobilnych w wersji aplikacyjnej dodano przycisk „Wymuś poziom”, który wykonuje najlepszą możliwą próbę przejścia do widoku poziomego.',
+      '📱 TRYB APLIKACJI MOBILNEJ: Na urządzeniach mobilnych w wersji aplikacyjnej dodano przycisk „Wymuś poziom”, który wykonuje najlepszą możliwą próbę przejścia do widoku poziomego.',
       '🗺️ WYDARZENIA W AKTACH: Ograniczono powtarzanie wydarzeń w tym samym akcie, dzięki czemu wyprawa daje bardziej różnorodne spotkania.',
-      '🔀 LEPSZE ZASTĘPSTWO WĘZŁA WYDARZENIA: Gdy pula wydarzeń w akcie się wyczerpie, węzeł przechodzi na sensowny fallback (walka lub jarmark), zamiast pustego zdarzenia.',
+      '🔀 LEPSZE ZASTĘPSTWO WĘZŁA WYDARZENIA: Gdy pula wydarzeń w akcie się wyczerpie, węzeł przechodzi na sensowny wariant zastępczy (walka lub jarmark), zamiast pustego zdarzenia.',
       '🚽 KOLEJKA DO TOALETY: Przerobiono pasywkę, aby licznik narastał sensownie między turami i był zużywany dopiero przy odpowiednim efekcie.',
-      '🧩 IKONY STATUSÓW: Uspójniono widoczność nowych statusów i flag mocy, żeby czytelniej pokazywać aktywne efekty podczas walki.',
+      '🧩 IKONY STATUSÓW: Uspójniono widoczność nowych statusów i znaczników mocy, żeby czytelniej pokazywać aktywne efekty podczas walki.',
     ],
   },
   {
@@ -53,7 +53,7 @@ export const releaseNotesData = [
     date: 'kwiecień 2026',
     changes: [
       '📲 GRA JAKO APLIKACJA (PWA): Usiec Cepra można teraz zainstalować na telefonie lub komputerze jak prawdziwą aplikację – bez sklepu z aplikacjami, działa w pełni offline. Na Android/Chrome kliknij „Zainstaluj" w menu przeglądarki. Na iPhone/iPad otwórz w Safari → Udostępnij □↑ → „Dodaj do ekranu głównego". Na komputerze (Chrome/Edge) kliknij ikonę ⊕ w pasku adresu. Przycisk „📲 Zainstaluj" w lewym dolnym rogu menu głównego prowadzi przez cały proces.',
-      '📱 LANDSCAPE WRACA NA TELEFONY: Gra znów działa w orientacji poziomej na urządzeniach mobilnych – blokada z poprzedniej wersji została zniesiona. Interfejs automatycznie dopasowuje się do szerokiego ekranu, a tytuł i przyciski menu są czytelne niezależnie od orientacji.',
+      '📱 TRYB POZIOMY WRACA NA TELEFONY: Gra znów działa w orientacji poziomej na urządzeniach mobilnych – blokada z poprzedniej wersji została zniesiona. Interfejs automatycznie dopasowuje się do szerokiego ekranu, a tytuł i przyciski menu są czytelne niezależnie od orientacji.',
       '🔍 PODGLĄD KART I PAMIĄTEK: Przytrzymanie palcem (lub kliknięcie i przytrzymanie myszą) na dowolnej karcie lub pamiątce – w nagrodach, Jarmarku, Watrze, Bibliotece Tatrzańskiej, stosach kart i u Maryny – otwiera pełnoekranowy podgląd z pełnym opisem.',
       '🃏 PODGLĄD DARÓW MARYNY: Przytrzymanie bonu błogosławieństwa Maryny poprawnie pokazuje teraz okno podglądu ponad nakładką wyboru.',
     ],
@@ -75,7 +75,7 @@ export const releaseNotesData = [
     changes: [
       '📱 TYLKO PION NA TELEFONACH: Gra blokuje teraz rozgrywkę na urządzeniach mobilnych w orientacji poziomej i wyświetla wyraźny komunikat, aby obrócić telefon do pionu.',
       '🛑 CZYTELNY EKRAN BLOKADY: Zamiast próbować upychać interfejs po obrocie, pokazujemy pełnoekranowy ekran informacyjny i wyłączamy interakcję z grą do czasu powrotu do układu pionowego.',
-      '🖥️ BRAK MOBILNEGO TRYBU NA DESKTOPIE: Bardzo szerokie, ale niskie okna na komputerach nie przełączają już gry do awaryjnego układu mobilnego. Zamiast tego pojawia się jasny komunikat, że okno jest zbyt niskie do wygodnej rozgrywki.',
+      '🖥️ BRAK MOBILNEGO TRYBU NA KOMPUTERZE: Bardzo szerokie, ale niskie okna na komputerach nie przełączają już gry do awaryjnego układu mobilnego. Zamiast tego pojawia się jasny komunikat, że okno jest zbyt niskie do wygodnej rozgrywki.',
     ],
   },
   {
@@ -112,7 +112,7 @@ export const releaseNotesData = [
     version: 'v1.4.0 - Lans na pełnym gazie',
     date: 'kwiecień 2026',
     changes: [
-      '🕶️ LANS Z CHARAKTEREM: Karty z tagiem Lans mają teraz własną, globalną zasadę - jeśli jeszcze nie jesteś w Lansie, pierwsze zagranie odpala sam status, a dopiero kolejne uruchamiają pełny efekt karty.',
+      '🕶️ LANS Z CHARAKTEREM: Karty z oznaczeniem Lans mają teraz własną, globalną zasadę - jeśli jeszcze nie jesteś w Lansie, pierwsze zagranie odpala sam status, a dopiero kolejne uruchamiają pełny efekt karty.',
       '💸 SZPAN KOSZTUJE WIĘCEJ: Lans dalej chroni Krzepę kosztem Dutków, ale w trakcie walki rachunek za taki styl rośnie coraz szybciej, więc mocny start łatwiej kończy się bolesnym BANKRUTEM.',
       '✨ NOWA OPRAWA LANSU: Aktywacji statusu towarzyszy teraz złoty błysk, spadające okulary i okrzyk "JEST LANS!", a przy utracie efektu okulary widowiskowo zlatują z nosa.',
     ],
@@ -175,7 +175,7 @@ export const releaseNotesData = [
     changes: [
       '🃏 NOWY PODGLĄD STOSÓW W WALCE: W trakcie starcia możesz kliknąć ikonki Talii, Odrzuconych i Przepadłych, aby podejrzeć dokładnie jakie karty są w każdym stosie.',
       '👀 CZYTELNIEJSZE DECYZJE TAKTYCZNE: Podgląd działa w wygodnym oknie z siatką kart, więc łatwiej planować kolejne ruchy i zarządzać tempem walki.',
-      '📱 LEPSZA ERGONOMIA UI: Ikony stosów są stale widoczne w górnym panelu i nie zasłaniają już kart na ręce, także na mniejszych ekranach.',
+      '📱 LEPSZA ERGONOMIA INTERFEJSU: Ikony stosów są stale widoczne w górnym panelu i nie zasłaniają już kart na ręce, także na mniejszych ekranach.',
       '🧾 POPRAWKA GAŹDZINY: Gaździna jest teraz w pełni odporna na Rachunek - licznik nie narasta i pozostaje na 0 przez całe starcie, co usuwa mylące wskazania.',
     ],
   },
