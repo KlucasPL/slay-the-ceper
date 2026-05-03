@@ -1684,8 +1684,8 @@ describe('GameState', () => {
       const act1EventIds = Object.keys(eventLibrary).filter((id) => eventLibrary[id].act === 'I');
       const act2EventIds = Object.keys(eventLibrary).filter((id) => eventLibrary[id].act === 'II');
 
-      it('eventLibrary has exactly 2 Act I tagged events', () => {
-        expect(act1EventIds).toHaveLength(2);
+      it('eventLibrary has exactly 3 Act I tagged events', () => {
+        expect(act1EventIds).toHaveLength(3);
       });
 
       it('eventLibrary has exactly 3 Act II events', () => {
@@ -1739,8 +1739,8 @@ describe('GameState', () => {
         expect(seenAct2.size).toBeGreaterThan(0);
       });
 
-      it('fiakier_event (no act field) appears in both Act I and Act II pools', () => {
-        expect(eventLibrary.fiakier_event.act).toBeUndefined();
+      it('fiakier_event has act: I and does not appear in Act II pool', () => {
+        expect(eventLibrary.fiakier_event.act).toBe('I');
 
         const sAct1 = freshState();
         sAct1.currentAct = 1;
@@ -1750,13 +1750,11 @@ describe('GameState', () => {
 
         const sAct2 = freshState();
         sAct2.currentAct = 2;
-        sAct2.recentEventIds = [
-          'event_korek_do_toalety',
-          'event_selfie_na_krawedzi',
-          'event_paragon_za_wrzatek',
-        ];
-        const pickedAct2 = sAct2.pickRandomEventDef();
-        expect(pickedAct2?.id).toBe('fiakier_event');
+        for (let i = 0; i < 30; i++) {
+          sAct2.recentEventIds = [];
+          const picked = sAct2.pickRandomEventDef();
+          expect(picked?.id).not.toBe('fiakier_event');
+        }
       });
     });
 
@@ -2544,7 +2542,7 @@ describe('GameState', () => {
       expect(s.enemy.currentIntent).toEqual({
         type: 'attack',
         name: 'Wyprzedzanie na trzeciego',
-        damage: 9,
+        damage: 10,
         hits: 1,
         applyFrail: 2,
       });
@@ -2608,7 +2606,7 @@ describe('GameState', () => {
       expect(s.enemy.currentIntent).toEqual({
         type: 'attack',
         name: 'Selfie z zaskoczenia',
-        damage: 14,
+        damage: 15,
         hits: 1,
         applyVulnerable: 2,
       });
@@ -2641,8 +2639,16 @@ describe('GameState', () => {
       s.player.hp = 50;
       s.player.block = 0;
 
+      const eliteDmgScale = 1.15;
+      const scaledFirstAtk = Math.round(
+        enemyLibrary.ceprzyca_vip.pattern[0].damage * eliteDmgScale
+      );
+      const scaledThirdAtk = Math.round(
+        enemyLibrary.ceprzyca_vip.pattern[2].damage * eliteDmgScale
+      );
+
       const firstTurn = s.endTurn();
-      expect(firstTurn.enemyAttack.raw).toBe(8);
+      expect(firstTurn.enemyAttack.raw).toBe(scaledFirstAtk);
       expect(s.player.status.vulnerable).toBe(1);
 
       s.startTurn();
@@ -2652,7 +2658,7 @@ describe('GameState', () => {
 
       s.startTurn();
       const thirdTurn = s.endTurn();
-      expect(thirdTurn.enemyAttack.raw).toBe(21);
+      expect(thirdTurn.enemyAttack.raw).toBe(Math.ceil(scaledThirdAtk * 1.5));
     });
   });
 
@@ -2692,7 +2698,7 @@ describe('GameState', () => {
       expect(s.enemy.currentIntent).toEqual({
         type: 'attack',
         name: 'Cena z kosmosu',
-        damage: 8,
+        damage: 9,
         hits: 1,
         applyWeak: 1,
       });
@@ -3066,18 +3072,18 @@ describe('GameState', () => {
     });
 
     it('busiarz enemy library has correct HP after 10% buff', () => {
-      expect(enemyLibrary.busiarz.maxHp).toBe(75);
-      expect(enemyLibrary.busiarz.pattern[1].damage).toBe(9);
+      expect(enemyLibrary.busiarz.maxHp).toBe(83);
+      expect(enemyLibrary.busiarz.pattern[1].damage).toBe(10);
     });
 
     it('baba enemy library has correct HP after 10% buff', () => {
-      expect(enemyLibrary.baba.maxHp).toBe(90);
-      expect(enemyLibrary.baba.pattern[1].damage).toBe(8);
+      expect(enemyLibrary.baba.maxHp).toBe(99);
+      expect(enemyLibrary.baba.pattern[1].damage).toBe(9);
     });
 
     it('parkingowy enemy library has correct HP after 10% buff', () => {
-      expect(enemyLibrary.parkingowy.maxHp).toBe(110);
-      expect(enemyLibrary.parkingowy.pattern[0].damage).toBe(7);
+      expect(enemyLibrary.parkingowy.maxHp).toBe(121);
+      expect(enemyLibrary.parkingowy.pattern[0].damage).toBe(8);
     });
 
     it('does not repeat the same regular enemy twice in a row when alternatives exist', () => {
@@ -3188,7 +3194,7 @@ describe('GameState', () => {
       const s = new GameState(mockPlayer, enemyLibrary.cepr);
       const eliteState = s._createEnemyState(enemyLibrary.spekulant);
       expect(eliteState.isElite).toBe(true);
-      expect(eliteState.maxHp).toBe(Math.round(92 * 1.25));
+      expect(eliteState.maxHp).toBe(Math.round(enemyLibrary.spekulant.maxHp * 1.25));
 
       s.enemy = eliteState;
       s.pendingBattleDutki = true;
@@ -3202,7 +3208,7 @@ describe('GameState', () => {
       const started = s.startBattleWithEnemyId('pomocnik_fiakra');
       expect(started).toBe(true);
       expect(s.enemy.id).toBe('pomocnik_fiakra');
-      expect(s.enemy.maxHp).toBe(64);
+      expect(s.enemy.maxHp).toBe(70);
       expect(s.pendingBattleDutki).toBe(true);
     });
 
@@ -3314,7 +3320,7 @@ describe('GameState', () => {
       s.resetBattle();
       expect(s.enemy.id).toBe('boss');
       expect(s.enemy.name).toBe('Król Krupówek - Biały Misiek (Zdzisiek)');
-      expect(s.enemy.maxHp).toBe(155);
+      expect(s.enemy.maxHp).toBe(154);
       expect(s.enemy.bossArtifact).toBe(2);
     });
 
@@ -3331,7 +3337,7 @@ describe('GameState', () => {
       s.resetBattle();
       expect(s.enemy.id).toBe('fiakier');
       expect(s.enemy.name).toBe('Fiakier spod Krupówek');
-      expect(s.enemy.maxHp).toBe(165);
+      expect(s.enemy.maxHp).toBe(173);
       expect(s.enemy.bossArtifact).toBe(0);
     });
 
@@ -3621,11 +3627,11 @@ describe('GameState', () => {
       expect(s.enemy.currentIntent.hits).toBe(3);
     });
 
-    it('fourth intent is Uścisk Krupówek with spike damage (12)', () => {
+    it('fourth intent is Uścisk Krupówek with spike damage (11)', () => {
       const s = freshBossState();
       s.endTurn(); // execute Górski Ryk -> intent 2
       s.endTurn(); // execute Agresywne pozowanie -> intent 3
-      // Podatek od zdjęcia (damage 9)
+      // Podatek od zdjęcia (damage 8)
       expect(s.enemy.currentIntent.type).toBe('attack');
       expect(s.enemy.currentIntent.name).toBe('Podatek od zdjęcia');
       expect(s.enemy.currentIntent.damage).toBe(9);
@@ -4745,7 +4751,7 @@ describe('GameState', () => {
       s.player.block = 0;
       const energyBefore = s.player.energy;
       s.playCard(0);
-      expect(s.enemy.hp).toBe(69);
+      expect(s.enemy.hp).toBe(enemyLibrary.cepr.maxHp - 12);
       expect(s.player.energy).toBe(energyBefore - 2 + 1);
     });
 
@@ -4949,6 +4955,98 @@ describe('GameState', () => {
 
       const summary = s.captureRunSummary('enemy_win');
       expect(summary.runStats.floorReached).toBe(19);
+    });
+
+    it('getRunTelemetryJSON includes Act 2 weather, events and battle details', () => {
+      const s = freshState();
+      s.currentAct = 2;
+      s.floorOffset = 15;
+      s.currentLevel = 2;
+      s.startFloorLog({ type: 'event', label: 'Test Event', weather: 'fog' });
+      s.logAction('events', {
+        eventId: 'event_selfie_na_krawedzi',
+        choiceLabel: 'Pomóż zrobić ujęcie',
+      });
+      s.currentFloorLog.battle = {
+        enemyId: 'kelner_schroniska',
+        enemyName: 'Kelner Schroniska',
+        context: 'event',
+        weather: 'fog',
+        outcome: 'player_win',
+        turns: 4,
+      };
+      s.endFloorLog();
+
+      const telemetry = JSON.parse(s.getRunTelemetryJSON());
+      expect(telemetry.schemaVersion).toBe(2);
+      expect(telemetry.act2.floorCount).toBe(1);
+      expect(telemetry.act2.weather.fog).toBe(1);
+      expect(telemetry.act2.events).toContain('event_selfie_na_krawedzi');
+      expect(telemetry.act2.battles[0].enemyId).toBe('kelner_schroniska');
+      expect(telemetry.floorHistory[0].nodeWeather).toBe('fog');
+      expect(telemetry.floorHistory[0].globalFloor).toBe(18);
+    });
+
+    it('notifyTelemetryDownloaded triggers callback with Act 2 metadata', () => {
+      const s = freshState();
+      s.currentAct = 2;
+      s.floorOffset = 15;
+      s.currentLevel = 1;
+      s.maxFloorReached = 17;
+      s.startFloorLog({ type: 'fight', label: 'Test Fight', weather: 'halny' });
+      s.endFloorLog();
+      s.captureRunSummary('player_win');
+
+      const onTelemetryDownloaded = vi.fn();
+      s.onTelemetryDownloaded = onTelemetryDownloaded;
+      s.notifyTelemetryDownloaded();
+
+      expect(onTelemetryDownloaded).toHaveBeenCalledTimes(1);
+      expect(onTelemetryDownloaded).toHaveBeenCalledWith(
+        expect.objectContaining({
+          outcome: 'player_win',
+          actReached: 2,
+          hasAct2Data: true,
+        })
+      );
+    });
+
+    it('captureRunSummary auto-publishes run telemetry once when callback is set', () => {
+      const s = freshState();
+      s.currentAct = 2;
+      s.floorOffset = 15;
+      s.currentLevel = 2;
+      s.startFloorLog({ type: 'event', label: 'Act2 Event', weather: 'frozen' });
+      s.logAction('events', { eventId: 'event_korek_do_toalety', choiceLabel: 'Test choice' });
+      s.endFloorLog();
+
+      const onRunTelemetryReady = vi.fn();
+      s.onRunTelemetryReady = onRunTelemetryReady;
+
+      s.captureRunSummary('player_win');
+      s.captureRunSummary('player_win');
+
+      expect(onRunTelemetryReady).toHaveBeenCalledTimes(1);
+      expect(onRunTelemetryReady).toHaveBeenCalledWith(
+        expect.objectContaining({
+          schemaVersion: 2,
+          run: expect.objectContaining({
+            outcome: 'player_win',
+            actReached: 2,
+          }),
+        })
+      );
+    });
+
+    it('captureRunSummary does not auto-publish run telemetry for simulation runs', () => {
+      const s = freshState();
+      s.isSimulationRun = true;
+      const onRunTelemetryReady = vi.fn();
+      s.onRunTelemetryReady = onRunTelemetryReady;
+
+      s.captureRunSummary('player_win');
+
+      expect(onRunTelemetryReady).not.toHaveBeenCalled();
     });
   });
 

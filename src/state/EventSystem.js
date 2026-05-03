@@ -19,7 +19,7 @@ export function pickRandomEventDef(state) {
   const currentAct = getCurrentAct(state);
   const baseEventIds = Object.keys(eventLibrary).filter((id) => {
     const eventDef = eventLibrary[id];
-    return !eventDef?.act || eventDef.act === currentAct;
+    return eventDef?.act === currentAct;
   });
   const allEventIds = state.filterPool('events', baseEventIds);
   if (allEventIds.length === 0) return null;
@@ -212,10 +212,23 @@ export function startBattleWithEnemyId(state, enemyId, options = {}) {
 
   state._battleEndedEmitted = false;
   state.enemy = state._createEnemyState(enemyDef);
+  if (state.currentFloorLog) {
+    state.currentFloorLog.battle = {
+      enemyId: state.enemy.id,
+      enemyName: state.enemy.name,
+      context: battleContext,
+      weather: state.currentWeather ?? null,
+      outcome: null,
+      turns: null,
+    };
+  }
   state.battleContext = battleContext;
   state.pendingEventVictoryRelicId = rewardRelicId;
   state._setCurrentWeatherFromNode();
   state.pendingBattleDutki = true;
+  if (state.currentFloorLog?.battle) {
+    state.currentFloorLog.battle.weather = state.currentWeather ?? null;
+  }
 
   state.emit('battle_started', { enemy: { kind: 'enemy', id: state.enemy.id } });
 

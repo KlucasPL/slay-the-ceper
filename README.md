@@ -8,13 +8,36 @@
 npm install
 ```
 
-2. Uruchom serwer developerski:
+2. (Opcjonalnie) skonfiguruj GameAnalytics przez lokalny plik `.env.local`:
+
+```bash
+VITE_GAMEANALYTICS_GAME_KEY=twoj_game_key
+VITE_GAMEANALYTICS_SECRET_KEY=twoj_secret_key
+VITE_GAMEANALYTICS_BUILD=web-1.7.2
+```
+
+> Dla bezpieczenstwa klucze trzymaj tylko lokalnie. Repo zawiera `.env.example`,
+> a `.env.local` jest ignorowany przez git.
+
+### GameAnalytics na GitHub Pages
+
+Aby zbieranie danych dzialalo na deployu z GitHub Pages, ustaw w repo (lub w environment
+`github-pages`) sekrety:
+
+- `VITE_GAMEANALYTICS_GAME_KEY`
+- `VITE_GAMEANALYTICS_SECRET_KEY`
+- `VITE_GAMEANALYTICS_BUILD` (np. `web-1.7.2`)
+
+Workflow [deploy-pages.yml](.github/workflows/deploy-pages.yml) przekazuje te wartosci do kroku
+`npm run build`, wiec analytics beda dostepne w buildzie publikowanym na Pages.
+
+3. Uruchom serwer developerski:
 
 ```bash
 npm run dev
 ```
 
-3. Otworz aplikacje pod adresem pokazanym przez Vite (zwykle `http://localhost:5173/slay-the-ceper/`).
+4. Otworz aplikacje pod adresem pokazanym przez Vite (zwykle `http://localhost:5173/slay-the-ceper/`).
 
 ## Menu Debug
 

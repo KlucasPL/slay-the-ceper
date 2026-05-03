@@ -240,8 +240,7 @@ export function showEndGame(uiManager, outcome) {
 
     const droppedDutki = uiManager.state.grantBattleDutki();
     const currentNode = uiManager.state.getCurrentMapNode();
-    const isBossFight =
-      uiManager.state.enemy.id === 'boss' || uiManager.state.enemy.id === 'fiakier';
+    const isBossFight = uiManager.state.enemy.isBoss === true;
     const isEliteFight = currentNode?.type === 'elite';
     const isBankrupt = uiManager.state.enemy.isBankrupt;
     const bankruptBonus = uiManager.state.enemyBankruptcyBonus;

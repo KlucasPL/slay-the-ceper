@@ -280,6 +280,7 @@ export const eventLibrary = {
   },
   fiakier_event: {
     id: 'fiakier_event',
+    act: 'I',
     title: 'Wąsaty Fiakier',
     description:
       "Wielka bryczka tarasuje przejście. Fiakier w zakurzonym kapeluszu strzela z bata i patrzy na Twoją sakiewkę. 'Panocku, koń tyż głodny, a patrzynie na luksusy kosztuje!'",

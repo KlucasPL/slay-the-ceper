@@ -96,6 +96,9 @@ export class EngineController {
     state._inCampfire = false;
     state._rewardOffer = null;
     state._enginePendingBattle = false;
+    // Headless controller is used by simulator / tooling and must never emit
+    // external client telemetry callbacks intended for browser gameplay.
+    state.isSimulationRun = true;
 
     const rules = opts.rules ?? {};
     const seed = opts.seed ?? null;

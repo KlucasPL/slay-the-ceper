@@ -102,6 +102,16 @@ export function resetBattle(state) {
   }
   state._battleEndedEmitted = false;
   state.enemy = state._createEnemyState(nextEnemy);
+  if (state.currentFloorLog) {
+    state.currentFloorLog.battle = {
+      enemyId: state.enemy.id,
+      enemyName: state.enemy.name,
+      context: 'map',
+      weather: state.currentWeather ?? null,
+      outcome: null,
+      turns: null,
+    };
+  }
   // Telemetry: record which boss variant was actually selected.
   if (isBossNode) {
     state.bossEncountered = state.enemy.id;
@@ -109,6 +119,9 @@ export function resetBattle(state) {
   state.battleContext = 'map';
   state._setCurrentWeatherFromNode();
   state.pendingBattleDutki = true;
+  if (state.currentFloorLog?.battle) {
+    state.currentFloorLog.battle.weather = state.currentWeather ?? null;
+  }
 
   emitS(state, 'battle_started', { enemy: { kind: 'enemy', id: state.enemy.id } });
 
@@ -145,6 +158,10 @@ export function checkWinCondition(state) {
   else if (state.player.hp <= 0) outcome = 'enemy_win';
   if (outcome) {
     state._battleEndedEmitted = true;
+    if (state.currentFloorLog?.battle) {
+      state.currentFloorLog.battle.outcome = outcome;
+      state.currentFloorLog.battle.turns = state.battleTurnsElapsed ?? 0;
+    }
     emitS(state, 'battle_ended', {
       outcome,
       enemy: { kind: 'enemy', id: state.enemy.id },
@@ -225,6 +242,10 @@ export function captureRunSummary(state, outcome) {
     outcome,
     killerEnemy: killerName ? { kind: 'enemy', id: state.enemy.id } : null,
   });
+
+  if (typeof state.publishRunTelemetryIfReady === 'function') {
+    state.publishRunTelemetryIfReady();
+  }
 
   return state.runSummary;
 }
@@ -325,6 +346,7 @@ export function resetForNewRun(state, startingDeck) {
   // do NOT overwrite it here or seeded runs lose their seed.
   state.bossEncountered = null;
   state.deathLevel = null;
+  state._runTelemetryPublished = false;
 
   state.enemy = state._createEnemyState(enemyLibrary.cepr);
   state.generateMap();

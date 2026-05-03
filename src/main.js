@@ -4,6 +4,7 @@ import { registerSW } from 'virtual:pwa-register';
 import './styles/animations.css';
 
 import { AudioManager } from './logic/AudioManager.js';
+import { AnalyticsManager } from './logic/AnalyticsManager.js';
 import { getSkipIntro } from './logic/settings.js';
 import { GameState } from './state/GameState.js';
 import { UIManager } from './ui/UIManager.js';
@@ -35,6 +36,10 @@ const hasValidDebugBoss =
 
 const PWA_UPDATE_EVENT = 'stc-pwa-update';
 const FORCE_NEXT_PWA_UPDATE = true;
+const GAME_ANALYTICS_BUILD = import.meta.env.VITE_GAMEANALYTICS_BUILD || 'web-1.7.2';
+const GAME_ANALYTICS_GAME_KEY = import.meta.env.VITE_GAMEANALYTICS_GAME_KEY || '';
+const GAME_ANALYTICS_SECRET_KEY = import.meta.env.VITE_GAMEANALYTICS_SECRET_KEY || '';
+const GAME_ANALYTICS_INFO_LOG = import.meta.env.DEV;
 
 /**
  * @param {boolean} isUpdateAvailable
@@ -93,6 +98,41 @@ const seedFromUrl =
 
 const state = new GameState(characters.jedrek, initialEnemy);
 state.initGame(startingDeck);
+
+const analytics = new AnalyticsManager({
+  gameKey: GAME_ANALYTICS_GAME_KEY,
+  secretKey: GAME_ANALYTICS_SECRET_KEY,
+  build: GAME_ANALYTICS_BUILD,
+  enableInfoLog: GAME_ANALYTICS_INFO_LOG,
+});
+const analyticsInitialized = analytics.init();
+if (import.meta.env.DEV) {
+  console.info('[Analytics] startup status', {
+    initialized: analyticsInitialized,
+    hasGameKey: Boolean(GAME_ANALYTICS_GAME_KEY),
+    hasSecretKey: Boolean(GAME_ANALYTICS_SECRET_KEY),
+    build: GAME_ANALYTICS_BUILD,
+  });
+}
+
+const originalEmit = state.emit.bind(state);
+state.emit = (kind, payload) => {
+  originalEmit(kind, payload);
+  analytics.trackEngineEvent(kind, payload, state);
+};
+state.onTelemetryDownloaded = (meta) => {
+  analytics.trackTelemetryDownload(meta);
+};
+state.onRunTelemetryReady = (payload) => {
+  if (import.meta.env.DEV) {
+    console.info('[Analytics] onRunTelemetryReady fired', {
+      outcome: payload?.run?.outcome,
+      actReached: payload?.run?.actReached,
+      floorReached: payload?.run?.floorReached,
+    });
+  }
+  analytics.trackRunTelemetry(payload);
+};
 
 if (sceneDef) {
   sceneDef.build(state);

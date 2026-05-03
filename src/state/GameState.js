@@ -264,6 +264,14 @@ export class GameState {
     this.bossEncountered = null;
     /** @type {number | null} Telemetry: floor level where the player died */
     this.deathLevel = null;
+    /** @type {((meta: { outcome: string, floorReached: number, actReached: number, hasAct2Data: boolean }) => void) | null} */
+    this.onTelemetryDownloaded = null;
+    /** @type {((payload: Record<string, any>) => void) | null} */
+    this.onRunTelemetryReady = null;
+    /** @type {boolean} */
+    this._runTelemetryPublished = false;
+    /** @type {boolean} */
+    this.isSimulationRun = false;
     /** @type {EnemyState} */
     this.enemy = this._createEnemyState(enemy);
     this.generateMap();
@@ -712,9 +720,11 @@ export class GameState {
   startFloorLog(node) {
     this.currentFloorLog = {
       level: this.currentLevel || 1,
+      globalFloor: (this.floorOffset ?? 0) + (this.currentLevel || 0) + 1,
       act: this.currentAct || 1,
       nodeType: node.type || 'unknown',
       nodeLabel: node.label || '',
+      nodeWeather: node.weather || this.currentWeather || null,
       startingHp: this.player.hp,
       startingDutki: this.dutki,
       purchases: [],
@@ -753,10 +763,10 @@ export class GameState {
   }
 
   /**
-   * Returns the complete run telemetry as a JSON string.
-   * @returns {string}
+   * Builds complete run telemetry payload object.
+   * @returns {Record<string, any>}
    */
-  getRunTelemetryJSON() {
+  buildRunTelemetryPayload() {
     const summary = this.runSummary;
     const currentDutki = summary?.snapshotDutki ?? this.dutki;
     const finalDutki =
@@ -766,23 +776,116 @@ export class GameState {
     const finalHp = summary ? this.player.hp : this.player.hp;
     const maxHp = this.player.maxHp;
 
-    return JSON.stringify(
-      {
-        seed: this.runSeed,
-        bossEncountered: this.bossEncountered,
-        deathLevel: this.deathLevel,
-        finalHp,
-        maxHp,
-        finalDutki,
-        currentDutki,
-        deckSize: finalDeck.length,
-        finalDeck,
-        finalRelics,
-        floorHistory: this.runLog,
+    const floorHistory = this.runLog.map((entry) => ({ ...entry }));
+    const byAct = {};
+    floorHistory.forEach((entry) => {
+      const actKey = String(entry.act ?? 1);
+      if (!byAct[actKey]) {
+        byAct[actKey] = {
+          floorCount: 0,
+          nodeTypes: {},
+          weather: {},
+          events: [],
+          battles: [],
+        };
+      }
+      const bucket = byAct[actKey];
+      bucket.floorCount += 1;
+      const nodeType = entry.nodeType ?? 'unknown';
+      bucket.nodeTypes[nodeType] = (bucket.nodeTypes[nodeType] ?? 0) + 1;
+
+      const weatherId = entry.nodeWeather ?? 'none';
+      bucket.weather[weatherId] = (bucket.weather[weatherId] ?? 0) + 1;
+
+      if (Array.isArray(entry.events) && entry.events.length > 0) {
+        entry.events.forEach((evt) => {
+          if (evt?.eventId) bucket.events.push(evt.eventId);
+        });
+      }
+
+      if (entry.battle && entry.battle.enemyId) {
+        bucket.battles.push({
+          enemyId: entry.battle.enemyId,
+          context: entry.battle.context ?? 'map',
+          outcome: entry.battle.outcome ?? null,
+          turns: entry.battle.turns ?? null,
+        });
+      }
+    });
+
+    Object.values(byAct).forEach((bucket) => {
+      bucket.events = [...new Set(bucket.events)];
+    });
+
+    return {
+      schemaVersion: 2,
+      generatedAt: new Date().toISOString(),
+      seed: this.runSeed,
+      run: {
+        outcome: summary?.outcome ?? null,
+        actReached: this.currentAct,
+        floorReached:
+          summary?.runStats?.floorReached ?? (this.floorOffset ?? 0) + this.currentLevel + 1,
       },
-      null,
-      2
-    );
+      bossEncountered: this.bossEncountered,
+      deathLevel: this.deathLevel,
+      finalHp,
+      maxHp,
+      finalDutki,
+      currentDutki,
+      deckSize: finalDeck.length,
+      finalDeck,
+      finalRelics,
+      floorHistory,
+      actSummary: byAct,
+      act2: byAct['2'] ?? {
+        floorCount: 0,
+        nodeTypes: {},
+        weather: {},
+        events: [],
+        battles: [],
+      },
+    };
+  }
+
+  /**
+   * Returns the complete run telemetry as a JSON string.
+   * @returns {string}
+   */
+  getRunTelemetryJSON() {
+    return JSON.stringify(this.buildRunTelemetryPayload(), null, 2);
+  }
+
+  /** @returns {void} */
+  publishRunTelemetryIfReady() {
+    if (this._runTelemetryPublished) return;
+    if (!this.runSummary) return;
+    if (this.isSimulationRun) return;
+    if (typeof this.onRunTelemetryReady !== 'function') return;
+
+    try {
+      this.onRunTelemetryReady(this.buildRunTelemetryPayload());
+      this._runTelemetryPublished = true;
+    } catch {
+      // Ignore telemetry publication callback failures; gameplay must not break.
+    }
+  }
+
+  /** @returns {void} */
+  notifyTelemetryDownloaded() {
+    if (typeof this.onTelemetryDownloaded !== 'function') return;
+    const payload = this.buildRunTelemetryPayload();
+    const act2Data = payload.act2 ?? { floorCount: 0 };
+    try {
+      this.onTelemetryDownloaded({
+        outcome: String(payload.run?.outcome ?? 'unknown'),
+        floorReached: Number(payload.run?.floorReached ?? 0),
+        actReached: Number(payload.run?.actReached ?? 1),
+        hasAct2Data: Boolean(act2Data.floorCount > 0),
+      });
+    } catch {
+      // Ignore telemetry download callbacks; exporting JSON must never fail gameplay.
+    }
   }
 
   // ── End Telemetry ──────────────────────────────────────────────────────────
