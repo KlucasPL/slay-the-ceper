@@ -250,7 +250,10 @@ export class AnalyticsManager {
           return;
         }
         case 'card_stolen': {
-          this.call('addDesignEvent', `card_stolen:${sanitizeEventPart(payload.cardId ?? 'unknown')}`);
+          this.call(
+            'addDesignEvent',
+            `card_stolen:${sanitizeEventPart(payload.cardId ?? 'unknown')}`
+          );
           return;
         }
         case 'enemy_move': {
@@ -323,13 +326,21 @@ export class AnalyticsManager {
           const entities = Array.isArray(payload.entities) ? payload.entities : [];
           this.call('addDesignEvent', 'reward_offered:count', entities.length);
           if (entities.length > 0) {
-            this.call('addDesignEvent', `reward_offered:first_${sanitizeEventPart(entities[0]?.id)}`);
+            this.call(
+              'addDesignEvent',
+              `reward_offered:first_${sanitizeEventPart(entities[0]?.id)}`
+            );
           }
           return;
         }
         case 'event_entered': {
           const eventId = sanitizeEventPart(payload?.event?.id ?? 'unknown');
-          this.call('addProgressionEvent', enums.EGAProgressionStatus?.Start ?? 1, 'event', eventId);
+          this.call(
+            'addProgressionEvent',
+            enums.EGAProgressionStatus?.Start ?? 1,
+            'event',
+            eventId
+          );
           this.call('addDesignEvent', `event_entered:${eventId}`);
           return;
         }
