@@ -32,6 +32,7 @@ const RARITY_WEIGHTS = {
 const MIN_ELITE_LEVEL = 4;
 const EVENT_OUTCOME_EVENT_CHANCE = 0.68;
 const EVENT_OUTCOME_FIGHT_CHANCE = 0.12;
+const EVENT_OUTCOME_SHOP_CHANCE = 1 - EVENT_OUTCOME_EVENT_CHANCE - EVENT_OUTCOME_FIGHT_CHANCE;
 
 /**
  * @typedef {import('../data/cards.js').StatusDef} StatusDef
@@ -186,6 +187,10 @@ export class GameState {
     this.activeEventId = null;
     /** @type {string[]} Recently selected event IDs (up to pool-size − 1) to prevent repeated picks */
     this.recentEventIds = [];
+    /** @type {string[]} Event IDs already seen this act — excluded for the rest of the act */
+    this.seenEventIdsThisAct = [];
+    /** @type {number} How many event nodes got 'shop' outcome during current map generation */
+    this._eventNodeShopsThisAct = 0;
     /** @type {{ offeredIds: string[], pickedId: string | null, flags: Record<string, boolean>, counters: Record<string, number> }} */
     this.maryna = { offeredIds: [], pickedId: null, flags: {}, counters: {} };
     /** @type {string | null} */
@@ -549,6 +554,11 @@ export class GameState {
     return eventSystem.pickRandomEventDef(this);
   }
 
+  /** @returns {boolean} */
+  hasUnseenEventsThisAct() {
+    return eventSystem.hasUnseenEventsThisAct(this);
+  }
+
   /** @returns {'I' | 'II' | 'III'} */
   _getCurrentAct() {
     return navigationState.getCurrentAct(this);
@@ -562,9 +572,23 @@ export class GameState {
   /** @returns {'event' | 'fight' | 'shop'} */
   rollEventNodeOutcome() {
     const roll = this.rng();
-    if (roll < EVENT_OUTCOME_EVENT_CHANCE) return 'event';
-    if (roll < EVENT_OUTCOME_EVENT_CHANCE + EVENT_OUTCOME_FIGHT_CHANCE) return 'fight';
-    return 'shop';
+    const canRollEvent = this.hasUnseenEventsThisAct();
+
+    if (canRollEvent) {
+      if (roll < EVENT_OUTCOME_EVENT_CHANCE) return 'event';
+      if (roll < EVENT_OUTCOME_EVENT_CHANCE + EVENT_OUTCOME_FIGHT_CHANCE) return 'fight';
+    } else {
+      const nonEventTotalChance = EVENT_OUTCOME_FIGHT_CHANCE + EVENT_OUTCOME_SHOP_CHANCE;
+      const fightChance = EVENT_OUTCOME_FIGHT_CHANCE / nonEventTotalChance;
+      if (roll < fightChance) return 'fight';
+    }
+
+    // Allow at most one shop outcome per event node per act.
+    if ((this._eventNodeShopsThisAct ?? 0) === 0) {
+      this._eventNodeShopsThisAct = (this._eventNodeShopsThisAct ?? 0) + 1;
+      return 'shop';
+    }
+    return 'fight';
   }
 
   /**
@@ -1418,6 +1442,16 @@ export class GameState {
         label: 'Pęd',
         value: this.enemy.ped,
         tooltip: 'Fiakier nabrał pędu. Następny atak „Przyspieszenie" zada o tyle więcej obrażeń.',
+      });
+    }
+
+    if (this.enemy.passive === 'kolejka_do_toalety') {
+      specials.push({
+        icon: '🚾',
+        label: 'Licznik Kolejki',
+        value: this.enemy.kolejkaCounter ?? 0,
+        tooltip:
+          'Rośnie o liczbę kart statusu w Twojej ręce na końcu tury wroga. "Gorąca zupa" dodaje 2 + ten licznik kart statusu i zużywa licznik.',
       });
     }
 

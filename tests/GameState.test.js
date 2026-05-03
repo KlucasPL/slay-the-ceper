@@ -1672,6 +1672,26 @@ describe('GameState', () => {
         expect(s.rollEventNodeOutcome()).toBe('event');
       });
 
+      it('falls back to non-event outcomes when all act events are exhausted', () => {
+        const s = freshState();
+        s.currentAct = 1;
+        s.seenEventIdsThisAct = ['fiakier_event', 'event_karykaturzysta', 'event_hazard_karton'];
+        s._eventNodeShopsThisAct = 0;
+
+        vi.spyOn(Math, 'random').mockReturnValue(0.9);
+        expect(s.rollEventNodeOutcome()).toBe('shop');
+      });
+
+      it('falls back to fight when non-event roll points to shop but shop quota is used', () => {
+        const s = freshState();
+        s.currentAct = 1;
+        s.seenEventIdsThisAct = ['fiakier_event', 'event_karykaturzysta', 'event_hazard_karton'];
+        s._eventNodeShopsThisAct = 1;
+
+        vi.spyOn(Math, 'random').mockReturnValue(0.9);
+        expect(s.rollEventNodeOutcome()).toBe('fight');
+      });
+
       it('returns fight for roll between 0.68 and 0.8', () => {
         const s = freshState();
         vi.spyOn(Math, 'random').mockReturnValue(0.79);
@@ -1680,6 +1700,7 @@ describe('GameState', () => {
 
       it('returns shop for roll >= 0.8', () => {
         const s = freshState();
+        s._eventNodeShopsThisAct = 0;
         vi.spyOn(Math, 'random').mockReturnValue(0.8);
         expect(s.rollEventNodeOutcome()).toBe('shop');
       });
@@ -1689,7 +1710,7 @@ describe('GameState', () => {
       it('does not repeat the same event twice in a row when alternatives exist', () => {
         const s = freshState();
         s.currentLevel = 0;
-        s.recentEventIds = ['fiakier_event'];
+        s.seenEventIdsThisAct = ['fiakier_event'];
         vi.spyOn(Math, 'random').mockReturnValue(0);
 
         const next = s.pickRandomEventDef();
@@ -1698,7 +1719,7 @@ describe('GameState', () => {
         expect(next?.id).not.toBe('fiakier_event');
       });
 
-      it('stores selected event id in recentEventIds', () => {
+      it('stores selected event id in seenEventIdsThisAct', () => {
         const s = freshState();
         s.currentLevel = 0;
         vi.spyOn(Math, 'random').mockReturnValue(0);
@@ -1706,20 +1727,30 @@ describe('GameState', () => {
         const next = s.pickRandomEventDef();
 
         expect(next).not.toBeNull();
-        expect(s.recentEventIds).toContain(next?.id);
+        expect(s.seenEventIdsThisAct).toContain(next?.id);
       });
 
-      it('does not repeat the last N-1 events so each event is seen before any repeats', () => {
+      it('does not repeat already-seen events within the same act', () => {
         const s = freshState();
         s.currentLevel = 0;
-        // With 3 act-I events, window = 2; seed recentEventIds with 2 known picks
-        s.recentEventIds = ['fiakier_event', 'event_karykaturzysta'];
+        // Seed two of the three act-I events as already seen
+        s.seenEventIdsThisAct = ['fiakier_event', 'event_karykaturzysta'];
 
         const next = s.pickRandomEventDef();
 
         expect(next).not.toBeNull();
         expect(next?.id).not.toBe('fiakier_event');
         expect(next?.id).not.toBe('event_karykaturzysta');
+      });
+
+      it('returns null when all act events were already seen', () => {
+        const s = freshState();
+        s.currentAct = 1;
+        s.seenEventIdsThisAct = ['fiakier_event', 'event_karykaturzysta', 'event_hazard_karton'];
+
+        const next = s.pickRandomEventDef();
+
+        expect(next).toBeNull();
       });
     });
 
@@ -1744,10 +1775,9 @@ describe('GameState', () => {
       it('pickRandomEventDef with currentAct=1 never returns Act II events', () => {
         const s = freshState();
         s.currentAct = 1;
-        s.recentEventIds = [];
-        // exhaust many picks
+        // exhaust many picks; reset seenEventIdsThisAct so pool doesn't dry up
         for (let i = 0; i < 30; i++) {
-          s.recentEventIds = [];
+          s.seenEventIdsThisAct = [];
           const picked = s.pickRandomEventDef();
           if (picked) {
             expect(act2EventIds).not.toContain(picked.id);
@@ -1758,9 +1788,8 @@ describe('GameState', () => {
       it('pickRandomEventDef with currentAct=2 never returns Act I events', () => {
         const s = freshState();
         s.currentAct = 2;
-        s.recentEventIds = [];
         for (let i = 0; i < 30; i++) {
-          s.recentEventIds = [];
+          s.seenEventIdsThisAct = [];
           const picked = s.pickRandomEventDef();
           if (picked) {
             expect(act1EventIds).not.toContain(picked.id);
@@ -1773,7 +1802,7 @@ describe('GameState', () => {
         s.currentAct = 2;
         const seenAct2 = new Set();
         for (let i = 0; i < 40; i++) {
-          s.recentEventIds = [];
+          s.seenEventIdsThisAct = [];
           const picked = s.pickRandomEventDef();
           if (picked && act2EventIds.includes(picked.id)) {
             seenAct2.add(picked.id);
@@ -1787,14 +1816,14 @@ describe('GameState', () => {
 
         const sAct1 = freshState();
         sAct1.currentAct = 1;
-        sAct1.recentEventIds = ['event_hazard_karton', 'event_karykaturzysta'];
+        sAct1.seenEventIdsThisAct = ['event_hazard_karton', 'event_karykaturzysta'];
         const pickedAct1 = sAct1.pickRandomEventDef();
         expect(pickedAct1?.id).toBe('fiakier_event');
 
         const sAct2 = freshState();
         sAct2.currentAct = 2;
         for (let i = 0; i < 30; i++) {
-          sAct2.recentEventIds = [];
+          sAct2.seenEventIdsThisAct = [];
           const picked = sAct2.pickRandomEventDef();
           expect(picked?.id).not.toBe('fiakier_event');
         }
@@ -1824,6 +1853,7 @@ describe('GameState', () => {
 
       it('eventOutcome is shop when roll >= 0.8', () => {
         const s = freshState();
+        s._eventNodeShopsThisAct = 0;
         vi.spyOn(Math, 'random').mockReturnValue(0.8);
         const node = s._createMapNode('event', 0, 1);
         expect(node.eventOutcome).toBe('shop');
@@ -4027,19 +4057,21 @@ describe('GameState', () => {
     it('kolejka_do_toalety: counter increments by number of status cards held at end of turn', () => {
       const s = freshState();
       s.enemy = s._createEnemyState(enemyLibrary.krolowa_schroniska);
+      s.enemy.currentIntent = { type: 'attack', name: 'Test', damage: 0, hits: 1 };
       s.hand = ['numerek_do_toalety', 'numerek_do_toalety', 'ciupaga'];
       expect(s.enemy.kolejkaCounter).toBe(0);
       s.endTurn();
       expect(s.enemy.kolejkaCounter).toBe(2);
     });
 
-    it('kolejka_do_toalety: counter resets when player holds no status cards', () => {
+    it('kolejka_do_toalety: counter persists when player holds no status cards', () => {
       const s = freshState();
       s.enemy = s._createEnemyState(enemyLibrary.krolowa_schroniska);
+      s.enemy.currentIntent = { type: 'attack', name: 'Test', damage: 0, hits: 1 };
       s.enemy.kolejkaCounter = 5;
       s.hand = ['ciupaga'];
       s.endTurn();
-      expect(s.enemy.kolejkaCounter).toBe(0);
+      expect(s.enemy.kolejkaCounter).toBe(5);
     });
 
     it('kolejka_do_toalety: status intent adds 2 + counter cards', () => {
@@ -4055,6 +4087,7 @@ describe('GameState', () => {
       const discardBefore = s.discard.length;
       s._applyEnemyIntent();
       expect(s.discard.length - discardBefore).toBe(5); // 2 + 3
+      expect(s.enemy.kolejkaCounter).toBe(0);
     });
 
     it('zmiana_pogody: harnas_pogodynka has weather_loop patternType and zmiana_pogody passive', () => {

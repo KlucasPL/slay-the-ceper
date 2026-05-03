@@ -318,6 +318,8 @@ export function resetForNewRun(state, startingDeck) {
   state.lastRegularEnemyId = 'cepr';
   state.activeEventId = null;
   state.recentEventIds = [];
+  state.seenEventIdsThisAct = [];
+  state._eventNodeShopsThisAct = 0;
   state.maryna = { offeredIds: [], pickedId: null, flags: {}, counters: {} };
   state.jumpToBoss = false;
   state.forceMainBossNextBattle = false;

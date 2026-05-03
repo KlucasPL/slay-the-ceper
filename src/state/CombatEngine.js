@@ -286,7 +286,10 @@ export function applyEnemyIntent(state) {
     if (intent.addStatusCard) {
       let amount = intent.amount ?? 1;
       if (state.enemy.passive === 'kolejka_do_toalety') {
-        amount += state.enemy.kolejkaCounter ?? 0;
+        const queued = state.enemy.kolejkaCounter ?? 0;
+        amount += queued;
+        // Queue is consumed only when Królowa actually serves this status move.
+        state.enemy.kolejkaCounter = 0;
       }
       for (let i = 0; i < amount; i++) {
         state.discard.push(intent.addStatusCard);
@@ -848,8 +851,6 @@ export function endTurn(state) {
   if (state.enemy.passive === 'kolejka_do_toalety') {
     if (playerHandStatusCount > 0) {
       state.enemy.kolejkaCounter = (state.enemy.kolejkaCounter ?? 0) + playerHandStatusCount;
-    } else {
-      state.enemy.kolejkaCounter = 0;
     }
   }
 

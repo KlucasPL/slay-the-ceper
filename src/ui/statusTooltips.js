@@ -142,7 +142,8 @@ export const statusTooltipRegistry = {
   kolejka_do_toalety: {
     icon: '🚾',
     label: 'Kolejka do Toalety',
-    tooltip: 'Ilość kart statusu w Twojej ręce (+2 za każdą) trafia do kolejki Królowej.',
+    tooltip:
+      'Na końcu tury wroga licznik kolejki rośnie o liczbę kart statusu w Twojej ręce. Przy ruchu "Gorąca zupa" Królowa dodaje 2 + licznik kart statusu i zużywa licznik.',
   },
   zmiana_pogody: {
     icon: '🌤',

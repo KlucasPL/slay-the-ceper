@@ -37,6 +37,9 @@ const MID_NODE_ELITE_CHANCE = 0.08;
 export function generateMap(state, rows = state.debugMapRows) {
   const clampedRows = Math.min(25, Math.max(10, Math.floor(rows)));
   state.debugMapRows = clampedRows;
+  // Reset per-act event deduplication counters for the new map.
+  state.seenEventIdsThisAct = [];
+  state._eventNodeShopsThisAct = 0;
   /** @type {(MapNode | null)[][]} */
   const generated = Array.from({ length: clampedRows }, () => Array(3).fill(null));
   const midCampfireLevel = Math.floor(generated.length / 2);

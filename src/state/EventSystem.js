@@ -12,27 +12,42 @@ function getCurrentAct(state) {
 }
 
 /**
- * @param {{ map: any[], currentLevel: number, recentEventIds: string[] }} state
- * @returns {import('../data/events.js').GameEventDef | null}
+ * @param {{ currentAct?: number, seenEventIdsThisAct?: string[], filterPool: (pool: string, ids: string[]) => string[] }} state
+ * @returns {string[]}
  */
-export function pickRandomEventDef(state) {
+function getUnseenEventIdsForCurrentAct(state) {
   const currentAct = getCurrentAct(state);
   const baseEventIds = Object.keys(eventLibrary).filter((id) => {
     const eventDef = eventLibrary[id];
     return eventDef?.act === currentAct;
   });
   const allEventIds = state.filterPool('events', baseEventIds);
-  if (allEventIds.length === 0) return null;
+  if (allEventIds.length === 0) return [];
 
-  const historyWindow = Math.max(0, allEventIds.length - 1);
-  const recentSlice = state.recentEventIds.slice(-historyWindow);
-  const filtered = allEventIds.filter((id) => !recentSlice.includes(id));
-  const pool = filtered.length > 0 ? filtered : allEventIds;
+  const seenThisAct = state.seenEventIdsThisAct ?? [];
+  return allEventIds.filter((id) => !seenThisAct.includes(id));
+}
 
-  const eventId = pool[Math.floor(state.rng() * pool.length)];
-  state.recentEventIds.push(eventId);
-  if (state.recentEventIds.length > historyWindow) {
-    state.recentEventIds = state.recentEventIds.slice(-historyWindow);
+/**
+ * @param {{ currentAct?: number, seenEventIdsThisAct?: string[], filterPool: (pool: string, ids: string[]) => string[] }} state
+ * @returns {boolean}
+ */
+export function hasUnseenEventsThisAct(state) {
+  return getUnseenEventIdsForCurrentAct(state).length > 0;
+}
+
+/**
+ * @param {{ map: any[], currentLevel: number, seenEventIdsThisAct: string[], rng: () => number, filterPool: (pool: string, ids: string[]) => string[] }} state
+ * @returns {import('../data/events.js').GameEventDef | null}
+ */
+export function pickRandomEventDef(state) {
+  const filtered = getUnseenEventIdsForCurrentAct(state);
+  if (filtered.length === 0) return null;
+
+  const eventId = filtered[Math.floor(state.rng() * filtered.length)];
+  const seenThisAct = state.seenEventIdsThisAct ?? [];
+  if (!seenThisAct.includes(eventId)) {
+    state.seenEventIdsThisAct = [...seenThisAct, eventId];
   }
   return eventLibrary[eventId] ?? null;
 }

@@ -283,7 +283,12 @@ export function handleMapNodeSelect(uiManager, level, nodeIndex) {
   }
 
   if (node.type === 'event') {
-    const outcome = node.eventOutcome ?? uiManager.state.rollEventNodeOutcome();
+    let outcome = node.eventOutcome ?? uiManager.state.rollEventNodeOutcome();
+    if (outcome === 'event' && !uiManager.state.hasUnseenEventsThisAct()) {
+      // Event pool exhausted for this act: remap to remaining outcomes.
+      outcome = uiManager.state.rollEventNodeOutcome();
+      node.eventOutcome = outcome;
+    }
     if (outcome === 'fight') {
       uiManager.state.hasStartedFirstBattle = true;
       uiManager.state.currentScreen = 'battle';
