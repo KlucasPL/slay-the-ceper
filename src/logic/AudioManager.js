@@ -47,6 +47,7 @@ export class AudioManager {
     const trzyKubkiEventUrl = new URL('../audio/event_trzy_kubki.mp3', import.meta.url).href;
     const toiletEventUrl = new URL('../audio/event_toilet.mp3', import.meta.url).href;
     const selfieEventUrl = new URL('../audio/event_selfie.mp3', import.meta.url).href;
+    const paragonEventUrl = new URL('../audio/event_paragon.mp3', import.meta.url).href;
 
     /** @type {HTMLAudioElement[]} Menu BGM pool — both tracks are pre-loaded; one is active at a time. */
     this.menuTrackPool = menuUrls.map((url) => this._createTrack(url, true, 0.7));
@@ -80,6 +81,8 @@ export class AudioManager {
     this.toiletEventTrack = this._createTrack(toiletEventUrl, true, 0.5);
     /** @type {HTMLAudioElement} */
     this.selfieEventTrack = this._createTrack(selfieEventUrl, true, 0.5);
+    /** @type {HTMLAudioElement} */
+    this.paragonEventTrack = this._createTrack(paragonEventUrl, true, 0.5);
 
     /** @type {'title' | 'inGame'} */
     this.context = 'title';
@@ -225,6 +228,9 @@ export class AudioManager {
     } else if (eventId === 'event_selfie_na_krawedzi') {
       this.eventSceneTrack = 'selfie';
       eventTrack = this.selfieEventTrack;
+    } else if (eventId === 'event_paragon_za_wrzatek') {
+      this.eventSceneTrack = 'paragon';
+      eventTrack = this.paragonEventTrack;
     } else {
       this.eventSceneTrack = 'fiakier';
     }
@@ -248,6 +254,10 @@ export class AudioManager {
 
   playSelfieEventMusic() {
     this.playEventMusic('event_selfie_na_krawedzi');
+  }
+
+  playParagonEventMusic() {
+    this.playEventMusic('event_paragon_za_wrzatek');
   }
 
   playBossMusic() {
@@ -383,6 +393,8 @@ export class AudioManager {
     this.toiletEventTrack.currentTime = 0;
     this.selfieEventTrack.pause();
     this.selfieEventTrack.currentTime = 0;
+    this.paragonEventTrack.pause();
+    this.paragonEventTrack.currentTime = 0;
   }
 
   playVictoryTheme() {

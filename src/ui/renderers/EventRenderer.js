@@ -49,7 +49,8 @@ export function openRandomEvent(uiManager, forcedEventId = null) {
     eventDef.id === 'event_karykaturzysta' ||
     eventDef.id === 'event_hazard_karton' ||
     eventDef.id === 'event_korek_do_toalety' ||
-    eventDef.id === 'event_selfie_na_krawedzi'
+    eventDef.id === 'event_selfie_na_krawedzi' ||
+    eventDef.id === 'event_paragon_za_wrzatek'
   ) {
     uiManager.audioManager.playEventMusic(eventDef.id);
   }
