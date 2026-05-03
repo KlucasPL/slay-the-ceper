@@ -1,0 +1,352 @@
+name: Mega Simulation
+
+on:
+  workflow_dispatch:
+    inputs:
+      games:
+        description: 'Total number of games to simulate'
+        required: true
+        default: '1000000'
+      shard_size:
+        description: 'Games per shard (keep <= 50000 to avoid OOM)'
+        required: true
+        default: '25000'
+      max_parallel:
+        description: 'How many shards to run in parallel'
+        required: true
+        default: '12'
+      base_seed:
+        description: 'First seed used by shard 0'
+        required: true
+        default: '100000'
+      agent:
+        description: 'Bot policy'
+        required: true
+        default: 'heuristic'
+        type: choice
+        options:
+          - heuristic
+          - random
+          - aggressive
+          - defensive
+          - status
+          - greedy
+          - minimalist
+          - economy
+          - search
+          - search-mcts
+      verbosity:
+        description: 'summary is required for dashboard/enemy heatmap'
+        required: true
+        default: 'off'
+        type: choice
+        options:
+          - off
+          - summary
+          - full
+      dashboard:
+        description: 'Build downloadable dashboard artifact (full or sampled; requires summary)'
+        required: true
+        default: false
+        type: boolean
+      dashboard_sample_games:
+        description: 'Max runs used for dashboard metrics when total games are larger (sampled mode)'
+        required: true
+        default: '250000'
+      keep_merged_jsonl:
+        description: 'Upload merged JSONL artifact (large)'
+        required: true
+        default: false
+        type: boolean
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+      shard_count: ${{ steps.plan.outputs.shard_count }}
+      dashboard_enabled: ${{ steps.plan.outputs.dashboard_enabled }}
+      dashboard_mode: ${{ steps.plan.outputs.dashboard_mode }}
+      dashboard_reason: ${{ steps.plan.outputs.dashboard_reason }}
+      dashboard_games: ${{ steps.plan.outputs.dashboard_games }}
+      total_games: ${{ steps.plan.outputs.total_games }}
+      shard_size: ${{ steps.plan.outputs.shard_size }}
+    steps:
+      - name: Build shard plan
+        id: plan
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          GAMES=${{ inputs.games }}
+          SHARD_SIZE=${{ inputs.shard_size }}
+          DASHBOARD_SAMPLE_GAMES=${{ inputs.dashboard_sample_games }}
+          VERBOSITY='${{ inputs.verbosity }}'
+          DASHBOARD='${{ inputs.dashboard }}'
+
+          if [ "$GAMES" -le 0 ]; then
+            echo "games must be > 0" >&2
+            exit 1
+          fi
+          if [ "$SHARD_SIZE" -le 0 ]; then
+            echo "shard_size must be > 0" >&2
+            exit 1
+          fi
+          if [ "$DASHBOARD_SAMPLE_GAMES" -le 0 ]; then
+            echo "dashboard_sample_games must be > 0" >&2
+            exit 1
+          fi
+
+          SHARD_COUNT=$(( (GAMES + SHARD_SIZE - 1) / SHARD_SIZE ))
+          if [ "$SHARD_COUNT" -gt 256 ]; then
+            echo "Shard count $SHARD_COUNT exceeds GitHub matrix limit (256). Increase shard_size." >&2
+            exit 1
+          fi
+
+          DASHBOARD_ENABLED=false
+          DASHBOARD_MODE='disabled'
+          DASHBOARD_REASON='disabled_by_input'
+          DASHBOARD_GAMES=0
+
+          if [ "$DASHBOARD" = 'true' ]; then
+            if [ "$VERBOSITY" != 'summary' ]; then
+              DASHBOARD_REASON='dashboard_requires_summary_verbosity'
+            else
+              DASHBOARD_ENABLED=true
+              if [ "$GAMES" -gt "$DASHBOARD_SAMPLE_GAMES" ]; then
+                DASHBOARD_MODE='sampled'
+                DASHBOARD_REASON='enabled_sampled_dashboard'
+                DASHBOARD_GAMES=$DASHBOARD_SAMPLE_GAMES
+              else
+                DASHBOARD_MODE='full'
+                DASHBOARD_REASON='enabled_full_dashboard'
+                DASHBOARD_GAMES=$GAMES
+              fi
+            fi
+          fi
+
+          MATRIX=$(node -e "const n=Number(process.argv[1]); console.log(JSON.stringify(Array.from({length:n}, (_, i) => i)));" "$SHARD_COUNT")
+
+          echo "matrix=$MATRIX" >> "$GITHUB_OUTPUT"
+          echo "shard_count=$SHARD_COUNT" >> "$GITHUB_OUTPUT"
+          echo "dashboard_enabled=$DASHBOARD_ENABLED" >> "$GITHUB_OUTPUT"
+          echo "dashboard_mode=$DASHBOARD_MODE" >> "$GITHUB_OUTPUT"
+          echo "dashboard_reason=$DASHBOARD_REASON" >> "$GITHUB_OUTPUT"
+          echo "dashboard_games=$DASHBOARD_GAMES" >> "$GITHUB_OUTPUT"
+          echo "total_games=$GAMES" >> "$GITHUB_OUTPUT"
+          echo "shard_size=$SHARD_SIZE" >> "$GITHUB_OUTPUT"
+
+  run-shards:
+    needs: prepare
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      max-parallel: ${{ fromJSON(inputs.max_parallel) }}
+      matrix:
+        shard: ${{ fromJSON(needs.prepare.outputs.matrix) }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run shard simulation
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          INDEX=${{ matrix.shard }}
+          TOTAL_GAMES=${{ inputs.games }}
+          SHARD_SIZE=${{ inputs.shard_size }}
+          BASE_SEED=${{ inputs.base_seed }}
+
+          START_SEED=$(( BASE_SEED + INDEX * SHARD_SIZE ))
+          REMAINING=$(( TOTAL_GAMES - INDEX * SHARD_SIZE ))
+          GAMES_THIS=$SHARD_SIZE
+          if [ "$REMAINING" -lt "$SHARD_SIZE" ]; then
+            GAMES_THIS=$REMAINING
+          fi
+
+          mkdir -p metrics/shards logs
+
+          echo "Running shard=$INDEX games=$GAMES_THIS seed_start=$START_SEED"
+
+          node --max-old-space-size=8192 scripts/sim/index.js \
+            --games "$GAMES_THIS" \
+            --seed "$START_SEED" \
+            --agent "${{ inputs.agent }}" \
+            --verbosity "${{ inputs.verbosity }}" \
+            --out "metrics/shards/shard-${INDEX}.jsonl" \
+            2>&1 | tee "logs/shard-${INDEX}.log"
+
+          gzip -9 "metrics/shards/shard-${INDEX}.jsonl"
+
+          cat > "metrics/shards/shard-${INDEX}.meta.json" <<EOF
+          {
+            "shard": ${INDEX},
+            "games": ${GAMES_THIS},
+            "seedStart": ${START_SEED},
+            "agent": "${{ inputs.agent }}",
+            "verbosity": "${{ inputs.verbosity }}"
+          }
+          EOF
+
+      - name: Upload shard artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sim-shard-${{ matrix.shard }}
+          path: |
+            metrics/shards/shard-${{ matrix.shard }}.jsonl.gz
+            metrics/shards/shard-${{ matrix.shard }}.meta.json
+            logs/shard-${{ matrix.shard }}.log
+          retention-days: 14
+
+  aggregate:
+    needs: [prepare, run-shards]
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download all shard artifacts
+        uses: actions/download-artifact@v5
+        with:
+          path: metrics/shards
+          pattern: sim-shard-*
+          merge-multiple: true
+
+      - name: Build shard manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          COUNT=$(find metrics/shards -name 'shard-*.jsonl.gz' | wc -l | tr -d ' ')
+          echo "Downloaded shard files: $COUNT"
+          ls -1 metrics/shards/shard-*.meta.json > /tmp/meta-files.txt
+
+          node - <<'EOF'
+          const fs = require('node:fs');
+          const list = fs.readFileSync('/tmp/meta-files.txt', 'utf8').trim().split('\n').filter(Boolean);
+          const meta = list.map((p) => JSON.parse(fs.readFileSync(p, 'utf8')));
+          meta.sort((a, b) => a.shard - b.shard);
+          fs.writeFileSync('metrics/manifest.json', JSON.stringify({ shards: meta }, null, 2));
+          EOF
+
+      - name: Upload merged shard package
+        uses: actions/upload-artifact@v4
+        with:
+          name: mega-sim-shards
+          path: |
+            metrics/shards/*.jsonl.gz
+            metrics/shards/*.meta.json
+            metrics/manifest.json
+          retention-days: 14
+
+      - name: Build dashboard metrics
+        if: needs.prepare.outputs.dashboard_enabled == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p metrics
+
+          find metrics/shards -name 'shard-*.jsonl.gz' | sort -V > /tmp/shard-files.txt
+
+          if [ '${{ needs.prepare.outputs.dashboard_mode }}' = 'full' ]; then
+            gunzip -c metrics/shards/shard-*.jsonl.gz > metrics/dashboard.input.jsonl
+          else
+            TARGET=${{ needs.prepare.outputs.dashboard_games }}
+            FOUND=0
+            : > metrics/dashboard.input.jsonl
+            while IFS= read -r GZ_FILE; do
+              if [ "$FOUND" -ge "$TARGET" ]; then
+                break
+              fi
+              NEED=$(( TARGET - FOUND ))
+              gunzip -c "$GZ_FILE" | awk -v limit="$NEED" 'NR <= limit { print } NR == limit { exit }' > /tmp/dashboard-sample-chunk.jsonl
+              ADDED=$(wc -l < /tmp/dashboard-sample-chunk.jsonl | tr -d ' ')
+              if [ "$ADDED" -eq 0 ]; then
+                continue
+              fi
+              cat /tmp/dashboard-sample-chunk.jsonl >> metrics/dashboard.input.jsonl
+              FOUND=$(( FOUND + ADDED ))
+            done < /tmp/shard-files.txt
+            echo "Sampled dashboard input records: $FOUND"
+          fi
+
+          node --max-old-space-size=8192 scripts/analyze.js \
+            metrics/dashboard.input.jsonl \
+            tools/dashboard/metrics.json
+
+          npm run dashboard:vendor
+
+          mkdir -p metrics/dashboard
+          cp -R tools/dashboard/* metrics/dashboard/
+
+      - name: Upload dashboard artifact
+        if: needs.prepare.outputs.dashboard_enabled == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: mega-sim-dashboard
+          path: metrics/dashboard
+          retention-days: 14
+
+      - name: Upload merged JSONL artifact
+        if: needs.prepare.outputs.dashboard_enabled == 'true' && inputs.keep_merged_jsonl
+        shell: bash
+        run: |
+          set -euo pipefail
+          gzip -9 metrics/dashboard.input.jsonl
+
+      - name: Upload merged JSONL file
+        if: needs.prepare.outputs.dashboard_enabled == 'true' && inputs.keep_merged_jsonl
+        uses: actions/upload-artifact@v4
+        with:
+          name: mega-sim-merged-jsonl
+          path: metrics/dashboard.input.jsonl.gz
+          retention-days: 7
+
+      - name: Workflow summary
+        shell: bash
+        run: |
+          {
+            echo "# Mega Simulation Summary"
+            echo ""
+            echo "- total games: ${{ needs.prepare.outputs.total_games }}"
+            echo "- shard size: ${{ needs.prepare.outputs.shard_size }}"
+            echo "- shard count: ${{ needs.prepare.outputs.shard_count }}"
+            echo "- agent: ${{ inputs.agent }}"
+            echo "- verbosity: ${{ inputs.verbosity }}"
+            echo "- dashboard enabled: ${{ needs.prepare.outputs.dashboard_enabled }}"
+            echo "- dashboard mode: ${{ needs.prepare.outputs.dashboard_mode }}"
+            echo "- dashboard runs analyzed: ${{ needs.prepare.outputs.dashboard_games }}"
+            echo "- dashboard reason: ${{ needs.prepare.outputs.dashboard_reason }}"
+            echo ""
+            echo "Artifacts:"
+            echo "- sim-shard-* (per-shard logs + gzipped jsonl)"
+            echo "- mega-sim-shards (combined shard package + manifest)"
+            if [ "${{ needs.prepare.outputs.dashboard_enabled }}" = 'true' ]; then
+              echo "- mega-sim-dashboard (static dashboard with metrics.json)"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
