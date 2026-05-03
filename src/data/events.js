@@ -338,38 +338,42 @@ export const eventLibrary = {
     choices: [
       {
         text: 'Kup szybkie wejście (30 dutków)',
-        description: 'Wciskasz banknotówy w szparę i wchodzisz bez kolejki. Krótka chwila spokoju.',
-        consequence: 'Koszt: 30 dutków. Nagroda: +10 Krzepy.',
+        description:
+          'Wciskasz banknoty w szparę i wchodzisz bez kolejki. Chwila ciszy i świeżości — prawdziwy luksus na szlaku.',
+        consequence: 'Koszt: 30 dutków. Nagroda: uleczenie +12 Krzepy (do max).',
         cost: 30,
         effect(state) {
-          state.healPlayer(10);
-          return 'Świeży i wypoczęty wychodzisz z toalety. Odzyskałeś 10 Krzepy.';
+          state.healPlayer(12);
+          return 'Świeży i wypoczęty wychodzisz z toalety. Odzyskałeś 12 Krzepy.';
         },
       },
       {
         text: 'Stój w kolejce',
-        description: 'Czekasz cierpliwie. Godzina mija. Nogi bolą. Za to portfel cały.',
+        description:
+          'Czekasz godzinę. Potem drugą. Nogi odmawiają posłuszeństwa. Obserwujesz tłum i wyciągasz wnioski.',
         consequence:
-          'Koszt: czas. Efekt: karta Ulotka trafia do talii, +15 dutków za znoszoną cierpliwość.',
+          'Koszt: -6 Krzepy (nogi bolą). Nagroda: karta Spostrzegawczość trafia do talii.',
         cost: 0,
         effect(state) {
-          state.deck.push('ulotka');
-          state.addDutki(15);
-          return 'Czekałeś jak mężczyzna. Ktoś dał Ci ulotkę i monetę ze współczucia (+15 dutków, karta Ulotka).';
+          state.player.hp = Math.max(1, state.player.hp - 6);
+          state.deck.push('spostrzegawczosc');
+          return 'Dwie godziny w kolejce zahartowały twój wzrok. Karta Spostrzegawczość w talii, ale nogi płaczą (-6 Krzepy).';
         },
       },
       {
         text: 'Idź w krzaki (ryzyko)',
-        description: 'Znasz las lepiej niż toaletę. Ale TPN czuwa.',
-        consequence: '50% szans: +25 dutków. 50%: wróg wypada z krzaków — walka wydarzeniowa!',
+        description: 'Znasz las lepiej niż toaletę. Ale TPN czuwa — i mandat do kompletu.',
+        consequence:
+          '50% szans: +45 dutków (spokój). 50%: bileter z TPN wyskakuje z krzaków — walka wydarzeniowa i -8 Krzepy wstydu!',
         cost: 0,
         effect(state) {
           if (state.rng() < 0.5) {
-            state.addDutki(25);
-            return 'Cisza, śpiew ptaków i +25 dutków. Nikt nie widział.';
+            state.addDutki(45);
+            return 'Cisza, śpiew ptaków. Nikt nie widział. +45 dutków w kieszeni.';
           }
+          state.player.hp = Math.max(1, state.player.hp - 8);
           state.queueEventBattle('bileter_z_tpn', null);
-          return 'Z krzaków wyskakuje bileter z TPN-u z mandatem! Czas walczyć!';
+          return 'Z krzaków wyskakuje bileter z TPN-u z mandatem i aparatem! Wstyd i bitwa! (-8 Krzepy)';
         },
       },
     ],
@@ -385,35 +389,39 @@ export const eventLibrary = {
     choices: [
       {
         text: 'Pomóż zrobić ujęcie',
-        description: 'Fotograf-amator na chwilę. Twoje ręce drżą z wysiłku i strachu o aparat.',
-        consequence: 'Nagroda: karta Spostrzegawczość. Koszt: -3 Krzepy (spięte mięśnie).',
+        description:
+          'Fotograf-amator na chwilę. Przez dwie godziny wisisz na krawędzi z jej telefonem. Twoje serce bije jak oszalałe.',
+        consequence:
+          'Koszt: -5 Krzepy (prawie spadłeś). Nagroda: karta Furia Turysty trafia do talii (adrenalina z przepaści).',
         cost: 0,
         effect(state) {
-          state.player.hp = Math.max(1, state.player.hp - 3);
-          state.deck.push('spostrzegawczosc');
-          return 'Trzysta ujęć. Trzysta. Twoje ramiona płoną, ale karta Spostrzegawczość trafia do talii.';
+          state.player.hp = Math.max(1, state.player.hp - 5);
+          state.deck.push('furia_turysty');
+          return 'Trzysta ujęć na krawędzi przepaści. Twoje serce jeszcze bije, ale karta Furia Turysty trafia do talii (-5 Krzepy).';
         },
       },
       {
-        text: 'Sprzedaj jej kijek selfie (zysk)',
-        description: 'Masz stary kijaszek. Ona desperacko potrzebuje zasięgu. Biznes gotowy.',
+        text: 'Sprzedaj jej kijek selfie',
+        description:
+          'Masz stary kijaszek — ona desperacko go potrzebuje. Biznes gotowy. Dopiero na zjeździe okazuje się, że kijki były jednak do czegoś.',
         consequence:
-          'Nagroda: +40 dutków. Koszt: karta Pocieszenie trafia do talii (bez kija ciężej).',
+          'Koszt: -8 Krzepy (skręcona kostka bez kijków). Nagroda: karta Prestiż na Kredyt w talii (wrzuciła Cię na story jako legendarnego przewodnika).',
         cost: 0,
         effect(state) {
-          state.addDutki(40);
-          state.deck.push('pocieszenie');
-          return 'Targu dobrego! 40 dutków w kieszeni, ale bez kija góry wyglądają inaczej (+40 dutków, karta Pocieszenie).';
+          state.player.hp = Math.max(1, state.player.hp - 8);
+          state.deck.push('prestiz_na_kredyt');
+          return 'Kijki sprzedane. Zejście bez nich skończyło się skręconą kostką (-8 Krzepy), ale karta Prestiż na Kredyt w talii.';
         },
       },
       {
         text: 'Zgaś temat i idź dalej',
-        description: 'Masz dość contentu. Zostawiasz ją z telefonem i idziesz w swoją stronę.',
-        consequence: 'Nagroda: +6 Krzepy (spokój wewnętrzny). Bez kosztów.',
+        description:
+          'Masz dość contentu, krawędzi i telefonów. Zostawiasz ją z problemem i idziesz spokojnie swoją drogą.',
+        consequence: 'Nagroda: uleczenie +8 Krzepy (spokój ducha to najlepsza dieta). Bez kosztów.',
         cost: 0,
         effect(state) {
-          state.healPlayer(6);
-          return 'Cisza. Spokój. Dobre zdrowie. Odzyskałeś 6 Krzepy.';
+          state.healPlayer(8);
+          return 'Cisza. Świeże powietrze. Żadnych telefonów. Odzyskałeś 8 Krzepy.';
         },
       },
     ],
@@ -447,13 +455,13 @@ export const eventLibrary = {
         text: 'Negocjuj cenę (15 dutków)',
         description: 'Targuj się jak na bazarze. Może uda się zbić cenę.',
         consequence:
-          '50%: pełen zwrot 15 dutków + 5 Krzepy. 50%: płacisz i dostajesz kartę Ulotka.',
+          '50%: pełen zwrot 15 dutków + 8 Krzepy. 50%: płacisz i dostajesz kartę Ulotka.',
         cost: 15,
         effect(state) {
           if (state.rng() < 0.5) {
             state.addDutki(15);
-            state.healPlayer(5);
-            return 'Właścicielka się ugięła. Zwróciła 15 dutków i dolała herbaty gratis (+5 Krzepy).';
+            state.healPlayer(8);
+            return 'Właścicielka się ugięła. Zwróciła 15 dutków i dolała herbaty gratis (+8 Krzepy).';
           }
           state.deck.push('ulotka');
           return 'Negocjacje skończyły się formularzem skargi w dłoniach. Karta Ulotka w talii.';
@@ -463,11 +471,12 @@ export const eventLibrary = {
         text: 'Awantura przy ladzie',
         description:
           'To jest skandal, złodziejstwo i naruszenie praw konsumenta! Wzywasz wszystkich na świadków!',
-        consequence: 'Walka wydarzeniowa z Bileterem z TPN. Po wygranej: relikt Zasluzony Portfel.',
+        consequence:
+          'Walka wydarzeniowa z Kelnerem Schroniska. Po wygranej: relikt Zasłużony Portfel.',
         cost: 0,
         effect(state) {
-          state.queueEventBattle('bileter_z_tpn', 'zasluzony_portfel');
-          return 'Skandal przy kasie! Obsługa schroniska ruszy na Ciebie z klipboardem!';
+          state.queueEventBattle('kelner_schroniska', 'zasluzony_portfel');
+          return "Kelner chwyta ścierkę jak broń. 'Wynocha z mojego schroniska!'";
         },
       },
     ],

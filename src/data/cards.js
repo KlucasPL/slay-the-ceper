@@ -660,6 +660,23 @@ export const cardLibrary = {
     },
   },
 
+  nadprogramowy_paragon: {
+    id: 'nadprogramowy_paragon',
+    name: 'Nadprogramowy Paragon',
+    type: 'status',
+    rarity: 'common',
+    cost: 1,
+    price: 1,
+    isStarter: true,
+    exhaust: true,
+    emoji: '🧾',
+    desc: 'Zapłać 1 Oscypek i wyrzuć. Póki na ręce — tracisz 3 dutki co turę.',
+    effect(state) {
+      void state;
+      return {};
+    },
+  },
+
   wydruk_z_kasy: {
     id: 'wydruk_z_kasy',
     name: 'Wydruk z Kasy',

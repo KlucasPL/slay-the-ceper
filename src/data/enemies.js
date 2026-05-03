@@ -885,6 +885,50 @@ const boberSprite = `
   <circle cx="67" cy="33" r="4" fill="#aa6633"/>
 </svg>`;
 
+const kelnerSchroniskaSprite = `
+<svg viewBox="0 0 100 100" width="120" height="120">
+  <!-- counter edge -->
+  <rect x="0" y="85" width="100" height="15" fill="#8b5a2b"/>
+  <rect x="0" y="82" width="100" height="5" fill="#a0692e"/>
+  <!-- receipt on counter -->
+  <rect x="64" y="71" width="22" height="14" rx="2" fill="#fafafa" stroke="#ccc" stroke-width="1"/>
+  <polyline points="64,71 67,75 70,71 73,75 76,71 79,75 82,71 85,71" fill="none" stroke="#ccc" stroke-width="1"/>
+  <line x1="67" y1="78" x2="84" y2="78" stroke="#ccc" stroke-width="0.75"/>
+  <line x1="67" y1="81" x2="84" y2="81" stroke="#ccc" stroke-width="0.75"/>
+  <!-- legs -->
+  <line x1="43" y1="78" x2="41" y2="92" stroke="#1a1a1a" stroke-width="7"/>
+  <line x1="57" y1="78" x2="59" y2="92" stroke="#1a1a1a" stroke-width="7"/>
+  <!-- dark trousers -->
+  <rect x="36" y="60" width="28" height="20" rx="3" fill="#2a2a2a"/>
+  <!-- dark vest/uniform -->
+  <rect x="30" y="40" width="40" height="26" rx="6" fill="#1a2a3a"/>
+  <!-- white apron bib -->
+  <rect x="38" y="40" width="24" height="32" rx="3" fill="#f5f5f5"/>
+  <line x1="38" y1="42" x2="30" y2="46" stroke="#ddd" stroke-width="2"/>
+  <line x1="62" y1="42" x2="70" y2="46" stroke="#ddd" stroke-width="2"/>
+  <!-- arm left holding receipt -->
+  <line x1="30" y1="52" x2="12" y2="60" stroke="#f0b090" stroke-width="7" stroke-linecap="round"/>
+  <rect x="5" y="55" width="10" height="14" rx="2" fill="#fafafa" stroke="#aaa" stroke-width="1"/>
+  <polyline points="5,55 7,58 9,55 11,58 13,55 15,55" fill="none" stroke="#aaa" stroke-width="1"/>
+  <!-- arm right raised in anger -->
+  <line x1="70" y1="50" x2="88" y2="40" stroke="#f0b090" stroke-width="7" stroke-linecap="round"/>
+  <line x1="88" y1="40" x2="94" y2="32" stroke="#f0b090" stroke-width="4" stroke-linecap="round"/>
+  <!-- head -->
+  <circle cx="50" cy="24" r="15" fill="#f0b090"/>
+  <!-- slicked-back hair -->
+  <path d="M 35,22 Q 50,10 65,22 L 65,28 Q 50,16 35,28 Z" fill="#2a1a0a"/>
+  <!-- mustache -->
+  <path d="M 44,32 Q 50,35 56,32" fill="#2a1a0a"/>
+  <!-- stern brows -->
+  <line x1="37" y1="20" x2="44" y2="22" stroke="#333" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="56" y1="22" x2="63" y2="20" stroke="#333" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- eyes -->
+  <circle cx="42" cy="26" r="2.5" fill="#333"/>
+  <circle cx="58" cy="26" r="2.5" fill="#333"/>
+  <!-- tight-lipped mouth -->
+  <line x1="44" y1="33" x2="56" y2="33" stroke="#994422" stroke-width="2" stroke-linecap="round"/>
+</svg>`;
+
 const krolowaSchroniskaSprite = `
 <svg viewBox="0 0 100 100" width="140" height="140">
   <!-- counter -->
@@ -1394,6 +1438,29 @@ export const enemyLibrary = {
       { type: 'attack', name: 'Inspekcja paragonu', damage: 14, hits: 1, applyWeak: 1 },
       { type: 'buff', name: 'Wezwanie straży', strengthGain: 2, block: 16 },
       { type: 'attack', name: 'Mandat za wydeptanie', damage: 18, hits: 1, applyFrail: 1 },
+    ],
+  },
+  kelner_schroniska: {
+    id: 'kelner_schroniska',
+    name: 'Kelner Schroniska',
+    emoji: '🍽️',
+    eventOnly: true,
+    hp: 78,
+    maxHp: 78,
+    block: 0,
+    baseAttack: 0,
+    act: 2,
+    spriteSvg: kelnerSchroniskaSprite,
+    patternType: 'loop',
+    pattern: [
+      {
+        type: 'status',
+        name: 'Paragon za paragon',
+        addStatusCard: 'nadprogramowy_paragon',
+        amount: 1,
+      },
+      { type: 'buff', name: 'Dopłata za obsługę', strengthGain: 2, block: 12 },
+      { type: 'attack', name: 'Wyrzucenie z lokalu', damage: 16, hits: 1, applyFrail: 1 },
     ],
   },
   meleksiarz_pirat_drogowy: {

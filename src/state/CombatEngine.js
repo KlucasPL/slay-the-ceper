@@ -733,6 +733,10 @@ export function endTurn(state) {
     state.dutki = Math.max(0, state.dutki - 2);
   }
 
+  if (state.hand.some((entry) => getBaseCardId(entry) === 'nadprogramowy_paragon')) {
+    state.dutki = Math.max(0, state.dutki - 3);
+  }
+
   if (
     state.enemy.currentIntent.type === 'attack' &&
     state.enemy.currentIntent.damagePerCardInHand

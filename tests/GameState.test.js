@@ -3383,6 +3383,7 @@ describe('GameState', () => {
         'influencerka',
         'insta_taterniczka',
         'janusz_znawca_szlakow',
+        'kelner_schroniska',
         'konik_spod_kuznic',
         'krolowa_schroniska',
         'meleksiarz_pirat_drogowy',
@@ -3804,6 +3805,15 @@ describe('GameState', () => {
       s.dutki = 3;
       s.endTurn();
       expect(s.dutki).toBe(1);
+    });
+
+    it('nadprogramowy_paragon: drains 3 dutki per turn while in hand', () => {
+      const s = freshState();
+      s.enemy = s._createEnemyState(enemyLibrary.kelner_schroniska);
+      s.hand = ['nadprogramowy_paragon'];
+      s.dutki = 5;
+      s.endTurn();
+      expect(s.dutki).toBe(2);
     });
 
     it('wiecznie_glodny: glodny_swistak heals 4 HP at start of enemy turn when not at full HP', () => {
