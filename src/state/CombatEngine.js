@@ -365,24 +365,27 @@ export function applyEnemyIntent(state) {
   }
 
   if (intent.stealCard && dealt > 0) {
-    // Pick a random card from hand or discard (non-status cards only)
-    const stealableHand = state.hand.filter((id) => getCardDefinition(id)?.type !== 'status');
-    const stealableDiscard = state.discard.filter((id) => getCardDefinition(id)?.type !== 'status');
-    const allStealable = [...stealableHand, ...stealableDiscard];
-    if (allStealable.length > 0) {
-      const idx = Math.floor(state.rng() * allStealable.length);
-      const stolenId = allStealable[idx];
-      const handIdx = state.hand.indexOf(stolenId);
-      if (handIdx !== -1) {
-        state.hand.splice(handIdx, 1);
+    // Build stealable entries with source pile and real index to avoid indexOf
+    // duplicates (same card ID appearing in both hand and discard).
+    const stealableEntries = [
+      ...state.hand
+        .map((id, i) => ({ id, pile: 'hand', realIndex: i }))
+        .filter((e) => getCardDefinition(e.id)?.type !== 'status'),
+      ...state.discard
+        .map((id, i) => ({ id, pile: 'discard', realIndex: i }))
+        .filter((e) => getCardDefinition(e.id)?.type !== 'status'),
+    ];
+    if (stealableEntries.length > 0) {
+      const pick = stealableEntries[Math.floor(state.rng() * stealableEntries.length)];
+      if (pick.pile === 'hand') {
+        state.hand.splice(pick.realIndex, 1);
       } else {
-        const discardIdx = state.discard.indexOf(stolenId);
-        if (discardIdx !== -1) state.discard.splice(discardIdx, 1);
+        state.discard.splice(pick.realIndex, 1);
       }
       if (!Array.isArray(state.enemy.stolenCards)) state.enemy.stolenCards = [];
-      state.enemy.stolenCards.push(stolenId);
-      state.lastStolenCardId = stolenId;
-      emitS(state, 'card_stolen', { cardId: stolenId });
+      state.enemy.stolenCards.push(pick.id);
+      state.lastStolenCardId = pick.id;
+      emitS(state, 'card_stolen', { cardId: pick.id });
     }
   }
 
