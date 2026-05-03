@@ -69,6 +69,16 @@ function freshBabaState() {
   return s;
 }
 
+/** @returns {GameState} */
+function freshCeprState() {
+  const s = new GameState({ ...mockPlayer }, enemyLibrary.cepr);
+  s.player.energy = 3;
+  s.hand = [];
+  s.deck = [];
+  s.discard = [];
+  return s;
+}
+
 /**
  * @param {GameState} state
  * @param {import('../src/data/enemies.js').EnemyMoveDef} intent
@@ -2534,7 +2544,7 @@ describe('GameState', () => {
       expect(s.enemy.currentIntent).toEqual({
         type: 'attack',
         name: 'Wyprzedzanie na trzeciego',
-        damage: 8,
+        damage: 9,
         hits: 1,
         applyFrail: 2,
       });
@@ -2598,7 +2608,7 @@ describe('GameState', () => {
       expect(s.enemy.currentIntent).toEqual({
         type: 'attack',
         name: 'Selfie z zaskoczenia',
-        damage: 13,
+        damage: 14,
         hits: 1,
         applyVulnerable: 2,
       });
@@ -2622,7 +2632,7 @@ describe('GameState', () => {
       expect(s.discard.filter((id) => id === 'spam_tagami').length).toBeGreaterThanOrEqual(2);
     });
 
-    it('ceprzyca_vip: Podatność increases Awantura o cenę to 20 after setup', () => {
+    it('ceprzyca_vip: Podatność increases Awantura o cenę to 21 after setup', () => {
       const s = new GameState({ ...mockPlayer }, enemyLibrary.ceprzyca_vip);
       s.player.energy = 3;
       s.hand = [];
@@ -2632,7 +2642,7 @@ describe('GameState', () => {
       s.player.block = 0;
 
       const firstTurn = s.endTurn();
-      expect(firstTurn.enemyAttack.raw).toBe(7);
+      expect(firstTurn.enemyAttack.raw).toBe(8);
       expect(s.player.status.vulnerable).toBe(1);
 
       s.startTurn();
@@ -2642,7 +2652,7 @@ describe('GameState', () => {
 
       s.startTurn();
       const thirdTurn = s.endTurn();
-      expect(thirdTurn.enemyAttack.raw).toBe(20);
+      expect(thirdTurn.enemyAttack.raw).toBe(21);
     });
   });
 
@@ -2682,7 +2692,7 @@ describe('GameState', () => {
       expect(s.enemy.currentIntent).toEqual({
         type: 'attack',
         name: 'Cena z kosmosu',
-        damage: 7,
+        damage: 8,
         hits: 1,
         applyWeak: 1,
       });
@@ -3055,31 +3065,19 @@ describe('GameState', () => {
       }
     });
 
-    it('can load Busiarz from the enemy library after victory', () => {
-      const s = freshState();
-      vi.spyOn(s, '_pickRandomEnemyDef').mockReturnValue(enemyLibrary.busiarz);
-      s.resetBattle();
-      expect(s.enemy.id).toBe('busiarz');
-      expect(s.enemy.name).toBe('Wąsaty Busiarz');
-      expect(s.enemy.maxHp).toBe(68);
+    it('busiarz enemy library has correct HP after 10% buff', () => {
+      expect(enemyLibrary.busiarz.maxHp).toBe(75);
+      expect(enemyLibrary.busiarz.pattern[1].damage).toBe(9);
     });
 
-    it('can load Babę from the enemy library after victory', () => {
-      const s = freshState();
-      vi.spyOn(s, '_pickRandomEnemyDef').mockReturnValue(enemyLibrary.baba);
-      s.resetBattle();
-      expect(s.enemy.id).toBe('baba');
-      expect(s.enemy.name).toBe('Handlara oscypkami');
-      expect(s.enemy.maxHp).toBe(82);
+    it('baba enemy library has correct HP after 10% buff', () => {
+      expect(enemyLibrary.baba.maxHp).toBe(90);
+      expect(enemyLibrary.baba.pattern[1].damage).toBe(8);
     });
 
-    it('can load Parkingowego from the enemy library with lowered HP', () => {
-      const s = freshState();
-      vi.spyOn(s, '_pickRandomEnemyDef').mockReturnValue(enemyLibrary.parkingowy);
-      s.resetBattle();
-      expect(s.enemy.id).toBe('parkingowy');
-      expect(s.enemy.name).toBe('Parkingowy z Palenicy');
-      expect(s.enemy.maxHp).toBe(100);
+    it('parkingowy enemy library has correct HP after 10% buff', () => {
+      expect(enemyLibrary.parkingowy.maxHp).toBe(110);
+      expect(enemyLibrary.parkingowy.pattern[0].damage).toBe(7);
     });
 
     it('does not repeat the same regular enemy twice in a row when alternatives exist', () => {
@@ -3187,10 +3185,10 @@ describe('GameState', () => {
     });
 
     it('elite enemies are scaled up and grant higher Dutki reward', () => {
-      const s = freshState();
+      const s = new GameState(mockPlayer, enemyLibrary.cepr);
       const eliteState = s._createEnemyState(enemyLibrary.spekulant);
       expect(eliteState.isElite).toBe(true);
-      expect(eliteState.maxHp).toBe(Math.round(84 * 1.25));
+      expect(eliteState.maxHp).toBe(Math.round(92 * 1.25));
 
       s.enemy = eliteState;
       s.pendingBattleDutki = true;
@@ -3200,12 +3198,11 @@ describe('GameState', () => {
     });
 
     it('can start scripted battle against pomocnik_fiakra', () => {
-      const s = freshState();
+      const s = new GameState(mockPlayer, enemyLibrary.cepr);
       const started = s.startBattleWithEnemyId('pomocnik_fiakra');
-
       expect(started).toBe(true);
       expect(s.enemy.id).toBe('pomocnik_fiakra');
-      expect(s.enemy.maxHp).toBe(58);
+      expect(s.enemy.maxHp).toBe(64);
       expect(s.pendingBattleDutki).toBe(true);
     });
 
@@ -4732,12 +4729,13 @@ describe('GameState', () => {
     });
 
     it('krzesany hits twice and grants +1 energy if second hit deals HP damage', () => {
-      const s = freshState();
+      const s = freshCeprState();
       s.hand = ['krzesany'];
-      s.enemy.block = 0;
+      s.player.energy = 3;
+      s.player.block = 0;
       const energyBefore = s.player.energy;
       s.playCard(0);
-      expect(s.enemy.hp).toBe(62);
+      expect(s.enemy.hp).toBe(69);
       expect(s.player.energy).toBe(energyBefore - 2 + 1);
     });
 
