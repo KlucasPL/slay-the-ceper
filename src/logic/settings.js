@@ -6,6 +6,8 @@ const MENU_MUSIC_KEY = 'slay-the-ceper:menu-music';
 const GAME_MUSIC_KEY = 'slay-the-ceper:game-music';
 /** @type {string} localStorage key for analytics preference. */
 const ANALYTICS_ENABLED_KEY = 'slay-the-ceper:analytics-enabled';
+/** @type {string} localStorage key for language preference. */
+const LANGUAGE_KEY = 'slay-the-ceper:language';
 /** @type {string} localStorage key for global text size preference. */
 const TEXT_SIZE_KEY = 'slay-the-ceper:text-size';
 /** @type {string} localStorage key for text-size schema version. */
@@ -14,6 +16,7 @@ const TEXT_SIZE_SCHEMA_KEY = 'slay-the-ceper:text-size-schema';
 const TEXT_SIZE_SCHEMA_VERSION = '2';
 
 /** @typedef {'normal' | 'large' | 'xlarge'} TextSizePreset */
+/** @typedef {'pl' | 'en'} LanguageCode */
 
 /** @type {Readonly<Record<TextSizePreset, number>>} */
 const TEXT_SIZE_SCALE = {
@@ -47,6 +50,66 @@ function readBool(key, fallback) {
 function writeBool(key, value) {
   try {
     localStorage.setItem(key, String(value));
+  } catch {
+    // Ignore — localStorage may be blocked by browser privacy settings.
+  }
+}
+
+/**
+ * Returns whether the provided value is a supported UI language code.
+ * @param {unknown} value
+ * @returns {value is LanguageCode}
+ */
+function isSupportedLanguage(value) {
+  return value === 'pl' || value === 'en';
+}
+
+/**
+ * Detects preferred language from browser navigator data.
+ * Rule: if any language starts with `pl`, prefer Polish, otherwise English.
+ * @param {{ language?: string, languages?: string[] } | undefined} navigatorLike
+ * @returns {LanguageCode}
+ */
+export function detectPreferredLanguage(navigatorLike = globalThis.navigator) {
+  const candidates = [];
+
+  if (navigatorLike?.language) {
+    candidates.push(navigatorLike.language);
+  }
+  if (Array.isArray(navigatorLike?.languages)) {
+    candidates.push(...navigatorLike.languages);
+  }
+
+  const hasPolish = candidates.some(
+    (lang) => typeof lang === 'string' && lang.toLowerCase().startsWith('pl')
+  );
+  return hasPolish ? 'pl' : 'en';
+}
+
+/**
+ * Returns currently selected language.
+ * Priority: explicit user preference (localStorage) -> browser detection.
+ * @returns {LanguageCode}
+ */
+export function getLanguage() {
+  try {
+    const raw = localStorage.getItem(LANGUAGE_KEY);
+    if (isSupportedLanguage(raw)) return raw;
+  } catch {
+    // Ignore — localStorage may be blocked by browser privacy settings.
+  }
+  return detectPreferredLanguage();
+}
+
+/**
+ * Persists selected language.
+ * Invalid values are ignored to keep storage clean.
+ * @param {LanguageCode} value
+ */
+export function setLanguage(value) {
+  if (!isSupportedLanguage(value)) return;
+  try {
+    localStorage.setItem(LANGUAGE_KEY, value);
   } catch {
     // Ignore — localStorage may be blocked by browser privacy settings.
   }

@@ -1,6 +1,7 @@
 import { getCardDefinition } from '../../data/cards.js';
 import * as uiHelpers from '../helpers/UIHelpers.js';
 import * as cardRenderer from './CardRenderer.js';
+import { localizeCardDescription, localizeCardName } from '../helpers/CardI18n.js';
 
 /**
  * @param {any} uiManager
@@ -45,7 +46,7 @@ export function renderPileViewer(uiManager) {
   if (view.ids.length === 0) {
     const empty = document.createElement('p');
     empty.className = 'pile-viewer-empty';
-    empty.textContent = 'Brak kart w tym stosie.';
+    empty.textContent = uiManager.localizeText('Brak kart w tym stosie.');
     grid.appendChild(empty);
   } else {
     view.ids.forEach((cardId) => {
@@ -55,13 +56,13 @@ export function renderPileViewer(uiManager) {
       cardEl.className = `card pile-viewer-card ${uiHelpers.rarityClass(card.rarity)} card-${card.type}`;
       cardEl.innerHTML = `
         <div class="card-header">
-          <div class="card-title">${card.name}</div>
+          <div class="card-title">${localizeCardName(uiManager.language, card.name)}</div>
           <div class="card-cost-oscypek">
             <span class="cost-value">${card.cost}</span>
             <span class="cost-icon">🧀</span>
           </div>
         </div>
-        <div class="card-subtitle">${uiHelpers.getFullCardType(card.rarity, card.type)}</div>
+        <div class="card-subtitle">${uiManager.localizeText(uiHelpers.getFullCardType(card.rarity, card.type))}</div>
         <div class="card-art">
           <span class="card-icon">${card.emoji}</span>
         </div>
@@ -73,7 +74,7 @@ export function renderPileViewer(uiManager) {
         cardEl.classList.add('card-exhaust');
         const exhaustEl = document.createElement('div');
         exhaustEl.className = 'card-exhaust-inline';
-        exhaustEl.innerHTML = '<span class="exhaust-fire">🔥</span> PRZEPADO';
+        exhaustEl.innerHTML = `<span class="exhaust-fire">🔥</span> ${localizeCardDescription(uiManager.language, 'PRZEPADO')}`;
         cardEl.querySelector('.card-text-box').appendChild(exhaustEl);
       }
       uiHelpers.attachLongPressZoom(cardEl, () => uiManager.showCardZoom(cardId));
@@ -123,7 +124,13 @@ export function buildPileViewerData(uiManager, pileType) {
     .sort((a, b) => {
       const cardA = getCardDefinition(a);
       const cardB = getCardDefinition(b);
-      return cardA.cost - cardB.cost || cardA.name.localeCompare(cardB.name, 'pl');
+      return (
+        cardA.cost - cardB.cost ||
+        localizeCardName(uiManager.language, cardA.name).localeCompare(
+          localizeCardName(uiManager.language, cardB.name),
+          uiManager.language === 'pl' ? 'pl' : 'en'
+        )
+      );
     });
 
   const discardIds = toIds(discardSource)
@@ -135,10 +142,10 @@ export function buildPileViewerData(uiManager, pileType) {
     .reverse();
 
   if (pileType === 'draw') {
-    return { title: 'Talia Dociągu', ids: drawIds };
+    return { title: uiManager.localizeText('Talia Dociągu'), ids: drawIds };
   }
   if (pileType === 'discard') {
-    return { title: 'Karty Odrzucone', ids: discardIds };
+    return { title: uiManager.localizeText('Karty Odrzucone'), ids: discardIds };
   }
-  return { title: 'Przepadło', ids: exhaustIds };
+  return { title: uiManager.localizeText('Przepadło'), ids: exhaustIds };
 }

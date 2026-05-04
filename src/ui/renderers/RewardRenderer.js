@@ -2,6 +2,8 @@ import { cardLibrary } from '../../data/cards.js';
 import { relicLibrary } from '../../data/relics.js';
 import * as uiHelpers from '../helpers/UIHelpers.js';
 import * as cardRenderer from './CardRenderer.js';
+import { localizeCardName, localizeCardDescription } from '../helpers/CardI18n.js';
+import { localizeRelicName, localizeRelicDescription } from '../helpers/RelicI18n.js';
 
 // Thematic SVG banner for Treasure Chest (Skrzynia)
 export const treasureSvg = `
@@ -117,14 +119,17 @@ export function showRelicScreen(uiManager, relicId, source) {
     claimBtn = document.createElement('button');
     claimBtn.id = 'claim-relic-btn';
     claimBtn.className = 'reward-relic-btn';
-    claimBtn.textContent = 'Zgarnij Pamiątkę';
+    claimBtn.textContent = uiManager.localizeText('Zgarnij Pamiątkę');
     panel.appendChild(claimBtn);
   }
 
   glowWrap.classList.remove('rarity-common', 'rarity-uncommon', 'rarity-rare');
   glowWrap.classList.add(uiHelpers.rarityClass(relic.rarity));
 
-  titleEl.textContent = source === 'treasure' ? 'Znalazłeś Skarb!' : 'Łup z wroga!';
+  titleEl.textContent =
+    source === 'treasure'
+      ? uiManager.localizeText('Znalazłeś Skarb!')
+      : uiManager.localizeText('Łup z wroga!');
   // Conditionally inject the treasure chest banner for treasure nodes
   const currentNode = uiManager.state.getCurrentMapNode();
   panel.querySelector('.treasure-banner-container')?.remove();
@@ -156,9 +161,9 @@ export function showRelicScreen(uiManager, relicId, source) {
   // Inject standardized relic plate
   glowWrap.innerHTML = `
     <div id="reward-relic" class="relic-plate ${uiHelpers.rarityClass(relic.rarity)}">
-      <h3 class="relic-plate-title">${relic.emoji} ${relic.name}</h3>
-      <p class="relic-plate-rarity">${uiHelpers.rarityLabel(relic.rarity, 'relic')}</p>
-      <p class="relic-plate-desc">${relic.desc}</p>
+      <h3 class="relic-plate-title">${relic.emoji} ${localizeRelicName(uiManager.language, relic.name)}</h3>
+      <p class="relic-plate-rarity">${uiManager.localizeText(uiHelpers.rarityLabel(relic.rarity, 'relic'))}</p>
+      <p class="relic-plate-desc">${localizeRelicDescription(uiManager.language, relic.desc)}</p>
     </div>
   `;
   const rewardRelicEl = glowWrap.querySelector('.relic-plate');
@@ -211,7 +216,8 @@ export function showCardRewardScreen(
   isBossFight = false,
   options = {}
 ) {
-  const { title = 'Cepr usieczony! Wybierz łup:', allowSkip = true } = options;
+  const { title = uiManager.localizeText('Cepr usieczony! Wybierz łup:'), allowSkip = true } =
+    options;
   const cardScreen = document.getElementById('card-reward-screen');
   const titleEl = cardScreen?.querySelector('.victory-title');
   const rewardDutki = document.getElementById('victory-dutki');
@@ -223,10 +229,14 @@ export function showCardRewardScreen(
 
   const lines = [];
   if (uiManager.state.lastVictoryMessage) {
-    lines.push(uiManager.state.lastVictoryMessage);
+    lines.push(uiManager.localizeText(uiManager.state.lastVictoryMessage));
   }
   if (droppedDutki > 0) {
-    lines.push(`Łup z bitki: +${droppedDutki} ${uiManager.state.getDutkiLabel(droppedDutki)}`);
+    lines.push(
+      uiManager.localizeText(
+        `Łup z bitki: +${droppedDutki} ${uiManager.state.getDutkiLabel(droppedDutki)}`
+      )
+    );
   }
   rewardDutki.textContent = lines.join(' | ');
   rewardCards.innerHTML = '';
@@ -240,13 +250,13 @@ export function showCardRewardScreen(
     cardEl.className = `card reward-phase-card ${uiHelpers.rarityClass(card.rarity)} card-${card.type}`;
     cardEl.innerHTML = `
         <div class="card-header">
-          <div class="card-title">${card.name}</div>
+          <div class="card-title">${localizeCardName(uiManager.language, card.name)}</div>
           <div class="card-cost-oscypek">
             <span class="cost-value">${card.cost}</span>
             <span class="cost-icon">🧀</span>
           </div>
         </div>
-        <div class="card-subtitle">${uiHelpers.getFullCardType(card.rarity, card.type)}</div>
+        <div class="card-subtitle">${uiManager.localizeText(uiHelpers.getFullCardType(card.rarity, card.type))}</div>
         <div class="card-art">
           <span class="card-icon">${card.emoji}</span>
         </div>
@@ -259,7 +269,7 @@ export function showCardRewardScreen(
       cardEl.classList.add('card-exhaust');
       const exhaustEl = document.createElement('div');
       exhaustEl.className = 'card-exhaust-inline';
-      exhaustEl.innerHTML = '<span class="exhaust-fire">🔥</span> PRZEPADO';
+      exhaustEl.innerHTML = `<span class="exhaust-fire">🔥</span> ${localizeCardDescription(uiManager.language, 'PRZEPADO')}`;
       cardEl.querySelector('.card-text-box').appendChild(exhaustEl);
     }
 
@@ -298,7 +308,10 @@ export function closeRewardScreens(uiManager, isBossFight = false) {
   cardScreen.setAttribute('aria-hidden', 'true');
   const cardTitle = cardScreen.querySelector('.victory-title');
   if (cardTitle) {
-    cardTitle.textContent = 'Cepr usieczony! Wybierz łup:';
+    cardTitle.textContent =
+      uiManager.language === 'pl'
+        ? 'Cepr usieczony! Wybierz łup:'
+        : 'Ceper defeated! Pick your reward:';
   }
   if (skipBtn) {
     skipBtn.classList.remove('hidden');
@@ -357,11 +370,11 @@ export function showRunSummaryOverlay(uiManager) {
   if (!summary) return;
 
   const isVictory = summary.outcome === 'player_win';
-  title.textContent = isVictory ? '🏔️ ZWYCIĘSTWO!' : '💀 KONIEC PRZYGODY';
+  title.textContent = isVictory ? uiManager.t('runSummary.win') : uiManager.t('runSummary.loss');
 
   if (summary.killerName) {
     killer.classList.remove('hidden');
-    killerLine.textContent = `Zgładzony przez: ${summary.killerName}`;
+    killerLine.textContent = uiManager.t('runSummary.killedBy', { name: summary.killerName });
   } else {
     killer.classList.add('hidden');
     killerLine.textContent = '';
@@ -384,13 +397,13 @@ export function showRunSummaryOverlay(uiManager) {
     if (!cardDef) return;
     const item = document.createElement('div');
     item.className = `run-summary-item ${uiHelpers.rarityClass(cardDef.rarity)}`;
-    item.textContent = `${count}x ${cardDef.emoji} ${cardDef.name}`;
+    item.textContent = `${count}x ${cardDef.emoji} ${localizeCardName(uiManager.language, cardDef.name)}`;
     deckFragment.appendChild(item);
   });
   if (deckFragment.childNodes.length === 0) {
     const empty = document.createElement('div');
     empty.className = 'run-summary-item';
-    empty.textContent = 'Brak kart w talii końcowej.';
+    empty.textContent = uiManager.t('runSummary.noDeck');
     deckFragment.appendChild(empty);
   }
   deck.innerHTML = '';
@@ -400,13 +413,13 @@ export function showRunSummaryOverlay(uiManager) {
   summary.finalRelics.forEach((relic) => {
     const item = document.createElement('div');
     item.className = `run-summary-item ${uiHelpers.rarityClass(relic.rarity)}`;
-    item.textContent = `${relic.emoji} ${relic.name}`;
+    item.textContent = `${relic.emoji} ${localizeRelicName(uiManager.language, relic.name)}`;
     relicFragment.appendChild(item);
   });
   if (relicFragment.childNodes.length === 0) {
     const empty = document.createElement('div');
     empty.className = 'run-summary-item';
-    empty.textContent = 'Brak zebranych pamiątek.';
+    empty.textContent = uiManager.t('runSummary.noRelics');
     relicFragment.appendChild(empty);
   }
   relics.innerHTML = '';
@@ -450,7 +463,7 @@ export function showRunSummaryOverlay(uiManager) {
     downloadLogBtn.className = 'btn run-summary-download-btn';
     downloadLogBtn.style.backgroundColor = '#2c3e50';
     downloadLogBtn.style.color = '#ecf0f1';
-    downloadLogBtn.textContent = '\uD83D\uDCBE Pobierz Log (JSON)';
+    downloadLogBtn.textContent = uiManager.t('runSummary.downloadLog');
     downloadLogBtn.onclick = () => {
       const dataStr =
         'data:text/json;charset=utf-8,' + encodeURIComponent(uiManager.state.getRunTelemetryJSON());
@@ -480,8 +493,8 @@ export function showEliteRewardOverlay(uiManager, droppedDutki) {
   const hasThreeRareChoices = eliteCardChoices.length >= 3;
   const cardChoices = hasThreeRareChoices ? eliteCardChoices : uiManager._pickRewardCards(3);
   const cardTitle = hasThreeRareChoices
-    ? 'Elita pokonana! Wybierz kartę rare:'
-    : 'Elita pokonana! Wybierz kartę:';
+    ? uiManager.localizeText('Elita pokonana! Wybierz kartę rare:')
+    : uiManager.localizeText('Elita pokonana! Wybierz kartę:');
   const goToCardPhase = () => {
     showCardRewardScreen(uiManager, droppedDutki, cardChoices, false, {
       title: cardTitle,
@@ -505,13 +518,17 @@ export function showEliteRewardOverlay(uiManager, droppedDutki) {
 
   const lines = [];
   if (uiManager.state.lastVictoryMessage) {
-    lines.push(uiManager.state.lastVictoryMessage);
+    lines.push(uiManager.localizeText(uiManager.state.lastVictoryMessage));
   }
   if (droppedDutki > 0) {
-    lines.push(`Łup z bitki: +${droppedDutki} ${uiManager.state.getDutkiLabel(droppedDutki)}`);
+    lines.push(
+      uiManager.localizeText(
+        `Łup z bitki: +${droppedDutki} ${uiManager.state.getDutkiLabel(droppedDutki)}`
+      )
+    );
   }
   rewardDutki.textContent = lines.join(' | ');
-  titleEl.textContent = 'Elita pokonana! Wybierz pamiątkę:';
+  titleEl.textContent = uiManager.localizeText('Elita pokonana! Wybierz pamiątkę:');
   rewardCards.innerHTML = '';
 
   relicChoices.forEach((relicId) => {
@@ -521,9 +538,9 @@ export function showEliteRewardOverlay(uiManager, droppedDutki) {
     relicEl.type = 'button';
     relicEl.className = `reward-card reward-relic-choice relic-plate ${uiHelpers.rarityClass(relic.rarity)}`;
     relicEl.innerHTML = `
-      <h3 class="relic-plate-title">${relic.emoji} ${relic.name}</h3>
-      <p class="relic-plate-rarity">${uiHelpers.rarityLabel(relic.rarity, 'relic')}</p>
-      <p class="relic-plate-desc">${relic.desc}</p>
+      <h3 class="relic-plate-title">${relic.emoji} ${localizeRelicName(uiManager.language, relic.name)}</h3>
+      <p class="relic-plate-rarity">${uiManager.localizeText(uiHelpers.rarityLabel(relic.rarity, 'relic'))}</p>
+      <p class="relic-plate-desc">${localizeRelicDescription(uiManager.language, relic.desc)}</p>
     `;
     relicEl.addEventListener('click', () => {
       uiManager.state.addRelic(relicId);
@@ -553,8 +570,10 @@ export function showAct2TransitionRelicReward(uiManager, choices) {
   const titleEl = cardScreen?.querySelector('.victory-title');
   if (!cardScreen || !rewardDutki || !rewardCards || !skipBtn || !titleEl) return;
 
-  rewardDutki.textContent = 'Mistrz pokonany! Wybierz swój atut na Morskie Oko:';
-  titleEl.textContent = 'Nagroda Bossowa:';
+  rewardDutki.textContent = uiManager.localizeText(
+    'Mistrz pokonany! Wybierz swój atut na Morskie Oko:'
+  );
+  titleEl.textContent = uiManager.localizeText('Nagroda Bossowa:');
   rewardCards.innerHTML = '';
 
   const pickRelic = (relicId) => {
@@ -579,9 +598,9 @@ export function showAct2TransitionRelicReward(uiManager, choices) {
     relicEl.type = 'button';
     relicEl.className = `reward-card reward-relic-choice relic-plate ${uiHelpers.rarityClass(relic.rarity)}`;
     relicEl.innerHTML = `
-      <h3 class="relic-plate-title">${relic.emoji} ${relic.name}</h3>
-      <p class="relic-plate-rarity">${uiHelpers.rarityLabel(relic.rarity, 'relic')}</p>
-      <p class="relic-plate-desc">${relic.desc}</p>
+      <h3 class="relic-plate-title">${relic.emoji} ${localizeRelicName(uiManager.language, relic.name)}</h3>
+      <p class="relic-plate-rarity">${uiManager.localizeText(uiHelpers.rarityLabel(relic.rarity, 'relic'))}</p>
+      <p class="relic-plate-desc">${localizeRelicDescription(uiManager.language, relic.desc)}</p>
     `;
     relicEl.addEventListener('click', () => pickRelic(relicId));
     rewardCards.appendChild(relicEl);

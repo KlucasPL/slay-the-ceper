@@ -1,6 +1,7 @@
 import { enemyLibrary } from '../../data/enemies.js';
 import { cardLibrary, getCardDefinition } from '../../data/cards.js';
 import * as uiHelpers from '../helpers/UIHelpers.js';
+import { localizeEventTitle, localizeEventDescription } from '../helpers/EventI18n.js';
 
 /**
  * @param {any} uiManager
@@ -34,7 +35,7 @@ export function openRandomEvent(uiManager, forcedEventId = null) {
     eventDef = uiManager.state.pickRandomEventDef();
   }
   if (!eventDef) {
-    uiManager.mapMessage = 'Cisza na szlaku... dziś nic się nie wydarzyło.';
+    uiManager.mapMessage = uiManager.localizeText('Cisza na szlaku... dziś nic się nie wydarzyło.');
     uiManager.state.currentScreen = 'map';
     uiManager._openMapOverlay();
     return;
@@ -58,12 +59,14 @@ export function openRandomEvent(uiManager, forcedEventId = null) {
   const fallbackFight = eventDef.fallbackFight;
   if (fallbackFight && uiManager.state.dutki < fallbackFight.minDutki) {
     uiManager.pendingEventFallbackEnemyId = fallbackFight.enemyId;
-    title.textContent = eventDef.title;
+    title.textContent = localizeEventTitle(uiManager.language, eventDef.title);
     image.innerHTML = eventDef.image;
-    description.textContent = fallbackFight.message;
-    result.textContent = 'Przedzierasz się przez tłum i szykujesz do walki.';
+    description.textContent = localizeEventDescription(uiManager.language, fallbackFight.message);
+    result.textContent = uiManager.localizeText(
+      'Przedzierasz się przez tłum i szykujesz do walki.'
+    );
     continueBtn.classList.remove('hidden');
-    continueBtn.textContent = 'Stań do walki';
+    continueBtn.textContent = uiManager.localizeText('Stań do walki');
     choicesContainer.innerHTML = '';
 
     uiHelpers.hideOverlay('map-overlay');
@@ -74,11 +77,11 @@ export function openRandomEvent(uiManager, forcedEventId = null) {
   }
 
   uiManager.pendingEventFallbackEnemyId = null;
-  continueBtn.textContent = 'Kontynuuj';
+  continueBtn.textContent = uiManager.localizeText('Kontynuuj');
 
-  title.textContent = eventDef.title;
+  title.textContent = localizeEventTitle(uiManager.language, eventDef.title);
   image.innerHTML = eventDef.image;
-  description.textContent = eventDef.description;
+  description.textContent = localizeEventDescription(uiManager.language, eventDef.description);
   result.textContent = '';
   continueBtn.classList.add('hidden');
 
@@ -100,9 +103,9 @@ export function openRandomEvent(uiManager, forcedEventId = null) {
 
     choiceBtn.innerHTML = `
       <div style="display: flex; flex-direction: column; gap: 4px; width: 100%;">
-        <span class="event-choice-title" style="font-size: 1.15rem; font-weight: bold; color: #2c1e16;">${choice.text}</span>
-        <span class="event-choice-desc" style="font-size: 0.95rem; font-weight: normal; color: #4a3625;">${choice.description}</span>
-        <span class="event-choice-extra" style="font-size: 0.95rem; font-weight: bold; margin-top: 4px; color: #783614;">Skutek: ${consequence}</span>
+        <span class="event-choice-title" style="font-size: 1.15rem; font-weight: bold; color: #2c1e16;">${localizeEventDescription(uiManager.language, choice.text)}</span>
+        <span class="event-choice-desc" style="font-size: 0.95rem; font-weight: normal; color: #4a3625;">${localizeEventDescription(uiManager.language, choice.description)}</span>
+        <span class="event-choice-extra" style="font-size: 0.95rem; font-weight: bold; margin-top: 4px; color: #783614;">${uiManager.localizeText('Skutek')}: ${localizeEventDescription(uiManager.language, consequence)}</span>
       </div>
     `;
 
@@ -127,7 +130,7 @@ export function openRandomEvent(uiManager, forcedEventId = null) {
         const previewBtn = document.createElement('button');
         previewBtn.className = 'event-preview-btn';
         previewBtn.innerHTML = '👁️';
-        previewBtn.title = 'Podejrzyj kartę';
+        previewBtn.title = uiManager.localizeText('Podejrzyj kartę');
         previewBtn.onclick = (e) => {
           e.stopPropagation();
           uiManager.showCardZoom(previewCardId);
@@ -159,7 +162,7 @@ export function handleRandomEventChoice(uiManager, choiceIndex) {
   const continueBtn = document.getElementById('random-event-continue-btn');
   if (!resultEl || !continueBtn) return;
 
-  resultEl.textContent = result.message;
+  resultEl.textContent = localizeEventDescription(uiManager.language, result.message);
   if (!result.success) return;
 
   uiManager.state.logAction('events', { choiceLabel, eventId: eventDef?.id ?? null });
@@ -190,7 +193,7 @@ export function continueAfterRandomEvent(uiManager) {
       rewardRelicId: queuedEventBattle.rewardRelicId,
     });
     if (!started) {
-      uiManager.mapMessage = 'Nie udało się rozpocząć walki eventowej.';
+      uiManager.mapMessage = uiManager.localizeText('Nie udało się rozpocząć walki eventowej.');
       uiManager.state.currentScreen = 'map';
       uiManager._openMapOverlay();
       uiManager.updateUI();
@@ -222,7 +225,9 @@ export function continueAfterRandomEvent(uiManager) {
   }
 
   if (uiManager.state.applyJumpToBossShortcut()) {
-    uiManager.mapMessage = 'Fiakier skrócił drogę. Następny przystanek: finał wyprawy.';
+    uiManager.mapMessage = uiManager.localizeText(
+      'Fiakier skrócił drogę. Następny przystanek: finał wyprawy.'
+    );
   } else {
     uiManager.mapMessage = '';
   }

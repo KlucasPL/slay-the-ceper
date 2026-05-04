@@ -1,6 +1,7 @@
 import { getCardDefinition } from '../../data/cards.js';
 import { getCardDescription } from '../renderers/CardRenderer.js';
 import * as uiHelpers from '../helpers/UIHelpers.js';
+import { localizeCardName } from '../helpers/CardI18n.js';
 
 export const watraSvg = `
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 120" width="100%" height="100%">
@@ -62,7 +63,7 @@ function renderCampfireMain(uiManager) {
   const header = document.createElement('div');
   header.className = 'shop-header';
   header.innerHTML = `
-    <h2 class="event-title">Watra</h2>
+    <h2 class="event-title">${uiManager.language === 'en' ? 'Campfire' : 'Watra'}</h2>
     <div style="width: 100%; height: 120px; border-radius: 8px; margin: 16px 0; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.5), inset 0 0 0 2px #5a3800; display: flex; justify-content: center; align-items: flex-end;">
        ${watraSvg}
     </div>
@@ -89,16 +90,20 @@ function renderCampfireMain(uiManager) {
   healBtn.disabled = isFullHp || uiManager.campfireUsed;
   healBtn.innerHTML = `
     <span class="event-choice-emoji">🥔</span>
-    <span class="event-choice-title">Pieczone Grule</span>
-    <span class="event-choice-desc">Odpocznij i zjedz ciepły posiłek.<br><span style='color:#27ae60;'>Odzyskaj 20% Krzepy</span></span>
+    <span class="event-choice-title">${uiManager.language === 'en' ? 'Baked Potatoes' : 'Pieczone Grule'}</span>
+    <span class="event-choice-desc">${uiManager.language === 'en' ? 'Rest and enjoy a warm meal.' : 'Odpocznij i zjedz ciepły posiłek.'}<br><span style='color:#27ae60;'>${uiManager.language === 'en' ? 'Recover 20% HP' : 'Odzyskaj 20% Krzepy'}</span></span>
   `;
-  if (isFullHp) healBtn.innerHTML += `<span class="event-choice-extra">Krzepa pełna</span>`;
+  if (isFullHp)
+    healBtn.innerHTML += `<span class="event-choice-extra">${uiManager.language === 'en' ? 'HP full' : 'Krzepa pełna'}</span>`;
   healBtn.onclick = () => {
     const healAmount = Math.max(1, Math.floor(uiManager.state.player.maxHp * 0.2));
     uiManager.state.healPlayer(healAmount);
     uiManager.state.logAction('campfire', { action: 'heal', amount: healAmount });
     uiManager.campfireUsed = true;
-    uiManager.campfireMessage = `Zjedzono grule. Odzyskano ${healAmount} Krzepy.`;
+    uiManager.campfireMessage =
+      uiManager.language === 'en'
+        ? `Potatoes eaten. Recovered ${healAmount} HP.`
+        : `Zjedzono grule. Odzyskano ${healAmount} Krzepy.`;
     renderCampfireMain(uiManager);
     uiManager.updateUI();
   };
@@ -111,8 +116,8 @@ function renderCampfireMain(uiManager) {
   upgradeBtn.disabled = uiManager.campfireUsed;
   upgradeBtn.innerHTML = `
     <span class="event-choice-emoji">🪓</span>
-    <span class="event-choice-title">Naostrz Broń</span>
-    <span class="event-choice-desc">Zwiększ siłę jednego ataku.<br><span style='color:#b32d1c;'>+3 Obrażenia do wybranej karty</span></span>
+    <span class="event-choice-title">${uiManager.language === 'en' ? 'Sharpen Weapon' : 'Naostrz Broń'}</span>
+    <span class="event-choice-desc">${uiManager.language === 'en' ? 'Increase the strength of one attack.' : 'Zwiększ siłę jednego ataku.'}<br><span style='color:#b32d1c;'>${uiManager.language === 'en' ? '+3 Damage to chosen card' : '+3 Obrażenia do wybranej karty'}</span></span>
   `;
   upgradeBtn.onclick = () => {
     renderCampfireUpgrade(uiManager);
@@ -130,7 +135,13 @@ function renderCampfireMain(uiManager) {
   exitBtn.id = 'camp-exit-btn';
   exitBtn.className = 'btn shop-exit-btn';
   exitBtn.style.marginTop = 'auto';
-  exitBtn.textContent = uiManager.campfireUsed ? 'Ruszaj w drogę' : 'Opuść Watrę';
+  exitBtn.textContent = uiManager.campfireUsed
+    ? uiManager.language === 'en'
+      ? 'Hit the trail'
+      : 'Ruszaj w drogę'
+    : uiManager.language === 'en'
+      ? 'Leave the campfire'
+      : 'Opuść Watrę';
   exitBtn.onclick = () => closeCampfire(uiManager);
   panel.appendChild(exitBtn);
 }
@@ -145,8 +156,8 @@ function renderCampfireUpgrade(uiManager) {
   const header = document.createElement('div');
   header.className = 'shop-header';
   header.innerHTML = `
-    <h2 class="event-title">Wybierz Atak</h2>
-    <p style="color: #f3dfbd; margin-top: 5px;">Ta karta otrzyma +3 obrażenia w następnej walce.</p>
+    <h2 class="event-title">${uiManager.language === 'en' ? 'Choose an Attack' : 'Wybierz Atak'}</h2>
+    <p style="color: #f3dfbd; margin-top: 5px;">${uiManager.language === 'en' ? 'This card gains +3 damage for the next battle.' : 'Ta karta otrzyma +3 obrażenia w następnej walce.'}</p>
   `;
   panel.appendChild(header);
 
@@ -160,7 +171,10 @@ function renderCampfireUpgrade(uiManager) {
   if (options.length === 0) {
     const msg = document.createElement('div');
     msg.className = 'shop-message';
-    msg.textContent = 'Brak kart ataku do ulepszenia.';
+    msg.textContent =
+      uiManager.language === 'en'
+        ? 'No attack cards to upgrade.'
+        : 'Brak kart ataku do ulepszenia.';
     panel.appendChild(msg);
   } else {
     options.forEach((cardId) => {
@@ -195,14 +209,18 @@ function renderCampfireUpgrade(uiManager) {
       selectBtn.style.backgroundColor = '#e67e22';
       selectBtn.style.borderColor = '#d35400';
       selectBtn.style.boxShadow = '0 4px 0 #a04000';
-      selectBtn.textContent = 'Naostrz';
+      selectBtn.textContent = uiManager.language === 'en' ? 'Sharpen' : 'Naostrz';
       selectBtn.onclick = () => {
         if (!uiManager.state.cardDamageBonus) uiManager.state.cardDamageBonus = {};
         uiManager.state.cardDamageBonus[cardId] =
           (uiManager.state.cardDamageBonus[cardId] || 0) + 3;
         uiManager.state.logAction('campfire', { action: 'upgrade', cardId });
         uiManager.campfireUsed = true;
-        uiManager.campfireMessage = `Naostrzono: ${cardDef.name} (+3 obr).`;
+        const localizedName = localizeCardName(uiManager.language, cardDef.name);
+        uiManager.campfireMessage =
+          uiManager.language === 'en'
+            ? `Sharpened: ${localizedName} (+3 dmg).`
+            : `Naostrzono: ${localizedName} (+3 obr).`;
         renderCampfireMain(uiManager);
         uiManager.updateUI();
       };
@@ -217,7 +235,7 @@ function renderCampfireUpgrade(uiManager) {
   const backBtn = document.createElement('button');
   backBtn.className = 'btn shop-exit-btn';
   backBtn.style.marginTop = 'auto';
-  backBtn.textContent = 'Wróć';
+  backBtn.textContent = uiManager.language === 'en' ? 'Back' : 'Wróć';
   backBtn.onclick = () => renderCampfireMain(uiManager);
   panel.appendChild(backBtn);
 }

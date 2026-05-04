@@ -1,3 +1,5 @@
+import { localizeWeatherName } from '../helpers/WeatherI18n.js';
+
 /** Drops sunglasses onto player sprite and flashes the screen gold. */
 export function triggerLansOnAnimation() {
   const el = document.getElementById('lans-sunglasses');
@@ -49,7 +51,9 @@ export function handlePlayCard(uiManager, handIndex) {
     showFloatingText(
       uiManager,
       'sprite-player',
-      'Najpierw zagraj wskazaną kartę.',
+      uiManager.language === 'en'
+        ? 'Play the indicated card first.'
+        : 'Najpierw zagraj wskazaną kartę.',
       'floating-shame'
     );
     return;
@@ -60,13 +64,25 @@ export function handlePlayCard(uiManager, handIndex) {
       showFloatingText(
         uiManager,
         'sprite-player',
-        'OGŁUSZONY! Ataki zablokowane',
+        uiManager.language === 'en' ? 'STUNNED! Attacks blocked' : 'OGŁUSZONY! Ataki zablokowane',
         'floating-shame'
       );
     } else if (result.reason === 'blokada') {
-      showFloatingText(uiManager, 'sprite-enemy', 'PARKINGOWY: LIMIT 3 KART!', 'floating-shame');
+      showFloatingText(
+        uiManager,
+        'sprite-enemy',
+        uiManager.language === 'en'
+          ? 'PARKING ENFORCER: 3-CARD LIMIT!'
+          : 'PARKINGOWY: LIMIT 3 KART!',
+        'floating-shame'
+      );
     } else if (result.reason === 'halas') {
-      showFloatingText(uiManager, 'sprite-player', '📢 Najpierw zagraj Hałas!', 'floating-shame');
+      showFloatingText(
+        uiManager,
+        'sprite-player',
+        uiManager.language === 'en' ? '📢 Play Noise first!' : '📢 Najpierw zagraj Hałas!',
+        'floating-shame'
+      );
     }
     return;
   }
@@ -75,17 +91,23 @@ export function handlePlayCard(uiManager, handIndex) {
   uiManager._handleTutorialCardPlayed(selectedCardId);
   if (uiManager.state.consumeLansActivatedEvent()) {
     triggerLansOnAnimation();
-    showFloatingText(uiManager, 'sprite-player', 'JEST LANS!', 'floating-lans');
+    showFloatingText(
+      uiManager,
+      'sprite-player',
+      uiManager.language === 'en' ? "IT'S LANS!" : 'JEST LANS!',
+      'floating-lans'
+    );
   }
   const missEvent = uiManager.state.consumeWeatherMissEvent();
   if (missEvent) {
     uiManager.audioManager.playMissSound();
     const targetSprite = missEvent.target === 'enemy' ? 'sprite-enemy' : 'sprite-player';
-    showFloatingText(uiManager, targetSprite, missEvent.text, 'floating-damage');
-  }
-  if (uiManager.state.consumeEnemyEvasionEvent()) {
-    uiManager.audioManager.playMissSound();
-    showFloatingText(uiManager, 'sprite-enemy', 'UNIK!', 'floating-damage');
+    showFloatingText(
+      uiManager,
+      targetSprite,
+      uiManager.language === 'en' ? 'DODGE!' : 'UNIK!',
+      'floating-damage'
+    );
   }
   const phaseTransitionText = uiManager.state.consumeEnemyPhaseTransitionMessage();
   if (phaseTransitionText) {
@@ -132,7 +154,12 @@ export function handleEndTurn(uiManager) {
   if (uiManager._isInputLocked()) return;
   if (!uiManager._isTutorialEndTurnAllowed()) {
     if (uiManager.isTutorialGuidanceActive) {
-      showFloatingText(uiManager, 'sprite-player', 'Jeszcze nie kończ tury.', 'floating-shame');
+      showFloatingText(
+        uiManager,
+        'sprite-player',
+        uiManager.language === 'en' ? 'Not your turn to end yet.' : 'Jeszcze nie kończ tury.',
+        'floating-shame'
+      );
     }
     return;
   }
@@ -150,11 +177,12 @@ export function handleEndTurn(uiManager) {
   if (missEvent) {
     uiManager.audioManager.playMissSound();
     const targetSprite = missEvent.target === 'enemy' ? 'sprite-enemy' : 'sprite-player';
-    showFloatingText(uiManager, targetSprite, missEvent.text, 'floating-damage');
-  }
-  if (uiManager.state.consumeEnemyEvasionEvent()) {
-    uiManager.audioManager.playMissSound();
-    showFloatingText(uiManager, 'sprite-enemy', 'UNIK!', 'floating-damage');
+    showFloatingText(
+      uiManager,
+      targetSprite,
+      uiManager.language === 'en' ? 'DODGE!' : 'UNIK!',
+      'floating-damage'
+    );
   }
   const phaseTransitionText = uiManager.state.consumeEnemyPhaseTransitionMessage();
   if (phaseTransitionText) {
@@ -170,7 +198,7 @@ export function handleEndTurn(uiManager) {
     showFloatingText(
       uiManager,
       'sprite-enemy',
-      `${result.weatherChanged.emoji} ${result.weatherChanged.name}!`,
+      `${result.weatherChanged.emoji} ${localizeWeatherName(uiManager.language, result.weatherChanged.name)}!`,
       'floating-shame'
     );
     uiManager._renderWeatherIndicator();
@@ -185,7 +213,9 @@ export function handleEndTurn(uiManager) {
     showFloatingText(
       uiManager,
       'sprite-player',
-      `🃏 Skradziono: ${stolenCardName}!`,
+      uiManager.language === 'en'
+        ? `🃏 Stolen: ${stolenCardName}!`
+        : `🃏 Skradziono: ${stolenCardName}!`,
       'floating-shame'
     );
   }

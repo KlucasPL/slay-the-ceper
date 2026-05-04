@@ -55,10 +55,10 @@
           </svg>
         </div>
         <div class="title-panel">
-          <p class="title-kicker">Góralska przygoda dla cierpliwych</p>
+          <p id="title-kicker" class="title-kicker">Góralska przygoda dla cierpliwych</p>
           <h1 class="title-main">USIEC CEPRA: WYPRAWA NA GIEWONT</h1>
-          <p class="title-subtitle">Pomóż Jędrkowi odzyskać spokój na perci!</p>
-          <nav class="title-menu-nav" aria-label="Menu główne">
+          <p id="title-subtitle" class="title-subtitle">Pomóż Jędrkowi odzyskać spokój na perci!</p>
+          <nav id="title-menu-nav" class="title-menu-nav" aria-label="Menu główne">
             <ul class="title-menu-list">
               <li class="title-menu-item">
                 <button id="title-btn-normal" class="title-start-btn" type="button">
@@ -95,7 +95,7 @@
               </li>
             </ul>
           </nav>
-          <p class="title-difficulty-hint">
+          <p id="title-difficulty-hint" class="title-difficulty-hint">
             W trybie Dla Marka przeciwnicy stają się silniejsi z każdą walką!
           </p>
           <div class="title-charms" aria-hidden="true">
@@ -168,14 +168,14 @@
       <div id="release-notes-modal" class="modal hidden" aria-hidden="true">
         <div class="modal-content">
           <span class="close-btn" role="button" tabindex="0" aria-label="Zamknij">&times;</span>
-          <h2>Dziennik Zmian</h2>
+          <h2 id="release-notes-title">Dziennik Zmian</h2>
           <div id="release-notes-container"></div>
         </div>
       </div>
 
       <div id="game-wrapper">
-        <div class="relics-wrap" aria-label="Zebrane Pamiątki">
-          <span class="relics-label">Pamiątki:</span>
+        <div id="relics-wrap" class="relics-wrap" aria-label="Zebrane Pamiątki">
+          <span id="relics-label-text" class="relics-label">Pamiątki:</span>
           <div id="relic-bar" class="relic-bar"></div>
         </div>
 
@@ -301,9 +301,13 @@
               </svg>
             </div>
             <div class="stats" id="p-hp-line">
-              ❤️ Krzepa: <span id="p-hp">50</span>/<span id="p-max-hp">50</span>
+              <span id="p-hp-label">❤️ Krzepa: </span><span id="p-hp">50</span>/<span id="p-max-hp"
+                >50</span
+              >
             </div>
-            <div class="stats" style="color: #4da6ff">🛡️ Garda: <span id="p-block">0</span></div>
+            <div class="stats" style="color: #4da6ff">
+              <span id="p-block-label">🛡️ Garda: </span><span id="p-block">0</span>
+            </div>
             <div id="p-statuses" class="statuses"></div>
           </div>
           <div class="entity" id="enemy">
@@ -349,9 +353,13 @@
               </svg>
             </div>
             <div class="stats">
-              ❤️ Krzepa: <span id="e-hp">40</span>/<span id="e-max-hp">40</span>
+              <span id="e-hp-label">❤️ Krzepa: </span><span id="e-hp">40</span>/<span id="e-max-hp"
+                >40</span
+              >
             </div>
-            <div class="stats" style="color: #4da6ff">🛡️ Garda: <span id="e-block">0</span></div>
+            <div class="stats" style="color: #4da6ff">
+              <span id="e-block-label">🛡️ Garda: </span><span id="e-block">0</span>
+            </div>
             <div id="e-statuses" class="statuses"></div>
           </div>
         </div>
@@ -374,8 +382,10 @@
                 stroke-linecap="round"
               />
             </svg>
-            Oscypki: <span id="energy">3</span>/3
-            <span class="currency">Dutki: <span id="dutki">50</span> 💰</span>
+            <span id="energy-label">Oscypki: </span><span id="energy">3</span>/3
+            <span class="currency"
+              ><span id="dutki-label">Dutki: </span><span id="dutki">50</span> 💰</span
+            >
           </div>
 
           <div class="piles" id="pile-controls" aria-label="Stosy kart">
@@ -603,9 +613,17 @@
           </p>
 
           <div class="run-summary-stats">
-            <div class="run-summary-stat">Piętro: <span id="run-summary-floor">1</span></div>
-            <div class="run-summary-stat">Zebrane Dutki: <span id="run-summary-dutki">0</span></div>
-            <div class="run-summary-stat">Tury: <span id="run-summary-turns">0</span></div>
+            <div class="run-summary-stat">
+              <span id="run-summary-floor-label">Piętro:</span>
+              <span id="run-summary-floor">1</span>
+            </div>
+            <div class="run-summary-stat">
+              <span id="run-summary-dutki-label">Zebrane Dutki:</span>
+              <span id="run-summary-dutki">0</span>
+            </div>
+            <div class="run-summary-stat">
+              <span id="run-summary-turns-label">Tury:</span> <span id="run-summary-turns">0</span>
+            </div>
           </div>
 
           <div class="run-summary-seed-row hidden" id="run-summary-seed-row">
@@ -621,12 +639,12 @@
           </div>
 
           <section class="run-summary-section">
-            <h3 class="run-summary-title">Pamiątki</h3>
+            <h3 id="run-summary-relics-title" class="run-summary-title">Pamiątki</h3>
             <div id="run-summary-relics" class="run-summary-grid"></div>
           </section>
 
           <section class="run-summary-section">
-            <h3 class="run-summary-title">Końcowa Talia</h3>
+            <h3 id="run-summary-deck-title" class="run-summary-title">Końcowa Talia</h3>
             <div id="run-summary-deck" class="run-summary-grid"></div>
           </section>
 
@@ -688,8 +706,10 @@
 
       <div id="library-overlay" class="event-overlay hidden" aria-hidden="true">
         <div class="event-panel library-panel">
-          <h2 class="event-title">Biblioteka Tatrzańska</h2>
-          <p class="library-subtitle">Spis kart i pamiątek z tej wyprawy przez Tatry.</p>
+          <h2 id="library-title" class="event-title">Biblioteka Tatrzańska</h2>
+          <p id="library-subtitle" class="library-subtitle">
+            Spis kart i pamiątek z tej wyprawy przez Tatry.
+          </p>
 
           <div class="library-toolbar">
             <div class="library-tabs" role="tablist" aria-label="Typ przedmiotów">
@@ -700,7 +720,7 @@
                 role="tab"
                 aria-selected="true"
               >
-                Karty
+                <span id="library-tab-cards-label">Karty</span>
               </button>
               <button
                 id="library-tab-relics"
@@ -709,7 +729,7 @@
                 role="tab"
                 aria-selected="false"
               >
-                Pamiątki
+                <span id="library-tab-relics-label">Pamiątki</span>
               </button>
               <button
                 id="library-tab-maryna"
@@ -718,25 +738,49 @@
                 role="tab"
                 aria-selected="false"
               >
-                Dary Maryny
+                <span id="library-tab-maryna-label">Dary Maryny</span>
               </button>
             </div>
 
             <div class="library-filters" role="group" aria-label="Filtrowanie rzadkości">
-              <button class="library-filter is-active" data-rarity="all" type="button">
-                Wszystkie
+              <button
+                id="library-filter-all"
+                class="library-filter is-active"
+                data-rarity="all"
+                type="button"
+              >
+                <span id="library-filter-all-label">Wszystkie</span>
               </button>
-              <button class="library-filter" data-rarity="common" type="button">Powszechne</button>
-              <button class="library-filter" data-rarity="uncommon" type="button">
-                Niepowszechne
+              <button
+                id="library-filter-common"
+                class="library-filter"
+                data-rarity="common"
+                type="button"
+              >
+                <span id="library-filter-common-label">Powszechne</span>
               </button>
-              <button class="library-filter" data-rarity="rare" type="button">Rzadkie</button>
+              <button
+                id="library-filter-uncommon"
+                class="library-filter"
+                data-rarity="uncommon"
+                type="button"
+              >
+                <span id="library-filter-uncommon-label">Niepowszechne</span>
+              </button>
+              <button
+                id="library-filter-rare"
+                class="library-filter"
+                data-rarity="rare"
+                type="button"
+              >
+                <span id="library-filter-rare-label">Rzadkie</span>
+              </button>
             </div>
           </div>
 
           <div id="library-grid" class="library-grid" aria-live="polite"></div>
           <button id="library-back-btn" class="btn library-back-btn" type="button">
-            Wróć do bazy
+            <span id="library-back-label">Wróć do bazy</span>
           </button>
         </div>
       </div>
@@ -796,10 +840,17 @@
     </div>
     <div id="options-modal" class="modal hidden" aria-hidden="true">
       <div class="modal-content options-content">
-        <span class="close-btn" role="button" tabindex="0" aria-label="Zamknij">&times;</span>
-        <h2>Opcje</h2>
+        <span
+          id="options-close-btn"
+          class="close-btn"
+          role="button"
+          tabindex="0"
+          aria-label="Zamknij"
+          >&times;</span
+        >
+        <h2 id="options-title">Opcje</h2>
         <div class="options-row">
-          <span>Muzyka w Menu</span>
+          <span id="option-menu-music-label">Muzyka w Menu</span>
           <button
             id="option-menu-music-btn"
             class="option-toggle"
@@ -810,7 +861,7 @@
           </button>
         </div>
         <div class="options-row">
-          <span>Muzyka w Grze</span>
+          <span id="option-game-music-label">Muzyka w Grze</span>
           <button
             id="option-game-music-btn"
             class="option-toggle"
@@ -821,7 +872,7 @@
           </button>
         </div>
         <div class="options-row">
-          <span>Pomiń Wstęp</span>
+          <span id="option-skip-intro-label">Pomiń Wstęp</span>
           <button
             id="option-skip-intro-btn"
             class="option-toggle"
@@ -832,7 +883,7 @@
           </button>
         </div>
         <div class="options-row">
-          <span>Rozmiar Tekstu</span>
+          <span id="option-text-size-label">Rozmiar Tekstu</span>
           <button
             id="option-text-size-btn"
             class="option-toggle"
@@ -843,7 +894,13 @@
           </button>
         </div>
         <div class="options-row">
-          <span>Analityka gry</span>
+          <span id="option-language-label">Język</span>
+          <button id="option-language-btn" class="option-toggle" type="button" aria-label="Język">
+            Polski
+          </button>
+        </div>
+        <div class="options-row">
+          <span id="option-analytics-label">Analityka gry</span>
           <button id="option-analytics-btn" class="option-toggle" type="button" aria-pressed="true">
             ON
           </button>

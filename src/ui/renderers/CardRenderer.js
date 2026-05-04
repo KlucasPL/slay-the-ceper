@@ -1,6 +1,7 @@
 import { getCardDefinition } from '../../data/cards.js';
 import * as uiHelpers from '../helpers/UIHelpers.js';
 import * as cardZoomOverlay from '../overlays/CardZoomOverlay.js';
+import { localizeCardDescription, localizeCardName } from '../helpers/CardI18n.js';
 
 /**
  * @param {any} uiManager
@@ -13,16 +14,21 @@ export function getCardDescription(uiManager, card, runtimeCardId = card.id) {
 
   if (card.id === 'prestiz_na_kredyt') {
     const baseDescription = `Zyskujesz ${uiManager.state.getPrestizNaKredytBlock()} Gardy (bazowo 6, +2 za każde 20 dutków, max +14).`;
-    return upgradeBonus > 0
-      ? `${baseDescription} Naostrzona: +${upgradeBonus} do ataku w tej walce.`
-      : baseDescription;
+    const text =
+      upgradeBonus > 0
+        ? `${baseDescription} Naostrzona: +${upgradeBonus} do ataku w tej walce.`
+        : baseDescription;
+    return localizeCardDescription(uiManager.language, text);
   }
 
   if (card.type === 'attack' && upgradeBonus > 0) {
-    return `${card.desc} Naostrzona: +${upgradeBonus} do ataku w tej walce.`;
+    return localizeCardDescription(
+      uiManager.language,
+      `${card.desc} Naostrzona: +${upgradeBonus} do ataku w tej walce.`
+    );
   }
 
-  return card.desc;
+  return localizeCardDescription(uiManager.language, card.desc);
 }
 
 /**
@@ -65,13 +71,13 @@ export function renderHand(uiManager) {
     // New Fluid Tatra Card Layout
     cardEl.innerHTML = `
       <div class="card-header">
-        <div class="card-title">${card.name}</div>
+        <div class="card-title">${localizeCardName(uiManager.language, card.name)}</div>
         <div class="card-cost-oscypek">
           <span class="cost-value">${actualCost}</span>
           <span class="cost-icon">🧀</span>
         </div>
       </div>
-      <div class="card-subtitle">${uiHelpers.getFullCardType(card.rarity, card.type)}</div>
+      <div class="card-subtitle">${uiManager.localizeText(uiHelpers.getFullCardType(card.rarity, card.type))}</div>
       <div class="card-art">
         <span class="card-icon">${card.emoji}</span>
       </div>
@@ -85,7 +91,7 @@ export function renderHand(uiManager) {
       cardEl.classList.add('card-exhaust');
       const exhaustEl = document.createElement('div');
       exhaustEl.className = 'card-exhaust-inline';
-      exhaustEl.innerHTML = '<span class="exhaust-fire">🔥</span> PRZEPADO';
+      exhaustEl.innerHTML = `<span class="exhaust-fire">🔥</span> ${localizeCardDescription(uiManager.language, 'PRZEPADO')}`;
       cardEl.querySelector('.card-text-box').appendChild(exhaustEl);
     }
 
@@ -98,7 +104,11 @@ export function renderHand(uiManager) {
         }
         if (uiManager.isAnimating) return;
         if (!canPlay) {
-          uiManager._showFloatingText('sprite-player', 'Brak oscypków!', 'floating-shame');
+          uiManager._showFloatingText(
+            'sprite-player',
+            uiManager.localizeText('Brak oscypków!'),
+            'floating-shame'
+          );
           return;
         }
         uiManager._handlePlayCard(index);
@@ -106,9 +116,9 @@ export function renderHand(uiManager) {
     }
 
     attachMobileLongPressZoom(cardEl, {
-      name: card.name,
+      name: localizeCardName(uiManager.language, card.name),
       emoji: card.emoji,
-      rarityLabel: uiHelpers.getFullCardType(card.rarity, card.type),
+      rarityLabel: uiManager.localizeText(uiHelpers.getFullCardType(card.rarity, card.type)),
       cost: actualCost,
       description: cardDescription,
       rarityClass: uiHelpers.rarityClass(card.rarity),
@@ -177,9 +187,9 @@ export function renderHand(uiManager) {
           return {
             cardId,
             handIndex: index,
-            name: card.name,
+            name: localizeCardName(uiManager.language, card.name),
             emoji: card.emoji,
-            rarityLabel: uiHelpers.getFullCardType(card.rarity, card.type),
+            rarityLabel: uiManager.localizeText(uiHelpers.getFullCardType(card.rarity, card.type)),
             cost: actualCost,
             description: cardDescription,
             rarityClass: uiHelpers.rarityClass(card.rarity),

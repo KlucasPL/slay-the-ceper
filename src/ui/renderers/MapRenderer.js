@@ -1,4 +1,5 @@
 import { weatherLibrary } from '../../data/weather.js';
+import { localizeWeatherName, localizeWeatherDesc } from '../helpers/WeatherI18n.js';
 
 /**
  * @param {any} uiManager
@@ -38,12 +39,12 @@ export function renderMapTrack(uiManager) {
   if (mapTitle) {
     const isHard = uiManager.state.difficulty === 'hard';
     mapTitle.innerHTML = isHard
-      ? `Perć przez Tatry <span class="hard-badge">🌶️ TRUDNY</span>`
-      : 'Perć przez Tatry';
+      ? `${uiManager.t('map.title')} <span class="hard-badge">🌶️ ${uiManager.t('map.hardBadge')}</span>`
+      : uiManager.t('map.title');
   }
 
   levels.innerHTML = '';
-  message.textContent = uiManager.mapMessage;
+  message.textContent = uiManager.localizeText(uiManager.mapMessage);
 
   const reachable = new Set(uiManager.state.getReachableNodes());
   const canStartFirstFight =
@@ -116,20 +117,22 @@ export function renderMapTrack(uiManager) {
         hint.type = 'button';
         hint.className = 'map-weather-hint weather-hint-trigger';
         hint.textContent = weather?.emoji ?? '🌤️';
-        hint.title = weather ? `${weather.name}: ${weather.desc}` : 'Pogoda';
+        hint.title = weather
+          ? `${localizeWeatherName(uiManager.language, weather.name)}: ${localizeWeatherDesc(uiManager.language, weather.desc)}`
+          : uiManager.localizeText('Pogoda');
         hint.setAttribute(
           'aria-label',
           weather
-            ? `Pogoda na polu ${node.label}: ${weather.name}. ${weather.desc}`
-            : 'Pogoda na polu'
+            ? `${uiManager.language === 'en' ? 'Weather for' : 'Pogoda na polu'} ${node.label}: ${localizeWeatherName(uiManager.language, weather.name)}. ${localizeWeatherDesc(uiManager.language, weather.desc)}`
+            : uiManager.localizeText('Pogoda na polu')
         );
         hint.setAttribute('aria-expanded', 'false');
 
         const tooltip = document.createElement('span');
         tooltip.className = 'weather-tooltip';
         tooltip.textContent = weather
-          ? `${weather.name}: ${weather.desc}`
-          : 'Brak danych o pogodzie.';
+          ? `${localizeWeatherName(uiManager.language, weather.name)}: ${localizeWeatherDesc(uiManager.language, weather.desc)}`
+          : uiManager.localizeText('Brak danych o pogodzie.');
         hint.appendChild(tooltip);
 
         hint.addEventListener('click', (event) => {
@@ -148,7 +151,7 @@ export function renderMapTrack(uiManager) {
   });
 
   const isOnBoss = uiManager.state.currentLevel === uiManager.state.map.length - 1;
-  continueBtn.textContent = isOnBoss ? 'Nowa perć' : 'Idź dalej';
+  continueBtn.textContent = isOnBoss ? uiManager.t('map.newPath') : uiManager.t('map.goNext');
   continueBtn.classList.toggle('hidden', !isOnBoss);
   continueBtn.disabled = isActIntroPlaying;
 

@@ -115,7 +115,10 @@ export function startTutorialRewardPhase(uiManager) {
     uiManager.tutorialStepIndex = 7;
     uiManager.isTutorialGuidanceActive = true;
     rewardRenderer.showCardRewardScreen(uiManager, 0, tutorialCardChoices, false, {
-      title: 'Zdobyłeś kartę! Wybierz jedną:',
+      title:
+        uiManager.language === 'en'
+          ? 'You got a card! Choose one:'
+          : 'Zdobyłeś kartę! Wybierz jedną:',
       allowSkip: false,
     });
     uiManager.updateUI();
@@ -133,12 +136,14 @@ export function startTutorialRewardPhase(uiManager) {
  * @returns {string}
  */
 export function resolveTutorialStepText(uiManager, step) {
+  const lang = uiManager.language ?? 'pl';
   if (step.dynamicText === 'map_explain') {
-    return buildTutorialMapExplanationText((type) => uiManager.state.getMapNodeMeta(type));
+    return buildTutorialMapExplanationText((type) => uiManager.state.getMapNodeMeta(type), lang);
   }
   if (step.dynamicText === 'finale_text') {
-    return buildTutorialFinaleText((type) => uiManager.state.getMapNodeMeta(type));
+    return buildTutorialFinaleText((type) => uiManager.state.getMapNodeMeta(type), lang);
   }
+  if (lang === 'en' && step.textEn) return step.textEn;
   return step.text ?? '';
 }
 
@@ -251,6 +256,7 @@ export function renderTutorialOverlay(uiManager) {
   const layer = document.getElementById('tutorial-highlight-layer');
   const concludeBtns = document.getElementById('tutorial-conclude-btns');
   const bubble = overlay?.querySelector('.tutorial-bubble');
+  const bubbleTitle = overlay?.querySelector('.tutorial-bubble-title');
   const dim = overlay?.querySelector('.tutorial-dim');
   if (!overlay || !text || !ackBtn || !layer) return;
 
@@ -274,11 +280,16 @@ export function renderTutorialOverlay(uiManager) {
   overlay.classList.remove('hidden');
   overlay.setAttribute('aria-hidden', 'false');
   text.textContent = resolveTutorialStepText(uiManager, step);
+  if (bubbleTitle instanceof HTMLElement) {
+    bubbleTitle.textContent = uiManager.language === 'en' ? 'Jędrek says' : 'Jędrek mówi';
+  }
 
   const showAck = step.action === 'ack';
   ackBtn.classList.toggle('hidden', !showAck);
   if (showAck) {
-    ackBtn.textContent = step.btnText ?? 'Zrozumiałem';
+    const defaultBtn = uiManager.language === 'en' ? 'Got it' : 'Zrozumiałem';
+    ackBtn.textContent =
+      uiManager.language === 'en' ? (step.btnTextEn ?? defaultBtn) : (step.btnText ?? defaultBtn);
   }
 
   if (concludeBtns) {
