@@ -104,9 +104,10 @@ export function renderMapTrack(uiManager) {
         node.type === 'event' && (uiManager.state.hasRelic('mapa_zakopanego') || revealAllMap)
           ? uiManager._revealedEventEmoji(node.eventOutcome)
           : node.emoji;
+      const localizedNodeLabel = uiManager.localizeText(node.label);
       btn.innerHTML = `
           <span class="map-node-emoji">${revealedEmoji}</span>
-          <span class="map-node-label">${node.label}</span>
+          <span class="map-node-label">${localizedNodeLabel}</span>
         `;
 
       wrap.appendChild(btn);
@@ -123,7 +124,7 @@ export function renderMapTrack(uiManager) {
         hint.setAttribute(
           'aria-label',
           weather
-            ? `${uiManager.language === 'en' ? 'Weather for' : 'Pogoda na polu'} ${node.label}: ${localizeWeatherName(uiManager.language, weather.name)}. ${localizeWeatherDesc(uiManager.language, weather.desc)}`
+            ? `${uiManager.language === 'en' ? 'Weather for' : 'Pogoda na polu'} ${localizedNodeLabel}: ${localizeWeatherName(uiManager.language, weather.name)}. ${localizeWeatherDesc(uiManager.language, weather.desc)}`
             : uiManager.localizeText('Pogoda na polu')
         );
         hint.setAttribute('aria-expanded', 'false');

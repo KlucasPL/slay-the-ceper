@@ -90,6 +90,13 @@ const REPLACEMENTS = [
     'Quiet on the trail... nothing happened today.',
   ],
   // Map
+  [/\bBitka\b/g, 'Battle'],
+  [/\bElita\b/g, 'Elite'],
+  [/\bJarmark\b/g, 'Market'],
+  [/\bWydarzenie\b/g, 'Event'],
+  [/\bWatra\b/g, 'Campfire'],
+  [/\bHerszt\b/g, 'Boss'],
+  [/\bSkarb\b/g, 'Treasure'],
   [/Pogoda na polu/g, 'Weather at field'],
   [/Pogoda/g, 'Weather'],
   [/Brak danych o pogodzie\./g, 'No weather data.'],

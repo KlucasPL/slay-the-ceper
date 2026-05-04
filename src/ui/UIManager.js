@@ -386,6 +386,18 @@ export class UIManager {
     assignText('title-btn-options', 'title.options');
     assignText('title-btn-library', 'title.library');
     assignText('title-difficulty-hint', 'title.difficultyHint');
+    assignText('title-disclaimer-btn', 'title.disclaimerBtn');
+    assignText('title-disclaimer-panel', 'title.disclaimerText');
+
+    const isInStandaloneMode =
+      'standalone' in navigator
+        ? /** @type {any} */ (navigator).standalone
+        : window.matchMedia('(display-mode: standalone)').matches;
+    const isMobileLike = window.matchMedia('(hover: none) and (pointer: coarse)').matches;
+    assignText(
+      'title-pwa-btn',
+      isInStandaloneMode && isMobileLike ? 'title.pwaForceLandscape' : 'title.pwaInstall'
+    );
 
     const nav = document.getElementById('title-menu-nav');
     if (nav) nav.setAttribute('aria-label', this.t('title.menuAria'));
@@ -441,6 +453,20 @@ export class UIManager {
     // Changelog modal
     assignText('release-notes-title', 'changelog.title');
 
+    // Seeded run modal
+    assignText('seeded-run-modal-title', 'seeded.title');
+    assignText('seeded-run-hint', 'seeded.hint');
+    assignText('seeded-run-error', 'seeded.error');
+    assignText('seeded-run-confirm-btn', 'seeded.start');
+    assignText('seeded-run-cancel-btn', 'seeded.cancel');
+    const seededInput = document.getElementById('seeded-run-input');
+    if (seededInput) seededInput.setAttribute('placeholder', this.t('seeded.placeholder'));
+
+    // PWA required update overlay
+    assignText('pwa-update-required-title', 'pwaUpdate.requiredTitle');
+    assignText('pwa-update-required-text', 'pwaUpdate.requiredText');
+    assignText('pwa-update-required-btn', 'pwaUpdate.updateApp');
+
     // Library UI
     assignText('library-title', 'library.title');
     assignText('library-subtitle', 'library.subtitle');
@@ -452,6 +478,11 @@ export class UIManager {
     assignText('library-filter-uncommon-label', 'library.filterUncommon');
     assignText('library-filter-rare-label', 'library.filterRare');
     assignText('library-back-label', 'library.backBtn');
+    assignText('maryna-boon-title', 'maryna.title');
+    assignText('maryna-boon-description', 'maryna.description');
+    assignText('tutorial-exit-btn', 'tutorial.exit');
+    assignText('tutorial-repeat-btn', 'tutorial.repeat');
+    assignText('tutorial-finish-btn', 'tutorial.finish');
     const libraryTabsEl = document.querySelector('.library-tabs');
     if (libraryTabsEl) libraryTabsEl.setAttribute('aria-label', this.t('library.tabsAria'));
     const libraryFiltersEl = document.querySelector('.library-filters');
@@ -806,8 +837,8 @@ export class UIManager {
         return;
       }
 
-      btn.textContent = '↔ Wymuś poziom';
-      btn.setAttribute('aria-label', 'Wymuś widok poziomy');
+      btn.textContent = this.t('title.pwaForceLandscape');
+      btn.setAttribute('aria-label', this.t('pwa.forceLandscapeAria'));
       panel.classList.add('hidden');
 
       btn.addEventListener('click', async (event) => {
@@ -838,25 +869,25 @@ export class UIManager {
     /** @returns {string} */
     const buildPanelHtml = () => {
       if (deferredPrompt) {
-        return `<strong>Zainstaluj jako aplikację</strong><br>
-Kliknij poniższy przycisk, aby dodać Usiec Cepra do pulpitu – bez sklepu z aplikacjami, działa offline.
-<br><button class="pwa-install-btn" id="pwa-native-install-btn">⬇ Zainstaluj</button>`;
+        return `<strong>${this.t('pwa.installTitle')}</strong><br>
+    ${this.t('pwa.installPrompt')}
+    <br><button class="pwa-install-btn" id="pwa-native-install-btn">${this.t('pwa.installNow')}</button>`;
       }
       if (isIos) {
-        return `<strong>Zainstaluj na iPhone / iPad</strong><ul>
-<li>Otwórz w <strong>Safari</strong> (nie Chrome/Firefox)</li>
-<li>Stuknij ikonę Udostępnij <strong>□↑</strong> na dole</li>
-<li>Wybierz <strong>„Dodaj do ekranu głównego"</strong></li>
-<li>Stuknij <strong>„Dodaj"</strong></li>
+        return `<strong>${this.t('pwa.iosTitle')}</strong><ul>
+    <li>${this.t('pwa.iosStep1')}</li>
+    <li>${this.t('pwa.iosStep2')}</li>
+    <li>${this.t('pwa.iosStep3')}</li>
+    <li>${this.t('pwa.iosStep4')}</li>
 </ul>
-Gra pojawi się jako ikona i będzie działać bez przeglądarki.`;
+    ${this.t('pwa.iosFooter')}`;
       }
-      return `<strong>Zainstaluj jako aplikację</strong><ul>
-<li><strong>Android (Chrome):</strong> menu ⋮ → „Dodaj do ekranu głównego" / „Zainstaluj"</li>
-<li><strong>Android (Firefox):</strong> menu ⋮ → „Zainstaluj"</li>
-<li><strong>Komputer (Chrome/Edge):</strong> ikona ⊕ w pasku adresu → „Zainstaluj"</li>
+      return `<strong>${this.t('pwa.installTitle')}</strong><ul>
+    <li>${this.t('pwa.androidStep1')}</li>
+    <li>${this.t('pwa.androidStep2')}</li>
+    <li>${this.t('pwa.desktopStep')}</li>
 </ul>
-Po instalacji gra działa offline i bez paska przeglądarki.`;
+    ${this.t('pwa.footer')}`;
     };
 
     btn.addEventListener('click', (e) => {
@@ -904,8 +935,7 @@ Po instalacji gra działa offline i bez paska przeglądarki.`;
 
     const orientationQuery = window.matchMedia('(orientation: landscape)');
     if (orientationQuery.matches) {
-      panel.innerHTML =
-        '<strong>Widok poziomy jest już aktywny.</strong><br>Możesz od razu grać w układzie poziomym.';
+      panel.innerHTML = `<strong>${this.t('pwa.landscapeAlreadyTitle')}</strong><br>${this.t('pwa.landscapeAlreadyBody')}`;
       panel.classList.remove('hidden');
       btn.setAttribute('aria-expanded', 'true');
       return;
@@ -935,13 +965,12 @@ Po instalacji gra działa offline i bez paska przeglądarki.`;
     const isLandscapeNow =
       orientationQuery.matches || window.matchMedia('(min-aspect-ratio: 13/10)').matches;
     if (isLandscapeNow || requestedLandscape) {
-      panel.innerHTML =
-        '<strong>Próba przejścia do poziomu wykonana.</strong><br>Jeśli ekran nie obrócił się automatycznie, obróć telefon ręcznie.';
+      panel.innerHTML = `<strong>${this.t('pwa.landscapeAttemptTitle')}</strong><br>${this.t('pwa.landscapeAttemptBody')}`;
     } else {
       const fullscreenHint = requestedFullscreen
-        ? 'Uruchomiono pełny ekran.'
-        : 'Pełny ekran nie jest dostępny na tym urządzeniu.';
-      panel.innerHTML = `<strong>Automatyczne wymuszenie poziomu niedostępne.</strong><br>${fullscreenHint} Obróć telefon ręcznie, aby grać wygodnie.`;
+        ? this.t('pwa.fullscreenEnabled')
+        : this.t('pwa.fullscreenUnavailable');
+      panel.innerHTML = `<strong>${this.t('pwa.forceUnavailableTitle')}</strong><br>${fullscreenHint} ${this.t('pwa.forceUnavailableBody')}`;
     }
 
     panel.classList.remove('hidden');
@@ -979,16 +1008,16 @@ Po instalacji gra działa offline i bez paska przeglądarki.`;
         const { applyUpdate } = getUpdateState();
         if (!applyUpdate) return;
         actionBtn.setAttribute('disabled', 'true');
-        actionBtn.textContent = 'Aktualizowanie...';
+        actionBtn.textContent = this.t('pwaUpdate.updating');
         await applyUpdate();
       });
     };
 
     const renderPanel = () => {
       panel.innerHTML = `
-        <strong>Nowa wersja aplikacji jest gotowa</strong><br>
-        Zaktualizuj Usiec Cepra, aby pobrać najnowsze poprawki i zawartość.<br>
-        <button class="pwa-update-action-btn" id="pwa-update-action-btn" type="button">⬆ Zaktualizuj teraz</button>
+        <strong>${this.t('pwaUpdate.readyTitle')}</strong><br>
+        ${this.t('pwaUpdate.readyBody')}<br>
+        <button class="pwa-update-action-btn" id="pwa-update-action-btn" type="button">${this.t('pwaUpdate.updateNow')}</button>
       `;
 
       bindUpdateAction(
@@ -1013,7 +1042,7 @@ Po instalacji gra działa offline i bez paska przeglądarki.`;
         panel.classList.add('hidden');
         btn.setAttribute('aria-expanded', 'false');
         requiredBtn.removeAttribute('disabled');
-        requiredBtn.textContent = '⬆ Zaktualizuj aplikację';
+        requiredBtn.textContent = this.t('pwaUpdate.updateApp');
         return;
       }
 
@@ -1021,10 +1050,10 @@ Po instalacji gra działa offline i bez paska przeglądarki.`;
         panel.classList.add('hidden');
         btn.setAttribute('aria-expanded', 'false');
         requiredBtn.removeAttribute('disabled');
-        requiredBtn.textContent = '⬆ Zaktualizuj aplikację';
+        requiredBtn.textContent = this.t('pwaUpdate.updateApp');
       }
 
-      btn.textContent = '⬆ Aktualizacja';
+      btn.textContent = this.t('pwaUpdate.updateBadge');
     };
 
     btn.addEventListener('click', (event) => {
@@ -2059,7 +2088,7 @@ Po instalacji gra działa offline i bez paska przeglądarki.`;
   }
 
   /**
-   * @param {{ partLabel: string, actLabel: string, title: string }} actData
+   * @param {{ partLabel: string, actLabel: string, title: string, motifAria?: string }} actData
    */
   playActIntro(actData) {
     return this.actIntroOverlay.play(actData);
@@ -2070,14 +2099,24 @@ Po instalacji gra działa offline i bez paska przeglądarki.`;
       ? Math.max(1, this.state.currentAct)
       : 1;
     const rawTitle = this.state.currentActName || 'NIEZNANY SZLAK';
-    const title = rawTitle
-      .toLocaleLowerCase('pl-PL')
-      .replace(/(^|\s)\S/g, (char) => char.toLocaleUpperCase('pl-PL'));
+    const titleSource =
+      this.language === 'en'
+        ? ({
+            KRUPÓWKI: 'KRUPÓWKI STREET',
+            'MORSKIE OKO': 'MORSKIE OKO',
+            'NIEZNANY SZLAK': 'UNKNOWN TRAIL',
+          }[rawTitle] ?? this.localizeText(rawTitle))
+        : rawTitle;
+    const locale = this.language === 'en' ? 'en-US' : 'pl-PL';
+    const title = titleSource
+      .toLocaleLowerCase(locale)
+      .replace(/(^|\s)\S/g, (char) => char.toLocaleUpperCase(locale));
 
     return {
-      partLabel: `CZĘŚĆ ${actNumber}:`,
+      partLabel: this.language === 'en' ? `PART ${actNumber}:` : `CZĘŚĆ ${actNumber}:`,
       actLabel: '',
       title,
+      motifAria: this.t('actIntro.motifAria'),
     };
   }
 }

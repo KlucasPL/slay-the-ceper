@@ -54,7 +54,7 @@ export function openMarynaBoonOverlay(uiManager) {
         {
           name: localizeBoonName(uiManager.language, boon.name),
           emoji: boon.emoji,
-          rarityLabel: 'Błogosławieństwo Maryny',
+          rarityLabel: uiManager.t('maryna.boonRarity'),
           description: localizeBoonEffectDesc(uiManager.language, boon.effectDesc),
           rarityClass: 'rarity-rare',
         },
@@ -77,7 +77,7 @@ export function openMarynaBoonOverlay(uiManager) {
     selectBtn.className = 'btn';
     selectBtn.style.padding = '8px 24px';
     selectBtn.style.fontSize = '1.1rem';
-    selectBtn.textContent = 'Wybierz';
+    selectBtn.textContent = uiManager.t('maryna.choose');
 
     selectBtn.addEventListener('click', (event) => {
       // Move focus out of the overlay before marking it aria-hidden.

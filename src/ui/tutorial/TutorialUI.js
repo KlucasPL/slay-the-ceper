@@ -115,10 +115,7 @@ export function startTutorialRewardPhase(uiManager) {
     uiManager.tutorialStepIndex = 7;
     uiManager.isTutorialGuidanceActive = true;
     rewardRenderer.showCardRewardScreen(uiManager, 0, tutorialCardChoices, false, {
-      title:
-        uiManager.language === 'en'
-          ? 'You got a card! Choose one:'
-          : 'Zdobyłeś kartę! Wybierz jedną:',
+      title: uiManager.t('tutorial.rewardChooseCard'),
       allowSkip: false,
     });
     uiManager.updateUI();
@@ -281,13 +278,13 @@ export function renderTutorialOverlay(uiManager) {
   overlay.setAttribute('aria-hidden', 'false');
   text.textContent = resolveTutorialStepText(uiManager, step);
   if (bubbleTitle instanceof HTMLElement) {
-    bubbleTitle.textContent = uiManager.language === 'en' ? 'Jędrek says' : 'Jędrek mówi';
+    bubbleTitle.textContent = uiManager.t('tutorial.speaker');
   }
 
   const showAck = step.action === 'ack';
   ackBtn.classList.toggle('hidden', !showAck);
   if (showAck) {
-    const defaultBtn = uiManager.language === 'en' ? 'Got it' : 'Zrozumiałem';
+    const defaultBtn = uiManager.t('tutorial.ack');
     ackBtn.textContent =
       uiManager.language === 'en' ? (step.btnTextEn ?? defaultBtn) : (step.btnText ?? defaultBtn);
   }
