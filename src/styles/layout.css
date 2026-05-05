@@ -1583,7 +1583,6 @@ h1 {
   width: 95%;
   max-width: 1180px;
   box-sizing: border-box;
-  z-index: 10;
 }
 
 .hand {
@@ -2555,15 +2554,15 @@ h1 {
 }
 
 .tutorial-highlight {
-  position: fixed;
-  border: 3px solid #ffd66e;
-  border-radius: 12px;
-  box-shadow: 0 0 0 2px rgba(80, 45, 18, 0.75) inset;
+  display: none;
 }
 
 .tutorial-focus-target {
   position: relative;
   z-index: 4560;
+  outline: 3px solid #ffd66e;
+  outline-offset: 6px;
+  border-radius: 12px;
 }
 
 .tutorial-bubble {
@@ -2736,12 +2735,22 @@ h1 {
 
 .tutorial-bubble.tutorial-bubble--map-explain {
   bottom: 8px;
+  z-index: 4570;
+  max-height: 60dvh;
+}
+
+.tutorial-overlay.tutorial-overlay--map-explain {
+  z-index: 4580;
 }
 
 .tutorial-overlay.tutorial-overlay--map-explain
   #map-overlay.map-overlay--tutorial
   .map-tree.map-tree--tutorial {
   max-height: min(52dvh, 390px);
+}
+
+#map-overlay.map-overlay--tutorial.map-overlay--tutorial-foreground {
+  z-index: 4560;
 }
 
 .motion-comic-intro {

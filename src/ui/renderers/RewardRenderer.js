@@ -119,9 +119,9 @@ export function showRelicScreen(uiManager, relicId, source) {
     claimBtn = document.createElement('button');
     claimBtn.id = 'claim-relic-btn';
     claimBtn.className = 'reward-relic-btn';
-    claimBtn.textContent = uiManager.localizeText('Zgarnij Pamiątkę');
     panel.appendChild(claimBtn);
   }
+  claimBtn.textContent = uiManager.localizeText('Zgarnij Pamiątkę');
 
   glowWrap.classList.remove('rarity-common', 'rarity-uncommon', 'rarity-rare');
   glowWrap.classList.add(uiHelpers.rarityClass(relic.rarity));

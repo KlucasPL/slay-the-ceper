@@ -1,6 +1,7 @@
 import { cardLibrary, startingDeck, getCardDefinition } from '../data/cards.js';
 import { relicLibrary } from '../data/relics.js';
 import { releaseNotesData } from '../data/releaseNotes.js';
+import { releaseNotesDataEn } from '../data/releaseNotes.en.js';
 import { ActIntroOverlay } from './overlays/ActIntroOverlay.js';
 import {
   getSkipIntro,
@@ -364,7 +365,9 @@ export class UIManager {
     const releaseNotesBtn = document.getElementById('btn-release-notes');
     if (!releaseNotesBtn) return;
 
-    const latestVersion = releaseNotesData[0]?.version?.split(' - ')[0];
+    const notes =
+      this.language === 'en' && releaseNotesDataEn.length ? releaseNotesDataEn : releaseNotesData;
+    const latestVersion = notes[0]?.version?.split(' - ')[0];
     releaseNotesBtn.textContent = latestVersion
       ? `📜 ${this.t('title.releaseNotesPrefix')} (${latestVersion})`
       : `📜 ${this.t('title.releaseNotesPrefix')}`;
@@ -1122,7 +1125,9 @@ export class UIManager {
     if (!container) return;
 
     container.innerHTML = '';
-    releaseNotesData.forEach((entry) => {
+    const notes =
+      this.language === 'en' && releaseNotesDataEn.length ? releaseNotesDataEn : releaseNotesData;
+    notes.forEach((entry) => {
       const section = document.createElement('section');
 
       const version = document.createElement('h3');

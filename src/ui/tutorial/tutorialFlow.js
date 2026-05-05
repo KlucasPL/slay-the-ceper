@@ -21,7 +21,7 @@ export function tutorialPlayerStatus() {
 export const tutorialSteps = [
   {
     action: 'ack',
-    selectors: ['#e-intent'],
+    selectors: ['#enemy'],
     text: 'Widzisz tego cepra? Ta ikonka nad jego głową znaczy, że zaraz wejdzie Ci w szkodę. Zawsze patrz, co kombinują, zanim cokolwiek zagrasz!',
     textEn:
       "See that tourist? The icon above his head means he's about to make your life difficult. Always check what they're planning before you play anything!",
@@ -54,14 +54,14 @@ export const tutorialSteps = [
     selectors: ['.relics-wrap'],
     text: 'Widzisz te pierdoły na górze? To Pamiątki z Krupówek. Dają Ci bonusy, o których nie musisz pamiętać - działają same. Im więcej ich masz, tym trudniej Cię ubić.',
     textEn:
-      "See those trinkets up top? Those are Relics from Krupówki Street. They give you bonuses you don't need to think about — they work automatically. The more you have, the harder you are to beat.",
+      "See those trinkets up top? Those are Souvenirs from Krupówki Street. They give you bonuses you don't need to think about — they work automatically. The more you have, the harder you are to beat.",
   },
   {
     action: 'end_turn',
     selectors: ['#end-turn-btn'],
     text: 'Jak skończysz ruch, kliknij tutaj. Twoja Garda zniknie na początku następnej tury (chyba że masz specjalną pamiątkę), a ceper spróbuje Ci oddać.',
     textEn:
-      "When you're done with your turn, click here. Your Garda resets at the start of the next turn (unless you have a special Relic), and the tourist will try to hit back.",
+      "When you're done with your turn, click here. Your Garda resets at the start of the next turn (unless you have a special Souvenir), and the tourist will try to hit back.",
   },
   {
     action: 'claim_relic',
@@ -69,7 +69,7 @@ export const tutorialSteps = [
     selectors: ['#claim-relic-btn'],
     text: 'Zwycięstwo! Za każdego ubitego cepra dostaniesz fanty. To jest Pamiątka – bierz ją, bo daje bonusy na stałe. Kliknij w nią, nie bój się, nie pogryzie!',
     textEn:
-      "Victory! Every tourist you beat earns you loot. That's a Relic — take it, it gives you permanent bonuses. Click on it, don't be shy, it won't bite!",
+      "Victory! Every tourist you beat earns you loot. That's a Souvenir — take it, it gives you permanent bonuses. Click on it, don't be shy, it won't bite!",
   },
   {
     action: 'pick_card',

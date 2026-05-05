@@ -271,6 +271,7 @@ export function renderTutorialOverlay(uiManager) {
     if (bubble) bubble.classList.remove('tutorial-bubble--conclude');
     overlay.classList.remove('tutorial-overlay--map-explain');
     if (bubble) bubble.classList.remove('tutorial-bubble--map-explain');
+    document.getElementById('map-overlay')?.classList.remove('map-overlay--tutorial-foreground');
     return;
   }
 
@@ -301,6 +302,14 @@ export function renderTutorialOverlay(uiManager) {
   if (bubble) {
     bubble.classList.toggle('tutorial-bubble--map-explain', isMapExplainStep);
   }
+  const mapOverlay = document.getElementById('map-overlay');
+  if (mapOverlay) {
+    mapOverlay.classList.toggle('map-overlay--tutorial-foreground', isMapExplainStep);
+    if (!isMapExplainStep) {
+      mapOverlay.classList.add('hidden');
+      mapOverlay.setAttribute('aria-hidden', 'true');
+    }
+  }
 
   if (dim) {
     dim.style.opacity = step.noDim ? '0' : '';
@@ -315,16 +324,6 @@ export function renderTutorialOverlay(uiManager) {
   targets.forEach((element) => {
     element.classList.add('tutorial-focus-target');
     uiManager.tutorialFocusedElements.push(element);
-
-    const rect = element.getBoundingClientRect();
-    const highlight = document.createElement('div');
-    highlight.className = 'tutorial-highlight';
-    const padding = 6;
-    highlight.style.left = `${Math.max(0, rect.left - padding)}px`;
-    highlight.style.top = `${Math.max(0, rect.top - padding)}px`;
-    highlight.style.width = `${rect.width + padding * 2}px`;
-    highlight.style.height = `${rect.height + padding * 2}px`;
-    layer.appendChild(highlight);
   });
 
   positionTutorialBubble(uiManager);

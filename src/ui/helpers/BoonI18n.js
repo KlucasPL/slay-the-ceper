@@ -22,7 +22,7 @@ const BOON_FLAVORS_EN = {
   'Wstawaj. Najpierw zimny okład, potem wielkie czyny.':
     'Get up. First a cold compress, then great deeds.',
   'Masz, ale nie przewal wszystkiego na jarmarku.':
-    "You have it, but don't blow it all at the fair.",
+    "You have it, but don't blow it all at the Market.",
   'Ten złom wyrzuć, to ci zostawiam.': "Throw out that junk, this I'm leaving you.",
   'Na trzy pierwsze bitki starczy ci mocy i ciepła.':
     'For the first three fights, you have enough strength and warmth.',
