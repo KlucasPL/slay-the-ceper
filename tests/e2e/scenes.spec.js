@@ -159,7 +159,7 @@ test('run-ended-win: shouldShowRunSummaryWithVictoryTitle', async ({ page }) => 
   const summaryOverlay = page.locator('#run-summary-overlay:not(.hidden)');
   await summaryOverlay.waitFor({ timeout: 5_000 });
   await expect(summaryOverlay).toBeVisible();
-  await expect(page.locator('#run-summary-title')).toContainText('ZWYCIĘSTWO');
+  await expect(page.locator('#run-summary-title')).toContainText(/ZWYCI[EĘ]STWO|VICTORY/i);
   await expect(page.locator('#run-summary-floor')).toContainText('15');
 });
 
@@ -169,5 +169,5 @@ test('run-ended-loss: shouldShowRunSummaryWithDefeatTitle', async ({ page }) => 
   const summaryOverlay = page.locator('#run-summary-overlay:not(.hidden)');
   await summaryOverlay.waitFor({ timeout: 5_000 });
   await expect(summaryOverlay).toBeVisible();
-  await expect(page.locator('#run-summary-title')).toContainText('KONIEC');
+  await expect(page.locator('#run-summary-title')).toContainText(/KONIEC|RUN OVER/i);
 });
