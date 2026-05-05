@@ -1,0 +1,478 @@
+/* --- Fix for Event Button Text Overflow --- */
+.event-choice-row {
+  align-items: stretch !important; /* Ensures the 'eye' button grows to match the choice button */
+}
+
+.event-choice-btn {
+  height: auto !important; /* Forces the button to wrap tall content instead of letting it bleed out */
+  overflow: visible !important;
+}
+
+/* Ensure the eye button keeps its content centered even when stretched vertically */
+.event-preview-btn {
+  height: auto !important;
+  align-self: stretch !important;
+}
+/* --- Missing Event Preview Styles --- */
+.event-choice-row {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  margin-bottom: 12px;
+}
+
+.event-choice-row .event-choice-btn {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.event-preview-btn {
+  background: #2c1e16;
+  border: 3px solid #bfa16a;
+  border-radius: 16px;
+  color: #fdf8eb;
+  padding: 0 18px;
+  font-size: 1.6rem;
+  cursor: pointer;
+  transition: all 0.18s ease-out;
+  box-shadow: 0 2px 12px rgba(69, 40, 22, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.event-preview-btn:hover:not(:disabled) {
+  background: #3d2314;
+  border-color: #e0b85a;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 18px rgba(69, 40, 22, 0.18);
+}
+
+.event-preview-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  filter: grayscale(100%);
+}
+/* --- Event Choice Button (Campfire, Events) --- */
+.event-choice-btn {
+  display: flex;
+  align-items: flex-start;
+  gap: 18px;
+  width: 100%;
+  background: linear-gradient(90deg, #f7e3c1 0%, #e8d9bd 100%);
+  border: 3px solid #bfa16a;
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(69, 40, 22, 0.1);
+  padding: 18px 22px 18px 18px;
+  margin: 0;
+  font-family: inherit;
+  font-size: 1.13rem;
+  font-weight: 700;
+  color: #3d2314;
+  cursor: pointer;
+  transition:
+    box-shadow 0.18s,
+    border-color 0.18s,
+    background 0.18s;
+  outline: none;
+  position: relative;
+  text-align: left;
+  min-height: 72px;
+}
+.event-choice-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  background: #e8d9bd;
+  color: #a89b8b;
+  border-color: #cfc2a2;
+}
+.event-choice-btn:not(:disabled):hover,
+.event-choice-btn:not(:disabled):focus {
+  box-shadow: 0 4px 18px rgba(69, 40, 22, 0.18);
+  border-color: #e0b85a;
+  background: linear-gradient(90deg, #fbe7b2 0%, #f3e2c2 100%);
+}
+.event-choice-emoji {
+  font-size: 2.2rem;
+  margin-right: 8px;
+  flex-shrink: 0;
+  line-height: 1;
+  filter: drop-shadow(0 1px 0 #fff6e0);
+}
+.event-choice-title {
+  font-size: 1.18rem;
+  font-weight: 800;
+  margin-bottom: 2px;
+  display: block;
+  color: #3d2314;
+}
+.event-choice-desc {
+  font-size: 0.98rem;
+  font-weight: 600;
+  color: #6b4a2b;
+  display: block;
+  margin-bottom: 0;
+}
+.event-choice-extra {
+  display: block;
+  font-size: 0.92rem;
+  color: #a89b8b;
+  margin-top: 4px;
+  font-weight: 600;
+}
+/* --- BULLETPROOF DISABLED CARD STATE --- */
+div.card.card-disabled-state,
+div.card.card-disabled-state:hover,
+div.card.card-disabled-state:focus {
+  filter: grayscale(100%) brightness(0.65) !important;
+  opacity: 0.85 !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+  box-shadow:
+    0 6px 14px rgba(0, 0, 0, 0.4),
+    inset 0 0 0 2px var(--rarity-border-color, #a9a9a9) !important;
+}
+/* Shop Buy Button (Highlander Green) */
+.shop-buy-btn {
+  background-color: #2ecc71; /* Green for buying */
+  color: white;
+  padding: 8px 16px;
+  font-size: 1rem;
+  border-radius: 8px;
+  border: 2px solid #27ae60;
+  box-shadow: 0 4px 0 #1e8449;
+  margin-top: 8px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  transition:
+    background 0.18s,
+    box-shadow 0.18s,
+    filter 0.18s;
+}
+
+.shop-buy-btn:hover:not(:disabled) {
+  background-color: #27ae60;
+  filter: brightness(1.08);
+  box-shadow: 0 6px 0 #1e8449;
+}
+
+.shop-buy-btn:disabled {
+  background-color: #95a5a6;
+  border-color: #7f8c8d;
+  box-shadow: 0 4px 0 #707b7c;
+  cursor: not-allowed;
+  filter: grayscale(0.2) brightness(0.92);
+}
+/* --- Unified Card & Hand Layout (Modernized) --- */
+
+/* --- Unified Card & Hand Layout (Modernized) --- */
+.card {
+  width: 250px;
+  min-width: 130px;
+  aspect-ratio: 2 / 3.1;
+  flex-shrink: 0; /* Changed from 1 to 0 to prevent squashing in battle */
+  container-type: inline-size;
+  background: #fdf8eb;
+  color: #2c1e16;
+  border-radius: 12px;
+  border: 4px solid #3d2314;
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  position: relative;
+  box-shadow:
+    0 6px 14px rgba(0, 0, 0, 0.4),
+    inset 0 0 0 2px var(--rarity-border-color, #a9a9a9);
+  transition:
+    transform 0.2s ease-out,
+    box-shadow 0.2s ease-out;
+  user-select: none;
+  overflow: hidden;
+}
+
+/* --- Visual feedback for unplayable cards (FORCE) --- */
+.card.card-disabled-state {
+  filter: grayscale(100%) brightness(0.65) !important;
+  opacity: 0.85 !important;
+  cursor: not-allowed !important;
+}
+
+.card.card-disabled-state:hover {
+  transform: none !important;
+  box-shadow:
+    0 6px 14px rgba(0, 0, 0, 0.4),
+    inset 0 0 0 2px var(--rarity-border-color, #a9a9a9) !important;
+}
+
+/* CRITICAL: Missing Card Children Styles */
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 10px;
+  background: #3d2314;
+  color: #f3dfbd;
+}
+
+.card-title {
+  font-weight: 800;
+  font-size: clamp(0.85rem, 10cqw, 1.15rem);
+  line-height: 1.1;
+  text-align: left;
+  margin: 0;
+  min-width: 0;
+  flex: 1 1 auto;
+  padding-right: 4px;
+  overflow-wrap: break-word;
+}
+
+.card-cost-oscypek {
+  background: #f4c26a;
+  color: #3d2314;
+  padding: 2px 6px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  border: 1px solid #3d2314;
+}
+
+/* --- Modern Full-Screen Shop Layout (Moved outside .card) --- */
+.shop-panel {
+  width: 1000px;
+  max-width: 95%;
+  max-height: 940px;
+  overflow-y: auto;
+  background: linear-gradient(180deg, #6a4222 0%, #4b2d17 100%);
+  border: 10px solid #7c4a1f;
+  box-shadow:
+    0 0 0 4px #3a210f,
+    0 12px 40px rgba(0, 0, 0, 0.65);
+  border-radius: 18px;
+  padding: 24px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.cost-value {
+  font-size: clamp(1rem, 12cqw, 1.3rem);
+  line-height: 1;
+}
+
+.card-subtitle {
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #8c5a35;
+  padding: 4px 10px;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.card-art {
+  flex: 1 1 0%;
+  min-height: 25%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: radial-gradient(circle at center, rgba(255, 235, 190, 0.6) 0%, transparent 60%);
+  padding: 4px;
+}
+
+.card-icon {
+  font-size: clamp(2rem, 25cqw, 4.5rem);
+  line-height: 1;
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.25));
+}
+
+.card-text-box {
+  flex: 1.2 0 0%;
+  background: rgba(230, 212, 184, 0.4);
+  border-top: 2px dashed rgba(140, 90, 53, 0.4);
+  padding: 12px 14px 8px 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  overflow: hidden;
+}
+
+.card-desc {
+  font-size: clamp(0.74rem, 9cqw, 0.85rem) !important;
+  font-weight: 700;
+  line-height: 1.15;
+  text-align: left;
+  color: #3d2314;
+  white-space: normal;
+  overflow-wrap: break-word;
+  margin: 0;
+}
+
+.card-exhaust-inline {
+  margin-top: 8px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #b32d1c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  letter-spacing: 0.05em;
+}
+
+.hand-header {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.hand-view-btn {
+  background: linear-gradient(135deg, #8b6914, #b8860b);
+  border: 1px solid #ffd700;
+  color: #f4e8d2;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.hand-view-btn:hover {
+  background: linear-gradient(135deg, #b8860b, #daa520);
+  border-color: #ffed4e;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
+}
+
+.hand-view-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+/* Hand View Overlay */
+.hand-view-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 4750;
+  background: rgba(0, 0, 0, 0.86);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(3px);
+}
+
+.hand-view-overlay.hidden {
+  display: none;
+}
+
+.hand-view-panel {
+  background: #1a1a1a;
+  border: 2px solid #8b6914;
+  border-radius: 12px;
+  padding: 20px;
+  width: 90%;
+  height: 82%;
+  max-width: 1200px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8);
+}
+
+.hand-view-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #8b6914;
+}
+
+.hand-view-header h2 {
+  margin: 0;
+  color: #f4e8d2;
+  font-size: 1.4rem;
+  font-weight: 600;
+}
+
+.hand-view-close-btn {
+  background: none;
+  border: none;
+  color: #f4e8d2;
+  font-size: 1.8rem;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.hand-view-close-btn:hover {
+  background: rgba(139, 105, 20, 0.4);
+  color: #ffd700;
+}
+
+.hand-view-close-btn:active {
+  transform: scale(0.95);
+}
+
+.hand-view-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  overflow-y: auto;
+  padding: 8px;
+  flex: 1;
+}
+
+.hand-view-grid::-webkit-scrollbar {
+  width: 8px;
+}
+
+.hand-view-grid::-webkit-scrollbar-track {
+  background: rgba(139, 105, 20, 0.1);
+  border-radius: 4px;
+}
+
+.hand-view-grid::-webkit-scrollbar-thumb {
+  background: rgba(139, 105, 20, 0.4);
+  border-radius: 4px;
+}
+
+.hand-view-grid::-webkit-scrollbar-thumb:hover {
+  background: rgba(139, 105, 20, 0.6);
+}
+
+.hand-view-card {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 2 / 3;
+  cursor: pointer;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.hand-view-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 8px 16px rgba(255, 215, 0, 0.2);
+}
+
+.hand-view-card:active {
+  transform: translateY(-4px);
+}
+
+.hand-view-tip {
+  margin: 12px 0 0 0;
+  padding-top: 12px;
+  border-top: 1px solid #8b6914;
+  color: #f3dec2;
+}
