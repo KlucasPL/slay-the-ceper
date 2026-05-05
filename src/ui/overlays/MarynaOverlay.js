@@ -1,6 +1,11 @@
 import { marynaBoonLibrary, marynaSvg } from '../../data/marynaBoons.js';
 import * as cardZoomOverlay from './CardZoomOverlay.js';
 import * as uiHelpers from '../helpers/UIHelpers.js';
+import {
+  localizeBoonName,
+  localizeBoonFlavor,
+  localizeBoonEffectDesc,
+} from '../helpers/BoonI18n.js';
 
 /**
  * @param {any} uiManager
@@ -40,17 +45,17 @@ export function openMarynaBoonOverlay(uiManager) {
     plateEl.style.cssText =
       'margin: 0; height: auto !important; min-height: 240px !important; justify-content: flex-start;';
     plateEl.innerHTML = `
-      <div class="relic-plate-title" style="margin-bottom: 2px;">${boon.name}</div>
+      <div class="relic-plate-title" style="margin-bottom: 2px;">${localizeBoonName(uiManager.language, boon.name)}</div>
       <div style="font-size: 2.4rem; margin: 4px 0 8px 0;">${boon.emoji}</div>
-      <div class="relic-plate-desc" style="color: #2c1e16; font-weight: 700;">${boon.effectDesc}</div>
+      <div class="relic-plate-desc" style="color: #2c1e16; font-weight: 700;">${localizeBoonEffectDesc(uiManager.language, boon.effectDesc)}</div>
     `;
     uiHelpers.attachLongPressZoom(plateEl, () => {
       cardZoomOverlay.openCardZoom(
         {
-          name: boon.name,
+          name: localizeBoonName(uiManager.language, boon.name),
           emoji: boon.emoji,
-          rarityLabel: 'Błogosławieństwo Maryny',
-          description: boon.effectDesc,
+          rarityLabel: uiManager.t('maryna.boonRarity'),
+          description: localizeBoonEffectDesc(uiManager.language, boon.effectDesc),
           rarityClass: 'rarity-rare',
         },
         'relic'
@@ -66,13 +71,13 @@ export function openMarynaBoonOverlay(uiManager) {
     flavorEl.style.lineHeight = '1.3';
     flavorEl.style.marginTop = '4px';
     flavorEl.style.marginBottom = 'auto';
-    flavorEl.innerHTML = `"${boon.flavor}"`;
+    flavorEl.innerHTML = `"${localizeBoonFlavor(uiManager.language, boon.flavor)}"`;
 
     const selectBtn = document.createElement('button');
     selectBtn.className = 'btn';
     selectBtn.style.padding = '8px 24px';
     selectBtn.style.fontSize = '1.1rem';
-    selectBtn.textContent = 'Wybierz';
+    selectBtn.textContent = uiManager.t('maryna.choose');
 
     selectBtn.addEventListener('click', (event) => {
       // Move focus out of the overlay before marking it aria-hidden.

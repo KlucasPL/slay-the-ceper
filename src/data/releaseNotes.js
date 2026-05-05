@@ -5,12 +5,19 @@
 /** @type {ReleaseNoteEntry[]} */
 export const releaseNotesData = [
   {
+    version: 'v2.0.2 - Ulepszenia poradnika i język angielski',
+    date: 'maj 2026',
+    changes: [
+      '🗺️ PORADNIK NA MAPIE: Wyjaśnienia dotyczące węzłów są teraz prawidłowo wyświetlane bez przewijania, a warstwa renderowania zapewnia widoczność nad mapą.',
+      '🌍 JĘZYK ANGIELSKI: Cała gra jest teraz dostępna w języku angielskim, w tym karty, pamiątki, przeciwnicy i wszystkie teksty systemowe.',
+    ],
+  },
+  {
     version: 'v2.0.1 - Szlify Aktu II i trybu aplikacyjnego',
     date: 'maj 2026',
     changes: [
       '📱 TRYB APLIKACJI MOBILNEJ: Na urządzeniach mobilnych w wersji aplikacyjnej dodano przycisk „Wymuś poziom”, który wykonuje najlepszą możliwą próbę przejścia do widoku poziomego.',
       '🗺️ WYDARZENIA W AKTACH: Ograniczono powtarzanie wydarzeń w tym samym akcie, dzięki czemu wyprawa daje bardziej różnorodne spotkania.',
-      '🔀 LEPSZE ZASTĘPSTWO WĘZŁA WYDARZENIA: Gdy pula wydarzeń w akcie się wyczerpie, węzeł przechodzi na sensowny wariant zastępczy (walka lub jarmark), zamiast pustego zdarzenia.',
       '🚽 KOLEJKA DO TOALETY: Przerobiono pasywkę, aby licznik narastał sensownie między turami i był zużywany dopiero przy odpowiednim efekcie.',
       '🧩 IKONY STATUSÓW: Uspójniono widoczność nowych statusów i znaczników mocy, żeby czytelniej pokazywać aktywne efekty podczas walki.',
     ],

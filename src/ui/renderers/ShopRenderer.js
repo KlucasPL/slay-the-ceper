@@ -2,6 +2,8 @@ import { cardLibrary } from '../../data/cards.js';
 import { relicLibrary } from '../../data/relics.js';
 import * as uiHelpers from '../helpers/UIHelpers.js';
 import * as cardRenderer from './CardRenderer.js';
+import { localizeCardName } from '../helpers/CardI18n.js';
+import { localizeRelicName, localizeRelicDescription } from '../helpers/RelicI18n.js';
 
 /**
  * Entry point to open the shop.
@@ -46,7 +48,7 @@ export function renderShopOffers(uiManager) {
   const header = document.createElement('div');
   header.className = 'shop-header';
   header.innerHTML = `
-    <h2 class="event-title">Jarmark u Bacy</h2>
+    <h2 class="event-title">${uiManager.localizeText('Jarmark u Bacy')}</h2>
     <div class="baca-sprite" id="baca-sprite">
       <svg viewBox="0 0 120 100" width="160" height="120" aria-label="Baca za ladą">
         <rect x="5" y="62" width="110" height="28" rx="6" fill="#6e4a2b" stroke="#3d2716" stroke-width="4" />
@@ -60,9 +62,9 @@ export function renderShopOffers(uiManager) {
         <circle cx="66" cy="33" r="2" fill="#111" />
       </svg>
     </div>
-    <p class="shop-line">"Patrzcie no! Mom towar i ciepłe oscypki!"</p>
+     <p class="shop-line">"${uiManager.localizeText('Patrzcie no! Mom towar i ciepłe oscypki!')}"</p>
     <div class="map-resource-strip">
-       <div class="map-resource-pill">💰 ${uiManager.state.dutki} Dutków</div>
+       <div class="map-resource-pill">💰 ${uiManager.state.dutki} ${uiManager.localizeText('Dutków')}</div>
        <div class="map-resource-pill">❤️ ${uiManager.state.player.hp} / ${uiManager.state.player.maxHp} HP</div>
     </div>
   `;
@@ -73,10 +75,10 @@ export function renderShopOffers(uiManager) {
   menuGrid.className = 'shop-main-menu';
 
   const categories = [
-    { id: 'cards', label: 'Kup Karty', icon: '🃏' },
-    { id: 'relics', label: 'Pamiątki', icon: '🏔️' },
-    { id: 'services', label: 'Usługi Bacy', icon: '🧀' },
-    { id: 'removal', label: 'Usuwanie Kart', icon: '🔥' },
+    { id: 'cards', label: uiManager.localizeText('Kup Karty'), icon: '🃏' },
+    { id: 'relics', label: uiManager.localizeText('Pamiątki'), icon: '🏔️' },
+    { id: 'services', label: uiManager.localizeText('Usługi Bacy'), icon: '🧀' },
+    { id: 'removal', label: uiManager.localizeText('Usuwanie Kart'), icon: '🔥' },
   ];
 
   categories.forEach((cat) => {
@@ -95,7 +97,7 @@ export function renderShopOffers(uiManager) {
   const message = document.createElement('div');
   message.id = 'shop-message';
   message.className = 'shop-message';
-  message.textContent = uiManager.state.lastShopMessage || '';
+  message.textContent = uiManager.localizeText(uiManager.state.lastShopMessage || '');
   panel.appendChild(message);
 
   // 4. Global Exit Button
@@ -122,7 +124,8 @@ function renderShopSubView(uiManager, viewId) {
     renderRemovalShop(uiManager);
   } else {
     const message = document.getElementById('shop-message');
-    if (message) message.textContent = `Kategoria ${viewId} wkrótce dostępna!`;
+    if (message)
+      message.textContent = uiManager.localizeText(`Kategoria ${viewId} wkrótce dostępna!`);
   }
   /**
    * Renders the Relic Shop Sub-view.
@@ -135,9 +138,9 @@ function renderShopSubView(uiManager, viewId) {
     const header = document.createElement('div');
     header.className = 'shop-header';
     header.innerHTML = `
-    <h2 class="event-title">Kup Pamiątki</h2>
+     <h2 class="event-title">${uiManager.localizeText('Kup Pamiątki')}</h2>
     <div class="map-resource-strip">
-       <div class="map-resource-pill">💰 ${uiManager.state.dutki} Dutków</div>
+       <div class="map-resource-pill">💰 ${uiManager.state.dutki} ${uiManager.localizeText('Dutków')}</div>
     </div>
   `;
     panel.appendChild(header);
@@ -152,7 +155,9 @@ function renderShopSubView(uiManager, viewId) {
     if (!relicId) {
       const msg = document.createElement('div');
       msg.className = 'shop-message';
-      msg.textContent = 'Brak pamiątek na sprzedaż (lub zostały już wykupione).';
+      msg.textContent = uiManager.localizeText(
+        'Brak pamiątek na sprzedaż (lub zostały już wykupione).'
+      );
       panel.appendChild(msg);
     } else {
       const relicDef = relicLibrary[relicId];
@@ -182,16 +187,16 @@ function renderShopSubView(uiManager, viewId) {
       relicEl.className = 'relic-plate';
       relicEl.style.margin = '0';
       relicEl.innerHTML = `
-      <div class="relic-plate-title">${relicDef.name}</div>
+      <div class="relic-plate-title">${localizeRelicName(uiManager.language, relicDef.name)}</div>
       <div style="font-size: 3rem; margin: 4px 0;">${relicDef.emoji}</div>
-      <div class="relic-plate-rarity">${uiHelpers.rarityLabel(relicDef.rarity, 'relic')}</div>
-      <div class="relic-plate-desc">${relicDef.desc}</div>
+      <div class="relic-plate-rarity">${uiManager.localizeText(uiHelpers.rarityLabel(relicDef.rarity, 'relic'))}</div>
+      <div class="relic-plate-desc">${localizeRelicDescription(uiManager.language, relicDef.desc)}</div>
     `;
       uiHelpers.attachLongPressZoom(relicEl, () => uiManager.showRelicZoom(relicId));
 
       const buyBtn = document.createElement('button');
       buyBtn.className = 'btn shop-buy-btn';
-      buyBtn.innerHTML = `Kup: ${price} 💰`;
+      buyBtn.innerHTML = `${uiManager.localizeText('Kup')}: ${price} 💰`;
       buyBtn.disabled = uiManager.state.dutki < price;
       buyBtn.onclick = () => {
         const result = uiManager.state.buyItem(relicItem, 'relic');
@@ -211,13 +216,13 @@ function renderShopSubView(uiManager, viewId) {
     const message = document.createElement('div');
     message.id = 'shop-message';
     message.className = 'shop-message';
-    message.textContent = uiManager.state.lastShopMessage || '';
+    message.textContent = uiManager.localizeText(uiManager.state.lastShopMessage || '');
     panel.appendChild(message);
 
     const backBtn = document.createElement('button');
     backBtn.className = 'btn shop-exit-btn';
     backBtn.style.marginTop = 'auto';
-    backBtn.textContent = 'Wróć do Bacy';
+    backBtn.textContent = uiManager.localizeText('Wróć do Bacy');
     backBtn.onclick = () => {
       uiManager.state.lastShopMessage = '';
       renderShopOffers(uiManager);
@@ -237,9 +242,9 @@ function renderServicesShop(uiManager) {
   const header = document.createElement('div');
   header.className = 'shop-header';
   header.innerHTML = `
-    <h2 class="event-title">Usługi Bacy</h2>
+    <h2 class="event-title">${uiManager.localizeText('Usługi Bacy')}</h2>
     <div class="map-resource-strip">
-       <div class="map-resource-pill">💰 ${uiManager.state.dutki} Dutków</div>
+      <div class="map-resource-pill">💰 ${uiManager.state.dutki} ${uiManager.localizeText('Dutków')}</div>
        <div class="map-resource-pill">❤️ ${uiManager.state.player.hp} / ${uiManager.state.player.maxHp} HP</div>
     </div>
   `;
@@ -262,14 +267,16 @@ function renderServicesShop(uiManager) {
   const serviceEl = document.createElement('div');
   serviceEl.className = 'relic-plate';
   serviceEl.innerHTML = `
-    <div class="relic-plate-title">Ciepły Oscypek</div>
+    <div class="relic-plate-title">${uiManager.localizeText('Ciepły Oscypek')}</div>
     <div style="font-size: 3rem; margin: 4px 0;">🧀</div>
-    <div class="relic-plate-desc">Odzyskaj ${healAmount} Krzepy (HP).</div>
+    <div class="relic-plate-desc">${uiManager.language === 'en' ? `Recover ${healAmount} HP.` : `Odzyskaj ${healAmount} Krzepy (HP).`}</div>
   `;
 
   const buyBtn = document.createElement('button');
   buyBtn.className = 'btn shop-buy-btn';
-  buyBtn.innerHTML = hasSheepBell ? 'Zablokowane przez Dzwonek Owcy!' : `Kup: ${healCost} 💰`;
+  buyBtn.innerHTML = hasSheepBell
+    ? uiManager.localizeText('Zablokowane przez Dzwonek Owcy!')
+    : `${uiManager.localizeText('Kup')}: ${healCost} 💰`;
   buyBtn.disabled =
     hasSheepBell ||
     uiManager.state.dutki < healCost ||
@@ -278,7 +285,9 @@ function renderServicesShop(uiManager) {
   buyBtn.onclick = () => {
     if (uiManager.state.spendDutki(healCost)) {
       uiManager.state.healPlayer(healAmount);
-      uiManager.state.lastShopMessage = 'Baca dał oscypek na ratunek. (+15 HP)';
+      uiManager.state.lastShopMessage = uiManager.localizeText(
+        'Baca dał oscypek na ratunek. (+15 HP)'
+      );
       renderServicesShop(uiManager);
       uiManager.updateUI();
     }
@@ -291,13 +300,13 @@ function renderServicesShop(uiManager) {
 
   const message = document.createElement('div');
   message.className = 'shop-message';
-  message.textContent = uiManager.state.lastShopMessage || '';
+  message.textContent = uiManager.localizeText(uiManager.state.lastShopMessage || '');
   panel.appendChild(message);
 
   const backBtn = document.createElement('button');
   backBtn.className = 'btn shop-exit-btn';
   backBtn.style.marginTop = 'auto';
-  backBtn.textContent = 'Wróć do Bacy';
+  backBtn.textContent = uiManager.localizeText('Wróć do Bacy');
   backBtn.onclick = () => {
     uiManager.state.lastShopMessage = '';
     renderShopOffers(uiManager);
@@ -318,10 +327,10 @@ function renderRemovalShop(uiManager) {
   const header = document.createElement('div');
   header.className = 'shop-header';
   header.innerHTML = `
-    <h2 class="event-title">Usuń Kartę z Talii</h2>
-    <p style="color: #f3dfbd; margin-top: 5px;">Wybierz kartę, o której chcesz zapomnieć.</p>
+     <h2 class="event-title">${uiManager.localizeText('Usuń Kartę z Talii')}</h2>
+     <p style="color: #f3dfbd; margin-top: 5px;">${uiManager.localizeText('Wybierz kartę, o której chcesz zapomnieć.')}</p>
     <div class="map-resource-strip">
-       <div class="map-resource-pill">💰 ${uiManager.state.dutki} Dutków</div>
+       <div class="map-resource-pill">💰 ${uiManager.state.dutki} ${uiManager.localizeText('Dutków')}</div>
     </div>
   `;
   panel.appendChild(header);
@@ -337,7 +346,7 @@ function renderRemovalShop(uiManager) {
   if (deckIds.length === 0) {
     const msg = document.createElement('div');
     msg.className = 'shop-message';
-    msg.textContent = 'Twoja talia jest pusta.';
+    msg.textContent = uiManager.localizeText('Twoja talia jest pusta.');
     panel.appendChild(msg);
   } else {
     deckIds.forEach((cardId) => {
@@ -355,13 +364,13 @@ function renderRemovalShop(uiManager) {
       cardEl.className = `card reward-phase-card ${uiHelpers.rarityClass(cardDef.rarity)} card-${cardDef.type}`;
       cardEl.innerHTML = `
           <div class="card-header">
-            <div class="card-title">${cardDef.name}</div>
+            <div class="card-title">${localizeCardName(uiManager.language, cardDef.name)}</div>
             <div class="card-cost-oscypek">
               <span class="cost-value">${cardDef.cost}</span>
               <span class="cost-icon">🧀</span>
             </div>
           </div>
-          <div class="card-subtitle">${uiHelpers.getFullCardType(cardDef.rarity, cardDef.type)}</div>
+          <div class="card-subtitle">${uiManager.localizeText(uiHelpers.getFullCardType(cardDef.rarity, cardDef.type))}</div>
           <div class="card-art"><span class="card-icon">${cardDef.emoji}</span></div>
           <div class="card-text-box"><div class="card-desc">${cardRenderer.getCardDescription(uiManager, cardDef)}</div></div>
       `;
@@ -369,7 +378,7 @@ function renderRemovalShop(uiManager) {
 
       const removeBtn = document.createElement('button');
       removeBtn.className = 'btn shop-buy-btn';
-      removeBtn.innerHTML = `Usuń: ${price} 💰`;
+      removeBtn.innerHTML = `${uiManager.localizeText('Usuń')}: ${price} 💰`;
       removeBtn.style.backgroundColor = '#e74c3c';
       removeBtn.style.borderColor = '#c0392b';
       removeBtn.style.boxShadow = '0 4px 0 #922b21';
@@ -381,7 +390,10 @@ function renderRemovalShop(uiManager) {
           uiManager.state.removeCardFromDeck(cardId);
           uiManager.state.logAction('removals', cardId);
           uiManager.state.afterShopCardRemoval();
-          uiManager.state.lastShopMessage = `Usunięto z talii: ${cardDef.name}`;
+          uiManager.state.lastShopMessage = `Usunięto z talii: ${localizeCardName(
+            uiManager.language,
+            cardDef.name
+          )}`;
           renderRemovalShop(uiManager);
           uiManager.updateUI();
         }
@@ -396,13 +408,13 @@ function renderRemovalShop(uiManager) {
 
   const message = document.createElement('div');
   message.className = 'shop-message';
-  message.textContent = uiManager.state.lastShopMessage || '';
+  message.textContent = uiManager.localizeText(uiManager.state.lastShopMessage || '');
   panel.appendChild(message);
 
   const backBtn = document.createElement('button');
   backBtn.className = 'btn shop-exit-btn';
   backBtn.style.marginTop = 'auto';
-  backBtn.textContent = 'Wróć do Bacy';
+  backBtn.textContent = uiManager.localizeText('Wróć do Bacy');
   backBtn.onclick = () => {
     uiManager.state.lastShopMessage = '';
     renderShopOffers(uiManager);
@@ -425,9 +437,9 @@ function renderCardShop(uiManager) {
   const header = document.createElement('div');
   header.className = 'shop-header';
   header.innerHTML = `
-    <h2 class="event-title">Wybierz Karty</h2>
+     <h2 class="event-title">${uiManager.localizeText('Wybierz Karty')}</h2>
     <div class="map-resource-strip">
-       <div class="map-resource-pill">💰 ${uiManager.state.dutki} Dutków</div>
+       <div class="map-resource-pill">💰 ${uiManager.state.dutki} ${uiManager.localizeText('Dutków')}</div>
     </div>
   `;
   panel.appendChild(header);
@@ -460,13 +472,13 @@ function renderCardShop(uiManager) {
     cardEl.className = `card reward-phase-card ${uiHelpers.rarityClass(cardDef.rarity)} card-${cardDef.type}`;
     cardEl.innerHTML = `
         <div class="card-header">
-          <div class="card-title">${cardDef.name}</div>
+          <div class="card-title">${localizeCardName(uiManager.language, cardDef.name)}</div>
           <div class="card-cost-oscypek">
             <span class="cost-value">${cardDef.cost}</span>
             <span class="cost-icon">🧀</span>
           </div>
         </div>
-        <div class="card-subtitle">${uiHelpers.getFullCardType(cardDef.rarity, cardDef.type)}</div>
+        <div class="card-subtitle">${uiManager.localizeText(uiHelpers.getFullCardType(cardDef.rarity, cardDef.type))}</div>
         <div class="card-art"><span class="card-icon">${cardDef.emoji}</span></div>
         <div class="card-text-box"><div class="card-desc">${cardDesc}</div></div>
     `;
@@ -474,7 +486,7 @@ function renderCardShop(uiManager) {
 
     const buyBtn = document.createElement('button');
     buyBtn.className = 'btn shop-buy-btn';
-    buyBtn.innerHTML = `Kup: ${price} 💰`;
+    buyBtn.innerHTML = `${uiManager.localizeText('Kup')}: ${price} 💰`;
     buyBtn.disabled = uiManager.state.dutki < price;
 
     buyBtn.onclick = () => {
@@ -495,7 +507,7 @@ function renderCardShop(uiManager) {
   if (cardIds.length === 0) {
     const msg = document.createElement('div');
     msg.className = 'shop-message';
-    msg.textContent = 'Brak kart na sprzedaż (lub wszystkie wyprzedane).';
+    msg.textContent = uiManager.localizeText('Brak kart na sprzedaż (lub wszystkie wyprzedane).');
     panel.appendChild(msg);
   } else {
     panel.appendChild(cardGrid);
@@ -504,13 +516,13 @@ function renderCardShop(uiManager) {
   const message = document.createElement('div');
   message.id = 'shop-message';
   message.className = 'shop-message';
-  message.textContent = uiManager.state.lastShopMessage || '';
+  message.textContent = uiManager.localizeText(uiManager.state.lastShopMessage || '');
   panel.appendChild(message);
 
   const backBtn = document.createElement('button');
   backBtn.className = 'btn shop-exit-btn';
   backBtn.style.marginTop = 'auto';
-  backBtn.textContent = 'Wróć do Bacy';
+  backBtn.textContent = uiManager.localizeText('Wróć do Bacy');
   backBtn.onclick = () => {
     uiManager.state.lastShopMessage = '';
     renderShopOffers(uiManager);

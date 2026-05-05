@@ -5,9 +5,10 @@ import './styles/animations.css';
 
 import { AudioManager } from './logic/AudioManager.js';
 import { AnalyticsManager } from './logic/AnalyticsManager.js';
-import { getSkipIntro, getAnalyticsEnabled } from './logic/settings.js';
+import { getSkipIntro, getAnalyticsEnabled, getLanguage } from './logic/settings.js';
 import { GameState } from './state/GameState.js';
 import { UIManager } from './ui/UIManager.js';
+import { t as tUi } from './ui/helpers/I18n.js';
 import { MotionComicIntro } from './ui/intro/MotionComicIntro.js';
 import { characters } from './data/characters.js';
 import { enemyLibrary } from './data/enemies.js';
@@ -247,6 +248,7 @@ function setupMobileZoomGuards() {
 function setupMobilePortraitViewportFallback() {
   const isMobileLike = window.matchMedia('(hover: none) and (pointer: coarse)').matches;
   if (!isMobileLike) return;
+  const language = getLanguage();
 
   let appViewport = document.getElementById('app-viewport');
   if (!appViewport) {
@@ -271,9 +273,9 @@ function setupMobilePortraitViewportFallback() {
     orientationOverlay.innerHTML = `
       <div class="orientation-lock-card">
         <div class="orientation-lock-icon" aria-hidden="true">📱</div>
-        <h2 class="orientation-lock-title">Obróć telefon do pionu</h2>
+        <h2 class="orientation-lock-title">${tUi(language, 'viewport.mobileTitle')}</h2>
         <p class="orientation-lock-text">
-          Ta gra działa tylko w orientacji pionowej. Obróć urządzenie, aby kontynuować.
+          ${tUi(language, 'viewport.mobileText')}
         </p>
       </div>
     `;
@@ -300,6 +302,7 @@ function setupMobilePortraitViewportFallback() {
 function setupDesktopViewportGuard() {
   const isDesktopLike = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
   if (!isDesktopLike) return;
+  const language = getLanguage();
 
   let appViewport = document.getElementById('app-viewport');
   if (!appViewport) {
@@ -324,10 +327,9 @@ function setupDesktopViewportGuard() {
     desktopViewportOverlay.innerHTML = `
       <div class="orientation-lock-card orientation-lock-card--desktop">
         <div class="orientation-lock-icon" aria-hidden="true">🖥️</div>
-        <h2 class="orientation-lock-title">Okno jest za niskie</h2>
+        <h2 class="orientation-lock-title">${tUi(language, 'viewport.desktopTitle')}</h2>
         <p class="orientation-lock-text">
-          Ten widok jest zbyt szeroki i zbyt niski dla wygodnej gry. Zwiększ wysokość okna
-          albo zmniejsz jego szerokość, aby wrócić do rozgrywki.
+          ${tUi(language, 'viewport.desktopText')}
         </p>
       </div>
     `;

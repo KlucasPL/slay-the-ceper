@@ -1,20 +1,26 @@
 import { cardLibrary, startingDeck, getCardDefinition } from '../data/cards.js';
 import { relicLibrary } from '../data/relics.js';
 import { releaseNotesData } from '../data/releaseNotes.js';
+import { releaseNotesDataEn } from '../data/releaseNotes.en.js';
 import { ActIntroOverlay } from './overlays/ActIntroOverlay.js';
 import {
   getSkipIntro,
   setSkipIntro,
+  getLanguage,
+  setLanguage,
   getTextSizePreset,
   setTextSizePreset,
   getTextSizeScale,
   getAnalyticsEnabled,
   setAnalyticsEnabled,
 } from '../logic/settings.js';
+import { t as translateUi } from './helpers/I18n.js';
+import { localizeGameText } from './helpers/ContentI18n.js';
 import * as uiHelpers from './helpers/UIHelpers.js';
 import * as cardRenderer from './renderers/CardRenderer.js';
 import * as statusRenderer from './renderers/StatusRenderer.js';
 import * as pileViewerRenderer from './renderers/PileViewerRenderer.js';
+import { localizeIntentText } from './helpers/EnemyI18n.js';
 import * as mapRenderer from './renderers/MapRenderer.js';
 import * as shopRenderer from './renderers/ShopRenderer.js';
 import * as rewardRenderer from './renderers/RewardRenderer.js';
@@ -69,6 +75,25 @@ export class UIManager {
     this.cardDescResizeObserver = null;
     /** @type {number | null} */
     this.cardDescFitRaf = null;
+    /** @type {'pl' | 'en'} */
+    this.language = getLanguage();
+  }
+
+  /**
+   * @param {string} key
+   * @param {Record<string, string | number>} [params]
+   * @returns {string}
+   */
+  t(key, params = {}) {
+    return translateUi(this.language, key, params);
+  }
+
+  /**
+   * @param {string} text
+   * @returns {string}
+   */
+  localizeText(text) {
+    return localizeGameText(this.language, text);
   }
 
   /**
@@ -170,6 +195,9 @@ export class UIManager {
     document
       .getElementById('option-text-size-btn')
       ?.addEventListener('click', () => this._cycleTextSizeOption());
+    document
+      .getElementById('option-language-btn')
+      ?.addEventListener('click', () => this._toggleLanguageOption());
     document
       .getElementById('option-analytics-btn')
       ?.addEventListener('click', () => this._toggleAnalyticsOption());
@@ -316,6 +344,7 @@ export class UIManager {
       this._openHandViewOverlay();
     });
     this._applyTextSizePreference();
+    this._applyLanguageToStaticUi();
     this._renderReleaseNotesButtonLabel();
     this._renderReleaseNotes();
     this._renderAudioOptions();
@@ -336,10 +365,134 @@ export class UIManager {
     const releaseNotesBtn = document.getElementById('btn-release-notes');
     if (!releaseNotesBtn) return;
 
-    const latestVersion = releaseNotesData[0]?.version?.split(' - ')[0];
+    const notes =
+      this.language === 'en' && releaseNotesDataEn.length ? releaseNotesDataEn : releaseNotesData;
+    const latestVersion = notes[0]?.version?.split(' - ')[0];
     releaseNotesBtn.textContent = latestVersion
-      ? `📜 Co nowego? (${latestVersion})`
-      : '📜 Co nowego?';
+      ? `📜 ${this.t('title.releaseNotesPrefix')} (${latestVersion})`
+      : `📜 ${this.t('title.releaseNotesPrefix')}`;
+  }
+
+  _applyLanguageToStaticUi() {
+    document.documentElement.lang = this.language;
+
+    const assignText = (id, key) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = this.t(key);
+    };
+
+    assignText('title-kicker', 'title.kicker');
+    assignText('title-subtitle', 'title.subtitle');
+    assignText('title-btn-normal', 'title.normal');
+    assignText('title-btn-tutorial', 'title.tutorial');
+    assignText('title-btn-hard', 'title.hard');
+    assignText('title-btn-options', 'title.options');
+    assignText('title-btn-library', 'title.library');
+    assignText('title-difficulty-hint', 'title.difficultyHint');
+    assignText('title-disclaimer-btn', 'title.disclaimerBtn');
+    assignText('title-disclaimer-panel', 'title.disclaimerText');
+
+    const isInStandaloneMode =
+      'standalone' in navigator
+        ? /** @type {any} */ (navigator).standalone
+        : window.matchMedia('(display-mode: standalone)').matches;
+    const isMobileLike = window.matchMedia('(hover: none) and (pointer: coarse)').matches;
+    assignText(
+      'title-pwa-btn',
+      isInStandaloneMode && isMobileLike ? 'title.pwaForceLandscape' : 'title.pwaInstall'
+    );
+
+    const nav = document.getElementById('title-menu-nav');
+    if (nav) nav.setAttribute('aria-label', this.t('title.menuAria'));
+
+    assignText('options-title', 'options.title');
+    assignText('option-menu-music-label', 'options.menuMusic');
+    assignText('option-game-music-label', 'options.gameMusic');
+    assignText('option-skip-intro-label', 'options.skipIntro');
+    assignText('option-text-size-label', 'options.textSize');
+    assignText('option-language-label', 'options.language');
+    assignText('option-analytics-label', 'options.analytics');
+    assignText('option-back-main-btn', 'options.backMain');
+
+    const optionsCloseBtn = document.getElementById('options-close-btn');
+    if (optionsCloseBtn) {
+      optionsCloseBtn.setAttribute('aria-label', this.language === 'pl' ? 'Zamknij' : 'Close');
+    }
+
+    assignText('run-summary-floor-label', 'runSummary.floor');
+    assignText('run-summary-dutki-label', 'runSummary.dutki');
+    assignText('run-summary-turns-label', 'runSummary.turns');
+    assignText('run-summary-relics-title', 'runSummary.relicsTitle');
+    assignText('run-summary-deck-title', 'runSummary.deckTitle');
+    assignText('run-summary-replay-btn', 'runSummary.replay');
+    assignText('run-summary-replay-seed-btn', 'runSummary.replaySeed');
+    assignText('run-summary-exit-btn', 'runSummary.exit');
+
+    // Combat UI labels
+    assignText('end-turn-btn', 'combat.endTurn');
+    assignText('p-hp-label', 'combat.hp');
+    assignText('p-block-label', 'combat.block');
+    assignText('e-hp-label', 'combat.hp');
+    assignText('e-block-label', 'combat.block');
+    assignText('energy-label', 'combat.energy');
+    assignText('dutki-label', 'combat.currency');
+    assignText('relics-label-text', 'combat.relicsLabel');
+    assignText('pile-viewer-close', 'common.close');
+
+    const setAria = (id, key) => {
+      const el = document.getElementById(id);
+      if (el) el.setAttribute('aria-label', this.t(key));
+    };
+    setAria('relics-wrap', 'combat.relicsAria');
+    setAria('pile-controls', 'combat.piles');
+    setAria('draw-pile-btn', 'combat.drawPile');
+    setAria('discard-pile-btn', 'combat.discardPile');
+    setAria('exhaust-pile-btn', 'combat.exhaustPile');
+    setAria('seed-hud', 'common.copySeed');
+
+    const seedHud = document.getElementById('seed-hud');
+    if (seedHud) seedHud.title = this.t('common.copySeedTitle');
+
+    // Changelog modal
+    assignText('release-notes-title', 'changelog.title');
+
+    // Seeded run modal
+    assignText('seeded-run-modal-title', 'seeded.title');
+    assignText('seeded-run-hint', 'seeded.hint');
+    assignText('seeded-run-error', 'seeded.error');
+    assignText('seeded-run-confirm-btn', 'seeded.start');
+    assignText('seeded-run-cancel-btn', 'seeded.cancel');
+    const seededInput = document.getElementById('seeded-run-input');
+    if (seededInput) seededInput.setAttribute('placeholder', this.t('seeded.placeholder'));
+
+    // PWA required update overlay
+    assignText('pwa-update-required-title', 'pwaUpdate.requiredTitle');
+    assignText('pwa-update-required-text', 'pwaUpdate.requiredText');
+    assignText('pwa-update-required-btn', 'pwaUpdate.updateApp');
+
+    // Library UI
+    assignText('library-title', 'library.title');
+    assignText('library-subtitle', 'library.subtitle');
+    assignText('library-tab-cards-label', 'library.tabCards');
+    assignText('library-tab-relics-label', 'library.tabRelics');
+    assignText('library-tab-maryna-label', 'library.tabMaryna');
+    assignText('library-filter-all-label', 'library.filterAll');
+    assignText('library-filter-common-label', 'library.filterCommon');
+    assignText('library-filter-uncommon-label', 'library.filterUncommon');
+    assignText('library-filter-rare-label', 'library.filterRare');
+    assignText('library-back-label', 'library.backBtn');
+    assignText('maryna-boon-title', 'maryna.title');
+    assignText('maryna-boon-description', 'maryna.description');
+    assignText('tutorial-exit-btn', 'tutorial.exit');
+    assignText('tutorial-repeat-btn', 'tutorial.repeat');
+    assignText('tutorial-finish-btn', 'tutorial.finish');
+    const libraryTabsEl = document.querySelector('.library-tabs');
+    if (libraryTabsEl) libraryTabsEl.setAttribute('aria-label', this.t('library.tabsAria'));
+    const libraryFiltersEl = document.querySelector('.library-filters');
+    if (libraryFiltersEl)
+      libraryFiltersEl.setAttribute('aria-label', this.t('library.filtersAria'));
+
+    this._renderReleaseNotesButtonLabel();
   }
 
   _renderCornerOptionsButton() {
@@ -477,8 +630,11 @@ export class UIManager {
     document.getElementById('energy').textContent = player.energy;
     document.getElementById('dutki').textContent = this.state.dutki;
     const enemyIntentEl = document.getElementById('e-intent');
-    enemyIntentEl.textContent = this.state.getEnemyIntentText();
-    enemyIntentEl.title = 'Wartość zamiaru uwzględnia Twoją aktualną Gardę.';
+    enemyIntentEl.textContent = localizeIntentText(this.language, this.state.getEnemyIntentText());
+    enemyIntentEl.title =
+      this.language === 'en'
+        ? 'Damage shown accounts for your current Garda.'
+        : 'Wartość zamiaru uwzględnia Twoją aktualną Gardę.';
     document.getElementById('draw-pile-count').textContent = deck.length;
     document.getElementById('discard-pile-count').textContent = discard.length;
     document.getElementById('exhaust-pile-count').textContent = exhaust.length;
@@ -684,8 +840,8 @@ export class UIManager {
         return;
       }
 
-      btn.textContent = '↔ Wymuś poziom';
-      btn.setAttribute('aria-label', 'Wymuś widok poziomy');
+      btn.textContent = this.t('title.pwaForceLandscape');
+      btn.setAttribute('aria-label', this.t('pwa.forceLandscapeAria'));
       panel.classList.add('hidden');
 
       btn.addEventListener('click', async (event) => {
@@ -716,25 +872,25 @@ export class UIManager {
     /** @returns {string} */
     const buildPanelHtml = () => {
       if (deferredPrompt) {
-        return `<strong>Zainstaluj jako aplikację</strong><br>
-Kliknij poniższy przycisk, aby dodać Usiec Cepra do pulpitu – bez sklepu z aplikacjami, działa offline.
-<br><button class="pwa-install-btn" id="pwa-native-install-btn">⬇ Zainstaluj</button>`;
+        return `<strong>${this.t('pwa.installTitle')}</strong><br>
+    ${this.t('pwa.installPrompt')}
+    <br><button class="pwa-install-btn" id="pwa-native-install-btn">${this.t('pwa.installNow')}</button>`;
       }
       if (isIos) {
-        return `<strong>Zainstaluj na iPhone / iPad</strong><ul>
-<li>Otwórz w <strong>Safari</strong> (nie Chrome/Firefox)</li>
-<li>Stuknij ikonę Udostępnij <strong>□↑</strong> na dole</li>
-<li>Wybierz <strong>„Dodaj do ekranu głównego"</strong></li>
-<li>Stuknij <strong>„Dodaj"</strong></li>
+        return `<strong>${this.t('pwa.iosTitle')}</strong><ul>
+    <li>${this.t('pwa.iosStep1')}</li>
+    <li>${this.t('pwa.iosStep2')}</li>
+    <li>${this.t('pwa.iosStep3')}</li>
+    <li>${this.t('pwa.iosStep4')}</li>
 </ul>
-Gra pojawi się jako ikona i będzie działać bez przeglądarki.`;
+    ${this.t('pwa.iosFooter')}`;
       }
-      return `<strong>Zainstaluj jako aplikację</strong><ul>
-<li><strong>Android (Chrome):</strong> menu ⋮ → „Dodaj do ekranu głównego" / „Zainstaluj"</li>
-<li><strong>Android (Firefox):</strong> menu ⋮ → „Zainstaluj"</li>
-<li><strong>Komputer (Chrome/Edge):</strong> ikona ⊕ w pasku adresu → „Zainstaluj"</li>
+      return `<strong>${this.t('pwa.installTitle')}</strong><ul>
+    <li>${this.t('pwa.androidStep1')}</li>
+    <li>${this.t('pwa.androidStep2')}</li>
+    <li>${this.t('pwa.desktopStep')}</li>
 </ul>
-Po instalacji gra działa offline i bez paska przeglądarki.`;
+    ${this.t('pwa.footer')}`;
     };
 
     btn.addEventListener('click', (e) => {
@@ -782,8 +938,7 @@ Po instalacji gra działa offline i bez paska przeglądarki.`;
 
     const orientationQuery = window.matchMedia('(orientation: landscape)');
     if (orientationQuery.matches) {
-      panel.innerHTML =
-        '<strong>Widok poziomy jest już aktywny.</strong><br>Możesz od razu grać w układzie poziomym.';
+      panel.innerHTML = `<strong>${this.t('pwa.landscapeAlreadyTitle')}</strong><br>${this.t('pwa.landscapeAlreadyBody')}`;
       panel.classList.remove('hidden');
       btn.setAttribute('aria-expanded', 'true');
       return;
@@ -813,13 +968,12 @@ Po instalacji gra działa offline i bez paska przeglądarki.`;
     const isLandscapeNow =
       orientationQuery.matches || window.matchMedia('(min-aspect-ratio: 13/10)').matches;
     if (isLandscapeNow || requestedLandscape) {
-      panel.innerHTML =
-        '<strong>Próba przejścia do poziomu wykonana.</strong><br>Jeśli ekran nie obrócił się automatycznie, obróć telefon ręcznie.';
+      panel.innerHTML = `<strong>${this.t('pwa.landscapeAttemptTitle')}</strong><br>${this.t('pwa.landscapeAttemptBody')}`;
     } else {
       const fullscreenHint = requestedFullscreen
-        ? 'Uruchomiono pełny ekran.'
-        : 'Pełny ekran nie jest dostępny na tym urządzeniu.';
-      panel.innerHTML = `<strong>Automatyczne wymuszenie poziomu niedostępne.</strong><br>${fullscreenHint} Obróć telefon ręcznie, aby grać wygodnie.`;
+        ? this.t('pwa.fullscreenEnabled')
+        : this.t('pwa.fullscreenUnavailable');
+      panel.innerHTML = `<strong>${this.t('pwa.forceUnavailableTitle')}</strong><br>${fullscreenHint} ${this.t('pwa.forceUnavailableBody')}`;
     }
 
     panel.classList.remove('hidden');
@@ -857,16 +1011,16 @@ Po instalacji gra działa offline i bez paska przeglądarki.`;
         const { applyUpdate } = getUpdateState();
         if (!applyUpdate) return;
         actionBtn.setAttribute('disabled', 'true');
-        actionBtn.textContent = 'Aktualizowanie...';
+        actionBtn.textContent = this.t('pwaUpdate.updating');
         await applyUpdate();
       });
     };
 
     const renderPanel = () => {
       panel.innerHTML = `
-        <strong>Nowa wersja aplikacji jest gotowa</strong><br>
-        Zaktualizuj Usiec Cepra, aby pobrać najnowsze poprawki i zawartość.<br>
-        <button class="pwa-update-action-btn" id="pwa-update-action-btn" type="button">⬆ Zaktualizuj teraz</button>
+        <strong>${this.t('pwaUpdate.readyTitle')}</strong><br>
+        ${this.t('pwaUpdate.readyBody')}<br>
+        <button class="pwa-update-action-btn" id="pwa-update-action-btn" type="button">${this.t('pwaUpdate.updateNow')}</button>
       `;
 
       bindUpdateAction(
@@ -891,7 +1045,7 @@ Po instalacji gra działa offline i bez paska przeglądarki.`;
         panel.classList.add('hidden');
         btn.setAttribute('aria-expanded', 'false');
         requiredBtn.removeAttribute('disabled');
-        requiredBtn.textContent = '⬆ Zaktualizuj aplikację';
+        requiredBtn.textContent = this.t('pwaUpdate.updateApp');
         return;
       }
 
@@ -899,10 +1053,10 @@ Po instalacji gra działa offline i bez paska przeglądarki.`;
         panel.classList.add('hidden');
         btn.setAttribute('aria-expanded', 'false');
         requiredBtn.removeAttribute('disabled');
-        requiredBtn.textContent = '⬆ Zaktualizuj aplikację';
+        requiredBtn.textContent = this.t('pwaUpdate.updateApp');
       }
 
-      btn.textContent = '⬆ Aktualizacja';
+      btn.textContent = this.t('pwaUpdate.updateBadge');
     };
 
     btn.addEventListener('click', (event) => {
@@ -971,7 +1125,9 @@ Po instalacji gra działa offline i bez paska przeglądarki.`;
     if (!container) return;
 
     container.innerHTML = '';
-    releaseNotesData.forEach((entry) => {
+    const notes =
+      this.language === 'en' && releaseNotesDataEn.length ? releaseNotesDataEn : releaseNotesData;
+    notes.forEach((entry) => {
       const section = document.createElement('section');
 
       const version = document.createElement('h3');
@@ -1031,20 +1187,22 @@ Po instalacji gra działa offline i bez paska przeglądarki.`;
     const gameBtn = document.getElementById('option-game-music-btn');
     if (!menuBtn || !gameBtn) return;
 
+    this._applyLanguageToStaticUi();
+
     const menuOn = this.audioManager.isMenuMusicEnabled;
-    menuBtn.textContent = menuOn ? 'ON' : 'OFF';
+    menuBtn.textContent = menuOn ? this.t('common.on') : this.t('common.off');
     menuBtn.classList.toggle('is-on', menuOn);
     menuBtn.setAttribute('aria-pressed', String(menuOn));
 
     const gameOn = this.audioManager.isGameMusicEnabled;
-    gameBtn.textContent = gameOn ? 'ON' : 'OFF';
+    gameBtn.textContent = gameOn ? this.t('common.on') : this.t('common.off');
     gameBtn.classList.toggle('is-on', gameOn);
     gameBtn.setAttribute('aria-pressed', String(gameOn));
 
     const skipIntroBtn = document.getElementById('option-skip-intro-btn');
     if (skipIntroBtn) {
       const skipOn = getSkipIntro();
-      skipIntroBtn.textContent = skipOn ? 'ON' : 'OFF';
+      skipIntroBtn.textContent = skipOn ? this.t('common.on') : this.t('common.off');
       skipIntroBtn.classList.toggle('is-on', skipOn);
       skipIntroBtn.setAttribute('aria-pressed', String(skipOn));
     }
@@ -1052,10 +1210,23 @@ Po instalacji gra działa offline i bez paska przeglądarki.`;
     const textSizeBtn = document.getElementById('option-text-size-btn');
     if (textSizeBtn) {
       const preset = getTextSizePreset();
-      const label = preset === 'xlarge' ? 'BARDZO DUŻY' : preset === 'large' ? 'DUŻY' : 'NORMALNY';
+      const label =
+        preset === 'xlarge'
+          ? this.t('options.textSize.xlarge')
+          : preset === 'large'
+            ? this.t('options.textSize.large')
+            : this.t('options.textSize.normal');
       textSizeBtn.textContent = label;
       textSizeBtn.classList.toggle('is-on', preset !== 'normal');
-      textSizeBtn.setAttribute('aria-label', `Rozmiar tekstu: ${label}`);
+      textSizeBtn.setAttribute('aria-label', this.t('options.textSizeAria', { label }));
+    }
+
+    const languageBtn = document.getElementById('option-language-btn');
+    if (languageBtn) {
+      const isPolish = this.language === 'pl';
+      languageBtn.textContent = isPolish ? this.t('language.pl') : this.t('language.en');
+      languageBtn.classList.toggle('is-on', this.language === 'en');
+      languageBtn.setAttribute('aria-label', this.t('options.language'));
     }
 
     this._renderAnalyticsOption();
@@ -1092,9 +1263,18 @@ Po instalacji gra działa offline i bez paska przeglądarki.`;
     const analyticsBtn = document.getElementById('option-analytics-btn');
     if (!analyticsBtn) return;
     const enabled = getAnalyticsEnabled();
-    analyticsBtn.textContent = enabled ? 'ON' : 'OFF';
+    analyticsBtn.textContent = enabled ? this.t('common.on') : this.t('common.off');
     analyticsBtn.classList.toggle('is-on', enabled);
     analyticsBtn.setAttribute('aria-pressed', String(enabled));
+  }
+
+  _toggleLanguageOption() {
+    if (this._isInputLocked()) return;
+    this.language = this.language === 'pl' ? 'en' : 'pl';
+    setLanguage(this.language);
+    this._renderAudioOptions();
+    this._renderReleaseNotesButtonLabel();
+    this.updateUI();
   }
 
   _toggleAnalyticsOption() {
@@ -1109,9 +1289,7 @@ Po instalacji gra działa offline i bez paska przeglądarki.`;
 
   _returnToMainMenuFromOptions() {
     if (this._isInputLocked()) return;
-    const shouldExit = window.confirm(
-      'Wrócić do menu głównego? Bieżąca wyprawa zostanie zresetowana.'
-    );
+    const shouldExit = window.confirm(this.t('confirm.backToMenu'));
     if (!shouldExit) return;
 
     this._closeOptionsModal();
@@ -1915,7 +2093,7 @@ Po instalacji gra działa offline i bez paska przeglądarki.`;
   }
 
   /**
-   * @param {{ partLabel: string, actLabel: string, title: string }} actData
+   * @param {{ partLabel: string, actLabel: string, title: string, motifAria?: string }} actData
    */
   playActIntro(actData) {
     return this.actIntroOverlay.play(actData);
@@ -1926,14 +2104,24 @@ Po instalacji gra działa offline i bez paska przeglądarki.`;
       ? Math.max(1, this.state.currentAct)
       : 1;
     const rawTitle = this.state.currentActName || 'NIEZNANY SZLAK';
-    const title = rawTitle
-      .toLocaleLowerCase('pl-PL')
-      .replace(/(^|\s)\S/g, (char) => char.toLocaleUpperCase('pl-PL'));
+    const titleSource =
+      this.language === 'en'
+        ? ({
+            KRUPÓWKI: 'KRUPÓWKI STREET',
+            'MORSKIE OKO': 'MORSKIE OKO',
+            'NIEZNANY SZLAK': 'UNKNOWN TRAIL',
+          }[rawTitle] ?? this.localizeText(rawTitle))
+        : rawTitle;
+    const locale = this.language === 'en' ? 'en-US' : 'pl-PL';
+    const title = titleSource
+      .toLocaleLowerCase(locale)
+      .replace(/(^|\s)\S/g, (char) => char.toLocaleUpperCase(locale));
 
     return {
-      partLabel: `CZĘŚĆ ${actNumber}:`,
+      partLabel: this.language === 'en' ? `PART ${actNumber}:` : `CZĘŚĆ ${actNumber}:`,
       actLabel: '',
       title,
+      motifAria: this.t('actIntro.motifAria'),
     };
   }
 }

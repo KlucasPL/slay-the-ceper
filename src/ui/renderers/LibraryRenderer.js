@@ -3,6 +3,8 @@ import { relicLibrary } from '../../data/relics.js';
 import * as uiHelpers from '../helpers/UIHelpers.js';
 import * as cardRenderer from './CardRenderer.js';
 import * as cardZoomOverlay from '../overlays/CardZoomOverlay.js';
+import { localizeCardDescription, localizeCardName } from '../helpers/CardI18n.js';
+import { localizeRelicName, localizeRelicDescription } from '../helpers/RelicI18n.js';
 
 /**
  * @param {any} uiManager
@@ -80,7 +82,14 @@ export function renderLibrary(uiManager) {
               ? true
               : card.rarity === uiManager.libraryRarityFilter
           )
-          .sort((a, b) => a.cost - b.cost || a.name.localeCompare(b.name, 'pl'))
+          .sort(
+            (a, b) =>
+              a.cost - b.cost ||
+              localizeCardName(uiManager.language, a.name).localeCompare(
+                localizeCardName(uiManager.language, b.name),
+                uiManager.language === 'pl' ? 'pl' : 'en'
+              )
+          )
       : uiManager.libraryTab === 'maryna'
         ? Object.values(relicLibrary)
             .filter((relic) => relic.marynaOnly)
@@ -89,7 +98,12 @@ export function renderLibrary(uiManager) {
                 ? true
                 : relic.rarity === uiManager.libraryRarityFilter
             )
-            .sort((a, b) => a.name.localeCompare(b.name, 'pl'))
+            .sort((a, b) =>
+              localizeRelicName(uiManager.language, a.name).localeCompare(
+                localizeRelicName(uiManager.language, b.name),
+                uiManager.language === 'pl' ? 'pl' : 'en'
+              )
+            )
         : Object.values(relicLibrary)
             .filter((relic) => !relic.marynaOnly)
             .filter((relic) =>
@@ -97,7 +111,12 @@ export function renderLibrary(uiManager) {
                 ? true
                 : relic.rarity === uiManager.libraryRarityFilter
             )
-            .sort((a, b) => a.name.localeCompare(b.name, 'pl'));
+            .sort((a, b) =>
+              localizeRelicName(uiManager.language, a.name).localeCompare(
+                localizeRelicName(uiManager.language, b.name),
+                uiManager.language === 'pl' ? 'pl' : 'en'
+              )
+            );
 
   entries.forEach((item) => {
     const card = document.createElement('article');
@@ -108,13 +127,13 @@ export function renderLibrary(uiManager) {
       // Use the new Fluid 50/50 Tatra Card Layout
       card.innerHTML = `
         <div class="card-header">
-          <div class="card-title">${cardDef.name}</div>
+          <div class="card-title">${localizeCardName(uiManager.language, cardDef.name)}</div>
           <div class="card-cost-oscypek">
             <span class="cost-value">${cardDef.cost}</span>
             <span class="cost-icon">🧀</span>
           </div>
         </div>
-        <div class="card-subtitle">${uiHelpers.getFullCardType(cardDef.rarity, cardDef.type)}</div>
+        <div class="card-subtitle">${uiManager.localizeText(uiHelpers.getFullCardType(cardDef.rarity, cardDef.type))}</div>
         <div class="card-art">
           <span class="card-icon">${cardDef.emoji}</span>
         </div>
@@ -127,7 +146,7 @@ export function renderLibrary(uiManager) {
         card.classList.add('card-exhaust');
         const exhaustEl = document.createElement('div');
         exhaustEl.className = 'card-exhaust-inline';
-        exhaustEl.innerHTML = '<span class="exhaust-fire">🔥</span> PRZEPADO';
+        exhaustEl.innerHTML = `<span class="exhaust-fire">🔥</span> ${localizeCardDescription(uiManager.language, 'PRZEPADO')}`;
         card.querySelector('.card-text-box').appendChild(exhaustEl);
       }
 
@@ -135,9 +154,11 @@ export function renderLibrary(uiManager) {
       attachMobileLongPressZoom(
         card,
         {
-          name: cardDef.name,
+          name: localizeCardName(uiManager.language, cardDef.name),
           emoji: cardDef.emoji,
-          rarityLabel: uiHelpers.getFullCardType(cardDef.rarity, cardDef.type),
+          rarityLabel: uiManager.localizeText(
+            uiHelpers.getFullCardType(cardDef.rarity, cardDef.type)
+          ),
           cost: cardDef.cost,
           description: cardRenderer.getCardDescription(uiManager, cardDef),
           rarityClass: uiHelpers.rarityClass(cardDef.rarity),
@@ -152,19 +173,19 @@ export function renderLibrary(uiManager) {
 
       // Build the plate structure
       card.innerHTML = `
-        <h3 class="relic-plate-title">${item.emoji} ${item.name}</h3>
-        <p class="relic-plate-rarity">${uiHelpers.rarityLabel(item.rarity, 'relic')}</p>
-        <p class="relic-plate-desc">${item.desc}</p>
+        <h3 class="relic-plate-title">${item.emoji} ${localizeRelicName(uiManager.language, item.name)}</h3>
+        <p class="relic-plate-rarity">${uiManager.localizeText(uiHelpers.rarityLabel(item.rarity, 'relic'))}</p>
+        <p class="relic-plate-desc">${localizeRelicDescription(uiManager.language, item.desc)}</p>
       `;
 
       // Attach long-press zoom for relics/boons
       attachMobileLongPressZoom(
         card,
         {
-          name: item.name,
+          name: localizeRelicName(uiManager.language, item.name),
           emoji: item.emoji,
-          rarityLabel: uiHelpers.rarityLabel(item.rarity, 'relic'),
-          description: item.desc,
+          rarityLabel: uiManager.localizeText(uiHelpers.rarityLabel(item.rarity, 'relic')),
+          description: localizeRelicDescription(uiManager.language, item.desc),
           rarityClass: uiHelpers.rarityClass(item.rarity),
         },
         'relic'

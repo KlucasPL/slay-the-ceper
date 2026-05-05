@@ -2,6 +2,11 @@ import { relicLibrary } from '../../data/relics.js';
 import { cardLibrary } from '../../data/cards.js';
 import { statusTooltipRegistry } from '../statusTooltips.js';
 import * as uiHelpers from '../helpers/UIHelpers.js';
+import { localizeCardDescription, localizeCardName } from '../helpers/CardI18n.js';
+import { localizeRelicName, localizeRelicDescription } from '../helpers/RelicI18n.js';
+import { localizeEnemyName } from '../helpers/EnemyI18n.js';
+import { localizeWeatherName, localizeWeatherDesc } from '../helpers/WeatherI18n.js';
+import { localizeStatusLabel, localizeStatusTooltip } from '../helpers/StatusTooltipI18n.js';
 
 /**
  * @param {any} uiManager
@@ -10,7 +15,7 @@ export function renderEnemyPresentation(uiManager) {
   const enemyName = document.getElementById('enemy-name');
   const enemySprite = document.getElementById('sprite-enemy');
   const enemyId = uiManager.state.enemy.id;
-  enemyName.textContent = `${uiManager.state.enemy.name} ${uiManager.state.enemy.emoji}`;
+  enemyName.textContent = `${localizeEnemyName(uiManager.language, uiManager.state.enemy.name)} ${uiManager.state.enemy.emoji}`;
   if (
     enemySprite.dataset.enemyId !== enemyId ||
     enemySprite.dataset.enemySpriteSvg !== uiManager.state.enemy.spriteSvg
@@ -35,10 +40,12 @@ export function renderWeatherIndicator(uiManager) {
   const tip = document.getElementById('weather-tooltip');
   if (!badge || !tip || !weather) return;
 
-  badge.textContent = `${weather.emoji} ${weather.name}`;
+  const wName = localizeWeatherName(uiManager.language, weather.name);
+  const wDesc = localizeWeatherDesc(uiManager.language, weather.desc);
+  badge.textContent = `${weather.emoji} ${wName}`;
   badge.appendChild(tip);
-  badge.setAttribute('aria-label', `${weather.name}: ${weather.desc}`);
-  tip.textContent = weather.desc;
+  badge.setAttribute('aria-label', `${wName}: ${wDesc}`);
+  tip.textContent = wDesc;
 }
 
 /**
@@ -57,12 +64,15 @@ export function renderRelics(uiManager) {
     chip.classList.add(uiHelpers.rarityClass(relic.rarity));
     chip.type = 'button';
     chip.textContent = relic.emoji;
-    chip.title = `${relic.name}: ${relic.desc}`;
-    chip.setAttribute('aria-label', `${relic.name}: ${relic.desc}`);
+    chip.title = `${localizeRelicName(uiManager.language, relic.name)}: ${localizeRelicDescription(uiManager.language, relic.desc)}`;
+    chip.setAttribute(
+      'aria-label',
+      `${localizeRelicName(uiManager.language, relic.name)}: ${localizeRelicDescription(uiManager.language, relic.desc)}`
+    );
 
     const tooltip = document.createElement('span');
     tooltip.className = 'relic-tooltip';
-    tooltip.textContent = `${relic.name}: ${relic.desc}`;
+    tooltip.textContent = `${localizeRelicName(uiManager.language, relic.name)}: ${localizeRelicDescription(uiManager.language, relic.desc)}`;
     chip.appendChild(tooltip);
 
     bar.appendChild(chip);
@@ -134,7 +144,9 @@ export function renderStatuses(uiManager, containerId, status) {
       }
     }
 
-    tag(def.icon, def.label, displayValue, def.tooltip);
+    const localizedLabel = localizeStatusLabel(uiManager.language, key, def.label);
+    const localizedTooltip = localizeStatusTooltip(uiManager.language, key, def.tooltip);
+    tag(def.icon, localizedLabel, displayValue, localizedTooltip);
   });
 
   // Sync sunglasses overlay visibility (skip if animation is in progress)
@@ -170,12 +182,24 @@ export function renderStatuses(uiManager, containerId, status) {
       if (!uiManager.state.player[flag]) return;
       const card = cardLibrary[cardId];
       if (!card) return;
-      tag(card.emoji, card.name, null, card.desc);
+      tag(
+        card.emoji,
+        localizeCardName(uiManager.language ?? 'pl', card.name),
+        null,
+        localizeCardDescription(uiManager.language ?? 'pl', card.desc)
+      );
     });
 
     const nextBonus = uiManager.state.nextAttackCardBonus ?? 0;
     if (nextBonus > 0) {
-      tag('👁️', 'Spostrzegawczość', `+${nextBonus}`, `Następny atak zadaje +${nextBonus} obrażeń.`);
+      tag(
+        '👁️',
+        uiManager.language === 'en' ? 'Perceptiveness' : 'Spostrzegawczość',
+        `+${nextBonus}`,
+        uiManager.language === 'en'
+          ? `Next attack deals +${nextBonus} damage.`
+          : `Następny atak zadaje +${nextBonus} obrażeń.`
+      );
     }
   }
 

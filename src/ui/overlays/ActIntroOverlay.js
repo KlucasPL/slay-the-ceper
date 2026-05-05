@@ -1,5 +1,5 @@
 /**
- * @typedef {{ partLabel: string, actLabel: string, title: string }} ActIntroData
+ * @typedef {{ partLabel: string, actLabel: string, title: string, motifAria?: string }} ActIntroData
  */
 
 export class ActIntroOverlay {
@@ -21,6 +21,7 @@ export class ActIntroOverlay {
     const partEl = this.root.querySelector('[data-act-part]');
     const actEl = this.root.querySelector('[data-act-label]');
     const titleEl = this.root.querySelector('[data-act-title]');
+    const motifEl = this.root.querySelector('[data-act-motif]');
     const panel = this.root.querySelector('[data-act-panel]');
 
     if (!(partEl instanceof HTMLElement)) return Promise.resolve();
@@ -32,6 +33,9 @@ export class ActIntroOverlay {
     actEl.textContent = data.actLabel;
     actEl.classList.toggle('hidden', !data.actLabel?.trim());
     titleEl.textContent = data.title;
+    if (motifEl instanceof SVGElement && data.motifAria) {
+      motifEl.setAttribute('aria-label', data.motifAria);
+    }
 
     this.root.classList.remove('hidden');
     this.root.setAttribute('aria-hidden', 'false');
@@ -74,7 +78,7 @@ export class ActIntroOverlay {
     overlay.innerHTML = `
       <div class="act-intro-backdrop"></div>
       <div class="act-intro-panel" data-act-panel>
-        <svg class="act-intro-motif" viewBox="0 0 320 64" role="img" aria-label="Góralski motyw dekoracyjny">
+        <svg class="act-intro-motif" data-act-motif viewBox="0 0 320 64" role="img" aria-label="Góralski motyw dekoracyjny">
           <path d="M12 52 L48 18 L84 52 L120 24 L156 52 L192 18 L228 52 L264 28 L308 52" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
           <path d="M34 52 L48 40 L62 52" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
           <path d="M178 52 L192 40 L206 52" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>

@@ -115,7 +115,7 @@ export function startTutorialRewardPhase(uiManager) {
     uiManager.tutorialStepIndex = 7;
     uiManager.isTutorialGuidanceActive = true;
     rewardRenderer.showCardRewardScreen(uiManager, 0, tutorialCardChoices, false, {
-      title: 'Zdobyłeś kartę! Wybierz jedną:',
+      title: uiManager.t('tutorial.rewardChooseCard'),
       allowSkip: false,
     });
     uiManager.updateUI();
@@ -133,12 +133,14 @@ export function startTutorialRewardPhase(uiManager) {
  * @returns {string}
  */
 export function resolveTutorialStepText(uiManager, step) {
+  const lang = uiManager.language ?? 'pl';
   if (step.dynamicText === 'map_explain') {
-    return buildTutorialMapExplanationText((type) => uiManager.state.getMapNodeMeta(type));
+    return buildTutorialMapExplanationText((type) => uiManager.state.getMapNodeMeta(type), lang);
   }
   if (step.dynamicText === 'finale_text') {
-    return buildTutorialFinaleText((type) => uiManager.state.getMapNodeMeta(type));
+    return buildTutorialFinaleText((type) => uiManager.state.getMapNodeMeta(type), lang);
   }
+  if (lang === 'en' && step.textEn) return step.textEn;
   return step.text ?? '';
 }
 
@@ -251,6 +253,7 @@ export function renderTutorialOverlay(uiManager) {
   const layer = document.getElementById('tutorial-highlight-layer');
   const concludeBtns = document.getElementById('tutorial-conclude-btns');
   const bubble = overlay?.querySelector('.tutorial-bubble');
+  const bubbleTitle = overlay?.querySelector('.tutorial-bubble-title');
   const dim = overlay?.querySelector('.tutorial-dim');
   if (!overlay || !text || !ackBtn || !layer) return;
 
@@ -268,17 +271,23 @@ export function renderTutorialOverlay(uiManager) {
     if (bubble) bubble.classList.remove('tutorial-bubble--conclude');
     overlay.classList.remove('tutorial-overlay--map-explain');
     if (bubble) bubble.classList.remove('tutorial-bubble--map-explain');
+    document.getElementById('map-overlay')?.classList.remove('map-overlay--tutorial-foreground');
     return;
   }
 
   overlay.classList.remove('hidden');
   overlay.setAttribute('aria-hidden', 'false');
   text.textContent = resolveTutorialStepText(uiManager, step);
+  if (bubbleTitle instanceof HTMLElement) {
+    bubbleTitle.textContent = uiManager.t('tutorial.speaker');
+  }
 
   const showAck = step.action === 'ack';
   ackBtn.classList.toggle('hidden', !showAck);
   if (showAck) {
-    ackBtn.textContent = step.btnText ?? 'Zrozumiałem';
+    const defaultBtn = uiManager.t('tutorial.ack');
+    ackBtn.textContent =
+      uiManager.language === 'en' ? (step.btnTextEn ?? defaultBtn) : (step.btnText ?? defaultBtn);
   }
 
   if (concludeBtns) {
@@ -292,6 +301,14 @@ export function renderTutorialOverlay(uiManager) {
   overlay.classList.toggle('tutorial-overlay--map-explain', isMapExplainStep);
   if (bubble) {
     bubble.classList.toggle('tutorial-bubble--map-explain', isMapExplainStep);
+  }
+  const mapOverlay = document.getElementById('map-overlay');
+  if (mapOverlay) {
+    mapOverlay.classList.toggle('map-overlay--tutorial-foreground', isMapExplainStep);
+    if (!isMapExplainStep) {
+      mapOverlay.classList.add('hidden');
+      mapOverlay.setAttribute('aria-hidden', 'true');
+    }
   }
 
   if (dim) {
@@ -307,16 +324,6 @@ export function renderTutorialOverlay(uiManager) {
   targets.forEach((element) => {
     element.classList.add('tutorial-focus-target');
     uiManager.tutorialFocusedElements.push(element);
-
-    const rect = element.getBoundingClientRect();
-    const highlight = document.createElement('div');
-    highlight.className = 'tutorial-highlight';
-    const padding = 6;
-    highlight.style.left = `${Math.max(0, rect.left - padding)}px`;
-    highlight.style.top = `${Math.max(0, rect.top - padding)}px`;
-    highlight.style.width = `${rect.width + padding * 2}px`;
-    highlight.style.height = `${rect.height + padding * 2}px`;
-    layer.appendChild(highlight);
   });
 
   positionTutorialBubble(uiManager);
