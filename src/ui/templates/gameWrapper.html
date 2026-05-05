@@ -1,0 +1,326 @@
+<div id="game-wrapper">
+  <div id="relics-wrap" class="relics-wrap" aria-label="Zebrane Pamiątki">
+    <span id="relics-label-text" class="relics-label">Pamiątki:</span>
+    <div id="relic-bar" class="relic-bar"></div>
+  </div>
+
+  <div class="battlefield">
+    <div class="weather-banner" aria-live="polite">
+      <button
+        id="weather-indicator"
+        class="weather-indicator weather-hint-trigger"
+        type="button"
+        aria-expanded="false"
+      >
+        🌤️ Czyste Niebo
+        <span id="weather-tooltip" class="weather-tooltip"
+          >Brak dodatkowych efektów pogodowych.</span
+        >
+      </button>
+    </div>
+    <div class="entity" id="player">
+      <h2>Jędrek 🧔‍♂️</h2>
+      <div class="sprite" id="sprite-player">
+        <svg
+          id="lans-sunglasses"
+          class="lans-sunglasses-overlay"
+          viewBox="0 0 100 100"
+          width="120"
+          height="120"
+          aria-hidden="true"
+        >
+          <!-- left arm -->
+          <line
+            x1="37"
+            y1="32"
+            x2="25"
+            y2="35"
+            stroke="#c8a600"
+            stroke-width="1.8"
+            stroke-linecap="round"
+          />
+          <!-- right arm -->
+          <line
+            x1="63"
+            y1="32"
+            x2="75"
+            y2="35"
+            stroke="#c8a600"
+            stroke-width="1.8"
+            stroke-linecap="round"
+          />
+          <!-- left lens -->
+          <ellipse
+            cx="44"
+            cy="32"
+            rx="7.5"
+            ry="5"
+            fill="rgba(5,5,20,0.93)"
+            stroke="#ffd700"
+            stroke-width="1.6"
+          />
+          <!-- right lens -->
+          <ellipse
+            cx="56"
+            cy="32"
+            rx="7.5"
+            ry="5"
+            fill="rgba(5,5,20,0.93)"
+            stroke="#ffd700"
+            stroke-width="1.6"
+          />
+          <!-- bridge -->
+          <path d="M 51.5,31 Q 50,33.5 48.5,31" fill="none" stroke="#ffd700" stroke-width="1.6" />
+          <!-- lens sheen -->
+          <ellipse cx="41" cy="30" rx="2.5" ry="1.4" fill="rgba(255,255,255,0.18)" />
+          <ellipse cx="53" cy="30" rx="2.5" ry="1.4" fill="rgba(255,255,255,0.18)" />
+        </svg>
+        <svg viewBox="0 0 100 100" width="120" height="120">
+          <line
+            x1="50"
+            y1="65"
+            x2="30"
+            y2="75"
+            stroke="#ffccaa"
+            stroke-width="6"
+            stroke-linecap="round"
+          />
+          <line x1="45" y1="85" x2="40" y2="100" stroke="white" stroke-width="8" />
+          <line x1="55" y1="85" x2="60" y2="100" stroke="white" stroke-width="8" />
+          <ellipse cx="38" cy="100" rx="8" ry="4" fill="#8b5a2b" />
+          <ellipse cx="62" cy="100" rx="8" ry="4" fill="#8b5a2b" />
+          <rect
+            x="35"
+            y="50"
+            width="30"
+            height="35"
+            rx="5"
+            fill="white"
+            stroke="#222"
+            stroke-width="3"
+          />
+          <path d="M 35,50 L 50,70 L 65,50" fill="none" stroke="#c00" stroke-width="3" />
+          <circle cx="50" cy="35" r="15" fill="#ffccaa" />
+          <circle cx="45" cy="32" r="2" fill="black" />
+          <circle cx="55" cy="32" r="2" fill="black" />
+          <path d="M 40,40 Q 50,45 60,40" fill="none" stroke="#553311" stroke-width="3" />
+          <path d="M 20,25 Q 50,15 80,25" fill="none" stroke="#111" stroke-width="6" />
+          <path d="M 35,25 C 35,5 65,5 65,25 Z" fill="#111" />
+          <path d="M 60,15 Q 75,-5 85,10" fill="none" stroke="#d00" stroke-width="4" />
+          <line
+            x1="50"
+            y1="65"
+            x2="70"
+            y2="55"
+            stroke="#ffccaa"
+            stroke-width="6"
+            stroke-linecap="round"
+          />
+          <line x1="65" y1="85" x2="85" y2="25" stroke="#654321" stroke-width="4" />
+          <polygon points="80,25 95,20 90,35" fill="#aaa" stroke="#333" stroke-width="2" />
+        </svg>
+      </div>
+      <div class="stats" id="p-hp-line">
+        <span id="p-hp-label">❤️ Krzepa: </span><span id="p-hp">50</span>/<span id="p-max-hp"
+          >50</span
+        >
+      </div>
+      <div class="stats" style="color: #4da6ff">
+        <span id="p-block-label">🛡️ Garda: </span><span id="p-block">0</span>
+      </div>
+      <div id="p-statuses" class="statuses"></div>
+    </div>
+    <div class="entity" id="enemy">
+      <h2 id="enemy-name">Cepr 🧦</h2>
+      <div class="intent" id="e-intent">Robi zdjęcie (⚔️ 8)</div>
+      <div class="sprite" id="sprite-enemy">
+        <svg viewBox="0 0 100 100" width="120" height="120">
+          <line
+            x1="50"
+            y1="65"
+            x2="35"
+            y2="75"
+            stroke="#ffccaa"
+            stroke-width="6"
+            stroke-linecap="round"
+          />
+          <line x1="45" y1="80" x2="40" y2="95" stroke="#ffccaa" stroke-width="6" />
+          <line x1="55" y1="80" x2="60" y2="95" stroke="#ffccaa" stroke-width="6" />
+          <rect x="36" y="90" width="8" height="5" fill="white" />
+          <rect x="56" y="90" width="8" height="5" fill="white" />
+          <line x1="34" y1="95" x2="44" y2="95" stroke="#444" stroke-width="3" />
+          <line x1="54" y1="95" x2="64" y2="95" stroke="#444" stroke-width="3" />
+          <rect x="38" y="70" width="24" height="15" fill="#0066cc" />
+          <rect x="38" y="45" width="24" height="25" rx="4" fill="#ff66b2" />
+          <circle cx="50" cy="32" r="14" fill="#ffccaa" />
+          <rect x="40" y="28" width="8" height="6" fill="#111" rx="2" />
+          <rect x="52" y="28" width="8" height="6" fill="#111" rx="2" />
+          <line x1="48" y1="31" x2="52" y2="31" stroke="#111" stroke-width="2" />
+          <path d="M 45,40 Q 50,43 55,40" fill="none" stroke="#222" stroke-width="2" />
+          <polygon points="35,25 42,15 58,15 65,25" fill="#dddd88" />
+          <line
+            x1="50"
+            y1="65"
+            x2="65"
+            y2="60"
+            stroke="#ffccaa"
+            stroke-width="6"
+            stroke-linecap="round"
+          />
+          <rect x="58" y="54" width="16" height="12" fill="#333" rx="2" />
+          <circle cx="66" cy="60" r="4" fill="#888" />
+          <path d="M 45,35 Q 50,60 60,54" fill="none" stroke="#222" stroke-width="1.5" />
+        </svg>
+      </div>
+      <div class="stats">
+        <span id="e-hp-label">❤️ Krzepa: </span><span id="e-hp">40</span>/<span id="e-max-hp"
+          >40</span
+        >
+      </div>
+      <div class="stats" style="color: #4da6ff">
+        <span id="e-block-label">🛡️ Garda: </span><span id="e-block">0</span>
+      </div>
+      <div id="e-statuses" class="statuses"></div>
+    </div>
+  </div>
+
+  <div class="ui-bar">
+    <div class="energy">
+      <svg class="icon-oscypek" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <polygon
+          points="50,5 90,50 50,95 10,50"
+          fill="#fbb03b"
+          stroke="#a67c00"
+          stroke-width="6"
+          stroke-linejoin="round"
+        />
+        <path
+          d="M 25,35 Q 50,50 75,35 M 15,50 Q 50,65 85,50 M 25,65 Q 50,80 75,65"
+          fill="none"
+          stroke="#a67c00"
+          stroke-width="6"
+          stroke-linecap="round"
+        />
+      </svg>
+      <span id="energy-label">Oscypki: </span><span id="energy">3</span>/3
+      <span class="currency"
+        ><span id="dutki-label">Dutki: </span><span id="dutki">50</span> 💰</span
+      >
+    </div>
+
+    <div class="piles" id="pile-controls" aria-label="Stosy kart">
+      <button id="draw-pile-btn" class="pile-btn" type="button" aria-label="Talia dociągu">
+        <span class="pile-icon" aria-hidden="true">
+          <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+            <rect
+              x="14"
+              y="18"
+              width="30"
+              height="40"
+              rx="4"
+              fill="#f0dfc4"
+              stroke="#5f4122"
+              stroke-width="2"
+            />
+            <rect
+              x="18"
+              y="14"
+              width="30"
+              height="40"
+              rx="4"
+              fill="#e5d1b2"
+              stroke="#5f4122"
+              stroke-width="2"
+            />
+            <rect
+              x="22"
+              y="10"
+              width="30"
+              height="40"
+              rx="4"
+              fill="#704f2b"
+              stroke="#402711"
+              stroke-width="2"
+            />
+          </svg>
+        </span>
+        <span class="pile-count" id="draw-pile-count">0</span>
+      </button>
+
+      <button id="discard-pile-btn" class="pile-btn" type="button" aria-label="Karty odrzucone">
+        <span class="pile-icon" aria-hidden="true">
+          <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+            <rect
+              x="10"
+              y="22"
+              width="28"
+              height="34"
+              rx="4"
+              transform="rotate(-10 24 39)"
+              fill="#f5e9d5"
+              stroke="#694622"
+              stroke-width="2"
+            />
+            <rect
+              x="24"
+              y="18"
+              width="30"
+              height="38"
+              rx="4"
+              transform="rotate(8 39 37)"
+              fill="#ecd8bb"
+              stroke="#694622"
+              stroke-width="2"
+            />
+            <rect
+              x="20"
+              y="12"
+              width="30"
+              height="38"
+              rx="4"
+              fill="#f9f0e0"
+              stroke="#694622"
+              stroke-width="2"
+            />
+            <line x1="26" y1="22" x2="44" y2="22" stroke="#8f6a3f" stroke-width="2" />
+            <line x1="26" y1="28" x2="44" y2="28" stroke="#8f6a3f" stroke-width="2" />
+          </svg>
+        </span>
+        <span class="pile-count" id="discard-pile-count">0</span>
+      </button>
+
+      <button id="exhaust-pile-btn" class="pile-btn" type="button" aria-label="Karty przepadłe">
+        <span class="pile-icon" aria-hidden="true">
+          <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+            <rect
+              x="18"
+              y="12"
+              width="30"
+              height="40"
+              rx="4"
+              fill="#5d5d5d"
+              stroke="#2e2e2e"
+              stroke-width="2"
+            />
+            <path
+              d="M32 54 C26 48 24 44 26 39 C28 34 34 32 34 26 C38 30 44 34 42 42 C41 48 37 51 32 54 Z"
+              fill="#ff8a2a"
+            />
+            <path
+              d="M32 49 C29 45 29 43 30 40 C31 37 34 36 34 33 C36 36 39 38 38 42 C37 45 35 47 32 49 Z"
+              fill="#ffd15a"
+            />
+          </svg>
+        </span>
+        <span class="pile-count" id="exhaust-pile-count">0</span>
+      </button>
+    </div>
+
+    <button class="btn" id="end-turn-btn">Koniec Tury</button>
+  </div>
+
+  <div class="hand-container">
+    <div class="hand" id="hand"></div>
+  </div>
+</div>
+<!-- #game-wrapper -->

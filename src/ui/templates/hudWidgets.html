@@ -1,0 +1,54 @@
+<button
+  id="corner-options-btn"
+  class="corner-options-btn hidden"
+  type="button"
+  aria-label="Opcje"
+  aria-hidden="true"
+  disabled
+>
+  ⚙️
+</button>
+<button
+  id="seed-hud"
+  class="seed-hud hidden"
+  type="button"
+  aria-label="Skopiuj seed"
+  title="Kliknij, aby skopiować seed"
+>
+  seed: <span id="seed-hud-value"></span>
+</button>
+<div class="pwa-update-widget">
+  <button
+    id="pwa-update-btn"
+    class="pwa-update-btn hidden"
+    type="button"
+    aria-expanded="false"
+    aria-hidden="true"
+    disabled
+  >
+    ⬆ Aktualizacja
+  </button>
+  <div id="pwa-update-panel" class="pwa-update-panel hidden" role="note"></div>
+</div>
+<div
+  id="pwa-update-required"
+  class="pwa-update-required hidden"
+  role="dialog"
+  aria-modal="true"
+  aria-live="polite"
+  aria-hidden="true"
+>
+  <div class="pwa-update-required-card">
+    <div class="pwa-update-required-icon" aria-hidden="true">⬆</div>
+    <h2 id="pwa-update-required-title" class="pwa-update-required-title">
+      Dostępna jest obowiązkowa aktualizacja
+    </h2>
+    <p id="pwa-update-required-text" class="pwa-update-required-text">
+      Ta wersja aplikacji jest już nieaktualna. Zaktualizuj Usiec Cepra teraz, aby kontynuować grę
+      na najnowszym wydaniu.
+    </p>
+    <button id="pwa-update-required-btn" class="pwa-update-action-btn" type="button">
+      ⬆ Zaktualizuj aplikację
+    </button>
+  </div>
+</div>

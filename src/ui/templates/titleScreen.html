@@ -1,0 +1,127 @@
+<div id="title-screen" class="title-screen" aria-hidden="false">
+  <div class="title-backdrop">
+    <svg
+      class="title-mountains"
+      viewBox="0 0 1440 900"
+      preserveAspectRatio="none"
+      aria-hidden="true"
+    >
+      <defs>
+        <linearGradient id="skyGradient" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#173328" />
+          <stop offset="60%" stop-color="#214636" />
+          <stop offset="100%" stop-color="#10241d" />
+        </linearGradient>
+      </defs>
+      <rect width="1440" height="900" fill="url(#skyGradient)" />
+      <path
+        d="M0 620 L180 430 L310 560 L460 350 L630 610 L760 420 L930 640 L1090 370 L1280 610 L1440 450 L1440 900 L0 900 Z"
+        fill="#274a3c"
+      />
+      <path
+        d="M0 690 L130 560 L250 650 L410 470 L590 720 L760 560 L910 730 L1090 520 L1240 700 L1440 600 L1440 900 L0 900 Z"
+        fill="#1b352b"
+      />
+      <path
+        d="M0 780 L160 700 L320 760 L470 650 L670 810 L830 700 L1010 830 L1170 700 L1320 800 L1440 740 L1440 900 L0 900 Z"
+        fill="#13271f"
+      />
+    </svg>
+  </div>
+  <div class="title-panel">
+    <p id="title-kicker" class="title-kicker">Góralska przygoda dla cierpliwych</p>
+    <h1 class="title-main">USIEC CEPRA: WYPRAWA NA GIEWONT</h1>
+    <p id="title-subtitle" class="title-subtitle">Pomóż Jędrkowi odzyskać spokój na perci!</p>
+    <nav id="title-menu-nav" class="title-menu-nav" aria-label="Menu główne">
+      <ul class="title-menu-list">
+        <li class="title-menu-item">
+          <button id="title-btn-normal" class="title-start-btn" type="button">
+            Tryb Podstawowy (Nowa Gra)
+          </button>
+        </li>
+        <li class="title-menu-item" hidden>
+          <button id="title-btn-seeded" class="title-start-btn" type="button">
+            Podany Seed 🌱
+          </button>
+        </li>
+        <li class="title-menu-item">
+          <button id="title-btn-tutorial" class="title-start-btn" type="button">Samouczek</button>
+        </li>
+        <li class="title-menu-item">
+          <button id="title-btn-hard" class="title-start-btn" type="button">
+            Tryb Dla Marka 🌶️
+          </button>
+        </li>
+        <li class="title-menu-item">
+          <button id="title-btn-options" class="title-start-btn" type="button">Opcje</button>
+        </li>
+        <li class="title-menu-item">
+          <button id="title-btn-library" class="title-start-btn" type="button">Biblioteka</button>
+        </li>
+        <li class="title-menu-item">
+          <button id="btn-release-notes" class="title-start-btn" type="button">
+            Co nowego? (v2.0.1)
+          </button>
+        </li>
+      </ul>
+    </nav>
+    <p id="title-difficulty-hint" class="title-difficulty-hint">
+      W trybie Dla Marka przeciwnicy stają się silniejsi z każdą walką!
+    </p>
+    <div class="title-charms" aria-hidden="true">
+      <span>🪓</span>
+      <span>👞</span>
+    </div>
+  </div>
+  <div class="title-pwa-widget">
+    <button id="title-pwa-btn" class="title-disclaimer-btn" type="button" aria-expanded="false">
+      📲 Zainstaluj
+    </button>
+    <div id="title-pwa-panel" class="title-pwa-panel hidden" role="note"></div>
+  </div>
+  <div class="title-disclaimer-widget">
+    <button
+      id="title-disclaimer-btn"
+      class="title-disclaimer-btn"
+      type="button"
+      aria-expanded="false"
+    >
+      ⓘ Parodia
+    </button>
+    <p id="title-disclaimer-panel" class="title-disclaimer-panel hidden" role="note">
+      Usiec Cepra to darmowa parodia gry Slay the Spire. Projekt ma charakter wyłącznie
+      humorystyczny i nie ma na celu nikogo obrazić, ani nie przedstawia prawdziwych ludzi i
+      wydarzeń.
+    </p>
+  </div>
+  <div
+    id="seeded-run-modal"
+    class="seeded-run-modal hidden"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="seeded-run-modal-title"
+  >
+    <div class="seeded-run-modal-inner">
+      <h3 id="seeded-run-modal-title" class="seeded-run-modal-title">Podany Seed</h3>
+      <p id="seeded-run-hint" class="seeded-run-modal-hint">
+        Podaj seed (1–8 znaków hex), aby zagrać identyczny przebieg z innym graczem.
+      </p>
+      <input
+        id="seeded-run-input"
+        class="seeded-run-input"
+        type="text"
+        maxlength="8"
+        placeholder="np. deadbeef"
+        autocomplete="off"
+        spellcheck="false"
+      />
+      <p id="seeded-run-error" class="seeded-run-error hidden">
+        Nieprawidłowy seed — użyj 1–8 znaków hex (0–9, a–f).
+      </p>
+      <div class="seeded-run-actions">
+        <button id="seeded-run-confirm-btn" class="title-start-btn" type="button">Start</button>
+        <button id="seeded-run-cancel-btn" class="reward-skip-btn" type="button">Anuluj</button>
+      </div>
+    </div>
+  </div>
+</div>

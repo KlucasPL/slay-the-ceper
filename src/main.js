@@ -8,12 +8,15 @@ import { AnalyticsManager } from './logic/AnalyticsManager.js';
 import { getSkipIntro, getAnalyticsEnabled, getLanguage } from './logic/settings.js';
 import { GameState } from './state/GameState.js';
 import { UIManager } from './ui/UIManager.js';
+import { mountAppMarkup } from './ui/templates/AppMarkup.js';
 import { t as tUi } from './ui/helpers/I18n.js';
 import { MotionComicIntro } from './ui/intro/MotionComicIntro.js';
 import { characters } from './data/characters.js';
 import { enemyLibrary } from './data/enemies.js';
 import { startingDeck } from './data/cards.js';
 import { sceneLibrary, isSceneLoadAllowed } from './logic/scenes/index.js';
+
+mountAppMarkup();
 
 const params = new URLSearchParams(window.location.search);
 const debugEnemyRaw = params.get('debugBoss') ?? params.get('debugEnemy');
